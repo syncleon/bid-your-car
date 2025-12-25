@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:15
+    container_name: bidapi-db
+    restart: always
+    environment:
+      POSTGRES_DB: carauction
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+    container_name: car-auction-backend
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/carauction
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/Users/oblapleon/uploads:/carauction/uploads"
+    restart: always
+
+volumes:
+  postgres-data:
