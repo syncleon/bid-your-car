@@ -1,25 +1,46 @@
-import type {AuthResponse, LoginRequest, RegisterRequest} from "../types";
+import type {
+    LoginRequestDto,
+    RegisterRequestDto,
+    LoginResponseDto,
+} from "../types";
 
 const BASE_URL = "http://localhost:8080/api/v1";
 
-async function request<T>(url: string, body: unknown): Promise<T> {
+async function post<T>(url: string, body: unknown): Promise<T> {
     const response = await fetch(url, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
     });
 
     if (!response.ok) {
-        throw new Error("Auth request failed");
+        let message = "Request failed";
+
+        const contentType = response.headers.get("content-type");
+
+        try {
+            if (contentType?.includes("application/json")) {
+                const errorBody = await response.json();
+                message =
+                    errorBody?.message ||
+                    errorBody?.error ||
+                    message;
+            } else {
+                // ✅ THIS is your case
+                message = await response.text();
+            }
+        } catch {
+            // ignore parsing errors
+        }
+
+        throw new Error(message);
     }
 
     return response.json();
 }
 
-export const register = (data: RegisterRequest) =>
-    request<AuthResponse>(`${BASE_URL}/register`, data);
+export const register = (dto: RegisterRequestDto) =>
+    post<LoginResponseDto>(`${BASE_URL}/register`, dto);
 
-export const login = (data: LoginRequest) =>
-    request<AuthResponse>(`${BASE_URL}/login`, data);
+export const login = (dto: LoginRequestDto) =>
+    post<LoginResponseDto>(`${BASE_URL}/login`, dto);

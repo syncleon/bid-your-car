@@ -1,14 +1,14 @@
-export interface RegisterRequest {
+export interface RegisterRequestDto {
     username: string;
-    password: number;
+    password: string;
     email: string;
 }
 
-export interface LoginRequest {
+export interface LoginRequestDto {
     username: string;
-    password: number;
+    password: string;
 }
 
-export interface AuthResponse {
+export interface LoginResponseDto {
     token: string;
 }

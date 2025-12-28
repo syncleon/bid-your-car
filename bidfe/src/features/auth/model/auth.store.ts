@@ -5,30 +5,41 @@ import { tokenStorage } from "../../../shared/lib/token";
 export class AuthStore {
     token: string | null = tokenStorage.get();
     isLoading = false;
+    error: string | null = null; // ✅ added
 
     constructor() {
         makeAutoObservable(this);
     }
 
-    get isAuthenticated() {
-        return !!this.token;
+    clearError() {
+        this.error = null;
     }
 
-    async register(username: string, password: number, email: string) {
+    async register(username: string, password: string, email: string) {
         this.isLoading = true;
+        this.error = null;
+
         try {
             const { token } = await register({ username, password, email });
             this.setToken(token);
+        } catch (e) {
+            this.error = (e as Error).message;
+            throw e;
         } finally {
             this.isLoading = false;
         }
     }
 
-    async login(username: string, password: number) {
+    async login(username: string, password: string) {
         this.isLoading = true;
+        this.error = null;
+
         try {
             const { token } = await login({ username, password });
             this.setToken(token);
+        } catch (e) {
+            this.error = (e as Error).message;
+            throw e;
         } finally {
             this.isLoading = false;
         }

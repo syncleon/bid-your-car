@@ -56,7 +56,7 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("http://localhost:3000", "http://localhost:8080")
+        configuration.allowedOrigins = listOf("http://localhost:5173", "http://localhost:8080")
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS") // Added OPTIONS
         configuration.allowedHeaders = listOf("*") // Simpler for dev, restrict in prod
         val source = UrlBasedCorsConfigurationSource()

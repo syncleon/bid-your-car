@@ -9,33 +9,58 @@ interface Props {
 
 export const LoginForm = observer(({ onSwitchToRegister, onSuccess }: Props) => {
     const { authStore } = useStore();
+
     const [username, setUsername] = useState("");
-    const [password, setPassword] = useState<number>(0);
+    const [password, setPassword] = useState("");
 
     const submit = async () => {
-        await authStore.login(username, password);
-        onSuccess();
+        try {
+            await authStore.login(username, password);
+            onSuccess();
+        } catch {
+            // ❌ error already stored in authStore.error
+            // keep modal open
+        }
+    };
+
+    const clearError = () => {
+        if (authStore.error) {
+            authStore.clearError();
+        }
     };
 
     return (
         <>
             <h2>Login</h2>
 
+            {/* 🔴 Error message */}
+            {authStore.error && (
+                <div style={{ color: "red", marginBottom: 12 }}>
+                    {authStore.error}
+                </div>
+            )}
+
             <input
                 placeholder="Username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                    setUsername(e.target.value);
+                    clearError();
+                }}
             />
 
             <input
                 placeholder="Password"
-                type="number"
+                type="password"
                 value={password}
-                onChange={(e) => setPassword(Number(e.target.value))}
+                onChange={(e) => {
+                    setPassword(e.target.value);
+                    clearError();
+                }}
             />
 
             <button onClick={submit} disabled={authStore.isLoading}>
-                Login
+                {authStore.isLoading ? "Logging in..." : "Login"}
             </button>
 
             <p>
