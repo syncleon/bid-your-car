@@ -20,7 +20,6 @@ export const RegisterForm = observer(
                 await authStore.register(username, password, email);
                 onSuccess();
             } catch {
-                // ❌ error already stored in authStore.error
                 // keep modal open
             }
         };
@@ -34,8 +33,6 @@ export const RegisterForm = observer(
         return (
             <>
                 <h2>Register</h2>
-
-                {/* 🔴 Error message */}
                 {authStore.error && (
                     <div style={{ color: "red", marginBottom: 12 }}>
                         {authStore.error}

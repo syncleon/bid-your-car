@@ -18,7 +18,6 @@ export const LoginForm = observer(({ onSwitchToRegister, onSuccess }: Props) => 
             await authStore.login(username, password);
             onSuccess();
         } catch {
-            // ❌ error already stored in authStore.error
             // keep modal open
         }
     };
@@ -32,8 +31,6 @@ export const LoginForm = observer(({ onSwitchToRegister, onSuccess }: Props) => 
     return (
         <>
             <h2>Login</h2>
-
-            {/* 🔴 Error message */}
             {authStore.error && (
                 <div style={{ color: "red", marginBottom: 12 }}>
                     {authStore.error}

@@ -11,6 +11,10 @@ export class AuthStore {
         makeAutoObservable(this);
     }
 
+    get isAuthenticated() {
+        return Boolean(this.token);
+    }
+
     clearError() {
         this.error = null;
     }
