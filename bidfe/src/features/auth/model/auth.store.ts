@@ -5,7 +5,7 @@ import { tokenStorage } from "../../../shared/lib/token";
 export class AuthStore {
     token: string | null = tokenStorage.get();
     isLoading = false;
-    error: string | null = null; // ✅ added
+    error: string | null = null;
 
     constructor() {
         makeAutoObservable(this);

@@ -1,18 +1,24 @@
-import type { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../shared/hooks/useStore";
+import type { ReactNode } from "react";
 
-interface Props {
-    children: ReactNode;
-}
+export const PrivateRoute = observer(
+    ({ children }: { children: ReactNode }) => {
+        const { authStore } = useStore();
+        const location = useLocation();
 
-export const PrivateRoute = observer(({ children }: Props) => {
-    const { authStore } = useStore();
+        if (!authStore.isAuthenticated) {
+            return (
+                <Navigate
+                    to={`/login?redirect=${encodeURIComponent(
+                        location.pathname
+                    )}`}
+                    replace
+                />
+            );
+        }
 
-    if (!authStore.isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <>{children}</>;
     }
-
-    return <>{children}</>;
-});
+);

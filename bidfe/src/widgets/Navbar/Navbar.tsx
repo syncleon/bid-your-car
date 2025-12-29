@@ -9,11 +9,29 @@ interface Props {
 export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
     return (
         <header className="navbar">
-            <Link to="/" className="navbar__logo">
-                AuctionApp
-            </Link>
+            <div className="navbar__left">
+                <Link to="/" className="navbar__logo">
+                    Bidyour car
+                </Link>
 
-            <nav className="navbar__actions">
+                <Link to="/auctions" className="navbar__link">
+                    Auctions
+                </Link>
+
+                {/* ✅ Always navigate to /sell */}
+                <Link to="/sell-car" className="navbar__button">
+                    Sell a car
+                </Link>
+            </div>
+
+            <div className="navbar__center">
+                <input
+                    className="navbar__search"
+                    placeholder="Search cars..."
+                />
+            </div>
+
+            <div className="navbar__actions">
                 {isAuthenticated ? (
                     <>
                         <Link to="/profile" className="navbar__link">
@@ -25,10 +43,10 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                     </>
                 ) : (
                     <Link to="/login" className="navbar__button">
-                        Login / Sign up
+                        Sign up
                     </Link>
                 )}
-            </nav>
+            </div>
         </header>
     );
 };

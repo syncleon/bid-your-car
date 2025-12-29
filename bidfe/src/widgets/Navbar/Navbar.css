@@ -1,24 +1,45 @@
 .navbar {
     height: 56px;
     padding: 0 24px;
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    justify-content: space-between;
     border-bottom: 1px solid #eaeaea;
     background: #fff;
 }
 
+.navbar__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.navbar__center {
+    display: flex;
+    justify-content: center;
+}
+
+.navbar__search {
+    width: 320px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+/* RIGHT */
+.navbar__actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* EXISTING */
 .navbar__logo {
     font-weight: 600;
     font-size: 18px;
     text-decoration: none;
     color: #000;
-}
-
-.navbar__actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
 }
 
 .navbar__link {

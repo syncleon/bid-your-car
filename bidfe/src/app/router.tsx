@@ -3,12 +3,17 @@ import { Routes, Route } from "react-router-dom";
 import { LoginPage } from "../pages/LoginPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { ItemsPage } from "../pages/ItemsPage";
+import { SellCarPage } from "../pages/SellCarPage";
+import { SubmitItemPage } from "../pages/CreateCarPage.tsx";
 import { PrivateRoute } from "../routes/PrivateRoute";
 
 export const AppRouter = () => (
     <Routes>
+        <Route path="/" element={<ItemsPage />} />
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
+        <Route path="/sell-car" element={<SellCarPage />} />
 
         <Route
             path="/profile"
@@ -18,7 +23,13 @@ export const AppRouter = () => (
                 </PrivateRoute>
             }
         />
-
-        <Route path="/" element={<ItemsPage />} />
+        <Route
+            path="/sell-car/submit"
+            element={
+                <PrivateRoute>
+                    <SubmitItemPage />
+                </PrivateRoute>
+            }
+        />
     </Routes>
 );
