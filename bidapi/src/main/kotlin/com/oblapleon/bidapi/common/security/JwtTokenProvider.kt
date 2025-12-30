@@ -5,13 +5,14 @@ import com.oblapleon.bidapi.feature.user.service.UserService
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm
 import org.springframework.security.oauth2.jwt.*
 import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Lazy
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 @Component
 class JwtTokenProvider(
     private val jwtEncoder: JwtEncoder,
-    private val userService: UserService,
+    @Lazy private val userService: UserService
 ) {
     fun createToken(user: User): String {
         val now = Instant.now()

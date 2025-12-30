@@ -1,17 +1,7 @@
 package com.oblapleon.bidapi.feature.user.entity
 
 import com.oblapleon.bidapi.common.entity.BaseEntity
-import com.oblapleon.bidapi.feature.user.entity.Role
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.Table
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "users")
@@ -25,7 +15,7 @@ class User(
     var username: String,
 
     @Column(nullable = false)
-    var password: String,
+    var password: String?,
 
     @Column(nullable = false, unique = true)
     var email: String,

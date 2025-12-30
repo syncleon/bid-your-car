@@ -1,16 +1,18 @@
 package com.oblapleon.bidapi.common.security
 
-import org.springframework.security.crypto.bcrypt.BCrypt
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 
 @Component
-class Hashing {
+class Hashing(
+    private val passwordEncoder: PasswordEncoder
+) {
 
-    fun checkBcrypt(input: String, hash: String): Boolean {
-        return BCrypt.checkpw(input, hash)
+    fun checkBcrypt(input: String, hash: String?): Boolean {
+        return passwordEncoder.matches(input, hash)
     }
 
-    fun hashBcrypt(input: String): String {
-        return BCrypt.hashpw(input, BCrypt.gensalt(10))
+    fun hashBcrypt(input: String): String? {
+        return passwordEncoder.encode(input)
     }
 }
