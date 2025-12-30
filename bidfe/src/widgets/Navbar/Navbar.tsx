@@ -43,7 +43,7 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                     </>
                 ) : (
                     <Link to="/login" className="navbar__button">
-                        Sign up
+                        Sign In
                     </Link>
                 )}
             </div>
