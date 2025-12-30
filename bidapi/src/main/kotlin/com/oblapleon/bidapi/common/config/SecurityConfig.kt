@@ -35,7 +35,7 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.POST, "/api/v1/login", "/api/v1/register").permitAll()
                     .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/v1/**").authenticated()
-                    .anyRequest().permitAll() // Careful: usually you want .authenticated() here for safety
+                    .anyRequest().permitAll()
             }
             .oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { jwt ->
@@ -58,8 +58,8 @@ class SecurityConfig(
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
         configuration.allowedOrigins = listOf("http://localhost:5173", "http://localhost:8080")
-        configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS") // Added OPTIONS
-        configuration.allowedHeaders = listOf("*") // Simpler for dev, restrict in prod
+        configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        configuration.allowedHeaders = listOf("*")
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source
@@ -73,7 +73,6 @@ class SecurityConfig(
     ) : Converter<Jwt, AbstractAuthenticationToken> {
 
         override fun convert(jwt: Jwt): AbstractAuthenticationToken {
-            // parsing logic moved here; parseToken now accepts the JWT object or claims
             val user = jwtTokenProvider.getUserFromClaims(jwt.claims)
                 ?: throw InvalidBearerTokenException("User not found")
 

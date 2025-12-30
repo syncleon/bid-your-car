@@ -10,7 +10,6 @@ class UserService(
     private val userRepo: UserRepo
 ) {
 
-
     fun findById(id: Long): User {
         val user = userRepo.findById(id)
         return user?.get() ?: throw NotFoundException("User not found")

@@ -1,15 +1,11 @@
-package com.oblapleon.bidapi.feature.auth.controller
+package com.oblapleon.bidapi.feature.user.controller
 
-import com.oblapleon.bidapi.common.exceptions.AlreadyExistsException
-import com.oblapleon.bidapi.common.exceptions.BadRequestException
-import com.oblapleon.bidapi.common.exceptions.InvalidDataException
-import com.oblapleon.bidapi.common.exceptions.NotFoundException
-import com.oblapleon.bidapi.common.exceptions.UnauthorizedException
+import com.oblapleon.bidapi.common.exceptions.*
 import com.oblapleon.bidapi.common.security.Hashing
 import com.oblapleon.bidapi.common.security.JwtTokenProvider
-import com.oblapleon.bidapi.feature.auth.dto.AuthRespDto
-import com.oblapleon.bidapi.feature.auth.dto.LoginReqDto
-import com.oblapleon.bidapi.feature.auth.dto.RegisterReqDto
+import com.oblapleon.bidapi.feature.user.dto.AuthRespDto
+import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
+import com.oblapleon.bidapi.feature.user.dto.RegisterReqDto
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.entity.Role
 import com.oblapleon.bidapi.feature.user.entity.User
@@ -21,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-
 
 @RestController
 @RequestMapping("/api/v1")

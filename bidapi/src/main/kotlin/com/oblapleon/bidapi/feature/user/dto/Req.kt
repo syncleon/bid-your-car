@@ -1,4 +1,4 @@
-package com.oblapleon.bidapi.feature.auth.dto
+package com.oblapleon.bidapi.feature.user.dto
 
 import jakarta.validation.constraints.Email
 

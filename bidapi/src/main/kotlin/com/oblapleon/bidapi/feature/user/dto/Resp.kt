@@ -3,6 +3,8 @@ package com.oblapleon.bidapi.feature.user.dto
 import com.oblapleon.bidapi.feature.user.entity.ERole
 
 
+data class AuthRespDto(val token: String)
+
 data class RoleDto(val name: ERole)
 
 data class UserDto(

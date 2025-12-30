@@ -17,13 +17,12 @@ class JwtEncodingConfig(
     @Value("\${jwt.secret.key}")
     private val jwtKey: String,
 ) {
-    // Explicitly define algorithm to match the HS256 used in Provider
     private val secretKey = SecretKeySpec(jwtKey.toByteArray(), "HmacSHA256")
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
         return NimbusJwtDecoder.withSecretKey(secretKey)
-            .macAlgorithm(MacAlgorithm.HS256) // Ensure decoder expects HS256
+            .macAlgorithm(MacAlgorithm.HS256)
             .build()
     }
 

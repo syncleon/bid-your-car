@@ -10,14 +10,13 @@ import java.time.temporal.ChronoUnit
 
 @Component
 class JwtTokenProvider(
-    private val jwtEncoder: JwtEncoder, // Decoder is handled by SecurityConfig now
+    private val jwtEncoder: JwtEncoder,
     private val userService: UserService,
 ) {
     fun createToken(user: User): String {
         val now = Instant.now()
         val validity = now.plus(30L, ChronoUnit.DAYS)
 
-        // FIX: Use specific MacAlgorithm
         val jwsHeader = JwsHeader.with(MacAlgorithm.HS256).build()
 
         val claims = JwtClaimsSet.builder()
@@ -30,7 +29,6 @@ class JwtTokenProvider(
         return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).tokenValue
     }
 
-    // Helper method used by the SecurityConfig Converter
     fun getUserFromClaims(claims: Map<String, Any>): User? {
         return try {
             val userId = claims["userId"] as? Long ?: return null
