@@ -26,7 +26,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
-    private val jwtDecoder: JwtDecoder // Inject interface directly
+    private val jwtDecoder: JwtDecoder
 ) {
 
     @Bean
@@ -72,9 +72,6 @@ class SecurityConfig(
         return source
     }
 
-    /**
-     * Converts a valid JWT into a UsernamePasswordAuthenticationToken containing the UserEntity.
-     */
     class UserAuthenticationConverter(
         private val jwtTokenProvider: JwtTokenProvider
     ) : Converter<Jwt, AbstractAuthenticationToken> {
@@ -83,7 +80,11 @@ class SecurityConfig(
             val user = jwtTokenProvider.getUserFromClaims(jwt.claims)
                 ?: throw InvalidBearerTokenException("User not found")
 
-            return UsernamePasswordAuthenticationToken(user, jwt, listOf(SimpleGrantedAuthority("USER")))
+            val authorities = user.roles.map { role ->
+                SimpleGrantedAuthority("${role.name}")
+            }
+
+            return UsernamePasswordAuthenticationToken(user, jwt, authorities)
         }
     }
 }

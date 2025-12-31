@@ -1,22 +1,25 @@
 package com.oblapleon.bidapi.feature.user.controller
 
 import com.oblapleon.bidapi.common.controller.BaseController
+import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.common.mapper.toDto
 import com.oblapleon.bidapi.feature.user.dto.*
+import com.oblapleon.bidapi.feature.user.entity.User
 import com.oblapleon.bidapi.feature.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
+
 
 @RestController
 @RequestMapping("/api/v1/users")
 @Tag(name = "Users", description = "User management APIs")
 class UserController(
-    private val userService: UserService
+    private val userService: UserService,
+    private val authHelper: AuthorizationHelper
 ) : BaseController() {
 
     @Operation(summary = "Get all users", description = "Returns all users (Admin only)")
@@ -30,43 +33,36 @@ class UserController(
     @Operation(summary = "Get user by ID", description = "Returns a single user by ID")
     @GetMapping("/{id}")
     fun getUserById(
-        @AuthenticationPrincipal userDetails: UserDetails,
+        @AuthenticationPrincipal currentUser: User,
         @PathVariable id: Long
     ) = handleRequest {
-        val user = userService.findById(id)
-        if (!userDetails.authorities.any { it.authority == "ROLE_ADMIN" } &&
-            user.username != userDetails.username
-        ) {
-            throw org.springframework.security.access.AccessDeniedException("Not allowed")
-        }
-        user.toDto()
+        val targetUser = userService.findById(id)
+
+        authHelper.checkOwnerOrAdmin(currentUser, targetUser.id!!)
+
+        targetUser.toDto()
     }
 
     @Operation(summary = "Update user", description = "Update user data (Admin or owner)")
     @PutMapping("/{id}")
     fun updateUser(
-        @AuthenticationPrincipal userDetails: UserDetails,
+        @AuthenticationPrincipal currentUser: User,
         @PathVariable id: Long,
         @Valid @RequestBody request: UserUpdateRequest
     ) = handleRequest {
-        val user = userService.findById(id)
-        if (!userDetails.authorities.any { it.authority == "ROLE_ADMIN" } &&
-            user.username != userDetails.username
-        ) {
-            throw org.springframework.security.access.AccessDeniedException("Not allowed")
-        }
+        authHelper.checkOwnerOrAdmin(currentUser, id)
+
         userService.update(id, request).toDto()
     }
 
     @Operation(summary = "Update current user profile")
     @PutMapping("/me/profile")
     fun updateCurrentUserProfile(
-        @AuthenticationPrincipal userDetails: UserDetails,
+        @AuthenticationPrincipal currentUser: User,
         @Valid @RequestBody request: ProfileUpdateRequest
     ) = handleRequest {
-        val user = userService.findByName(userDetails.username)
         userService.updateProfile(
-            id = user.id!!,
+            id = currentUser.id!!,
             username = request.username,
             email = request.email
         ).toDto()
@@ -75,12 +71,11 @@ class UserController(
     @Operation(summary = "Change password")
     @PutMapping("/me/change-password")
     fun changePassword(
-        @AuthenticationPrincipal userDetails: UserDetails,
+        @AuthenticationPrincipal currentUser: User,
         @Valid @RequestBody request: ChangePasswordRequest
     ) = handleRequest {
-        val user = userService.findByName(userDetails.username)
         userService.changePassword(
-            id = user.id!!,
+            id = currentUser.id!!,
             oldPassword = request.oldPassword,
             newPassword = request.newPassword
         )
@@ -109,8 +104,8 @@ class UserController(
 
     @Operation(summary = "Get current user profile")
     @GetMapping("/me")
-    fun getCurrentUser(@AuthenticationPrincipal userDetails: UserDetails) =
-        handleRequest { userService.findByName(userDetails.username).toDto() }
+    fun getCurrentUser(@AuthenticationPrincipal currentUser: User) =
+        handleRequest { currentUser.toDto() }
 
     @Operation(summary = "Check if username exists")
     @GetMapping("/exists/username/{username}")

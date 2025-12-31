@@ -13,6 +13,6 @@ class Role(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    var name: ERole = ERole.ROLE_USER
+    var name: ERole = ERole.USER
 
 ) : BaseEntity()

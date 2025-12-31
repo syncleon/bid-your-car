@@ -76,7 +76,7 @@ class AuthController(
                 throw AlreadyExistsException("User with this name already exists.")
             }
 
-            val userRole = roleRepo.findByName(ERole.ROLE_USER)
+            val userRole = roleRepo.findByName(ERole.USER)
             val user = User(
                 username = payload.username,
                 password = hashing.hashBcrypt(payload.password),
