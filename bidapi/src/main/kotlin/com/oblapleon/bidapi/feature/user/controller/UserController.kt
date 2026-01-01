@@ -13,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
-
 @RestController
 @RequestMapping("/api/v1/users")
 @Tag(name = "Users", description = "User management APIs")
@@ -22,38 +21,14 @@ class UserController(
     private val authHelper: AuthorizationHelper
 ) : BaseController() {
 
-    @Operation(summary = "Get all users", description = "Returns all users (Admin only)")
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    fun getAllUsers() =
-        handleRequest {
-            userService.findAll().map { it.toDto() }
-        }
+    // ==========================================
+    // 1. SPECIFIC ENDPOINTS (Must be at the top)
+    // ==========================================
 
-    @Operation(summary = "Get user by ID", description = "Returns a single user by ID")
-    @GetMapping("/{id}")
-    fun getUserById(
-        @AuthenticationPrincipal currentUser: User,
-        @PathVariable id: Long
-    ) = handleRequest {
-        val targetUser = userService.findById(id)
-
-        authHelper.checkOwnerOrAdmin(currentUser, targetUser.id!!)
-
-        targetUser.toDto()
-    }
-
-    @Operation(summary = "Update user", description = "Update user data (Admin or owner)")
-    @PutMapping("/{id}")
-    fun updateUser(
-        @AuthenticationPrincipal currentUser: User,
-        @PathVariable id: Long,
-        @Valid @RequestBody request: UserUpdateRequest
-    ) = handleRequest {
-        authHelper.checkOwnerOrAdmin(currentUser, id)
-
-        userService.update(id, request).toDto()
-    }
+    @Operation(summary = "Get current user profile")
+    @GetMapping("/me")
+    fun getCurrentUser(@AuthenticationPrincipal currentUser: User) =
+        handleRequest { currentUser.toDto() }
 
     @Operation(summary = "Update current user profile")
     @PutMapping("/me/profile")
@@ -82,10 +57,51 @@ class UserController(
         null
     }
 
-    @Operation(summary = "Delete user (Admin only)")
-    @DeleteMapping("/{id}")
+    @Operation(summary = "Get all users", description = "Returns all users (Admin only)")
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    fun deleteUser(@PathVariable id: Long) = handleRequest {
+    fun getAllUsers() =
+        handleRequest {
+            userService.findAll().map { it.toDto() }
+        }
+
+    // ==========================================
+    // 2. DYNAMIC ENDPOINTS (/{id})
+    // ==========================================
+
+    @Operation(summary = "Get user by ID", description = "Returns a single user by ID")
+    @GetMapping("/{id}")
+    fun getUserById(
+        @AuthenticationPrincipal currentUser: User,
+        @PathVariable id: Long
+    ) = handleRequest {
+        val targetUser = userService.findById(id)
+        authHelper.checkOwnerOrAdmin(currentUser, targetUser.id!!)
+        targetUser.toDto()
+    }
+
+    @Operation(summary = "Update user", description = "Update user data (Admin or owner)")
+    @PutMapping("/{id}")
+    fun updateUser(
+        @AuthenticationPrincipal currentUser: User,
+        @PathVariable id: Long,
+        @Valid @RequestBody request: UserUpdateRequest
+    ) = handleRequest {
+        authHelper.checkOwnerOrAdmin(currentUser, id)
+        userService.update(id, request).toDto()
+    }
+
+    @Operation(
+        summary = "Delete user (Soft Delete)",
+        description = "Marks account for deletion. Permanently removed after 30 days. Accessible by Admin or Account Owner."
+    )
+    @DeleteMapping("/{id}")
+    fun deleteUser(
+        @AuthenticationPrincipal currentUser: User,
+        @PathVariable id: Long
+    ) = handleRequest {
+        authHelper.checkOwnerOrAdmin(currentUser, id)
+
         userService.delete(id)
         null
     }
@@ -101,11 +117,6 @@ class UserController(
     @PreAuthorize("hasRole('ADMIN')")
     fun searchByEmail(@RequestParam query: String) =
         handleRequest { userService.searchByEmailContains(query).map { it.toDto() } }
-
-    @Operation(summary = "Get current user profile")
-    @GetMapping("/me")
-    fun getCurrentUser(@AuthenticationPrincipal currentUser: User) =
-        handleRequest { currentUser.toDto() }
 
     @Operation(summary = "Check if username exists")
     @GetMapping("/exists/username/{username}")

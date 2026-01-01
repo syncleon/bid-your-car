@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 interface UserRepo : JpaRepository<User, Long> {
@@ -17,4 +18,5 @@ interface UserRepo : JpaRepository<User, Long> {
 
     fun findByUsernameContainingIgnoreCase(query: String): List<User>
     fun findByEmailContainingIgnoreCase(query: String): List<User>
+    fun findAllByDeletedAtBefore(dateTime: LocalDateTime): List<User>
 }

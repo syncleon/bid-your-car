@@ -8,6 +8,18 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: f251d039e25de7
+    password: c01f28a5e4b9d7
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 server:
   address: 0.0.0.0
   port: 8080

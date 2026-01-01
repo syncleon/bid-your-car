@@ -15,11 +15,9 @@ export const LoginForm = observer(({ onSwitchToRegister, onSuccess }: Props) => 
 
     const submit = async () => {
         try {
-            await authStore.login(username, password);
+            await authStore.login({ username, password });
             onSuccess();
-        } catch {
-            // keep modal open
-        }
+        } catch { /* empty */ }
     };
 
     const clearError = () => {

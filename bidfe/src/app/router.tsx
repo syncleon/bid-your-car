@@ -6,6 +6,7 @@ import { ItemsPage } from "../pages/ItemsPage";
 import { SellCarPage } from "../pages/SellCarPage";
 import { SubmitItemPage } from "../pages/CreateCarPage.tsx";
 import { PrivateRoute } from "../routes/PrivateRoute";
+import {VerifyPage} from "../pages/VerifyPage.tsx";
 
 export const AppRouter = () => (
     <Routes>
@@ -14,6 +15,7 @@ export const AppRouter = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
         <Route path="/sell-car" element={<SellCarPage />} />
+        <Route path="/verify" element={<VerifyPage />} />
 
         <Route
             path="/profile"

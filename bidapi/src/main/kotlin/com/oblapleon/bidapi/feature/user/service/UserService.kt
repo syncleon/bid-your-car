@@ -9,6 +9,7 @@ import com.oblapleon.bidapi.feature.user.entity.User
 import com.oblapleon.bidapi.feature.user.repo.UserRepo
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 @Service
 @Transactional
@@ -24,11 +25,34 @@ class UserService(
     override fun findAll(): List<User> =
         userRepo.findAll()
 
+    /**
+     * SOFT DELETE:
+     * Sets the deletedAt timestamp. The user remains in the DB but is marked for deletion.
+     * The Scheduler will pick this up after 30 days.
+     */
     override fun delete(id: Long) {
+        val user = findById(id) // Throws NotFoundException if missing
+        user.deletedAt = LocalDateTime.now()
+        userRepo.save(user)
+    }
+
+    /**
+     * HARD DELETE:
+     * Permanently removes the user from the database.
+     * Used by the Cleanup Scheduler.
+     */
+    fun deletePermanently(id: Long) {
         if (!userRepo.existsById(id)) {
             throw NotFoundException("User with ID $id not found")
         }
         userRepo.deleteById(id)
+    }
+
+    /**
+     * Used by Scheduler to find accounts that were soft-deleted before the cutoff date.
+     */
+    fun findReadyForPurge(cutoffDate: LocalDateTime): List<User> {
+        return userRepo.findAllByDeletedAtBefore(cutoffDate)
     }
 
     fun findByName(username: String): User =
