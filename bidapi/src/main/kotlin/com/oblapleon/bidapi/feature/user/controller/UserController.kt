@@ -93,16 +93,22 @@ class UserController(
 
     @Operation(
         summary = "Delete user (Soft Delete)",
-        description = "Marks account for deletion. Permanently removed after 30 days. Accessible by Admin or Account Owner."
+        description = "Requires 'password' in body if deleting your own account. Admin can delete without password."
     )
     @DeleteMapping("/{id}")
     fun deleteUser(
         @AuthenticationPrincipal currentUser: User,
-        @PathVariable id: Long
+        @PathVariable id: Long,
+        @RequestBody(required = false) payload: DeleteAccountReqDto?
     ) = handleRequest {
-        authHelper.checkOwnerOrAdmin(currentUser, id)
 
-        userService.delete(id)
+        authHelper.checkOwnerOrAdmin(currentUser, id)
+        userService.deleteWithVerification(
+            initiator = currentUser,
+            targetUserId = id,
+            password = payload?.password
+        )
+
         null
     }
 

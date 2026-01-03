@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
+/**
+ * Service responsible for handling user authentication flows including registration,
+ * login, email verification, and account restoration.
+ */
 @Service
 class AuthService(
     private val userService: UserService,
@@ -21,6 +25,16 @@ class AuthService(
     private val jwtTokenProvider: JwtTokenProvider
 ) {
 
+    /**
+     * Registers a new user with the provided credentials.
+     * Checks for existing usernames or emails, assigns the default user role,
+     * creates a verification token, and sends a verification email.
+     *
+     * @param payload The registration request containing username, email, and password.
+     * @return A success message indicating that the verification email has been sent.
+     * @throws AlreadyExistsException If the username or email is already in use.
+     * @throws NotFoundException If the default user role is not found in the database.
+     */
     @Transactional
     fun register(payload: RegisterReqDto): String {
         if (userService.existsByName(payload.username)) {
@@ -33,26 +47,32 @@ class AuthService(
         val userRole = roleRepo.findByName(ERole.USER)
             ?: throw NotFoundException("Default role not found")
 
-        // 1. Save User (Enabled = false)
         val user = User(
             username = payload.username,
             password = hashing.hashBcrypt(payload.password),
             email = payload.email,
             roles = mutableSetOf(userRole),
-            enabled = false // Important
+            enabled = false
         )
         val savedUser = userService.save(user)
 
-        // 2. Create Token
         val token = VerificationToken(user = savedUser)
         verificationTokenRepo.save(token)
 
-        // 3. Send Email
         emailService.sendVerificationEmail(savedUser.email, token.token)
 
         return "Registration successful. Please check your email to verify your account."
     }
 
+    /**
+     * Authenticates a user based on the provided login credentials.
+     * Performs validation checks for password correctness, account deletion status,
+     * and email verification status before generating a JWT token.
+     *
+     * @param payload The login request containing username and password.
+     * @return An [AuthRespDto] containing the generated JWT token.
+     * @throws UnauthorizedException If the password is incorrect, the account is deleted, or the account is not verified.
+     */
     fun login(payload: LoginReqDto): AuthRespDto {
         val user = userService.findByName(payload.username)
 
@@ -60,7 +80,10 @@ class AuthService(
             throw UnauthorizedException("Incorrect password.")
         }
 
-        // 4. Verification Check
+        if (user.deletedAt != null) {
+            throw UnauthorizedException("This account has been deleted and is scheduled for permanent removal.")
+        }
+
         if (!user.enabled) {
             throw UnauthorizedException("Account is not verified. Please check your email.")
         }
@@ -68,6 +91,15 @@ class AuthService(
         return AuthRespDto(token = jwtTokenProvider.createToken(user))
     }
 
+    /**
+     * Verifies a user's account using the provided verification token.
+     * Validates the token's existence and expiration date, enables the user account,
+     * and removes the token upon successful verification.
+     *
+     * @param token The verification token string received via email.
+     * @return A success message indicating the account has been verified.
+     * @throws BadRequestException If the token is invalid or expired.
+     */
     @Transactional
     fun verifyAccount(token: String): String {
         val verificationToken = verificationTokenRepo.findByToken(token)
@@ -82,9 +114,19 @@ class AuthService(
 
         user.enabled = true
         userService.save(user)
-        
-        verificationTokenRepo.delete(verificationToken) // Cleanup
-        
+
+        verificationTokenRepo.delete(verificationToken)
+
         return "Account verified successfully!"
+    }
+
+    /**
+     * Restores a soft-deleted account by delegating the restoration logic to the user service.
+     * Requires valid credentials (username and password) to authorize the restoration.
+     *
+     * @param payload The login credentials required to identify and authorize the user.
+     */
+    fun restoreAccount(payload: LoginReqDto) {
+        userService.restoreUser(payload)
     }
 }

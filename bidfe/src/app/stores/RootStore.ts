@@ -7,6 +7,6 @@ export class RootStore {
 
     constructor() {
         this.authStore = new AuthStore();
-        this.profileStore = new ProfileStore();
+        this.profileStore = new ProfileStore(this.authStore);
     }
 }

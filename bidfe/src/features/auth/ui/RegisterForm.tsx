@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useStore } from "../../../shared/hooks/useStore";
 
 interface Props {
@@ -7,34 +7,35 @@ interface Props {
     onSuccess: () => void;
 }
 
+/**
+ * Component responsible for new user account creation.
+ * Manages the registration state machine, including data submission
+ * and the display of verification success messages.
+ */
 export const RegisterForm = observer(({ onSwitchToLogin }: Props) => {
     const { authStore } = useStore();
     const [formData, setFormData] = useState({ username: "", email: "", password: "" });
 
-    useEffect(() => () => {
-        authStore.clearError();
-        authStore.clearSuccessMessage();
-    }, [authStore]);
-
+    /**
+     * Initiates the registration process using provided credentials.
+     * On success, the store's successMessage state triggers the
+     * post-registration view.
+     */
     const submit = async () => {
         try {
             await authStore.register(formData);
-            // We do NOT call onSuccess() here anymore.
-            // We stay on this form to show the success message.
-        } catch { /* empty */ }
+        } catch {
+            /* Error state managed by authStore */
+        }
     };
 
-    // 1. SUCCESS STATE VIEW
     if (authStore.successMessage) {
         return (
             <div style={{ textAlign: "center", padding: "20px" }}>
                 <h2 style={{ color: "green" }}>Registration Successful!</h2>
                 <p>{authStore.successMessage}</p>
                 <div style={{ marginTop: 20 }}>
-                    <button onClick={() => {
-                        authStore.clearSuccessMessage();
-                        onSwitchToLogin();
-                    }}>
+                    <button onClick={onSwitchToLogin}>
                         Go to Login
                     </button>
                 </div>

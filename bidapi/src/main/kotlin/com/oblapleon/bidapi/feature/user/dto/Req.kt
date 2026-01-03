@@ -17,6 +17,10 @@ data class RegisterReqDto(
     val email: String,
 )
 
+data class DeleteAccountReqDto(
+    val password: String
+)
+
 data class UserUpdateRequest(
     @field:Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     @field:Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")

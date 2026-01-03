@@ -22,6 +22,11 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
+/**
+ * Main configuration class for Spring Security.
+ * Defines the security filter chain, password encoding, CORS settings,
+ * and the mechanism for converting JWTs into authenticated user tokens.
+ */
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
@@ -29,13 +34,27 @@ class SecurityConfig(
     private val jwtDecoder: JwtDecoder
 ) {
 
+    /**
+     * Configures the security filter chain.
+     * Sets up public endpoints, OAuth2 resource server integration, session management,
+     * and disables CSRF protection for stateless API operation.
+     *
+     * @param http The HttpSecurity object used to build the filter chain.
+     * @return The configured SecurityFilterChain.
+     */
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .authorizeHttpRequests { authorize ->
                 authorize
-                    .requestMatchers(HttpMethod.POST, "/api/v1/login", "/api/v1/register").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/verify").permitAll()
+                    .requestMatchers(HttpMethod.POST,
+                        "/api/v1/login",
+                        "/api/v1/register",
+                        "/api/v1/restore"
+                    ).permitAll()
+                    .requestMatchers(HttpMethod.GET,
+                        "/api/v1/verify"
+                    ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/v1/**").authenticated()
                     .anyRequest().permitAll()
@@ -57,11 +76,23 @@ class SecurityConfig(
         return http.build()
     }
 
+    /**
+     * Provides the password encoder bean used for hashing and verifying passwords.
+     * Uses the BCrypt hashing algorithm.
+     *
+     * @return A BCryptPasswordEncoder instance.
+     */
     @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
     }
 
+    /**
+     * Configures Cross-Origin Resource Sharing (CORS) settings.
+     * Defines allowed origins, methods, and headers for incoming requests.
+     *
+     * @return The configured CorsConfigurationSource.
+     */
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
@@ -73,10 +104,23 @@ class SecurityConfig(
         return source
     }
 
+    /**
+     * Custom converter that transforms a standard Spring Security JWT into an
+     * application-specific AbstractAuthenticationToken.
+     * It uses the JwtTokenProvider to extract the User entity from the JWT claims
+     * and map authorities/roles.
+     */
     class UserAuthenticationConverter(
         private val jwtTokenProvider: JwtTokenProvider
     ) : Converter<Jwt, AbstractAuthenticationToken> {
 
+        /**
+         * Converts the source JWT into a UsernamePasswordAuthenticationToken.
+         *
+         * @param jwt The source JWT to convert.
+         * @return An authentication token containing the user principal and authorities.
+         * @throws InvalidBearerTokenException if the user cannot be found from the token claims.
+         */
         override fun convert(jwt: Jwt): AbstractAuthenticationToken {
             val user = jwtTokenProvider.getUserFromClaims(jwt.claims)
                 ?: throw InvalidBearerTokenException("User not found")

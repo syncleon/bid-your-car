@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1")
-@Tag(name = "Authentication", description = "Endpoints for user login and registration")
+@Tag(name = "Authentication", description = "Endpoints for user login, registration, and recovery")
 class AuthController(
     private val authService: AuthService
 ) : BaseController() {
@@ -23,7 +23,7 @@ class AuthController(
         value = [
             ApiResponse(responseCode = "200", description = "Login successful"),
             ApiResponse(responseCode = "400", description = "Bad request"),
-            ApiResponse(responseCode = "401", description = "Unauthorized or Unverified")
+            ApiResponse(responseCode = "401", description = "Unauthorized (Wrong password or Account Deleted)")
         ]
     )
     @PostMapping("/login")
@@ -38,9 +38,8 @@ class AuthController(
     @Operation(summary = "User registration", description = "Register a new user and send verification email")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Registration successful (Email sent)"),
-            ApiResponse(responseCode = "400", description = "Bad request"),
-            ApiResponse(responseCode = "409", description = "Username/Email already exists")
+            ApiResponse(responseCode = "200", description = "Registration successful"),
+            ApiResponse(responseCode = "409", description = "User already exists")
         ]
     )
     @PostMapping("/register")
@@ -49,7 +48,6 @@ class AuthController(
             if (payload.username.isEmpty() || payload.password.isEmpty()) {
                 throw BadRequestException("Username or password cannot be empty.")
             }
-            // Returns a string message instead of a token
             authService.register(payload)
         }
 
@@ -58,5 +56,24 @@ class AuthController(
     fun verify(@RequestParam token: String) =
         handleRequest {
             authService.verifyAccount(token)
+        }
+
+    // --- NEW ENDPOINT ---
+    @Operation(
+        summary = "Restore deleted account",
+        description = "Reactivates a soft-deleted account. Requires valid Username and Password."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Account restored successfully"),
+            ApiResponse(responseCode = "401", description = "Invalid credentials"),
+            ApiResponse(responseCode = "400", description = "Account is already active")
+        ]
+    )
+    @PostMapping("/restore")
+    fun restore(@RequestBody payload: LoginReqDto) =
+        handleRequest {
+            authService.restoreAccount(payload)
+            mapOf("message" to "Account restored successfully. You can now log in.")
         }
 }
