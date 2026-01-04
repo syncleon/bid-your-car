@@ -7,11 +7,21 @@ import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
+/**
+ * Data seeding component responsible for ensuring required authorization roles
+ * exist in the database upon application startup.
+ * Automatically synchronizes the database Role table with the [ERole] enumeration.
+ */
 @Component
 class RoleInitializer(
     private val roleRepo: RoleRepo
 ) {
 
+    /**
+     * Initializes the role repository with default values.
+     * Iterates through all defined [ERole] entries and persists any missing
+     * roles to the database within a single transaction.
+     */
     @PostConstruct
     @Transactional
     fun initRoles() {

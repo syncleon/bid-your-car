@@ -5,8 +5,20 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 
+/**
+ * Abstract foundation for API controllers providing a unified request handling mechanism.
+ * Standardizes the transformation of functional logic results and domain-specific
+ * exceptions into consistent HTTP responses.
+ */
 abstract class BaseController {
 
+    /**
+     * Executes a functional block and wraps the result in a [ResponseEntity].
+     * Intercepts various domain exceptions to return the appropriate HTTP status
+     * codes and error messages.
+     * * @param action The functional block to execute, typically a service call.
+     * @return A [ResponseEntity] containing the result or an error message.
+     */
     protected fun handleRequest(action: () -> Any?): ResponseEntity<Any> {
         return try {
             val response = action()
