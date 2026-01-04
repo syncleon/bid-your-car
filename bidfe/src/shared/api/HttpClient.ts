@@ -1,13 +1,17 @@
 import { tokenStorage } from "../lib/token";
 
-const BASE_URL = "http://localhost:8080/api/v1"; // centralized base URL
+const BASE_URL = "http://localhost:8080/api/v1";
 
+/**
+ * A centralized HTTP utility for making authenticated API requests.
+ * Standardizes the consumption of the response body to prevent
+ * "stream already read" errors by reading the body exactly once.
+ */
 export async function http<T>(
     path: string,
     options: RequestInit = {}
 ): Promise<T> {
     const token = tokenStorage.get();
-
     const url = `${BASE_URL}${path}`;
 
     const headers: HeadersInit = {
@@ -21,27 +25,26 @@ export async function http<T>(
         headers,
     });
 
-    // 1. Handle HTTP Errors
+    // Determine if there is actually a body to read
+    const contentType = response.headers.get("Content-Type");
+    const isJson = contentType?.includes("application/json");
+
+    // READ THE BODY ONCE
+    let body: any = null;
+    if (response.status !== 204) {
+        body = isJson ? await response.json() : await response.text();
+    }
+
     if (!response.ok) {
+        // Since we already read the body, we just extract the message
         let errorMessage = "HTTP Error";
-        try {
-            // Try to parse error message from JSON response
-            const errorBody = await response.json();
-            errorMessage = errorBody.message || errorBody.error || errorMessage;
-        } catch {
-            // Fallback if body is not JSON
-            errorMessage = await response.text();
+        if (isJson && typeof body === 'object') {
+            errorMessage = body.message || body.error || errorMessage;
+        } else if (typeof body === 'string' && body.length > 0) {
+            errorMessage = body;
         }
         throw new Error(errorMessage);
     }
 
-    // 2. Handle Empty Responses (common in DELETE/PUT)
-    // If content-length is 0 or null, return null/void
-    const contentLength = response.headers.get("Content-Length");
-    if (contentLength === "0" || response.status === 204) {
-        return null as T;
-    }
-
-    // 3. Return parsed JSON
-    return response.json();
+    return body as T;
 }
