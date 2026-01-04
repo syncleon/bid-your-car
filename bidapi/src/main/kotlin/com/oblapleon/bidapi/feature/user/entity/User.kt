@@ -1,6 +1,7 @@
 package com.oblapleon.bidapi.feature.user.entity
 
 import com.oblapleon.bidapi.common.entity.BaseEntity
+import com.oblapleon.bidapi.feature.item.entity.Item
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -21,7 +22,7 @@ class User(
     @Column(nullable = false, unique = true)
     var email: String,
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
         joinColumns = [JoinColumn(name = "user_id")],
@@ -29,12 +30,13 @@ class User(
     )
     var roles: MutableSet<Role> = mutableSetOf(),
 
+    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY)
+    var items: MutableList<Item> = mutableListOf(),
+
     @Column(name = "deleted_at")
     var deletedAt: LocalDateTime? = null,
 
     @Column(nullable = false)
     var enabled: Boolean = false
-
-
 
 ) : BaseEntity()

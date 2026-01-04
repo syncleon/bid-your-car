@@ -4,7 +4,7 @@ import { LoginPage } from "../pages/LoginPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { ItemsPage } from "../pages/ItemsPage";
 import { SellCarPage } from "../pages/SellCarPage";
-import { SubmitItemPage } from "../pages/CreateCarPage.tsx";
+import { SubmitItemPage } from "../pages/SubmitItemPage.tsx";
 import { PrivateRoute } from "../routes/PrivateRoute";
 import {VerifyPage} from "../pages/VerifyPage.tsx";
 

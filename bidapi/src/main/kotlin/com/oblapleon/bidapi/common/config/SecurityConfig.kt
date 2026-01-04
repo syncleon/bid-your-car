@@ -47,16 +47,28 @@ class SecurityConfig(
         http
             .authorizeHttpRequests { authorize ->
                 authorize
-                    .requestMatchers(HttpMethod.POST,
+                    .requestMatchers(
+                        HttpMethod.POST,
                         "/api/v1/login",
                         "/api/v1/register",
                         "/api/v1/restore"
                     ).permitAll()
-                    .requestMatchers(HttpMethod.GET,
+                    .requestMatchers(
+                        HttpMethod.GET,
                         "/api/v1/verify"
                     ).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                    .requestMatchers("/api/v1/**").authenticated()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/v1/items",
+                        "/api/v1/items/{id}").permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**"
+                    ).permitAll()
+                    .requestMatchers(
+                        "/api/v1/**"
+                    ).authenticated()
                     .anyRequest().permitAll()
             }
             .oauth2ResourceServer { oauth2 ->
