@@ -12,3 +12,14 @@ export interface LoginRequestDto {
 export interface LoginResponseDto {
     token: string;
 }
+
+export interface RoleDto {
+    name: string;
+}
+
+export interface UserDto {
+    id: number;
+    username: string;
+    email: string;
+    roles: RoleDto[];
+}

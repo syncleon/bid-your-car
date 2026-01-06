@@ -1,141 +1,100 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { useStore } from "../shared/hooks/useStore";
-import { Modal } from "../shared/ui/Modal";
 import { useNavigate } from "react-router-dom";
-import { ProfileEditForm } from "../features/profile/ui/ProfileEditForm";
-import { ChangePasswordForm } from "../features/profile/ui/ChangePasswordForm";
 
-/**
- * Page component representing the user's private profile dashboard.
- * Provides functionality for viewing/editing personal data, managing security settings,
- * and initiating the account deletion process with a 30-day recovery warning.
- */
+// Stores & Hooks
+import { useStore } from "../shared/hooks/useStore";
+import { itemStore } from "../features/item/model/item.store";
+
+// UI Components
+import { ProfileInfoCard } from "../features/profile/ui/ProfileInfoCard";
+import { SecurityCard } from "../features/profile/ui/SecurityCard";
+import { AccountDeleteCard } from "../features/profile/ui/AccountDeleteCard";
+import { MyListingsSection } from "../features/profile/ui/MyListingsSection";
+import { EditItemModal } from "../features/item/ui/EditItemModal";
+
+// Types
+import type { ItemDto, ItemSubmitRequest } from "../features/item/types";
+
 export const ProfilePage = observer(() => {
     const { profileStore } = useStore();
     const navigate = useNavigate();
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [deletePassword, setDeletePassword] = useState("");
-    const [deleteError, setDeleteError] = useState<string | null>(null);
+    // State for Item Management
+    const [editingItem, setEditingItem] = useState<ItemDto | null>(null);
 
-    /**
-     * Orchestrates the initial data fetch on mount and performs
-     * cleanup of transient store messages on unmount.
-     */
+    // Initial Load
     useEffect(() => {
         profileStore.loadProfile();
+        itemStore.loadMyItems();
         return () => profileStore.clearMessages();
     }, [profileStore]);
 
-    /**
-     * Validates credentials and executes the account deletion flow.
-     * Transitions the user to the login screen upon successful soft-deletion.
-     */
-    const handleDeleteSubmit = async () => {
-        if (!deletePassword) return setDeleteError("Password required");
+    // Handlers
+    const handleAccountDelete = async (password: string) => {
+        await profileStore.deleteAccount(password);
+        navigate("/login");
+    };
 
-        try {
-            await profileStore.deleteAccount(deletePassword);
-            setDeleteModalOpen(false);
-            navigate("/login");
-        } catch (e) {
-            setDeleteError((e as Error).message);
+    const handleItemDelete = async (id: string) => {
+        if (window.confirm("Are you sure you want to delete this listing?")) {
+            await itemStore.deleteListing(id);
         }
     };
 
-    if (profileStore.isLoading && !profileStore.profile) return <p>Loading...</p>;
-    if (!profileStore.profile) return <p>No profile found.</p>;
+    const handleItemUpdate = async (data: ItemSubmitRequest) => {
+        if (!editingItem) return;
+        const success = await itemStore.updateListing(editingItem.id, data);
+        if (success) setEditingItem(null);
+    };
+
+    // Loading/Error Checks
+    if (profileStore.isLoading && !profileStore.profile) return <div style={{padding: 24}}>Loading Profile...</div>;
+    if (!profileStore.profile) return <div style={{padding: 24}}>No profile found.</div>;
 
     return (
-        <div style={{ maxWidth: 600, margin: "0 auto", padding: 24 }}>
-            <h1>My Profile</h1>
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: 24 }}>
+            <h1 style={{ marginBottom: 32 }}>My Dashboard</h1>
 
+            {/* Global Messages */}
             {profileStore.successMessage && (
-                <div style={{ color: "green", background: "#e6fffa", padding: 10, marginBottom: 20 }}>
-                    {profileStore.successMessage}
-                </div>
-            )}
-            {profileStore.error && (
-                <div style={{ color: "red", background: "#fff5f5", padding: 10, marginBottom: 20 }}>
-                    {profileStore.error}
-                </div>
+                <div style={messageStyle("#e6fffa")}>{profileStore.successMessage}</div>
             )}
 
-            <section style={{ marginBottom: 30, border: "1px solid #eee", padding: 20, borderRadius: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
-                    <h2 style={{ margin: 0 }}>General Information</h2>
-                    {!isEditing && (
-                        <button onClick={() => setIsEditing(true)}>Edit Profile</button>
-                    )}
-                </div>
+            {/* Top Row: Profile & Security */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, marginBottom: 40 }}>
+                <ProfileInfoCard profile={profileStore.profile} />
+                <SecurityCard />
+            </div>
 
-                {isEditing ? (
-                    <ProfileEditForm onCancel={() => setIsEditing(false)} />
-                ) : (
-                    <div>
-                        <p><strong>Username:</strong> {profileStore.profile.username}</p>
-                        <p><strong>Email:</strong> {profileStore.profile.email}</p>
-                    </div>
-                )}
-            </section>
+            {/* My Listings */}
+            <MyListingsSection
+                items={itemStore.myItems}
+                isLoading={itemStore.isLoading}
+                onCreate={() => navigate("/sell-car/submit")}
+                onEdit={setEditingItem}
+                onDelete={handleItemDelete}
+            />
 
-            <section style={{ marginBottom: 30, border: "1px solid #eee", padding: 20, borderRadius: 8 }}>
-                <h2>Security</h2>
-                <p>Change your password</p>
-                <ChangePasswordForm />
-            </section>
+            {/* Danger Zone */}
+            <AccountDeleteCard onConfirmDelete={handleAccountDelete} />
 
-            <section style={{ border: "1px solid #ffccc7", padding: 20, borderRadius: 8, background: "#fff1f0" }}>
-                <h2 style={{ color: "#cf1322", marginTop: 0 }}>Danger Zone</h2>
-                <p>
-                    <strong>Warning:</strong> Deleting your account will log you out immediately.
-                    Your data will be kept for <strong>30 days</strong> in case you change your mind.
-                    After that, it will be permanently removed.
-                </p>
-                <p>
-                    To restore your account within 30 days, simply try to log in and click "Restore".
-                </p>
-                <button
-                    onClick={() => setDeleteModalOpen(true)}
-                    style={{ background: "#cf1322", color: "white", border: "none", padding: "8px 16px", cursor: "pointer" }}
-                >
-                    Delete Account
-                </button>
-            </section>
-
-            {isDeleteModalOpen && (
-                <Modal isOpen onClose={() => setDeleteModalOpen(false)}>
-                    <div style={{ padding: 20 }}>
-                        <h2 style={{ color: "#cf1322" }}>Confirm Deletion</h2>
-                        <p>Enter your password to confirm. This cannot be undone immediately.</p>
-
-                        {deleteError && <p style={{ color: "red" }}>{deleteError}</p>}
-
-                        <input
-                            type="password"
-                            placeholder="Current Password"
-                            value={deletePassword}
-                            onChange={(e) => {
-                                setDeletePassword(e.target.value);
-                                setDeleteError(null);
-                            }}
-                            style={{ width: "100%", padding: 8, marginBottom: 15 }}
-                        />
-
-                        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                            <button onClick={() => setDeleteModalOpen(false)}>Cancel</button>
-                            <button
-                                onClick={handleDeleteSubmit}
-                                style={{ background: "#cf1322", color: "white" }}
-                            >
-                                Confirm Delete
-                            </button>
-                        </div>
-                    </div>
-                </Modal>
-            )}
+            {/* Edit Modal */}
+            <EditItemModal
+                isOpen={!!editingItem}
+                item={editingItem}
+                onClose={() => setEditingItem(null)}
+                onSubmit={handleItemUpdate}
+                isLoading={itemStore.isLoading}
+            />
         </div>
     );
+});
+
+const messageStyle = (bg: string): React.CSSProperties => ({
+    background: bg,
+    color: "green",
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 20
 });

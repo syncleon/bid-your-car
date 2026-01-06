@@ -1,50 +1,73 @@
 import { observer } from "mobx-react-lite";
+import { useNavigate } from "react-router-dom";
+import { itemStore } from "../features/item/model/item.store";
+import type { ItemSubmitRequest } from "../features/item/types";
+import { SubmitItemForm } from "../features/item/ui/SubmitItemForm";
 
 export const SubmitItemPage = observer(() => {
-    return (
-        <div style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
-            <h1>Create auction</h1>
+    const navigate = useNavigate();
 
-            <p style={{ marginTop: 8, color: "#555" }}>
-                Add car details and publish your auction.
+    const handleFormSubmit = async (data: ItemSubmitRequest) => {
+        const success = await itemStore.submitItem(data);
+        if (success) {
+            navigate("/");
+        }
+    };
+
+    return (
+        <div style={pageStyles.container}>
+            <h1 style={pageStyles.title}>Tell more about your car</h1>
+            <p style={pageStyles.subtitle}>
+                Fill in the details below to list your vehicle on the marketplace.
             </p>
 
-            <div
-                style={{
-                    marginTop: 24,
-                    padding: 24,
-                    border: "1px solid #eaeaea",
-                    borderRadius: 8,
-                    background: "#fafafa",
-                }}
-            >
-                <p style={{ color: "#666" }}>
-                    🚧 Form will be here:
-                </p>
+            <div style={pageStyles.card}>
+                {itemStore.error && (
+                    <div style={pageStyles.errorAlert}>
+                        <strong>Error:</strong> {itemStore.error}
+                    </div>
+                )}
 
-                <ul style={{ marginTop: 12, color: "#666" }}>
-                    <li>Car details (brand, model, year)</li>
-                    <li>Description</li>
-                    <li>Photos upload</li>
-                    <li>Starting price</li>
-                    <li>Auction duration</li>
-                </ul>
-
-                <button
-                    style={{
-                        marginTop: 16,
-                        padding: "10px 20px",
-                        borderRadius: 6,
-                        border: "none",
-                        background: "#000",
-                        color: "#fff",
-                        fontSize: 14,
-                        cursor: "pointer",
-                    }}
-                >
-                    Publish auction
-                </button>
+                <SubmitItemForm
+                    onSubmit={handleFormSubmit}
+                    isLoading={itemStore.isLoading}
+                />
             </div>
         </div>
     );
 });
+
+// --- Page Styles ---
+const pageStyles = {
+    container: {
+        padding: "24px",
+        maxWidth: "720px",
+        margin: "0 auto",
+    },
+    title: {
+        fontSize: "28px",
+        fontWeight: 700,
+        marginBottom: "8px",
+    },
+    subtitle: {
+        color: "#555",
+        fontSize: "16px",
+        marginBottom: "32px",
+    },
+    card: {
+        padding: "32px",
+        border: "1px solid #eaeaea",
+        borderRadius: "12px",
+        background: "#fff",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+    },
+    errorAlert: {
+        padding: "12px 16px",
+        background: "#fef2f2",
+        color: "#dc2626",
+        border: "1px solid #fca5a5",
+        borderRadius: "6px",
+        marginBottom: "24px",
+        fontSize: "14px",
+    },
+};
