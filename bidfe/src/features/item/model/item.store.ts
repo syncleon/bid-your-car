@@ -1,5 +1,12 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { getAllItems, submitItem, getMyItems, deleteItem, updateItem } from "../api/item.api";
+import {
+    getAllItems,
+    submitItem,
+    getMyItems,
+    deleteItem,
+    updateItem,
+    uploadItemImage // ✅ Import the new API method
+} from "../api/item.api";
 import type { ItemDto, ItemSubmitRequest } from "../types";
 
 class ItemStore {
@@ -7,6 +14,9 @@ class ItemStore {
     myItems: ItemDto[] = [];    // User's private items
     isLoading = false;
     error: string | null = null;
+
+    // ✅ New state to track image uploading status
+    uploadProgress: string | null = null;
 
     constructor() {
         makeAutoObservable(this);
@@ -50,7 +60,6 @@ class ItemStore {
         try {
             await deleteItem(id);
             runInAction(() => {
-                // Optimistically remove from local state
                 this.myItems = this.myItems.filter(item => item.id !== id);
             });
         } catch (err: any) {
@@ -65,7 +74,6 @@ class ItemStore {
         try {
             const updated = await updateItem(id, data);
             runInAction(() => {
-                // Find and replace the item in the list
                 const index = this.myItems.findIndex(i => i.id === id);
                 if (index !== -1) {
                     this.myItems[index] = updated;
@@ -82,20 +90,43 @@ class ItemStore {
         }
     };
 
-    submitItem = async (data: ItemSubmitRequest) => {
+    // ✅ UPDATED: Accepts files alongside the data
+    submitItem = async (data: ItemSubmitRequest, files: File[]) => {
         this.isLoading = true;
         this.error = null;
+        this.uploadProgress = "Creating listing...";
 
         try {
-            await submitItem(data);
+            // 1. Create the Item (JSON)
+            const newItem = await submitItem(data);
+
+            // 2. Upload Images (if any)
+            if (files.length > 0) {
+                const itemId = newItem.id;
+
+                // Upload sequentially to avoid network timeouts on large files
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+
+                    runInAction(() => {
+                        this.uploadProgress = `Uploading image ${i + 1} of ${files.length}...`;
+                    });
+
+                    await uploadItemImage(itemId, file);
+                }
+            }
+
             runInAction(() => {
                 this.isLoading = false;
+                this.uploadProgress = null;
             });
             return true; // Success
+
         } catch (err: any) {
             runInAction(() => {
                 this.error = err.message || "Something went wrong";
                 this.isLoading = false;
+                this.uploadProgress = null;
             });
             return false; // Failed
         }

@@ -4,18 +4,25 @@ import com.oblapleon.bidapi.common.exceptions.AlreadyExistsException
 import com.oblapleon.bidapi.common.exceptions.NotFoundException
 import com.oblapleon.bidapi.common.mapper.toEntity
 import com.oblapleon.bidapi.common.service.BaseService
+import com.oblapleon.bidapi.common.service.StorageService
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
 import com.oblapleon.bidapi.feature.item.entity.Item
+import com.oblapleon.bidapi.feature.item.entity.ItemImage
+import com.oblapleon.bidapi.feature.item.repo.ItemImageRepo
 import com.oblapleon.bidapi.feature.item.repo.ItemRepo
 import com.oblapleon.bidapi.feature.user.entity.User
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
+import java.nio.file.AccessDeniedException
 import java.util.*
 
 @Service
 class ItemService(
-    private val itemRepo: ItemRepo
+    private val itemRepo: ItemRepo,
+    private val itemImageRepo: ItemImageRepo, // Inject new Repo
+    private val storageService: StorageService // Inject Storage Service
 ) : BaseService<Item, UUID> {
 
     @Transactional(readOnly = true)
@@ -58,5 +65,34 @@ class ItemService(
     override fun delete(id: UUID) {
         if (!itemRepo.existsById(id)) throw NotFoundException("Item not found")
         itemRepo.deleteById(id)
+    }
+
+    @Transactional
+    fun uploadImage(itemId: UUID, file: MultipartFile): String {
+        val item = findById(itemId)
+
+        // 1. Upload to Cloud/CDN
+        val imageUrl = storageService.uploadFile(file)
+
+        // 2. Save Reference in DB
+        val imageEntity = ItemImage(url = imageUrl, item = item)
+        item.images.add(imageEntity)
+        itemRepo.save(item) // Cascades save to ItemImage
+
+        return imageUrl
+    }
+
+    @Transactional
+    fun deleteImage(imageId: UUID, userId: Long) {
+        val image = itemImageRepo.findById(imageId)
+            .orElseThrow { NotFoundException("Image not found") }
+
+        // Security check: ensure the user owns the car this image belongs to
+        if (image.item.seller.id != userId) {
+            throw AccessDeniedException("You do not own this image")
+        }
+
+        itemImageRepo.delete(image)
+        // Optional: Trigger async job to delete actual file from S3
     }
 }

@@ -1,20 +1,14 @@
-export interface ItemSubmitRequest {
-    make: string;
-    model: string;
-    vin: string;
-    location: string;
 
-    // Optional / Nullable fields matching Entity
-    buyNowPrice: number | null;
-    engine: string | null;
-    drivetrain: string | null;
-    transmission: string | null;
-    bodyStyle: string | null;
-    exteriorColor: string | null;
-    interiorColor: string | null;
-    sellerType: string | null;
+// ✅ 1. Define the Image structure (matches backend DTO)
+export interface ItemImageDto {
+    id: string;
+    originalUrl: string;
+    thumbnailUrl: string;
+    previewUrl: string;
+    fullHdUrl: string;
 }
 
+// ✅ 2. Update ItemDto to include the images array
 export interface ItemDto {
     id: string;
     make: string;
@@ -22,6 +16,8 @@ export interface ItemDto {
     vin: string;
     location: string;
     buyNowPrice?: number;
+
+    // Optional Specs
     engine?: string;
     drivetrain?: string;
     transmission?: string;
@@ -29,5 +25,24 @@ export interface ItemDto {
     exteriorColor?: string;
     interiorColor?: string;
     sellerType?: string;
-    // seller: UserDto; // Assuming seller is returned in GET response
+
+    // ✅ The list of images from the backend
+    images: ItemImageDto[];
+
+    // seller: UserDto;
+}
+
+export interface ItemSubmitRequest {
+    make: string;
+    model: string;
+    vin: string;
+    location: string;
+    buyNowPrice: number | null;
+    engine?: string;
+    drivetrain?: string;
+    transmission?: string;
+    bodyStyle?: string;
+    exteriorColor?: string;
+    interiorColor?: string;
+    sellerType?: string;
 }

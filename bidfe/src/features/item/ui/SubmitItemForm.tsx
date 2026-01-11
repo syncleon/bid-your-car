@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import type { ItemSubmitRequest, ItemDto } from "../types";
 import { FormInput, FormSelect, FormSection } from "./form-components";
 
-// Predefined Options for Selects
+// Predefined Options (kept same as before)
 const BODY_STYLES = [
     { value: "Sedan", label: "Sedan" },
     { value: "Coupe", label: "Coupe" },
@@ -17,8 +17,8 @@ const BODY_STYLES = [
 const TRANSMISSIONS = [
     { value: "Automatic", label: "Automatic" },
     { value: "Manual", label: "Manual" },
-    { value: "CVT", label: "CVT (Continuously Variable)" },
-    { value: "DCT", label: "DCT (Dual Clutch)" }
+    { value: "CVT", label: "CVT" },
+    { value: "DCT", label: "DCT" }
 ];
 
 const DRIVETRAINS = [
@@ -35,12 +35,13 @@ const SELLER_TYPES = [
 
 interface Props {
     initialData?: ItemDto;
-    onSubmit: (data: ItemSubmitRequest) => void;
+    // ✅ UPDATED: Now accepts files as second argument
+    onSubmit: (data: ItemSubmitRequest, files: File[]) => void;
     isLoading: boolean;
 }
 
 export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
-    // Helper to initialize fields safely
+    // --- Existing Form State ---
     const initial = (key: keyof ItemSubmitRequest, fallback: string | number | null = "") => {
         if (!initialData) return fallback;
         return (initialData as any)[key] ?? fallback;
@@ -61,6 +62,17 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
         sellerType: initial("sellerType") as string,
     });
 
+    // --- ✅ NEW: File Handling State ---
+    const [files, setFiles] = useState<File[]>([]);
+    const [previews, setPreviews] = useState<string[]>([]);
+
+    // Cleanup object URLs to avoid memory leaks
+    useEffect(() => {
+        return () => {
+            previews.forEach((url) => URL.revokeObjectURL(url));
+        };
+    }, []);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -71,9 +83,34 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
         }));
     };
 
+    // ✅ NEW: Handle File Selection
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const newFiles = Array.from(e.target.files);
+
+            // Add to file list
+            setFiles((prev) => [...prev, ...newFiles]);
+
+            // Generate previews
+            const newUrls = newFiles.map((file) => URL.createObjectURL(file));
+            setPreviews((prev) => [...prev, ...newUrls]);
+        }
+    };
+
+    // ✅ NEW: Remove Image
+    const handleRemoveImage = (index: number) => {
+        setFiles((prev) => prev.filter((_, i) => i !== index));
+        setPreviews((prev) => {
+            // Revoke the specific URL being removed
+            URL.revokeObjectURL(prev[index]);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(formData);
+        // ✅ Pass files up to parent
+        onSubmit(formData, files);
     };
 
     return (
@@ -89,24 +126,25 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
                     required
                     maxLength={17}
                     placeholder="e.g. 1HGCM82633A..."
-                    hint="The 17-character Vehicle Identification Number found on the dashboard or door jamb."
                 />
-                <FormInput
-                    label="Make"
-                    name="make"
-                    value={formData.make}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. BMW"
-                />
-                <FormInput
-                    label="Model"
-                    name="model"
-                    value={formData.model}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. M3"
-                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <FormInput
+                        label="Make"
+                        name="make"
+                        value={formData.make}
+                        onChange={handleChange}
+                        required
+                        placeholder="e.g. BMW"
+                    />
+                    <FormInput
+                        label="Model"
+                        name="model"
+                        value={formData.model}
+                        onChange={handleChange}
+                        required
+                        placeholder="e.g. M3"
+                    />
+                </div>
                 <FormSelect
                     label="Body Style"
                     name="bodyStyle"
@@ -116,6 +154,46 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
                 />
             </FormSection>
 
+            {/* ✅ NEW Section: Photos */}
+            <FormSection title="Photos">
+                <div style={styles.uploadContainer}>
+                    <p style={styles.uploadHint}>
+                        Add photos of the exterior, interior, and engine bay.
+                    </p>
+
+                    {/* Hidden Input + Custom Button */}
+                    <label style={styles.uploadButton}>
+                        + Add Photos
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            style={{ display: "none" }}
+                        />
+                    </label>
+
+                    {/* Previews Grid */}
+                    {previews.length > 0 && (
+                        <div style={styles.grid}>
+                            {previews.map((url, index) => (
+                                <div key={url} style={styles.previewWrapper}>
+                                    <img src={url} alt={`Preview ${index}`} style={styles.previewImg} />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveImage(index)}
+                                        style={styles.removeBtn}
+                                        title="Remove photo"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </FormSection>
+
             {/* Section 2: Technical Specifications */}
             <FormSection title="Technical Specifications">
                 <FormInput
@@ -123,41 +201,44 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
                     name="engine"
                     value={formData.engine || ""}
                     onChange={handleChange}
-                    placeholder="e.g. 3.0L Twin-Turbo Inline-6"
-                    hint="Displacement, cylinder count, and aspiration (Turbo/NA)."
+                    placeholder="e.g. 3.0L Twin-Turbo"
                 />
-                <FormSelect
-                    label="Transmission"
-                    name="transmission"
-                    value={formData.transmission || ""}
-                    onChange={handleChange}
-                    options={TRANSMISSIONS}
-                />
-                <FormSelect
-                    label="Drivetrain"
-                    name="drivetrain"
-                    value={formData.drivetrain || ""}
-                    onChange={handleChange}
-                    options={DRIVETRAINS}
-                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <FormSelect
+                        label="Transmission"
+                        name="transmission"
+                        value={formData.transmission || ""}
+                        onChange={handleChange}
+                        options={TRANSMISSIONS}
+                    />
+                    <FormSelect
+                        label="Drivetrain"
+                        name="drivetrain"
+                        value={formData.drivetrain || ""}
+                        onChange={handleChange}
+                        options={DRIVETRAINS}
+                    />
+                </div>
             </FormSection>
 
             {/* Section 3: Colors & Location */}
             <FormSection title="Appearance & Location">
-                <FormInput
-                    label="Exterior Color"
-                    name="exteriorColor"
-                    value={formData.exteriorColor || ""}
-                    onChange={handleChange}
-                    placeholder="e.g. Alpine White"
-                />
-                <FormInput
-                    label="Interior Color"
-                    name="interiorColor"
-                    value={formData.interiorColor || ""}
-                    onChange={handleChange}
-                    placeholder="e.g. Black Nappa Leather"
-                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <FormInput
+                        label="Exterior Color"
+                        name="exteriorColor"
+                        value={formData.exteriorColor || ""}
+                        onChange={handleChange}
+                        placeholder="e.g. Alpine White"
+                    />
+                    <FormInput
+                        label="Interior Color"
+                        name="interiorColor"
+                        value={formData.interiorColor || ""}
+                        onChange={handleChange}
+                        placeholder="e.g. Black"
+                    />
+                </div>
                 <FormInput
                     label="Location"
                     name="location"
@@ -165,50 +246,113 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
                     onChange={handleChange}
                     required
                     placeholder="City, State, Zip"
-                    hint="Where is the vehicle currently located?"
                 />
             </FormSection>
 
             {/* Section 4: Sale Info */}
             <FormSection title="Sale Details">
-                <FormInput
-                    label="Buy Now Price ($)"
-                    name="buyNowPrice"
-                    type="number"
-                    value={formData.buyNowPrice ?? ""}
-                    onChange={handleChange}
-                    placeholder="0.00"
-                    hint="Leave empty if this is an auction-only listing."
-                />
-                <FormSelect
-                    label="Seller Type"
-                    name="sellerType"
-                    value={formData.sellerType || ""}
-                    onChange={handleChange}
-                    options={SELLER_TYPES}
-                    hint="Are you selling as an individual or a business?"
-                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <FormInput
+                        label="Buy Now Price ($)"
+                        name="buyNowPrice"
+                        type="number"
+                        value={formData.buyNowPrice ?? ""}
+                        onChange={handleChange}
+                        placeholder="0.00"
+                    />
+                    <FormSelect
+                        label="Seller Type"
+                        name="sellerType"
+                        value={formData.sellerType || ""}
+                        onChange={handleChange}
+                        options={SELLER_TYPES}
+                    />
+                </div>
             </FormSection>
 
             <button
                 type="submit"
                 disabled={isLoading}
                 style={{
-                    marginTop: "16px",
-                    padding: "16px",
-                    borderRadius: "8px",
-                    border: "none",
+                    ...styles.submitBtn,
                     background: isLoading ? "#9ca3af" : "#000",
-                    color: "#fff",
-                    fontSize: "16px",
-                    fontWeight: 700,
                     cursor: isLoading ? "not-allowed" : "pointer",
-                    width: "100%",
-                    boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
                 }}
             >
                 {isLoading ? "Processing..." : (initialData ? "Save Changes" : "Publish Listing")}
             </button>
         </form>
     );
+};
+
+// --- Styles ---
+const styles = {
+    uploadContainer: {
+        border: "1px dashed #d1d5db",
+        borderRadius: "8px",
+        padding: "20px",
+        background: "#f9fafb",
+    },
+    uploadHint: {
+        fontSize: "14px",
+        color: "#6b7280",
+        marginBottom: "12px",
+    },
+    uploadButton: {
+        display: "inline-block",
+        padding: "8px 16px",
+        background: "#fff",
+        border: "1px solid #d1d5db",
+        borderRadius: "6px",
+        fontSize: "14px",
+        fontWeight: 600,
+        color: "#374151",
+        cursor: "pointer",
+        marginBottom: "16px",
+    },
+    grid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+        gap: "12px",
+    },
+    previewWrapper: {
+        position: "relative" as const,
+        width: "100%",
+        aspectRatio: "4/3",
+        borderRadius: "6px",
+        overflow: "hidden",
+        border: "1px solid #e5e7eb",
+    },
+    previewImg: {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover" as const,
+    },
+    removeBtn: {
+        position: "absolute" as const,
+        top: "4px",
+        right: "4px",
+        width: "20px",
+        height: "20px",
+        background: "rgba(0,0,0,0.6)",
+        color: "#fff",
+        border: "none",
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        fontSize: "12px",
+    },
+    submitBtn: {
+        marginTop: "16px",
+        padding: "16px",
+        borderRadius: "8px",
+        border: "none",
+        color: "#fff",
+        fontSize: "16px",
+        fontWeight: 700,
+        width: "100%",
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+    }
 };

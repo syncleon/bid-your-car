@@ -7,8 +7,9 @@ import { SubmitItemForm } from "../features/item/ui/SubmitItemForm";
 export const SubmitItemPage = observer(() => {
     const navigate = useNavigate();
 
-    const handleFormSubmit = async (data: ItemSubmitRequest) => {
-        const success = await itemStore.submitItem(data);
+    // ✅ UPDATED: Now accepts 'files' as the second argument
+    const handleFormSubmit = async (data: ItemSubmitRequest, files: File[]) => {
+        const success = await itemStore.submitItem(data, files);
         if (success) {
             navigate("/");
         }
@@ -22,9 +23,18 @@ export const SubmitItemPage = observer(() => {
             </p>
 
             <div style={pageStyles.card}>
+                {/* Error Alert */}
                 {itemStore.error && (
                     <div style={pageStyles.errorAlert}>
                         <strong>Error:</strong> {itemStore.error}
+                    </div>
+                )}
+
+                {/* ✅ NEW: Upload Progress Indicator */}
+                {itemStore.isLoading && itemStore.uploadProgress && (
+                    <div style={pageStyles.progressAlert}>
+                        <div style={pageStyles.spinner}></div>
+                        {itemStore.uploadProgress}
                     </div>
                 )}
 
@@ -70,4 +80,36 @@ const pageStyles = {
         marginBottom: "24px",
         fontSize: "14px",
     },
+    // New styles for the progress indicator
+    progressAlert: {
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        padding: "12px 16px",
+        background: "#eff6ff", // Light blue
+        color: "#1d4ed8",      // Dark blue text
+        border: "1px solid #bfdbfe",
+        borderRadius: "6px",
+        marginBottom: "24px",
+        fontSize: "14px",
+        fontWeight: 500,
+    },
+    spinner: {
+        width: "16px",
+        height: "16px",
+        border: "2px solid #1d4ed8",
+        borderTop: "2px solid transparent",
+        borderRadius: "50%",
+        animation: "spin 1s linear infinite",
+    }
 };
+
+// Add global style for keyframes if not present elsewhere
+const styleSheet = document.createElement("style");
+styleSheet.innerText = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+`;
+document.head.appendChild(styleSheet);

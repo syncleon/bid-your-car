@@ -43,6 +43,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")
+    implementation("software.amazon.awssdk:s3:2.21.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

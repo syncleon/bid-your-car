@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { ItemDto } from "../types";
 
 interface Props {
@@ -5,67 +6,122 @@ interface Props {
 }
 
 export const ItemCard = ({ item }: Props) => {
+    // ✅ Logic: Get the first image or null
+    const mainImage = item.images && item.images.length > 0
+        ? item.images[0].thumbnailUrl
+        : null;
+
     return (
-        <div style={cardStyle}>
-            {/* Placeholder Image */}
-            <div style={imagePlaceholderStyle}>
-                Running Car
-            </div>
+        <Link to={`/items/${item.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={cardStyle}>
 
-            <div style={{ padding: "16px" }}>
-                <h3 style={{ margin: "0 0 4px", fontSize: 18 }}>
-                    {item.make} {item.model}
-                </h3>
-
-                <div style={{ color: "#666", fontSize: 14, marginBottom: 12 }}>
-                    {item.location}
+                {/* ✅ Image Area */}
+                <div style={imageContainerStyle}>
+                    {mainImage ? (
+                        <img
+                            src={mainImage}
+                            alt={`${item.make} ${item.model}`}
+                            style={imageStyle}
+                            loading="lazy"
+                        />
+                    ) : (
+                        <div style={placeholderStyle}>
+                            No Photos
+                        </div>
+                    )}
                 </div>
 
-                <div style={infoRowStyle}>
-                    <span>VIN:</span>
-                    <span style={{ fontFamily: "monospace" }}>{item.vin}</span>
+                {/* Content Area */}
+                <div style={{ padding: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                        <h3 style={{ margin: "0 0 4px", fontSize: 18 }}>
+                            {item.make} {item.model}
+                        </h3>
+                        {item.buyNowPrice && (
+                            <span style={priceStyle}>
+                                ${item.buyNowPrice.toLocaleString()}
+                            </span>
+                        )}
+                    </div>
+
+                    <div style={{ color: "#666", fontSize: 14, marginBottom: 12 }}>
+                        {item.location}
+                    </div>
+
+                    {/* Specs Tags */}
+                    <div style={tagsContainerStyle}>
+                        {item.engine && <span style={tagStyle}>{item.engine}</span>}
+                        {item.transmission && <span style={tagStyle}>{item.transmission}</span>}
+                        <span style={tagStyle}>{item.vin.slice(-6)}</span>
+                    </div>
                 </div>
-
-                {item.buyNowPrice && (
-                    <div style={{ marginTop: 12, fontWeight: "bold", fontSize: 18 }}>
-                        ${item.buyNowPrice.toLocaleString()}
-                    </div>
-                )}
-
-                {!item.buyNowPrice && (
-                    <div style={{ marginTop: 12, color: "#888", fontStyle: "italic" }}>
-                        Bidding Only
-                    </div>
-                )}
             </div>
-        </div>
+        </Link>
     );
 };
 
-// Styles
+// --- Styles ---
+
 const cardStyle: React.CSSProperties = {
     border: "1px solid #eaeaea",
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: "hidden",
     background: "#fff",
     transition: "transform 0.2s, box-shadow 0.2s",
-    cursor: "pointer"
+    cursor: "pointer",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column"
 };
 
-const imagePlaceholderStyle: React.CSSProperties = {
-    height: 200,
-    background: "#f0f0f0",
+const imageContainerStyle: React.CSSProperties = {
+    height: 220,
+    width: "100%",
+    background: "#f9fafb",
+    position: "relative",
+    borderBottom: "1px solid #f0f0f0"
+};
+
+const imageStyle: React.CSSProperties = {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover", // Ensures image fills box without stretching
+    display: "block"
+};
+
+const placeholderStyle: React.CSSProperties = {
+    width: "100%",
+    height: "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#aaa",
-    fontWeight: 500
+    color: "#9ca3af",
+    fontSize: "14px",
+    fontWeight: 500,
+    background: "#f3f4f6"
 };
 
-const infoRowStyle: React.CSSProperties = {
+const priceStyle: React.CSSProperties = {
+    fontWeight: 700,
+    fontSize: 16,
+    color: "#059669", // Green color for price
+    background: "#ecfdf5",
+    padding: "2px 8px",
+    borderRadius: "4px"
+};
+
+const tagsContainerStyle: React.CSSProperties = {
     display: "flex",
-    justifyContent: "space-between",
-    fontSize: 13,
-    color: "#555",
-    marginTop: 4
+    gap: "8px",
+    marginTop: "8px",
+    flexWrap: "wrap"
+};
+
+const tagStyle: React.CSSProperties = {
+    fontSize: "12px",
+    color: "#4b5563",
+    background: "#f3f4f6",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    whiteSpace: "nowrap"
 };

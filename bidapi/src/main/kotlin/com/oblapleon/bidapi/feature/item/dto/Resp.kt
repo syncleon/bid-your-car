@@ -18,5 +18,6 @@ data class ItemDto(
     val exteriorColor: String?,
     val interiorColor: String?,
     val sellerType: String?,
-    val buyNowPrice: BigDecimal?
+    val buyNowPrice: BigDecimal?,
+    val images: List<ItemImageDto> = emptyList()
 )

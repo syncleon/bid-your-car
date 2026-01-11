@@ -1,40 +1,61 @@
-HELP.md
-.gradle
+# --- SECURITY (CRITICAL) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+
+# --- OS & General ---
+.DS_Store
+Thumbs.db
+.directory
+
+# --- Kotlin / Spring Boot / Gradle ---
+.gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+# Ignore Gradle GUI config
+gradle-app.setting
+# Avoid ignoring Gradle wrapper jar
+!gradle-wrapper.jar
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+# --- React / Node.js ---
+node_modules/
+/dist/
+# If using Create-React-App, it uses 'build' which overlaps with Gradle.
+# Since Gradle also uses 'build', ignoring 'build/' covers both!
+# build/ (Already covered above)
 
-### IntelliJ IDEA ###
-.idea
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea/
+.vscode/
 *.iws
 *.iml
 *.ipr
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+bin/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# --- Testing / Coverage ---
+coverage/
+.nyc_output/
 
-### VS Code ###
-.vscode/
-
-### Kotlin ###
-.kotlin
+# --- Temporary Files ---
+*.log
+*.bak
+*.tmp
+*.swp

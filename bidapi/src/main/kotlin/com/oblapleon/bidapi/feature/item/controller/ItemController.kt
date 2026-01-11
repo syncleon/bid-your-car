@@ -9,7 +9,9 @@ import com.oblapleon.bidapi.feature.item.service.ItemService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import java.util.*
 
 @RestController
@@ -58,4 +60,28 @@ class ItemController(
     fun getAllItems() = handleRequest { itemService.findAll().map { it.toDto() } }
     @GetMapping("/{id}")
     fun getItemById(@PathVariable id: UUID) = handleRequest { itemService.findById(id).toDto() }
+
+    @Operation(summary = "Upload an image for a car")
+    @PostMapping(
+        value = ["/{id}/images"],
+        consumes = [MediaType.MULTIPART_FORM_DATA_VALUE]
+    )
+    fun uploadItemImage(
+        @PathVariable id: UUID,
+        @RequestParam("file") file: MultipartFile
+    ) = handleRequest {
+        val item = itemService.findById(id)
+        authHelper.checkOwnerOrAdmin(item.seller.id!!)
+
+        val url = itemService.uploadImage(id, file)
+        mapOf("url" to url)
+    }
+
+    @Operation(summary = "Delete an image")
+    @DeleteMapping("/images/{imageId}")
+    fun deleteItemImage(@PathVariable imageId: UUID) = handleRequest {
+        val user = authHelper.getCurrentUser()
+        itemService.deleteImage(imageId, user.id!!)
+        null
+    }
 }

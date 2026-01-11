@@ -16,8 +16,6 @@ export const EditItemModal = ({ item, isOpen, onClose, onSubmit, isLoading }: Pr
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <div style={styles.container}>
-
-                {/* --- Sticky Header --- */}
                 <div style={styles.header}>
                     <div style={{ flex: 1 }}>
                         <h2 style={styles.title}>Edit Listing</h2>
@@ -35,8 +33,6 @@ export const EditItemModal = ({ item, isOpen, onClose, onSubmit, isLoading }: Pr
                         &times;
                     </button>
                 </div>
-
-                {/* --- Scrollable Content --- */}
                 <div style={styles.body}>
                     <p style={styles.instructions}>
                         Update the vehicle information below. Changes are saved immediately.
@@ -47,8 +43,6 @@ export const EditItemModal = ({ item, isOpen, onClose, onSubmit, isLoading }: Pr
                         onSubmit={onSubmit}
                         isLoading={isLoading}
                     />
-
-                    {/* Optional Cancel link for better UX */}
                     <div style={{ textAlign: "center", marginTop: "16px" }}>
                         <button
                             type="button"
@@ -65,17 +59,16 @@ export const EditItemModal = ({ item, isOpen, onClose, onSubmit, isLoading }: Pr
     );
 };
 
-// --- Styles ---
 const styles = {
     container: {
         width: "100%",
-        maxWidth: "720px", // Matches SubmitItemPage width
+        maxWidth: "720px",
         background: "#fff",
         borderRadius: "12px",
         boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
         display: "flex",
         flexDirection: "column" as const,
-        maxHeight: "90vh", // Keeps modal within viewport
+        maxHeight: "90vh",
         margin: "0 auto",
         position: "relative" as const,
     },
@@ -89,7 +82,7 @@ const styles = {
         background: "#fff",
         borderTopLeftRadius: "12px",
         borderTopRightRadius: "12px",
-        position: "sticky" as const, // Keeps header visible
+        position: "sticky" as const,
         top: 0,
         zIndex: 10,
     },
