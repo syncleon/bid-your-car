@@ -25,6 +25,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BUCKET: ${AWS_BUCKET}
     ports:
       - "8080:8080"
     volumes:
