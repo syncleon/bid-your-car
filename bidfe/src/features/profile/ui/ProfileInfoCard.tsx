@@ -1,49 +1,64 @@
 import { useState } from "react";
-import { ProfileEditForm } from "./ProfileEditForm";
+import { observer } from "mobx-react-lite";
+import { useStore } from "../../../shared/hooks/useStore";
 import type { Profile } from "../types";
+import { minStyles } from "./minimalStyles";
 
-interface Props {
-    profile: Profile;
-}
-
-export const ProfileInfoCard = ({ profile }: Props) => {
+export const ProfileInfoSection = observer(({ profile }: { profile: Profile }) => {
+    const { profileStore } = useStore();
     const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({ username: profile.username, email: profile.email });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await profileStore.updateProfileData(formData);
+        setIsEditing(false);
+    };
 
     return (
-        <section style={cardStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h2 style={{ margin: 0, fontSize: 20 }}>Profile Details</h2>
+        <section style={minStyles.section}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+                <h3 style={minStyles.header}>Personal Information</h3>
                 {!isEditing && (
-                    <button onClick={() => setIsEditing(true)} style={textBtnStyle}>Edit</button>
+                    <button onClick={() => setIsEditing(true)} style={minStyles.textBtn}>Edit</button>
                 )}
             </div>
 
             {isEditing ? (
-                <ProfileEditForm onCancel={() => setIsEditing(false)} />
+                <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
+                    <div style={{ marginBottom: 20 }}>
+                        <label style={minStyles.label}>Username</label>
+                        <input
+                            style={minStyles.input}
+                            value={formData.username}
+                            onChange={e => setFormData({ ...formData, username: e.target.value })}
+                        />
+                    </div>
+                    <div style={{ marginBottom: 30 }}>
+                        <label style={minStyles.label}>Email</label>
+                        <input
+                            style={minStyles.input}
+                            value={formData.email}
+                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                        />
+                    </div>
+                    <div style={{ display: "flex", gap: 16 }}>
+                        <button type="submit" style={minStyles.primaryBtn} disabled={profileStore.isLoading}>Save</button>
+                        <button type="button" onClick={() => setIsEditing(false)} style={minStyles.textBtn}>Cancel</button>
+                    </div>
+                </form>
             ) : (
-                <div>
-                    <p style={{ margin: "8px 0" }}><strong>Username:</strong> {profile.username}</p>
-                    <p style={{ margin: "8px 0" }}><strong>Email:</strong> {profile.email}</p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, color: "#444" }}>
+                    <div>
+                        <span style={minStyles.label}>Username</span>
+                        <div>{profile.username}</div>
+                    </div>
+                    <div>
+                        <span style={minStyles.label}>Email</span>
+                        <div>{profile.email}</div>
+                    </div>
                 </div>
             )}
         </section>
     );
-};
-
-// Styles
-const cardStyle: React.CSSProperties = {
-    background: "#fff",
-    border: "1px solid #eaeaea",
-    borderRadius: 8,
-    padding: 24,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
-};
-
-const textBtnStyle: React.CSSProperties = {
-    background: "none",
-    border: "none",
-    color: "#2563eb",
-    textDecoration: "underline",
-    cursor: "pointer",
-    fontSize: 14
-};
+});

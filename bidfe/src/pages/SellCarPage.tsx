@@ -1,48 +1,19 @@
-import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
 
-export const SellCarPage = observer(() => {
+export const SellCarPage = () => {
     const navigate = useNavigate();
-
     return (
-        <div style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
-            <h1>Sell your car</h1>
-
-            <p style={{ marginTop: 8, color: "#555" }}>
-                Create an auction and start receiving bids from buyers.
+        <div style={{ height: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px" }}>
+            <h1 style={{ fontSize: "42px", letterSpacing: "-1px", marginBottom: "16px" }}>Sell with us.</h1>
+            <p style={{ color: "#666", maxWidth: "400px", lineHeight: "1.6", marginBottom: "32px" }}>
+                Create a professional listing in minutes. Reach thousands of enthusiasts.
             </p>
-
-            <div
-                style={{
-                    marginTop: 32,
-                    padding: 24,
-                    border: "1px solid #eaeaea",
-                    borderRadius: 8,
-                    background: "#fafafa",
-                }}
+            <button
+                onClick={() => navigate("/sell-car/submit")}
+                style={{ background: "#000", color: "#fff", padding: "14px 32px", borderRadius: "50px", border: "none", fontSize: "15px", fontWeight: 500, cursor: "pointer" }}
             >
-                <h3>Ready to sell?</h3>
-
-                <p style={{ margin: "8px 0 16px", color: "#666" }}>
-                    You will be able to add photos, description, and set a
-                    starting price.
-                </p>
-
-                <button
-                    style={{
-                        padding: "10px 20px",
-                        borderRadius: 6,
-                        border: "none",
-                        background: "#000",
-                        color: "#fff",
-                        fontSize: 14,
-                        cursor: "pointer",
-                    }}
-                    onClick={() => navigate("/sell-car/submit")}
-                >
-                    Sell now
-                </button>
-            </div>
+                Start Listing
+            </button>
         </div>
     );
-});
+};

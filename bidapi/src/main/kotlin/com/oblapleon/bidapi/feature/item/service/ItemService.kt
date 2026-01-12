@@ -21,16 +21,26 @@ import java.util.*
 @Service
 class ItemService(
     private val itemRepo: ItemRepo,
-    private val itemImageRepo: ItemImageRepo, // Inject new Repo
-    private val storageService: StorageService // Inject Storage Service
+    private val itemImageRepo: ItemImageRepo,
+    private val storageService: StorageService
 ) : BaseService<Item, UUID> {
 
     @Transactional(readOnly = true)
-    override fun findAll(): List<Item> = itemRepo.findAll()
+    override fun findAll(): List<Item> {
+        return itemRepo.findAllActive()
+    }
 
     @Transactional(readOnly = true)
-    override fun findById(id: UUID): Item = itemRepo.findById(id)
-        .orElseThrow { NotFoundException("Item with id $id not found") }
+    override fun findById(id: UUID): Item {
+        val item = itemRepo.findById(id)
+            .orElseThrow { NotFoundException("Item with id $id not found") }
+
+        if (item.seller.deletedAt != null) {
+            throw NotFoundException("Item listing is no longer available")
+        }
+
+        return item
+    }
 
     @Transactional(readOnly = true)
     fun findBySeller(sellerId: Long): List<Item> = itemRepo.findBySellerId(sellerId)

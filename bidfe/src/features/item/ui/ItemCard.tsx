@@ -6,17 +6,22 @@ interface Props {
 }
 
 export const ItemCard = ({ item }: Props) => {
-    // ✅ Logic: Get the first image or null
+    // Get the first image or null
     const mainImage = item.images && item.images.length > 0
         ? item.images[0].thumbnailUrl
         : null;
 
-    return (
-        <Link to={`/items/${item.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={cardStyle}>
+    // Helper to join specs safely
+    const specs = [item.engine, item.transmission, item.drivetrain]
+        .filter(Boolean)
+        .join(" • ");
 
-                {/* ✅ Image Area */}
-                <div style={imageContainerStyle}>
+    return (
+        <Link to={`/items/${item.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+            <div style={containerStyle}>
+
+                {/* Image Area */}
+                <div style={imageWrapperStyle}>
                     {mainImage ? (
                         <img
                             src={mainImage}
@@ -25,68 +30,63 @@ export const ItemCard = ({ item }: Props) => {
                             loading="lazy"
                         />
                     ) : (
-                        <div style={placeholderStyle}>
-                            No Photos
-                        </div>
+                        <div style={placeholderStyle}>No Photos</div>
                     )}
                 </div>
 
                 {/* Content Area */}
-                <div style={{ padding: "16px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                        <h3 style={{ margin: "0 0 4px", fontSize: 18 }}>
+                <div style={{ paddingTop: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
+                        <h3 style={titleStyle}>
                             {item.make} {item.model}
                         </h3>
-                        {item.buyNowPrice && (
-                            <span style={priceStyle}>
-                                ${item.buyNowPrice.toLocaleString()}
-                            </span>
+                        {item.buyNowPrice ? (
+                            <span style={priceStyle}>${item.buyNowPrice.toLocaleString()}</span>
+                        ) : (
+                            <span style={{ fontSize: "14px", color: "#999", fontStyle: "italic" }}>Bid Only</span>
                         )}
                     </div>
 
-                    <div style={{ color: "#666", fontSize: 14, marginBottom: 12 }}>
+                    {/* Location */}
+                    <div style={metaStyle}>
                         {item.location}
                     </div>
 
-                    {/* Specs Tags */}
-                    <div style={tagsContainerStyle}>
-                        {item.engine && <span style={tagStyle}>{item.engine}</span>}
-                        {item.transmission && <span style={tagStyle}>{item.transmission}</span>}
-                        <span style={tagStyle}>{item.vin.slice(-6)}</span>
-                    </div>
+                    {/* Minimal Specs Line */}
+                    {specs && (
+                        <div style={specsStyle}>
+                            {specs}
+                        </div>
+                    )}
                 </div>
             </div>
         </Link>
     );
 };
 
-// --- Styles ---
+// --- Minimal Styles ---
 
-const cardStyle: React.CSSProperties = {
-    border: "1px solid #eaeaea",
-    borderRadius: 12,
-    overflow: "hidden",
-    background: "#fff",
-    transition: "transform 0.2s, box-shadow 0.2s",
+const containerStyle: React.CSSProperties = {
     cursor: "pointer",
-    height: "100%",
-    display: "flex",
-    flexDirection: "column"
+    transition: "opacity 0.2s",
+    // No border, no shadow, just content
 };
 
-const imageContainerStyle: React.CSSProperties = {
-    height: 220,
+const imageWrapperStyle: React.CSSProperties = {
+    aspectRatio: "4/3",
     width: "100%",
-    background: "#f9fafb",
+    background: "#f4f4f4",
+    borderRadius: "8px", // Subtle rounding
+    overflow: "hidden",
     position: "relative",
-    borderBottom: "1px solid #f0f0f0"
 };
 
 const imageStyle: React.CSSProperties = {
     width: "100%",
     height: "100%",
-    objectFit: "cover", // Ensures image fills box without stretching
-    display: "block"
+    objectFit: "cover",
+    display: "block",
+    transition: "transform 0.3s ease",
 };
 
 const placeholderStyle: React.CSSProperties = {
@@ -95,33 +95,38 @@ const placeholderStyle: React.CSSProperties = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#9ca3af",
-    fontSize: "14px",
-    fontWeight: 500,
-    background: "#f3f4f6"
+    color: "#aaa",
+    fontSize: "13px",
+    background: "#f9fafb",
+    letterSpacing: "0.5px",
+    textTransform: "uppercase"
+};
+
+const titleStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: "16px",
+    fontWeight: 600,
+    color: "#111",
+    letterSpacing: "-0.3px",
 };
 
 const priceStyle: React.CSSProperties = {
-    fontWeight: 700,
-    fontSize: 16,
-    color: "#059669", // Green color for price
-    background: "#ecfdf5",
-    padding: "2px 8px",
-    borderRadius: "4px"
+    fontSize: "16px",
+    fontWeight: 500,
+    color: "#111", // Keeping price neutral/black looks more premium/minimal
 };
 
-const tagsContainerStyle: React.CSSProperties = {
-    display: "flex",
-    gap: "8px",
-    marginTop: "8px",
-    flexWrap: "wrap"
+const metaStyle: React.CSSProperties = {
+    fontSize: "13px",
+    color: "#666",
+    marginBottom: "4px",
 };
 
-const tagStyle: React.CSSProperties = {
+const specsStyle: React.CSSProperties = {
     fontSize: "12px",
-    color: "#4b5563",
-    background: "#f3f4f6",
-    padding: "4px 8px",
-    borderRadius: "4px",
-    whiteSpace: "nowrap"
+    color: "#888",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    marginTop: "6px"
 };

@@ -1,409 +1,195 @@
-import { useState, useEffect, type ChangeEvent } from "react";
-import type { ItemSubmitRequest, ItemDto, ItemImageDto } from "../types"; // ✅ Added ItemImageDto
-import { FormInput, FormSelect, FormSection } from "./form-components";
+import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
+import type { ItemSubmitRequest, ItemDto, ItemImageDto } from "../types";
+import { FormInput, FormSelect, FormSection } from "./form-ui";
+import { ImageUploader } from "./ImageUploader";
 
-// Predefined Options
-const BODY_STYLES = [
-    { value: "Sedan", label: "Sedan" },
-    { value: "Coupe", label: "Coupe" },
-    { value: "SUV", label: "SUV" },
-    { value: "Convertible", label: "Convertible" },
-    { value: "Hatchback", label: "Hatchback" },
-    { value: "Wagon", label: "Wagon" },
-    { value: "Truck", label: "Truck" },
-    { value: "Van", label: "Van" }
-];
-
-const TRANSMISSIONS = [
-    { value: "Automatic", label: "Automatic" },
-    { value: "Manual", label: "Manual" },
-    { value: "CVT", label: "CVT" },
-    { value: "DCT", label: "DCT" }
-];
-
-const DRIVETRAINS = [
-    { value: "RWD", label: "Rear-Wheel Drive (RWD)" },
-    { value: "FWD", label: "Front-Wheel Drive (FWD)" },
-    { value: "AWD", label: "All-Wheel Drive (AWD)" },
-    { value: "4WD", label: "Four-Wheel Drive (4WD)" }
-];
-
-const SELLER_TYPES = [
-    { value: "Private Party", label: "Private Party" },
-    { value: "Dealer", label: "Dealership" }
-];
+// --- Constants ---
+const BODY_STYLES = ["Sedan", "Coupe", "SUV", "Convertible", "Hatchback", "Wagon", "Truck", "Van"].map(v => ({ value: v, label: v }));
+const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT"].map(v => ({ value: v, label: v }));
+const DRIVETRAINS = ["RWD", "FWD", "AWD", "4WD"].map(v => ({ value: v, label: v }));
+const SELLER_TYPES = [{ value: "Private Party", label: "Private Party" }, { value: "Dealer", label: "Dealership" }];
 
 interface Props {
     initialData?: ItemDto;
     onSubmit: (data: ItemSubmitRequest, files: File[]) => void;
-    // ✅ NEW: Optional callback for deleting server images (only for Edit mode)
     onDeleteImage?: (imageId: string) => void;
     isLoading: boolean;
 }
 
 export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading }: Props) => {
 
-    // --- 1. Form Data State ---
-    const initial = (key: keyof ItemSubmitRequest, fallback: string | number | null = "") => {
-        if (!initialData) return fallback;
-        return (initialData as any)[key] ?? fallback;
-    };
+    // 1. Form State
+    const initial = (key: keyof ItemSubmitRequest, fallback: any = "") => initialData ? (initialData as any)[key] ?? fallback : fallback;
 
     const [formData, setFormData] = useState<ItemSubmitRequest>({
-        make: initial("make") as string,
-        model: initial("model") as string,
-        vin: initial("vin") as string,
-        location: initial("location") as string,
-        buyNowPrice: initial("buyNowPrice", null) as number | null,
-        engine: initial("engine") as string,
-        transmission: initial("transmission") as string,
-        drivetrain: initial("drivetrain") as string,
-        bodyStyle: initial("bodyStyle") as string,
-        exteriorColor: initial("exteriorColor") as string,
-        interiorColor: initial("interiorColor") as string,
-        sellerType: initial("sellerType") as string,
+        make: initial("make"), model: initial("model"), vin: initial("vin"), location: initial("location"),
+        buyNowPrice: initial("buyNowPrice", null), engine: initial("engine"), transmission: initial("transmission"),
+        drivetrain: initial("drivetrain"), bodyStyle: initial("bodyStyle"), exteriorColor: initial("exteriorColor"),
+        interiorColor: initial("interiorColor"), sellerType: initial("sellerType"),
     });
 
-    const [existingImages, setExistingImages] = useState<ItemImageDto[]>(
-        initialData?.images || []
-    );
+    // 2. Error State
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
+    // 3. Image State
+    const [existingImages, setExistingImages] = useState<ItemImageDto[]>(initialData?.images || []);
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
 
-    useEffect(() => {
-        if (initialData?.images) {
-            setExistingImages(initialData.images);
-        }
-    }, [initialData]);
+    useEffect(() => { if (initialData?.images) setExistingImages(initialData.images); }, [initialData]);
+    useEffect(() => () => previews.forEach(url => URL.revokeObjectURL(url)), [previews]);
 
-    // Cleanup object URLs
-    useEffect(() => {
-        return () => {
-            previews.forEach((url) => URL.revokeObjectURL(url));
-        };
-    }, [previews]);
+    // --- Handlers ---
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
+
+        // Clear error when user types
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+
+        setFormData(prev => ({
             ...prev,
-            [name]: name === "buyNowPrice"
-                ? (value === "" ? null : Number(value))
-                : value,
+            // Special handling for VIN (Uppercase) and Price (Number)
+            [name]: name === "buyNowPrice" ? (value === "" ? null : Number(value))
+                : name === "vin" ? value.toUpperCase()
+                    : value
         }));
     };
 
-    // Handle Selecting NEW Files
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
+        if (e.target.files?.length) {
             const newFiles = Array.from(e.target.files);
-            setFiles((prev) => [...prev, ...newFiles]);
-            const newUrls = newFiles.map((file) => URL.createObjectURL(file));
-            setPreviews((prev) => [...prev, ...newUrls]);
+            setFiles(prev => [...prev, ...newFiles]);
+            setPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
         }
     };
 
-    // Remove a NEW file (Local only)
-    const handleRemoveNewFile = (index: number) => {
-        setFiles((prev) => prev.filter((_, i) => i !== index));
-        setPreviews((prev) => {
-            URL.revokeObjectURL(prev[index]);
-            return prev.filter((_, i) => i !== index);
-        });
+    const removeNew = (idx: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== idx));
+        setPreviews(prev => prev.filter((_, i) => i !== idx));
     };
 
-    // ✅ Remove an EXISTING image (Server side)
-    const handleRemoveExistingImage = (imageId: string) => {
-        if (onDeleteImage) {
-            // 1. Call parent handler (triggers API)
-            onDeleteImage(imageId);
-            // 2. Optimistically remove from UI
-            setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+    const removeExisting = (id: string) => {
+        if (onDeleteImage && confirm("Are you sure you want to delete this image?")) {
+            onDeleteImage(id);
+            setExistingImages(prev => prev.filter(img => img.id !== id));
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // --- Validation ---
+    const validate = () => {
+        const newErrors: Record<string, string> = {};
+        if (!formData.vin || formData.vin.length !== 17) newErrors.vin = "VIN must be exactly 17 characters.";
+        if (!formData.make) newErrors.make = "Make is required.";
+        if (!formData.model) newErrors.model = "Model is required.";
+        if (!formData.location) newErrors.location = "Location is required.";
+        if (!formData.buyNowPrice) newErrors.buyNowPrice = "Please set a price.";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        onSubmit(formData, files);
+        if (validate()) {
+            onSubmit(formData, files);
+        } else {
+            // Scroll to top to see errors
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: "40px" }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: "800px", margin: "0 auto" }}>
 
-            {/* Section 1: Essentials */}
-            <FormSection title="Vehicle Essentials">
+            {/* 1. Essentials */}
+            <FormSection title="Vehicle Essentials" description="Let's start with the basics found on your title.">
                 <FormInput
                     label="VIN"
                     name="vin"
                     value={formData.vin}
                     onChange={handleChange}
-                    required
                     maxLength={17}
-                    placeholder="e.g. 1HGCM82633A..."
+                    placeholder="e.g. 1HGCM..."
+                    error={errors.vin}
+                    hint="17 alphanumeric characters."
                 />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                    <FormInput
-                        label="Make"
-                        name="make"
-                        value={formData.make}
-                        onChange={handleChange}
-                        required
-                        placeholder="e.g. BMW"
-                    />
-                    <FormInput
-                        label="Model"
-                        name="model"
-                        value={formData.model}
-                        onChange={handleChange}
-                        required
-                        placeholder="e.g. M3"
-                    />
+                <div style={gridRow}>
+                    <FormInput label="Make" name="make" value={formData.make} onChange={handleChange} error={errors.make} placeholder="e.g. Porsche" />
+                    <FormInput label="Model" name="model" value={formData.model} onChange={handleChange} error={errors.model} placeholder="e.g. 911 Carrera" />
                 </div>
-                <FormSelect
-                    label="Body Style"
-                    name="bodyStyle"
-                    value={formData.bodyStyle || ""}
-                    onChange={handleChange}
-                    options={BODY_STYLES}
+                <FormSelect label="Body Style" name="bodyStyle" value={formData.bodyStyle || ""} onChange={handleChange} options={BODY_STYLES} />
+            </FormSection>
+
+            {/* 2. Photos */}
+            <FormSection title="Photos" description="Great photos increase sales by 50%. The first photo will be your cover.">
+                <ImageUploader
+                    existingImages={existingImages}
+                    newPreviews={previews}
+                    onAddFiles={handleFileChange}
+                    onRemoveExisting={removeExisting}
+                    onRemoveNew={removeNew}
                 />
             </FormSection>
 
-            {/* ✅ UPDATED Section: Photos */}
-            <FormSection title="Photos">
-                <div style={styles.uploadContainer}>
-                    <p style={styles.uploadHint}>
-                        Add photos of the exterior, interior, and engine bay.
-                    </p>
-
-                    <label style={styles.uploadButton}>
-                        + Add Photos
-                        <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            style={{ display: "none" }}
-                        />
-                    </label>
-
-                    <div style={styles.grid}>
-                        {/* A. EXISTING IMAGES (From Server) */}
-                        {existingImages.map((img) => (
-                            <div key={img.id} style={styles.previewWrapper}>
-                                <img
-                                    src={img.thumbnailUrl}
-                                    alt="existing"
-                                    style={styles.previewImg}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => handleRemoveExistingImage(img.id)}
-                                    style={{ ...styles.removeBtn, background: "#dc2626" }} // Red for delete
-                                    title="Delete from server"
-                                >
-                                    🗑️
-                                </button>
-                            </div>
-                        ))}
-
-                        {/* B. NEW PREVIEWS (Pending Upload) */}
-                        {previews.map((url, index) => (
-                            <div key={url} style={styles.previewWrapper}>
-                                <img
-                                    src={url}
-                                    alt={`New ${index}`}
-                                    style={styles.previewImg}
-                                />
-                                <div style={styles.newBadge}>New</div>
-                                <button
-                                    type="button"
-                                    onClick={() => handleRemoveNewFile(index)}
-                                    style={styles.removeBtn}
-                                    title="Remove upload"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+            {/* 3. Specs */}
+            <FormSection title="Technical Specs" description="Details about the performance and configuration.">
+                <FormInput label="Engine" name="engine" value={formData.engine || ""} onChange={handleChange} placeholder="e.g. 3.0L Flat-6" />
+                <div style={gridRow}>
+                    <FormSelect label="Transmission" name="transmission" value={formData.transmission || ""} onChange={handleChange} options={TRANSMISSIONS} />
+                    <FormSelect label="Drivetrain" name="drivetrain" value={formData.drivetrain || ""} onChange={handleChange} options={DRIVETRAINS} />
                 </div>
             </FormSection>
 
-            {/* Section 2: Technical Specifications */}
-            <FormSection title="Technical Specifications">
-                <FormInput
-                    label="Engine"
-                    name="engine"
-                    value={formData.engine || ""}
-                    onChange={handleChange}
-                    placeholder="e.g. 3.0L Twin-Turbo"
-                />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                    <FormSelect
-                        label="Transmission"
-                        name="transmission"
-                        value={formData.transmission || ""}
-                        onChange={handleChange}
-                        options={TRANSMISSIONS}
-                    />
-                    <FormSelect
-                        label="Drivetrain"
-                        name="drivetrain"
-                        value={formData.drivetrain || ""}
-                        onChange={handleChange}
-                        options={DRIVETRAINS}
-                    />
-                </div>
-            </FormSection>
-
-            {/* Section 3: Colors & Location */}
-            <FormSection title="Appearance & Location">
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                    <FormInput
-                        label="Exterior Color"
-                        name="exteriorColor"
-                        value={formData.exteriorColor || ""}
-                        onChange={handleChange}
-                        placeholder="e.g. Alpine White"
-                    />
-                    <FormInput
-                        label="Interior Color"
-                        name="interiorColor"
-                        value={formData.interiorColor || ""}
-                        onChange={handleChange}
-                        placeholder="e.g. Black"
-                    />
+            {/* 4. Sale Info */}
+            <FormSection title="Sale Details" description="Where is the car located and how much do you want for it?">
+                <div style={gridRow}>
+                    <FormInput label="Exterior Color" name="exteriorColor" value={formData.exteriorColor || ""} onChange={handleChange} placeholder="e.g. Guards Red" />
+                    <FormInput label="Interior Color" name="interiorColor" value={formData.interiorColor || ""} onChange={handleChange} placeholder="e.g. Black Leather" />
                 </div>
                 <FormInput
                     label="Location"
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
-                    required
-                    placeholder="City, State, Zip"
+                    error={errors.location}
+                    placeholder="City, State"
                 />
-            </FormSection>
-
-            {/* Section 4: Sale Info */}
-            <FormSection title="Sale Details">
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div style={gridRow}>
                     <FormInput
-                        label="Buy Now Price ($)"
+                        label="Asking Price ($)"
                         name="buyNowPrice"
                         type="number"
                         value={formData.buyNowPrice ?? ""}
                         onChange={handleChange}
+                        error={errors.buyNowPrice}
                         placeholder="0.00"
                     />
-                    <FormSelect
-                        label="Seller Type"
-                        name="sellerType"
-                        value={formData.sellerType || ""}
-                        onChange={handleChange}
-                        options={SELLER_TYPES}
-                    />
+                    <FormSelect label="Are you a dealer?" name="sellerType" value={formData.sellerType || ""} onChange={handleChange} options={SELLER_TYPES} />
                 </div>
             </FormSection>
 
-            <button
-                type="submit"
-                disabled={isLoading}
-                style={{
-                    ...styles.submitBtn,
-                    background: isLoading ? "#9ca3af" : "#000",
-                    cursor: isLoading ? "not-allowed" : "pointer",
-                }}
-            >
+            <button type="submit" disabled={isLoading} style={submitBtnStyle}>
                 {isLoading ? "Processing..." : (initialData ? "Save Changes" : "Publish Listing")}
             </button>
         </form>
     );
 };
 
-// --- Styles ---
-const styles = {
-    uploadContainer: {
-        border: "1px dashed #d1d5db",
-        borderRadius: "8px",
-        padding: "20px",
-        background: "#f9fafb",
-    },
-    uploadHint: {
-        fontSize: "14px",
-        color: "#6b7280",
-        marginBottom: "12px",
-    },
-    uploadButton: {
-        display: "inline-block",
-        padding: "8px 16px",
-        background: "#fff",
-        border: "1px solid #d1d5db",
-        borderRadius: "6px",
-        fontSize: "14px",
-        fontWeight: 600,
-        color: "#374151",
-        cursor: "pointer",
-        marginBottom: "16px",
-    },
-    grid: {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-        gap: "12px",
-    },
-    previewWrapper: {
-        position: "relative" as const,
-        width: "100%",
-        aspectRatio: "4/3",
-        borderRadius: "6px",
-        overflow: "hidden",
-        border: "1px solid #e5e7eb",
-        background: "#fff",
-    },
-    previewImg: {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover" as const,
-    },
-    // Standard remove button (gray)
-    removeBtn: {
-        position: "absolute" as const,
-        top: "4px",
-        right: "4px",
-        width: "24px",
-        height: "24px",
-        background: "rgba(0,0,0,0.6)",
-        color: "#fff",
-        border: "none",
-        borderRadius: "50%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-        fontSize: "14px",
-        zIndex: 2,
-    },
-    newBadge: {
-        position: "absolute" as const,
-        bottom: "4px",
-        left: "4px",
-        background: "#059669", // Green
-        color: "white",
-        fontSize: "10px",
-        padding: "2px 6px",
-        borderRadius: "4px",
-        fontWeight: "bold",
-        zIndex: 2
-    },
-    submitBtn: {
-        marginTop: "16px",
-        padding: "16px",
-        borderRadius: "8px",
-        border: "none",
-        color: "#fff",
-        fontSize: "16px",
-        fontWeight: 700,
-        width: "100%",
-        boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-    }
+// --- Local Styles ---
+const gridRow = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" };
+
+const submitBtnStyle = {
+    marginTop: "20px",
+    width: "100%",
+    padding: "16px",
+    background: "#111",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    fontWeight: 700,
+    fontSize: "16px",
+    cursor: "pointer",
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+    transition: "transform 0.1s"
 };

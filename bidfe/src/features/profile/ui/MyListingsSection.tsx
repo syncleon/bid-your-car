@@ -1,5 +1,6 @@
 import { ItemCard } from "../../item/ui/ItemCard";
 import type { ItemDto } from "../../item/types";
+import { minStyles } from "./minimalStyles";
 
 interface Props {
     items: ItemDto[];
@@ -11,33 +12,29 @@ interface Props {
 
 export const MyListingsSection = ({ items, isLoading, onCreate, onEdit, onDelete }: Props) => {
     return (
-        <section style={{ marginBottom: 40 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h2 style={{ margin: 0 }}>My Listings</h2>
-                <button onClick={onCreate} style={primaryBtnStyle}>
-                    + List New Car
+        <section style={{ ...minStyles.section, borderBottom: '1px solid #eee', marginBottom: 24, paddingBottom: 40 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                <h3 style={{ ...minStyles.header, marginBottom: 0 }}>Active Listings</h3>
+                <button onClick={onCreate} style={minStyles.primaryBtn}>
+                    + Create New
                 </button>
             </div>
 
             {isLoading ? (
-                <p>Loading listings...</p>
+                <p style={{ color: "#999" }}>Loading...</p>
             ) : items.length === 0 ? (
-                <div style={emptyStateStyle}>
-                    <p>You haven't listed any cars yet.</p>
+                <div style={{ padding: "40px 0", color: "#999", fontStyle: "italic" }}>
+                    No active listings.
                 </div>
             ) : (
                 <div style={gridStyle}>
                     {items.map(item => (
                         <div key={item.id} style={{ position: "relative" }}>
                             <ItemCard item={item} />
-
-                            <div style={actionBarStyle}>
-                                <button onClick={() => onEdit(item)} style={secondaryBtnStyle}>
-                                    Edit
-                                </button>
-                                <button onClick={() => onDelete(item.id)} style={dangerActionBtnStyle}>
-                                    Delete
-                                </button>
+                            <div style={actionRow}>
+                                <button onClick={() => onEdit(item)} style={actionLink}>Edit</button>
+                                <span style={{color: '#ddd'}}>|</span>
+                                <button onClick={() => onDelete(item.id)} style={{...actionLink, color: '#dc2626'}}>Delete</button>
                             </div>
                         </div>
                     ))}
@@ -47,50 +44,24 @@ export const MyListingsSection = ({ items, isLoading, onCreate, onEdit, onDelete
     );
 };
 
-// Styles
 const gridStyle: React.CSSProperties = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-    gap: 24
+    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+    gap: "32px 24px"
 };
 
-const emptyStateStyle: React.CSSProperties = {
-    padding: 40,
-    background: "#f9fafb",
-    borderRadius: 8,
-    textAlign: "center",
-    color: "#6b7280",
-    border: "1px dashed #d1d5db"
-};
-
-const actionBarStyle: React.CSSProperties = {
+const actionRow: React.CSSProperties = {
     marginTop: 12,
     display: "flex",
     gap: 12,
-    justifyContent: "flex-end"
+    fontSize: "13px"
 };
 
-const primaryBtnStyle: React.CSSProperties = {
-    background: "#000",
-    color: "#fff",
+const actionLink: React.CSSProperties = {
+    background: "none",
     border: "none",
-    padding: "10px 20px",
-    borderRadius: 6,
     cursor: "pointer",
-    fontWeight: 600
-};
-
-const secondaryBtnStyle: React.CSSProperties = {
-    background: "#fff",
-    border: "1px solid #d1d5db",
-    padding: "4px 12px",
-    borderRadius: 6,
-    cursor: "pointer",
-    fontSize: 13
-};
-
-const dangerActionBtnStyle: React.CSSProperties = {
-    ...secondaryBtnStyle,
-    color: "#dc2626",
-    borderColor: "#fca5a5"
+    padding: 0,
+    color: "#666",
+    fontWeight: 500
 };

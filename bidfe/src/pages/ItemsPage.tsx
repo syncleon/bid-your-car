@@ -9,19 +9,21 @@ export const ItemsPage = observer(() => {
         itemStore.loadItems();
     }, []);
 
+    // Loading State
     if (itemStore.isLoading && itemStore.items.length === 0) {
         return (
-            <div style={containerStyle}>
-                <p style={{textAlign: 'center', color: '#666'}}>Loading marketplace...</p>
+            <div style={{ padding: 60, textAlign: "center", color: "#999", fontSize: "14px" }}>
+                Loading inventory...
             </div>
         );
     }
 
+    // Error State
     if (itemStore.error) {
         return (
-            <div style={containerStyle}>
-                <div style={{ padding: 24, color: "#dc2626", background: "#fef2f2", borderRadius: 8 }}>
-                    Error: {itemStore.error}
+            <div style={{ padding: 40 }}>
+                <div style={{ color: "#dc2626", fontSize: "14px" }}>
+                    Unable to load items: {itemStore.error}
                 </div>
             </div>
         );
@@ -29,20 +31,26 @@ export const ItemsPage = observer(() => {
 
     return (
         <div style={containerStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 32 }}>
-                <div>
-                    <h1 style={{ margin: 0, fontSize: 32 }}>Inventory</h1>
-                    <p style={{ color: "#666", margin: "8px 0 0" }}>Browse quality vehicles available now</p>
+            {/* Header Section */}
+            <div style={{ marginBottom: 40, paddingBottom: 20, borderBottom: "1px solid #f0f0f0" }}>
+                <h1 style={{ fontSize: "28px", fontWeight: 300, margin: "0 0 8px 0", letterSpacing: "-0.5px" }}>
+                    Inventory
+                </h1>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <p style={{ color: "#888", margin: 0, fontSize: "14px" }}>
+                        Browse curated vehicles available for immediate purchase.
+                    </p>
+                    <span style={{ fontSize: "13px", color: "#666", fontWeight: 500 }}>
+                        {itemStore.items.length} results
+                    </span>
                 </div>
-                <span style={{ color: "#666", fontSize: 14, background: "#f3f4f6", padding: "6px 12px", borderRadius: 20 }}>
-                    {itemStore.items.length} vehicles
-                </span>
             </div>
 
+            {/* Grid Section */}
             {itemStore.items.length === 0 ? (
                 <div style={emptyStateStyle}>
-                    <h3>No items found</h3>
-                    <p>Be the first to list a car!</p>
+                    <h3>No items available</h3>
+                    <p>Check back later for new listings.</p>
                 </div>
             ) : (
                 <div style={gridStyle}>
@@ -55,27 +63,26 @@ export const ItemsPage = observer(() => {
     );
 });
 
-// --- Styles ---
+// --- Minimal Page Styles ---
 
 const containerStyle: React.CSSProperties = {
     padding: "40px 24px",
-    maxWidth: 1280,
+    maxWidth: 1200, // Slightly tighter max-width for better density
     margin: "0 auto"
 };
 
 const gridStyle: React.CSSProperties = {
     display: "grid",
-    // Responsive grid: Cards are min 300px wide
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-    gap: "32px",
-    alignItems: "stretch"
+    // Cards min-width set to 260px for a clean look on desktop
+    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+    gap: "40px 24px", // More vertical gap (40px) vs horizontal (24px)
+    alignItems: "start"
 };
 
 const emptyStateStyle: React.CSSProperties = {
     textAlign: "center",
     marginTop: 80,
-    color: "#666",
-    padding: "60px",
-    background: "#f9fafb",
-    borderRadius: 12
+    color: "#999",
+    padding: "40px",
+    fontSize: "14px"
 };
