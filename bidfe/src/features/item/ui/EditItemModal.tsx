@@ -6,11 +6,22 @@ interface Props {
     item: ItemDto | null;
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: ItemSubmitRequest) => Promise<void>;
+    // ✅ UPDATED: Now accepts 'files' (new images to upload)
+    onSubmit: (data: ItemSubmitRequest, files: File[]) => Promise<void>;
+    // ✅ NEW: Callback to delete an existing image from the server
+    onDeleteImage: (imageId: string) => Promise<void>;
     isLoading: boolean;
 }
 
-export const EditItemModal = ({ item, isOpen, onClose, onSubmit, isLoading }: Props) => {
+export const EditItemModal = ({
+                                  item,
+                                  isOpen,
+                                  onClose,
+                                  onSubmit,
+                                  onDeleteImage,
+                                  isLoading
+                              }: Props) => {
+
     if (!isOpen || !item) return null;
 
     return (
@@ -35,14 +46,16 @@ export const EditItemModal = ({ item, isOpen, onClose, onSubmit, isLoading }: Pr
                 </div>
                 <div style={styles.body}>
                     <p style={styles.instructions}>
-                        Update the vehicle information below. Changes are saved immediately.
+                        Update the vehicle information below. New photos are uploaded when you click Save.
                     </p>
 
                     <SubmitItemForm
                         initialData={item}
-                        onSubmit={onSubmit}
+                        onSubmit={onSubmit}         // ✅ Pass the update handler
+                        onDeleteImage={onDeleteImage} // ✅ Pass the delete handler
                         isLoading={isLoading}
                     />
+
                     <div style={{ textAlign: "center", marginTop: "16px" }}>
                         <button
                             type="button"
@@ -60,6 +73,7 @@ export const EditItemModal = ({ item, isOpen, onClose, onSubmit, isLoading }: Pr
 };
 
 const styles = {
+    // ... (Your existing styles remain exactly the same)
     container: {
         width: "100%",
         maxWidth: "720px",

@@ -5,7 +5,8 @@ import {
     getMyItems,
     deleteItem,
     updateItem,
-    uploadItemImage // ✅ Import the new API method
+    uploadItemImage,
+    deleteImage as apiDeleteImage // ✅ Import this (ensure it exists in api/item.api.ts)
 } from "../api/item.api";
 import type { ItemDto, ItemSubmitRequest } from "../types";
 
@@ -14,8 +15,6 @@ class ItemStore {
     myItems: ItemDto[] = [];    // User's private items
     isLoading = false;
     error: string | null = null;
-
-    // ✅ New state to track image uploading status
     uploadProgress: string | null = null;
 
     constructor() {
@@ -69,49 +68,89 @@ class ItemStore {
         }
     };
 
-    updateListing = async (id: string, data: ItemSubmitRequest) => {
+    // ✅ UPDATED: Now handles Text Update + New File Uploads
+    updateListing = async (id: string, data: ItemSubmitRequest, newFiles: File[]) => {
         this.isLoading = true;
+        this.uploadProgress = "Updating details...";
+
         try {
-            const updated = await updateItem(id, data);
-            runInAction(() => {
-                const index = this.myItems.findIndex(i => i.id === id);
-                if (index !== -1) {
-                    this.myItems[index] = updated;
+            // 1. Update text data (Make, Model, Price, etc.)
+            const updatedItem = await updateItem(id, data);
+
+            // 2. Upload NEW images (if any)
+            if (newFiles.length > 0) {
+                for (let i = 0; i < newFiles.length; i++) {
+                    runInAction(() => {
+                        this.uploadProgress = `Uploading new photo ${i + 1} of ${newFiles.length}...`;
+                    });
+                    // Upload to server
+                    await uploadItemImage(id, newFiles[i]);
                 }
+
+                // 3. IMPORTANT: Reload "My Items" to get the fresh image URLs from the server
+                // The 'updatedItem' from step 1 doesn't know about the images we just uploaded in step 2.
+                await this.loadMyItems();
+            } else {
+                // If no new files, just update the local state immediately
+                runInAction(() => {
+                    const index = this.myItems.findIndex(i => i.id === id);
+                    if (index !== -1) {
+                        this.myItems[index] = updatedItem;
+                    }
+                });
+            }
+
+            runInAction(() => {
                 this.isLoading = false;
+                this.uploadProgress = null;
             });
             return true;
         } catch (err: any) {
             runInAction(() => {
                 this.error = err.message || "Failed to update item";
                 this.isLoading = false;
+                this.uploadProgress = null;
             });
             return false;
         }
     };
 
-    // ✅ UPDATED: Accepts files alongside the data
+    // ✅ NEW: Handle deleting a single image
+    deleteImage = async (itemId: string, imageId: string) => {
+        try {
+            // 1. Call API to delete from Server/S3
+            await apiDeleteImage(imageId);
+
+            runInAction(() => {
+                // 2. Optimistically remove from local UI
+                const item = this.myItems.find(i => i.id === itemId);
+                if (item) {
+                    item.images = item.images.filter(img => img.id !== imageId);
+                }
+            });
+        } catch (err: any) {
+            runInAction(() => {
+                console.error("Failed to delete image", err);
+                this.error = "Failed to delete image";
+            });
+        }
+    };
+
     submitItem = async (data: ItemSubmitRequest, files: File[]) => {
         this.isLoading = true;
         this.error = null;
         this.uploadProgress = "Creating listing...";
 
         try {
-            // 1. Create the Item (JSON)
             const newItem = await submitItem(data);
 
-            // 2. Upload Images (if any)
             if (files.length > 0) {
                 const itemId = newItem.id;
-
-                // Upload sequentially to avoid network timeouts on large files
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-
                     runInAction(() => {
                         this.uploadProgress = `Uploading image ${i + 1} of ${files.length}...`;
                     });
-
                     await uploadItemImage(itemId, file);
                 }
             }
@@ -120,15 +159,14 @@ class ItemStore {
                 this.isLoading = false;
                 this.uploadProgress = null;
             });
-            return true; // Success
-
+            return true;
         } catch (err: any) {
             runInAction(() => {
                 this.error = err.message || "Something went wrong";
                 this.isLoading = false;
                 this.uploadProgress = null;
             });
-            return false; // Failed
+            return false;
         }
     };
 }

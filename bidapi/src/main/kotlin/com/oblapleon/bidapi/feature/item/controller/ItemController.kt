@@ -2,7 +2,7 @@ package com.oblapleon.bidapi.feature.item.controller
 
 import com.oblapleon.bidapi.common.controller.BaseController
 import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
-import com.oblapleon.bidapi.common.mapper.toDto
+import com.oblapleon.bidapi.common.mapper.toDto // ✅ Import the extension function
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
 import com.oblapleon.bidapi.feature.item.service.ItemService
@@ -19,7 +19,7 @@ import java.util.*
 @Tag(name = "Items", description = "Car listing management APIs")
 class ItemController(
     private val itemService: ItemService,
-    private val authHelper: AuthorizationHelper
+    private val authHelper: AuthorizationHelper,
 ) : BaseController() {
 
     @Operation(summary = "List a new car")
@@ -72,9 +72,7 @@ class ItemController(
     ) = handleRequest {
         val item = itemService.findById(id)
         authHelper.checkOwnerOrAdmin(item.seller.id!!)
-
-        val url = itemService.uploadImage(id, file)
-        mapOf("url" to url)
+        itemService.uploadImage(id, file).toDto()
     }
 
     @Operation(summary = "Delete an image")

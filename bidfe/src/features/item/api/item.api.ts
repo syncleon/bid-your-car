@@ -1,8 +1,7 @@
-import type { ItemSubmitRequest, ItemDto } from "../types.ts";
+import type { ItemSubmitRequest, ItemDto, ItemImageDto } from "../types.ts"; // ✅ Import ItemImageDto
 import { tokenStorage } from "../../../shared/lib/token.ts";
 import { http } from "../../../shared/api/HttpClient.ts";
 
-// Ensure this matches your backend URL structure
 const BASE_URL = "http://localhost:8080/api/v1/items";
 
 export const submitItem = async (data: ItemSubmitRequest): Promise<ItemDto> => {
@@ -24,18 +23,13 @@ export const submitItem = async (data: ItemSubmitRequest): Promise<ItemDto> => {
     if (!response.ok) {
         const errorText = await response.text();
         let errorMessage = "Failed to submit item";
-
         try {
             const errorJson = JSON.parse(errorText);
             if (errorJson.message) errorMessage = errorJson.message;
             else if (errorJson.error) errorMessage = errorJson.error;
-            else if (errorJson.detail) errorMessage = errorJson.detail;
         } catch {
-            if (errorText && errorText.trim().length > 0) {
-                errorMessage = errorText;
-            }
+            if (errorText && errorText.trim().length > 0) errorMessage = errorText;
         }
-
         throw new Error(errorMessage);
     }
 
@@ -43,16 +37,11 @@ export const submitItem = async (data: ItemSubmitRequest): Promise<ItemDto> => {
 };
 
 /**
- * ✅ NEW: Uploads a single image for a specific item.
- * Note: We do NOT set 'Content-Type' header here.
- * The browser automatically sets it to 'multipart/form-data' with the correct boundary.
+ * ✅ UPDATED: Returns ItemImageDto so the UI can show the new image immediately.
  */
-export const uploadItemImage = async (itemId: string, file: File): Promise<void> => {
+export const uploadItemImage = async (itemId: string, file: File): Promise<ItemImageDto> => {
     const token = tokenStorage.get();
-
-    if (!token) {
-        throw new Error("No authentication token found.");
-    }
+    if (!token) throw new Error("No authentication token found.");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -69,20 +58,21 @@ export const uploadItemImage = async (itemId: string, file: File): Promise<void>
         const errorText = await response.text();
         throw new Error(errorText || `Failed to upload image: ${file.name}`);
     }
+
+    return response.json(); // ✅ Return the new image object
 };
+
+// ✅ NEW: Delete Image API
+export const deleteImage = (imageId: string) =>
+    http<void>(`/items/images/${imageId}`, { method: "DELETE" });
 
 export const getAllItems = async (): Promise<ItemDto[]> => {
     const response = await fetch(BASE_URL, {
         method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        }
+        headers: { "Content-Type": "application/json" }
     });
 
-    if (!response.ok) {
-        throw new Error("Failed to load auctions");
-    }
-
+    if (!response.ok) throw new Error("Failed to load auctions");
     return response.json();
 };
 

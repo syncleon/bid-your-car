@@ -1,8 +1,8 @@
 import { useState, useEffect, type ChangeEvent } from "react";
-import type { ItemSubmitRequest, ItemDto } from "../types";
+import type { ItemSubmitRequest, ItemDto, ItemImageDto } from "../types"; // ✅ Added ItemImageDto
 import { FormInput, FormSelect, FormSection } from "./form-components";
 
-// Predefined Options (kept same as before)
+// Predefined Options
 const BODY_STYLES = [
     { value: "Sedan", label: "Sedan" },
     { value: "Coupe", label: "Coupe" },
@@ -35,13 +35,15 @@ const SELLER_TYPES = [
 
 interface Props {
     initialData?: ItemDto;
-    // ✅ UPDATED: Now accepts files as second argument
     onSubmit: (data: ItemSubmitRequest, files: File[]) => void;
+    // ✅ NEW: Optional callback for deleting server images (only for Edit mode)
+    onDeleteImage?: (imageId: string) => void;
     isLoading: boolean;
 }
 
-export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
-    // --- Existing Form State ---
+export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading }: Props) => {
+
+    // --- 1. Form Data State ---
     const initial = (key: keyof ItemSubmitRequest, fallback: string | number | null = "") => {
         if (!initialData) return fallback;
         return (initialData as any)[key] ?? fallback;
@@ -62,16 +64,25 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
         sellerType: initial("sellerType") as string,
     });
 
-    // --- ✅ NEW: File Handling State ---
+    const [existingImages, setExistingImages] = useState<ItemImageDto[]>(
+        initialData?.images || []
+    );
+
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
 
-    // Cleanup object URLs to avoid memory leaks
+    useEffect(() => {
+        if (initialData?.images) {
+            setExistingImages(initialData.images);
+        }
+    }, [initialData]);
+
+    // Cleanup object URLs
     useEffect(() => {
         return () => {
             previews.forEach((url) => URL.revokeObjectURL(url));
         };
-    }, []);
+    }, [previews]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -83,33 +94,37 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
         }));
     };
 
-    // ✅ NEW: Handle File Selection
+    // Handle Selecting NEW Files
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const newFiles = Array.from(e.target.files);
-
-            // Add to file list
             setFiles((prev) => [...prev, ...newFiles]);
-
-            // Generate previews
             const newUrls = newFiles.map((file) => URL.createObjectURL(file));
             setPreviews((prev) => [...prev, ...newUrls]);
         }
     };
 
-    // ✅ NEW: Remove Image
-    const handleRemoveImage = (index: number) => {
+    // Remove a NEW file (Local only)
+    const handleRemoveNewFile = (index: number) => {
         setFiles((prev) => prev.filter((_, i) => i !== index));
         setPreviews((prev) => {
-            // Revoke the specific URL being removed
             URL.revokeObjectURL(prev[index]);
             return prev.filter((_, i) => i !== index);
         });
     };
 
+    // ✅ Remove an EXISTING image (Server side)
+    const handleRemoveExistingImage = (imageId: string) => {
+        if (onDeleteImage) {
+            // 1. Call parent handler (triggers API)
+            onDeleteImage(imageId);
+            // 2. Optimistically remove from UI
+            setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // ✅ Pass files up to parent
         onSubmit(formData, files);
     };
 
@@ -154,14 +169,13 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
                 />
             </FormSection>
 
-            {/* ✅ NEW Section: Photos */}
+            {/* ✅ UPDATED Section: Photos */}
             <FormSection title="Photos">
                 <div style={styles.uploadContainer}>
                     <p style={styles.uploadHint}>
                         Add photos of the exterior, interior, and engine bay.
                     </p>
 
-                    {/* Hidden Input + Custom Button */}
                     <label style={styles.uploadButton}>
                         + Add Photos
                         <input
@@ -173,24 +187,46 @@ export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
                         />
                     </label>
 
-                    {/* Previews Grid */}
-                    {previews.length > 0 && (
-                        <div style={styles.grid}>
-                            {previews.map((url, index) => (
-                                <div key={url} style={styles.previewWrapper}>
-                                    <img src={url} alt={`Preview ${index}`} style={styles.previewImg} />
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRemoveImage(index)}
-                                        style={styles.removeBtn}
-                                        title="Remove photo"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <div style={styles.grid}>
+                        {/* A. EXISTING IMAGES (From Server) */}
+                        {existingImages.map((img) => (
+                            <div key={img.id} style={styles.previewWrapper}>
+                                <img
+                                    src={img.thumbnailUrl}
+                                    alt="existing"
+                                    style={styles.previewImg}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveExistingImage(img.id)}
+                                    style={{ ...styles.removeBtn, background: "#dc2626" }} // Red for delete
+                                    title="Delete from server"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        ))}
+
+                        {/* B. NEW PREVIEWS (Pending Upload) */}
+                        {previews.map((url, index) => (
+                            <div key={url} style={styles.previewWrapper}>
+                                <img
+                                    src={url}
+                                    alt={`New ${index}`}
+                                    style={styles.previewImg}
+                                />
+                                <div style={styles.newBadge}>New</div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveNewFile(index)}
+                                    style={styles.removeBtn}
+                                    title="Remove upload"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </FormSection>
 
@@ -322,18 +358,20 @@ const styles = {
         borderRadius: "6px",
         overflow: "hidden",
         border: "1px solid #e5e7eb",
+        background: "#fff",
     },
     previewImg: {
         width: "100%",
         height: "100%",
         objectFit: "cover" as const,
     },
+    // Standard remove button (gray)
     removeBtn: {
         position: "absolute" as const,
         top: "4px",
         right: "4px",
-        width: "20px",
-        height: "20px",
+        width: "24px",
+        height: "24px",
         background: "rgba(0,0,0,0.6)",
         color: "#fff",
         border: "none",
@@ -342,7 +380,20 @@ const styles = {
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
-        fontSize: "12px",
+        fontSize: "14px",
+        zIndex: 2,
+    },
+    newBadge: {
+        position: "absolute" as const,
+        bottom: "4px",
+        left: "4px",
+        background: "#059669", // Green
+        color: "white",
+        fontSize: "10px",
+        padding: "2px 6px",
+        borderRadius: "4px",
+        fontWeight: "bold",
+        zIndex: 2
     },
     submitBtn: {
         marginTop: "16px",

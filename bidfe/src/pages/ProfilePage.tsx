@@ -42,10 +42,24 @@ export const ProfilePage = observer(() => {
         }
     };
 
-    const handleItemUpdate = async (data: ItemSubmitRequest) => {
+    // ✅ UPDATED: Accepts 'files' as the second argument
+    const handleItemUpdate = async (data: ItemSubmitRequest, files: File[]) => {
         if (!editingItem) return;
-        const success = await itemStore.updateListing(editingItem.id, data);
-        if (success) setEditingItem(null);
+
+        // Pass the files to the store
+        const success = await itemStore.updateListing(editingItem.id, data, files);
+
+        if (success) {
+            setEditingItem(null);
+        }
+    };
+
+    // ✅ NEW: Handles deleting an image
+    const handleDeleteImage = async (imageId: string) => {
+        if (!editingItem) return;
+
+        // Call the store to delete from API
+        await itemStore.deleteImage(editingItem.id, imageId);
     };
 
     // Loading/Error Checks
@@ -84,7 +98,8 @@ export const ProfilePage = observer(() => {
                 isOpen={!!editingItem}
                 item={editingItem}
                 onClose={() => setEditingItem(null)}
-                onSubmit={handleItemUpdate}
+                onSubmit={handleItemUpdate}        // ✅ Updated handler
+                onDeleteImage={handleDeleteImage}  // ✅ New handler connected
                 isLoading={itemStore.isLoading}
             />
         </div>

@@ -68,20 +68,17 @@ class ItemService(
     }
 
     @Transactional
-    fun uploadImage(itemId: UUID, file: MultipartFile): String {
+    fun uploadImage(itemId: UUID, file: MultipartFile): ItemImage { // ✅ Changed return type
         val item = findById(itemId)
 
-        // 1. Upload to Cloud/CDN
         val imageUrl = storageService.uploadFile(file)
 
-        // 2. Save Reference in DB
         val imageEntity = ItemImage(url = imageUrl, item = item)
         item.images.add(imageEntity)
-        itemRepo.save(item) // Cascades save to ItemImage
+        itemRepo.save(item)
 
-        return imageUrl
+        return item.images.last()
     }
-
     @Transactional
     fun deleteImage(imageId: UUID, userId: Long) {
         val image = itemImageRepo.findById(imageId)
