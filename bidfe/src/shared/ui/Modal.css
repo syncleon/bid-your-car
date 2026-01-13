@@ -1,75 +1,82 @@
-/* Modal.css */
-
-/* 1. The Backdrop */
+/* --- 1. Backdrop --- */
 .modal__overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6); /* Dim background */
-    backdrop-filter: blur(4px); /* Modern frosted glass effect */
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
     display: flex;
-    align-items: center; /* Vertical Center */
-    justify-content: center; /* Horizontal Center */
-    z-index: 1000; /* Ensure it sits on top */
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 16px;
     animation: fadeIn 0.2s ease-out forwards;
-    padding: 16px; /* Prevent content touching edges on mobile */
 }
 
-/* 2. The Card Content */
-.modal__content {
+/* --- 2. The Card --- */
+.modal__card {
     background: #ffffff;
     width: 100%;
-    max-width: 600px; /* Standard width, slightly narrower than full form */
-    max-height: 90vh; /* Prevent overflowing screen height */
-    overflow-y: auto; /* Scroll internally if content is too tall */
-    border-radius: 12px; /* Slightly rounder than inputs */
-    box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Deep, soft shadow */
-    position: relative;
+    max-width: 850px;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* 3. Optional Header/Close Button styling (if added to TSX) */
+/* --- 3. Header --- */
+.modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* REDUCED PADDING: Was 24px 32px */
+    padding: 20px 24px 0 24px;
+    flex-shrink: 0;
+}
+
+.modal__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: -0.02em;
+}
+
+/* --- 4. Close Button --- */
 .modal__close-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
     background: transparent;
     border: none;
     cursor: pointer;
     padding: 8px;
-    border-radius: 50%;
-    color: #666;
-    transition: all 0.2s;
+    margin-right: -8px;
+    border-radius: 6px;
+    color: #888;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
+    transition: all 0.2s;
 }
 
 .modal__close-btn:hover {
-    background-color: #f3f4f6;
-    color: #111; /* Matches your form button color */
+    background-color: #f3f3f3;
+    color: #000;
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* --- 5. Content Body --- */
+.modal__body {
+    /* REDUCED PADDING: Was 24px 32px... */
+    padding: 20px 24px 24px 24px;
+    overflow-y: auto;
+    color: #333;
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }

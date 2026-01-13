@@ -31,22 +31,6 @@ export const ItemsPage = observer(() => {
 
     return (
         <div style={containerStyle}>
-            {/* Header Section */}
-            <div style={{ marginBottom: 40, paddingBottom: 20, borderBottom: "1px solid #f0f0f0" }}>
-                <h1 style={{ fontSize: "28px", fontWeight: 300, margin: "0 0 8px 0", letterSpacing: "-0.5px" }}>
-                    Inventory
-                </h1>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <p style={{ color: "#888", margin: 0, fontSize: "14px" }}>
-                        Browse curated vehicles available for immediate purchase.
-                    </p>
-                    <span style={{ fontSize: "13px", color: "#666", fontWeight: 500 }}>
-                        {itemStore.items.length} results
-                    </span>
-                </div>
-            </div>
-
-            {/* Grid Section */}
             {itemStore.items.length === 0 ? (
                 <div style={emptyStateStyle}>
                     <h3>No items available</h3>
@@ -63,11 +47,9 @@ export const ItemsPage = observer(() => {
     );
 });
 
-// --- Minimal Page Styles ---
-
 const containerStyle: React.CSSProperties = {
     padding: "40px 24px",
-    maxWidth: 1200, // Slightly tighter max-width for better density
+    maxWidth: 1200,
     margin: "0 auto"
 };
 

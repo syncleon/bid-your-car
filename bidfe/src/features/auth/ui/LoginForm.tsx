@@ -1,123 +1,112 @@
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { useStore } from "../../../shared/hooks/useStore";
+import { formStyles } from "./formStyles"; // Assumed shared or defined below
 
 interface Props {
     onSwitchToRegister: () => void;
     onSuccess: () => void;
 }
 
-/**
- * Component providing a user interface for authentication.
- * Handles standard login procedures and provides a recovery path
- * for accounts marked for soft-deletion.
- */
 export const LoginForm = observer(({ onSwitchToRegister, onSuccess }: Props) => {
     const { authStore } = useStore();
     const [formData, setFormData] = useState({ username: "", password: "" });
 
-    /**
-     * Executes the standard authentication flow.
-     * Redirects the user upon successful login.
-     */
-    const submit = async () => {
+    const submit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         try {
             await authStore.login(formData);
             onSuccess();
         } catch {
-            /* Error state managed by authStore */
+            // Error managed by store
         }
     };
 
-    /**
-     * Triggers the account restoration process.
-     * Displays a success message upon completion and waits
-     * briefly before performing a redirect.
-     */
     const handleRestore = async () => {
         await authStore.restore(formData);
-
         if (authStore.isAuthenticated) {
-            setTimeout(() => {
-                onSuccess();
-            }, 2000);
+            setTimeout(() => onSuccess(), 1500);
         }
     };
 
-    /**
-     * Updates local form state and synchronizes global store messages.
-     * Resets error and success states when the user modifies inputs.
-     * * @param key The form field to update.
-     * @param key
-     * @param value The new value for the field.
-     */
     const handleChange = (key: string, value: string) => {
         setFormData({ ...formData, [key]: value });
         if (authStore.error || authStore.successMessage) authStore.reset();
     };
 
     return (
-        <>
-            <h2>Login</h2>
+        <div style={formStyles.container}>
+            <h2 style={formStyles.header}>Welcome back</h2>
+            <p style={formStyles.subHeader}>Please enter your details to sign in.</p>
 
+            {/* Error Message */}
             {authStore.error && (
-                <div style={{ color: "red", marginBottom: 12, padding: 8, border: "1px solid red", borderRadius: 4 }}>
-                    {authStore.error}
-                </div>
+                <div style={formStyles.errorBanner}>{authStore.error}</div>
             )}
 
+            {/* Success Message */}
             {authStore.successMessage && (
-                <div style={{
-                    color: "#155724",
-                    backgroundColor: "#d4edda",
-                    marginBottom: 12,
-                    padding: 10,
-                    borderRadius: 4,
-                    border: "1px solid #c3e6cb",
-                    textAlign: "center"
-                }}>
-                    {authStore.successMessage}
-                </div>
+                <div style={formStyles.successBanner}>{authStore.successMessage}</div>
             )}
 
+            {/* Deleted Account Recovery UI */}
             {authStore.isDeletedAccount && !authStore.successMessage && (
-                <div style={{ marginBottom: 20, textAlign: "center" }}>
-                    <p style={{ fontSize: "0.9em", color: "#666" }}>
-                        Your account is currently in the trash. <br/>
-                        Would you like to recover it?
+                <div style={formStyles.warningBox}>
+                    <p style={{ margin: "0 0 12px 0", fontSize: "0.9rem", color: "#854d0e" }}>
+                        This account is currently deactivated.
                     </p>
                     <button
                         onClick={handleRestore}
                         disabled={authStore.isLoading}
-                        style={{ backgroundColor: "#52c41a", color: "white", width: "100%", padding: "8px", cursor: "pointer" }}
+                        style={formStyles.restoreBtn}
                     >
-                        {authStore.isLoading ? "Restoring..." : "Yes, Restore Account"}
+                        {authStore.isLoading ? "Restoring..." : "Restore Account"}
                     </button>
-                    <hr style={{ margin: "20px 0", borderColor: "#eee" }}/>
                 </div>
             )}
 
-            <input
-                placeholder="Username"
-                value={formData.username}
-                onChange={(e) => handleChange("username", e.target.value)}
-            />
+            {/* Main Form */}
+            <form onSubmit={submit}>
+                <div style={formStyles.inputGroup}>
+                    <label style={formStyles.label}>Username</label>
+                    <input
+                        style={formStyles.input}
+                        placeholder="Enter your username"
+                        value={formData.username}
+                        onChange={(e) => handleChange("username", e.target.value)}
+                    />
+                </div>
 
-            <input
-                placeholder="Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleChange("password", e.target.value)}
-            />
+                <div style={formStyles.inputGroup}>
+                    <label style={formStyles.label}>Password</label>
+                    <input
+                        style={formStyles.input}
+                        placeholder="••••••••"
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => handleChange("password", e.target.value)}
+                    />
+                </div>
 
-            <button onClick={submit} disabled={authStore.isLoading}>
-                {authStore.isLoading ? "Logging in..." : "Login"}
-            </button>
+                <button
+                    type="submit"
+                    onClick={submit}
+                    disabled={authStore.isLoading}
+                    style={{
+                        ...formStyles.primaryBtn,
+                        opacity: authStore.isLoading ? 0.7 : 1
+                    }}
+                >
+                    {authStore.isLoading ? "Signing in..." : "Sign in"}
+                </button>
+            </form>
 
-            <p>
-                No account?{" "}
-                <button onClick={onSwitchToRegister}>Register</button>
-            </p>
-        </>
+            <div style={formStyles.footer}>
+                <span style={{ color: "#666" }}>Don't have an account? </span>
+                <button onClick={onSwitchToRegister} style={formStyles.linkBtn}>
+                    Sign up
+                </button>
+            </div>
+        </div>
     );
 });

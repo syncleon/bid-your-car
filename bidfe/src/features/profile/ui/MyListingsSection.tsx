@@ -1,6 +1,7 @@
 import { ItemCard } from "../../item/ui/ItemCard";
 import type { ItemDto } from "../../item/types";
 import { minStyles } from "./minimalStyles";
+import React from "react";
 
 interface Props {
     items: ItemDto[];
@@ -12,9 +13,16 @@ interface Props {
 
 export const MyListingsSection = ({ items, isLoading, onCreate, onEdit, onDelete }: Props) => {
     return (
-        <section style={{ ...minStyles.section, borderBottom: '1px solid #eee', marginBottom: 24, paddingBottom: 40 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <h3 style={{ ...minStyles.header, marginBottom: 0 }}>Active Listings</h3>
+        <section style={{
+            ...minStyles.section,
+            borderBottom: '1px solid #eee',
+            marginBottom: 12,
+            paddingBottom: 24,
+            paddingTop: 0,
+            marginTop: 0
+        }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h2 style={{ ...minStyles.header, marginBottom: 10 }}>Profile</h2>
                 <button onClick={onCreate} style={minStyles.primaryBtn}>
                     + Create New
                 </button>
@@ -23,7 +31,7 @@ export const MyListingsSection = ({ items, isLoading, onCreate, onEdit, onDelete
             {isLoading ? (
                 <p style={{ color: "#999" }}>Loading...</p>
             ) : items.length === 0 ? (
-                <div style={{ padding: "40px 0", color: "#999", fontStyle: "italic" }}>
+                <div style={{ padding: "24px 0", color: "#999", fontStyle: "italic" }}>
                     No active listings.
                 </div>
             ) : (
@@ -47,11 +55,11 @@ export const MyListingsSection = ({ items, isLoading, onCreate, onEdit, onDelete
 const gridStyle: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-    gap: "32px 24px"
+    gap: "20px 24px"
 };
 
 const actionRow: React.CSSProperties = {
-    marginTop: 12,
+    marginTop: 8,
     display: "flex",
     gap: 12,
     fontSize: "13px"

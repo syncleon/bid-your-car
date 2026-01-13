@@ -1,80 +1,103 @@
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { useStore } from "../../../shared/hooks/useStore";
+import { formStyles } from "./formStyles";
 
 interface Props {
     onSwitchToLogin: () => void;
     onSuccess: () => void;
 }
 
-/**
- * Component responsible for new user account creation.
- * Manages the registration state machine, including data submission
- * and the display of verification success messages.
- */
 export const RegisterForm = observer(({ onSwitchToLogin }: Props) => {
     const { authStore } = useStore();
     const [formData, setFormData] = useState({ username: "", email: "", password: "" });
 
-    /**
-     * Initiates the registration process using provided credentials.
-     * On success, the store's successMessage state triggers the
-     * post-registration view.
-     */
-    const submit = async () => {
+    const submit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         try {
             await authStore.register(formData);
         } catch {
-            /* Error state managed by authStore */
+            // Error managed by store
         }
     };
 
+    // Success View
     if (authStore.successMessage) {
         return (
-            <div style={{ textAlign: "center", padding: "20px" }}>
-                <h2 style={{ color: "green" }}>Registration Successful!</h2>
-                <p>{authStore.successMessage}</p>
-                <div style={{ marginTop: 20 }}>
-                    <button onClick={onSwitchToLogin}>
-                        Go to Login
-                    </button>
-                </div>
+            <div style={{ ...formStyles.container, textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>🎉</div>
+                <h2 style={formStyles.header}>Account Created</h2>
+                <p style={{ color: "#666", marginBottom: "32px", lineHeight: "1.5" }}>
+                    {authStore.successMessage}
+                </p>
+                <button onClick={onSwitchToLogin} style={formStyles.primaryBtn}>
+                    Continue to Login
+                </button>
             </div>
         );
     }
 
     return (
-        <>
-            <h2>Register</h2>
+        <div style={formStyles.container}>
+            <h2 style={formStyles.header}>Create an account</h2>
+            <p style={formStyles.subHeader}>Start your journey with us today.</p>
+
             {authStore.error && (
-                <div style={{ color: "red", marginBottom: 12 }}>{authStore.error}</div>
+                <div style={formStyles.errorBanner}>{authStore.error}</div>
             )}
 
-            <input
-                placeholder="Username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            />
-            <input
-                placeholder="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <input
-                placeholder="Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
+            <form onSubmit={submit}>
+                <div style={formStyles.inputGroup}>
+                    <label style={formStyles.label}>Username</label>
+                    <input
+                        style={formStyles.input}
+                        placeholder="Choose a username"
+                        value={formData.username}
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    />
+                </div>
 
-            <button onClick={submit} disabled={authStore.isLoading}>
-                {authStore.isLoading ? "Registering..." : "Register"}
-            </button>
+                <div style={formStyles.inputGroup}>
+                    <label style={formStyles.label}>Email</label>
+                    <input
+                        style={formStyles.input}
+                        placeholder="name@example.com"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                </div>
 
-            <p>
-                Already have an account? <button onClick={onSwitchToLogin}>Login</button>
-            </p>
-        </>
+                <div style={formStyles.inputGroup}>
+                    <label style={formStyles.label}>Password</label>
+                    <input
+                        style={formStyles.input}
+                        placeholder="Create a strong password"
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    onClick={submit}
+                    disabled={authStore.isLoading}
+                    style={{
+                        ...formStyles.primaryBtn,
+                        opacity: authStore.isLoading ? 0.7 : 1
+                    }}
+                >
+                    {authStore.isLoading ? "Creating account..." : "Create account"}
+                </button>
+            </form>
+
+            <div style={formStyles.footer}>
+                <span style={{ color: "#666" }}>Already have an account? </span>
+                <button onClick={onSwitchToLogin} style={formStyles.linkBtn}>
+                    Log in
+                </button>
+            </div>
+        </div>
     );
 });

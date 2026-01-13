@@ -21,7 +21,8 @@ fun User.toDto(): UserDto =
         id = id!!,
         username = username,
         email = email,
-        roles = roles.map { it.toDto() }.toSet()
+        roles = roles.map { it.toDto() }.toSet(),
+        createDate = createdDate
     )
 
 fun Item.toDto(): ItemDto = ItemDto(
@@ -39,8 +40,6 @@ fun Item.toDto(): ItemDto = ItemDto(
     interiorColor = this.interiorColor,
     sellerType = this.sellerType,
     buyNowPrice = this.buyNowPrice,
-
-    // ✅ Map the list of images using the extension function below
     images = this.images.map { it.toDto() }
 )
 
@@ -75,6 +74,4 @@ fun ItemCreateRequest.toEntity(seller: User): Item = Item(
     interiorColor = this.interiorColor,
     sellerType = this.sellerType,
     buyNowPrice = this.buyNowPrice
-    // Note: Images are usually uploaded separately after item creation,
-    // so we don't map them here.
 )

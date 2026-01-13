@@ -1,64 +1,50 @@
-import { useState } from "react";
 import { observer } from "mobx-react-lite";
-import { useStore } from "../../../shared/hooks/useStore";
 import type { Profile } from "../types";
 import { minStyles } from "./minimalStyles";
 
-export const ProfileInfoSection = observer(({ profile }: { profile: Profile }) => {
-    const { profileStore } = useStore();
-    const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ username: profile.username, email: profile.email });
+interface Props {
+    profile: Profile;
+    onOpenSettings: () => void;
+}
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await profileStore.updateProfileData(formData);
-        setIsEditing(false);
+export const ProfileInfoSection = observer(({ profile, onOpenSettings }: Props) => {
+
+    const formatDate = (isoString: string | null | undefined) => {
+        if (!isoString) return "Unknown";
+        return new Date(isoString).toLocaleDateString("en-US", {
+            year: 'numeric',
+            month: 'long'
+        });
     };
 
     return (
-        <section style={minStyles.section}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-                <h3 style={minStyles.header}>Personal Information</h3>
-                {!isEditing && (
-                    <button onClick={() => setIsEditing(true)} style={minStyles.textBtn}>Edit</button>
-                )}
+        // CHANGED: Reduced marginBottom from 24 to 8
+        <section style={{ ...minStyles.compactHeader, marginBottom: 8 }}>
+            {/* Avatar */}
+            <div style={minStyles.avatar}>
+                {profile.username.charAt(0).toUpperCase()}
             </div>
 
-            {isEditing ? (
-                <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
-                    <div style={{ marginBottom: 20 }}>
-                        <label style={minStyles.label}>Username</label>
-                        <input
-                            style={minStyles.input}
-                            value={formData.username}
-                            onChange={e => setFormData({ ...formData, username: e.target.value })}
-                        />
-                    </div>
-                    <div style={{ marginBottom: 30 }}>
-                        <label style={minStyles.label}>Email</label>
-                        <input
-                            style={minStyles.input}
-                            value={formData.email}
-                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                        />
-                    </div>
-                    <div style={{ display: "flex", gap: 16 }}>
-                        <button type="submit" style={minStyles.primaryBtn} disabled={profileStore.isLoading}>Save</button>
-                        <button type="button" onClick={() => setIsEditing(false)} style={minStyles.textBtn}>Cancel</button>
-                    </div>
-                </form>
-            ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, color: "#444" }}>
+            {/* Info */}
+            <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
-                        <span style={minStyles.label}>Username</span>
-                        <div>{profile.username}</div>
+                        <h1 style={{ fontSize: "24px", margin: "0 0 2px 0", fontWeight: 600 }}>{profile.username}</h1>
+                        <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>{profile.email}</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#999" }}>
+                            Member since {formatDate(profile.createDate)}
+                        </p>
                     </div>
-                    <div>
-                        <span style={minStyles.label}>Email</span>
-                        <div>{profile.email}</div>
-                    </div>
+
+                    <button onClick={onOpenSettings} style={minStyles.settingsBtn}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        Settings
+                    </button>
                 </div>
-            )}
+            </div>
         </section>
     );
 });
