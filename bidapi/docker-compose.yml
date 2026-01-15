@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15
-    container_name: bidapi-db
+    container_name: car-auction-db
     restart: always
     environment:
       POSTGRES_DB: carauction
@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - car-auction-data:/var/lib/postgresql/data
 
   backend:
     build:
@@ -28,9 +28,7 @@ services:
       AWS_BUCKET: ${AWS_BUCKET}
     ports:
       - "8080:8080"
-    volumes:
-      - "/Users/oblapleon/uploads:/carauction/uploads"
     restart: always
 
 volumes:
-  postgres-data:
+  car-auction-data:
