@@ -1,0 +1,16 @@
+services:
+  bidfe-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bidfe_frontend
+    restart: always
+    ports:
+      # Map host port 5173 to container port 80
+      - "5173:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

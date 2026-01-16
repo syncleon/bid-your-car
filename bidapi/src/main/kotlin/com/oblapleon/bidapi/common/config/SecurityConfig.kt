@@ -1,6 +1,7 @@
 package com.oblapleon.bidapi.common.config
 
 import com.oblapleon.bidapi.common.security.JwtTokenProvider
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -32,7 +33,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val jwtDecoder: JwtDecoder
-) {
+)
+{
+    @Value("\${cors.allowed-origins:http://localhost:5173}")
+    lateinit var allowedOrigins: List<String>
 
     /**
      * Configures the security filter chain.
@@ -108,9 +112,14 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("http://localhost:5173", "http://localhost:8080")
+
+        // Use the injected list instead of hardcoded strings
+        configuration.allowedOrigins = allowedOrigins
+
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
+        configuration.allowCredentials = true // Usually needed if frontend sends cookies/headers
+
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source
