@@ -2,7 +2,6 @@ package com.oblapleon.bidapi.feature.user.controller
 
 import com.oblapleon.bidapi.common.controller.BaseController
 import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
-import com.oblapleon.bidapi.common.mapper.toDto
 import com.oblapleon.bidapi.feature.user.dto.*
 import com.oblapleon.bidapi.feature.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
@@ -28,7 +27,7 @@ class UserController(
     @Operation(summary = "Update current user profile")
     @PutMapping("/me/profile")
     fun updateCurrentUserProfile(
-        @Valid @RequestBody request: ProfileUpdateRequest
+        @Valid @RequestBody request: UpdateProfileReqDto
     ) = handleRequest {
         val currentUser = authHelper.getCurrentUser()
         userService.updateProfile(
@@ -41,7 +40,7 @@ class UserController(
     @Operation(summary = "Change password")
     @PutMapping("/me/change-password")
     fun changePassword(
-        @Valid @RequestBody request: ChangePasswordRequest
+        @Valid @RequestBody request: UpdatePasswordReqDto
     ) = handleRequest {
         val currentUser = authHelper.getCurrentUser()
         userService.changePassword(
@@ -71,7 +70,7 @@ class UserController(
     @PutMapping("/{id}")
     fun updateUser(
         @PathVariable id: Long,
-        @Valid @RequestBody request: UserUpdateRequest
+        @Valid @RequestBody request: UpdateUserReqDto
     ) = handleRequest {
         // Fixed: No longer passing 'currentUser'
         authHelper.checkOwnerOrAdmin(id)

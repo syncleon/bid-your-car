@@ -6,10 +6,13 @@ import java.util.*
 
 data class ItemDto(
     val id: UUID,
+    val year: Int,
     val make: String,
     val model: String,
     val vin: String,
     val location: String,
+    val mileage: Int,
+    val description: String?,
     val seller: UserDto,
     val engine: String?,
     val drivetrain: String?,
@@ -18,6 +21,7 @@ data class ItemDto(
     val exteriorColor: String?,
     val interiorColor: String?,
     val sellerType: String?,
+    val titleStatus: String?,
     val buyNowPrice: BigDecimal?,
     val images: List<ItemImageDto> = emptyList()
 )

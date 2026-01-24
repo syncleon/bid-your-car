@@ -2,9 +2,9 @@ package com.oblapleon.bidapi.feature.item.controller
 
 import com.oblapleon.bidapi.common.controller.BaseController
 import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
-import com.oblapleon.bidapi.common.mapper.toDto // ✅ Import the extension function
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
+import com.oblapleon.bidapi.feature.item.dto.toDto
 import com.oblapleon.bidapi.feature.item.service.ItemService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -26,7 +26,8 @@ class ItemController(
     @PostMapping
     fun createItem(@Valid @RequestBody request: ItemCreateRequest) = handleRequest {
         val user = authHelper.getCurrentUser()
-        itemService.create(user, request).toDto()
+        val createdItem = itemService.create(user, request)
+        createdItem.toDto()
     }
 
     @Operation(summary = "Update a car listing")
@@ -45,6 +46,7 @@ class ItemController(
     fun deleteItem(@PathVariable id: UUID) = handleRequest {
         val item = itemService.findById(id)
         authHelper.checkOwnerOrAdmin(item.seller.id!!)
+
         itemService.delete(id)
         null
     }
@@ -56,10 +58,17 @@ class ItemController(
         itemService.findBySeller(user.id!!).map { it.toDto() }
     }
 
+    @Operation(summary = "Get all active listings")
     @GetMapping
-    fun getAllItems() = handleRequest { itemService.findAll().map { it.toDto() } }
+    fun getAllItems() = handleRequest {
+        itemService.findAll().map { it.toDto() }
+    }
+
+    @Operation(summary = "Get specific listing details")
     @GetMapping("/{id}")
-    fun getItemById(@PathVariable id: UUID) = handleRequest { itemService.findById(id).toDto() }
+    fun getItemById(@PathVariable id: UUID) = handleRequest {
+        itemService.findById(id).toDto()
+    }
 
     @Operation(summary = "Upload an image for a car")
     @PostMapping(
@@ -79,6 +88,7 @@ class ItemController(
     @DeleteMapping("/images/{imageId}")
     fun deleteItemImage(@PathVariable imageId: UUID) = handleRequest {
         val user = authHelper.getCurrentUser()
+        // Service handles ownership check specifically for the image
         itemService.deleteImage(imageId, user.id!!)
         null
     }

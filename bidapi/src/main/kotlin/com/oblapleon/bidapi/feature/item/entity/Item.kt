@@ -1,19 +1,9 @@
 package com.oblapleon.bidapi.feature.item.entity
 
 import com.oblapleon.bidapi.common.entity.BaseEntity
+import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.user.entity.User
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Index
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import java.math.BigDecimal
 import java.sql.Types
@@ -24,6 +14,7 @@ import java.util.UUID
     name = "items",
     indexes = [
         Index(name = "idx_item_make_model", columnList = "make, model"),
+        Index(name = "idx_item_year", columnList = "year"), // Useful for sorting
         Index(name = "idx_item_seller_id", columnList = "seller_id")
     ]
 )
@@ -34,6 +25,9 @@ class Item(
     @JdbcTypeCode(Types.VARCHAR)
     @Column(updatable = false, nullable = false)
     var id: UUID? = null,
+
+    @Column(nullable = false)
+    var year: Int,
 
     @Column(nullable = false, length = 50)
     var make: String,
@@ -47,8 +41,14 @@ class Item(
     @Column(nullable = false)
     var location: String,
 
+    @Column(nullable = false)
+    var mileage: Int,
+
+    @Column(columnDefinition = "TEXT")
+    var description: String? = null,
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false) // This will be a BIGINT in DB to match User.id
+    @JoinColumn(name = "seller_id", nullable = false)
     var seller: User,
 
     @Column(name = "engine")
@@ -72,10 +72,16 @@ class Item(
     @Column(name = "seller_type")
     var sellerType: String? = null,
 
+    @Column(name = "title_status")
+    var titleStatus: String? = null,
+
     @Column(name = "buy_now_price", precision = 19, scale = 2)
     var buyNowPrice: BigDecimal? = null,
 
     @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var images: MutableList<ItemImage> = mutableListOf()
+    var images: MutableList<ItemImage> = mutableListOf(),
+
+    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
+    var auctions: MutableList<Auction> = mutableListOf()
 
 ) : BaseEntity()

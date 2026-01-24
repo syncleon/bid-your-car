@@ -6,7 +6,7 @@ import com.oblapleon.bidapi.common.exceptions.NotFoundException
 import com.oblapleon.bidapi.common.exceptions.UnauthorizedException
 import com.oblapleon.bidapi.common.service.BaseService
 import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
-import com.oblapleon.bidapi.feature.user.dto.UserUpdateRequest
+import com.oblapleon.bidapi.feature.user.dto.UpdateUserReqDto
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.entity.User
 import com.oblapleon.bidapi.feature.user.repo.UserRepo
@@ -249,7 +249,7 @@ class UserService(
      * @return The updated User entity.
      * @throws ConflictException If the new username or email is already taken.
      */
-    fun update(id: Long, request: UserUpdateRequest): User {
+    fun update(id: Long, request: UpdateUserReqDto): User {
         val user = findById(id)
 
         request.username?.let {

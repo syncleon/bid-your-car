@@ -9,6 +9,10 @@ import java.util.UUID
  * Includes strict validation for VIN and price.
  */
 data class ItemCreateRequest(
+    @field:NotNull(message = "Year is required")
+    @field:Min(value = 1900, message = "Year must be valid")
+    val year: Int,
+
     @field:NotBlank(message = "Make is required")
     val make: String,
 
@@ -22,6 +26,13 @@ data class ItemCreateRequest(
     @field:NotBlank(message = "Location is required")
     val location: String,
 
+    @field:NotNull(message = "Mileage is required")
+    @field:Min(value = 0, message = "Mileage cannot be negative")
+    val mileage: Int,
+
+    @field:Size(max = 5000, message = "Description is too long")
+    val description: String? = null,
+
     val engine: String? = null,
     val drivetrain: String? = null,
     val transmission: String? = null,
@@ -29,6 +40,7 @@ data class ItemCreateRequest(
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
     val sellerType: String? = null,
+    val titleStatus: String? = null, // e.g. Clean, Salvage
 
     @field:DecimalMin(value = "0.0", inclusive = true, message = "Price cannot be negative")
     val buyNowPrice: BigDecimal? = null
@@ -39,9 +51,18 @@ data class ItemCreateRequest(
  * All fields are optional to allow partial updates.
  */
 data class ItemUpdateRequest(
+    @field:Min(value = 1900)
+    val year: Int? = null,
     val make: String? = null,
     val model: String? = null,
     val location: String? = null,
+
+    @field:Min(value = 0)
+    val mileage: Int? = null,
+
+    @field:Size(max = 5000)
+    val description: String? = null,
+
     val engine: String? = null,
     val drivetrain: String? = null,
     val transmission: String? = null,
@@ -49,6 +70,7 @@ data class ItemUpdateRequest(
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
     val sellerType: String? = null,
+    val titleStatus: String? = null,
 
     @field:DecimalMin(value = "0.0", inclusive = true)
     val buyNowPrice: BigDecimal? = null

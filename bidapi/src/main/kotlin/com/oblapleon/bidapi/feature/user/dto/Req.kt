@@ -21,7 +21,7 @@ data class DeleteAccountReqDto(
     val password: String
 )
 
-data class UserUpdateRequest(
+data class UpdateUserReqDto(
     @field:Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     @field:Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
     val username: String? = null,
@@ -34,7 +34,7 @@ data class UserUpdateRequest(
     val password: String? = null
 )
 
-data class ProfileUpdateRequest(
+data class UpdateProfileReqDto(
     @field:Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     @field:Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
     val username: String? = null,
@@ -44,7 +44,7 @@ data class ProfileUpdateRequest(
     val email: String? = null
 )
 
-data class ChangePasswordRequest(
+data class UpdatePasswordReqDto(
     @field:NotBlank(message = "Old password is required")
     val oldPassword: String,
 

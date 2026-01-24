@@ -67,6 +67,14 @@ class SecurityConfig(
                         "/api/v1/items/{id}").permitAll()
                     .requestMatchers(
                         HttpMethod.GET,
+                        "/api/v1/auctions",
+                        "/api/v1/auctions/active",
+                        "/api/v1/auctions/{id}",
+                        "/api/v1/auctions/ending-soon",
+                        "/api/v1/bids/auction/{auctionId}"
+                    ).permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
                         "/swagger-ui/**",
                         "/v3/api-docs/**"
                     ).permitAll()

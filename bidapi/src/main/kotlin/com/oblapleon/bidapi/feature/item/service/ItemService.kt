@@ -2,7 +2,6 @@ package com.oblapleon.bidapi.feature.item.service
 
 import com.oblapleon.bidapi.common.exceptions.AlreadyExistsException
 import com.oblapleon.bidapi.common.exceptions.NotFoundException
-import com.oblapleon.bidapi.common.mapper.toEntity
 import com.oblapleon.bidapi.common.service.BaseService
 import com.oblapleon.bidapi.common.service.StorageService
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
@@ -50,16 +49,42 @@ class ItemService(
         if (itemRepo.existsByVin(request.vin)) {
             throw AlreadyExistsException("Car with VIN ${request.vin} already exists")
         }
-        return itemRepo.save(request.toEntity(currentUser))
+
+        // Manual mapping ensures all new fields are captured correctly
+        val newItem = Item(
+            seller = currentUser,
+            year = request.year,
+            make = request.make,
+            model = request.model,
+            vin = request.vin,
+            location = request.location,
+            mileage = request.mileage,
+            description = request.description,
+            engine = request.engine,
+            drivetrain = request.drivetrain,
+            transmission = request.transmission,
+            bodyStyle = request.bodyStyle,
+            exteriorColor = request.exteriorColor,
+            interiorColor = request.interiorColor,
+            sellerType = request.sellerType,
+            titleStatus = request.titleStatus,
+            buyNowPrice = request.buyNowPrice
+        )
+
+        return itemRepo.save(newItem)
     }
 
     @Transactional
     fun update(id: UUID, request: ItemUpdateRequest): Item {
         val item = findById(id)
+
         return item.apply {
+            request.year?.let { year = it }
             request.make?.let { make = it }
             request.model?.let { model = it }
             request.location?.let { location = it }
+            request.mileage?.let { mileage = it }
+            request.description?.let { description = it }
             request.engine?.let { engine = it }
             request.drivetrain?.let { drivetrain = it }
             request.transmission?.let { transmission = it }
@@ -67,6 +92,7 @@ class ItemService(
             request.exteriorColor?.let { exteriorColor = it }
             request.interiorColor?.let { interiorColor = it }
             request.sellerType?.let { sellerType = it }
+            request.titleStatus?.let { titleStatus = it }
             request.buyNowPrice?.let { buyNowPrice = it }
         }.let { itemRepo.save(it) }
     }
@@ -78,17 +104,21 @@ class ItemService(
     }
 
     @Transactional
-    fun uploadImage(itemId: UUID, file: MultipartFile): ItemImage { // ✅ Changed return type
+    fun uploadImage(itemId: UUID, file: MultipartFile): ItemImage {
         val item = findById(itemId)
 
+        // Assuming storageService returns the full URL or path
         val imageUrl = storageService.uploadFile(file)
 
         val imageEntity = ItemImage(url = imageUrl, item = item)
         item.images.add(imageEntity)
+
+        // Saving the item cascades the new image due to CascadeType.ALL
         itemRepo.save(item)
 
         return item.images.last()
     }
+
     @Transactional
     fun deleteImage(imageId: UUID, userId: Long) {
         val image = itemImageRepo.findById(imageId)

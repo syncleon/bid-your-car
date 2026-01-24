@@ -1,9 +1,9 @@
 package com.oblapleon.bidapi.common.helpers
 
-import com.oblapleon.bidapi.common.config.toUser
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.entity.User
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 
@@ -32,5 +32,17 @@ class AuthorizationHelper {
             throw AccessDeniedException("You are not authorized to access this resource")
         }
         return user
+    }
+
+    /**
+     * Extension to extract the domain User entity from the Authentication object.
+     * This works because of our custom UserAuthenticationConverter.
+     */
+    fun Authentication.toUser(): User {
+        val principal = this.principal
+        if (principal is User) {
+            return principal
+        }
+        throw AccessDeniedException("Principal is not a valid User entity")
     }
 }
