@@ -39,7 +39,10 @@ export const ItemsPage = observer(() => {
             ) : (
                 <div style={gridStyle}>
                     {itemStore.items.map((item) => (
-                        <ItemCard key={item.id} item={item} />
+                        <ItemCard
+                            key={item.id}
+                            item={item}
+                        />
                     ))}
                 </div>
             )}

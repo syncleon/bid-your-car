@@ -1,10 +1,10 @@
-import type { ItemSubmitRequest, ItemDto, ItemImageDto } from "../types.ts"; // ✅ Import ItemImageDto
+import type { ItemCreateRequest, ItemDto, ItemImageDto } from "../types.ts"; // ✅ Import ItemImageDto
 import { tokenStorage } from "../../../shared/lib/token.ts";
 import { http } from "../../../shared/api/HttpClient.ts";
 
 const BASE_URL = "http://localhost:8080/api/v1/items";
 
-export const submitItem = async (data: ItemSubmitRequest): Promise<ItemDto> => {
+export const submitItem = async (data: ItemCreateRequest): Promise<ItemDto> => {
     const token = tokenStorage.get();
 
     if (!token) {
@@ -79,7 +79,7 @@ export const getAllItems = async (): Promise<ItemDto[]> => {
 export const getMyItems = () =>
     http<ItemDto[]>("/items/me", { method: "GET" });
 
-export const updateItem = (id: string, data: ItemSubmitRequest) =>
+export const updateItem = (id: string, data: ItemCreateRequest) =>
     http<ItemDto>(`/items/${id}`, {
         method: "PUT",
         body: JSON.stringify(data)
