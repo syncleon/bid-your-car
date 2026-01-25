@@ -27,7 +27,6 @@ export const EditItemModal = ({
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            // Better title for a vehicle marketplace
             title={`Edit ${item.year} ${item.make} ${item.model}`}
         >
             <div style={formWrapperStyle}>
@@ -38,7 +37,6 @@ export const EditItemModal = ({
                     isLoading={isLoading}
                 />
 
-                {/* Footer action for the Modal specifically */}
                 <div style={footerStyle}>
                     <button
                         onClick={onClose}
@@ -56,7 +54,7 @@ export const EditItemModal = ({
 // --- Styles ---
 
 const formWrapperStyle: React.CSSProperties = {
-    padding: "0 4px", // Give the form some breathing room inside the modal
+    padding: "0 4px",
 };
 
 const footerStyle: React.CSSProperties = {

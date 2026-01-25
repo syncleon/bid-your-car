@@ -8,7 +8,6 @@ const BODY_STYLES = ["Sedan", "Coupe", "SUV", "Convertible", "Hatchback", "Wagon
 const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT"].map(v => ({ value: v, label: v }));
 const DRIVETRAINS = ["RWD", "FWD", "AWD", "4WD"].map(v => ({ value: v, label: v }));
 const SELLER_TYPES = [{ value: "Private Party", label: "Private Party" }, { value: "Dealer", label: "Dealership" }];
-const TITLE_STATUSES = ["Clean", "Salvage", "Rebuilt", "Lien"].map(v => ({ value: v, label: v }));
 
 interface Props {
     initialData?: ItemDto;
@@ -31,7 +30,6 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
         location: initial("location"),
         mileage: initial("mileage", 0),
         description: initial("description"),
-        buyNowPrice: initial("buyNowPrice", null),
         engine: initial("engine"),
         transmission: initial("transmission"),
         drivetrain: initial("drivetrain"),
@@ -39,7 +37,6 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
         exteriorColor: initial("exteriorColor"),
         interiorColor: initial("interiorColor"),
         sellerType: initial("sellerType"),
-        titleStatus: initial("titleStatus"),
     });
 
     // 2. State Hooks
@@ -158,10 +155,8 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
                 </div>
             </FormSection>
 
-            {/* 4. Sale Info */}
             <FormSection title="Pricing & Location" description="Set your price and verify title status.">
                 <div style={gridRow}>
-                    <FormSelect label="Title Status" name="titleStatus" value={formData.titleStatus || ""} onChange={handleChange} options={TITLE_STATUSES} />
                     <FormSelect label="Seller Type" name="sellerType" value={formData.sellerType || ""} onChange={handleChange} options={SELLER_TYPES} />
                 </div>
                 <div style={gridRow}>
@@ -169,14 +164,6 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
                     <FormInput label="Interior Color" name="interiorColor" value={formData.interiorColor || ""} onChange={handleChange} />
                 </div>
                 <FormInput label="Location" name="location" value={formData.location} onChange={handleChange} error={errors.location} placeholder="City, State" />
-                <FormInput
-                    label="Buy It Now Price ($)"
-                    name="buyNowPrice"
-                    type="number"
-                    value={formData.buyNowPrice ?? ""}
-                    onChange={handleChange}
-                    hint="Optional. Leave blank to only allow bidding."
-                />
             </FormSection>
 
             <button type="submit" disabled={isLoading} style={submitBtnStyle}>

@@ -50,16 +50,34 @@ export const ProfilePage = observer(() => {
         const success = await auctionStore.startAuction(data);
         if (success) {
             setAuctioningItem(null);
+            // Refresh items so the UI updates from "Available" to "Live"
+            await itemStore.loadMyItems();
 
-            // Navigate to the new auction.
-            // Since our store unshifts the new auction to index 0, this works.
             const newAuctionId = auctionStore.auctions[0]?.id;
             if (newAuctionId) {
                 navigate(`/auctions/${newAuctionId}`);
             } else {
-                // Fallback if local state update lags
                 navigate("/auctions");
             }
+        }
+    };
+
+    // ✅ New Handler: Cancel Active Auction
+    const handleCancelAuction = async (itemId: string) => {
+        // 1. Find the item in our store to get the activeAuctionId
+        const item = itemStore.myItems.find((i) => i.id === itemId);
+
+        if (!item || !item.activeAuctionId) {
+            alert("Error: No active auction found for this item.");
+            return;
+        }
+
+        // 2. Call the auction store to cancel using the AUCTION ID
+        const success = await auctionStore.cancelActiveAuction(item.activeAuctionId);
+
+        if (success) {
+            // 3. Refresh the list so the badge updates from "Live" to "Cancelled"
+            await itemStore.loadMyItems();
         }
     };
 
@@ -86,6 +104,7 @@ export const ProfilePage = observer(() => {
                 onDelete={(id) => {
                     if (window.confirm("Delete listing?")) itemStore.deleteListing(id);
                 }}
+                onCancel={handleCancelAuction} // <--- Pass the new handler here
             />
 
             <ProfileSettingsModal

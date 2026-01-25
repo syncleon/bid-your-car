@@ -1,8 +1,9 @@
 package com.oblapleon.bidapi.feature.auction.entity
 
 enum class AuctionStatus {
-    ACTIVE,     // Currently bidding
-    SOLD,       // Successfully ended
-    EXPIRED,    // Time ran out, reserve not met / no bids
-    CANCELLED   // Manually stopped
+    DRAFT,      // Created but not yet live (optional)
+    ACTIVE,     // Open for bidding
+    SOLD,       // Time ended and Reserve Price was met
+    EXPIRED,    // Time ended but Reserve Price was NOT met
+    CANCELLED,  // Manually stopped by admin or seller
 }

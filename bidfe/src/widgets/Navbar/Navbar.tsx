@@ -30,17 +30,15 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                 </Link>
 
                 <nav className="navbar__nav">
-                    <Link to="/auctions" className="navbar__link">
-                        Auctions
+                    <Link to="/past-auctions" className="navbar__link">
+                        Past Auctions
                     </Link>
-                    {/* Left Aligned Sell Button (Black Pill) */}
                     <Link to="/sell-car" className="navbar__cta">
                         Sell a Car
                     </Link>
                 </nav>
             </div>
 
-            {/* Center: Search */}
             <div className="navbar__center">
                 <div className="search-wrapper">
                     <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,7 +52,6 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                 </div>
             </div>
 
-            {/* Right: User Actions */}
             <div className="navbar__right">
                 {isAuthenticated ? (
                     <div className="user-menu" ref={menuRef}>

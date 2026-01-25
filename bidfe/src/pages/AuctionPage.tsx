@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { auctionStore } from "../features/auction/model/auction.store";
-import {AuctionCard} from "../features/auction/ui/AuctionItemCard.tsx";
+import {AuctionCard} from "../features/auction/ui/AuctionCard.tsx";
 
 export const AuctionPage = observer(() => {
 

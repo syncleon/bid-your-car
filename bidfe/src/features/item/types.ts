@@ -1,3 +1,5 @@
+export type AuctionStatus = "DRAFT" | "ACTIVE" | "SOLD" | "EXPIRED" | "CANCELLED";
+
 export interface ItemImageDto {
     /** Unique ID for database referencing (e.g., for deletion) */
     id: string;
@@ -33,9 +35,12 @@ export interface ItemDto {
     exteriorColor: string | null;
     interiorColor: string | null;
     sellerType: string | null;
-    titleStatus: string | null;
-    buyNowPrice: number | null;
     images: ItemImageDto[];
+    auctionStatus: AuctionStatus | null;
+    activeAuctionId: string | null;
+    active: boolean;
+    available: boolean;
+    sold: boolean;
 }
 
 export interface ItemCreateRequest {
@@ -53,6 +58,4 @@ export interface ItemCreateRequest {
     exteriorColor?: string;
     interiorColor?: string;
     sellerType?: string;
-    titleStatus?: string;
-    buyNowPrice?: number;
 }

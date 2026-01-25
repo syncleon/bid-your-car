@@ -44,13 +44,21 @@ class AuctionService(
         reservePrice: BigDecimal?,
         sellerId: Long
     ): Auction {
+        // 1. Fetch item (Ensure Repository uses JOIN FETCH on auctions to avoid N+1)
         val item = itemRepo.findById(itemId).orElseThrow { NotFoundException("Item not found") }
 
+        // 2. Ownership & Business Rule Validation
         if (item.seller.id != sellerId) throw UnauthorizedException("You do not own this item.")
 
-        check(!auctionRepo.isItemInActiveAuction(itemId)) { "Item is already in an active auction." }
+        // Using the bidirectional relation to check status
+        val hasActiveAuction = item.auctions.any { it.status == AuctionStatus.ACTIVE }
+        if (hasActiveAuction) {
+            throw IllegalStateException("Item is already in an active auction.")
+        }
+
         require(startPrice >= BigDecimal.ZERO) { "Start price cannot be negative." }
 
+        // 3. Create & Link Auction
         val auction = Auction(
             item = item,
             startPrice = startPrice,
@@ -60,6 +68,9 @@ class AuctionService(
             endTime = LocalDateTime.now().plusHours(durationHours),
             status = AuctionStatus.ACTIVE
         )
+
+        // 4. Maintain bidirectional consistency
+        item.auctions.add(auction)
 
         return auctionRepo.save(auction)
     }

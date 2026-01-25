@@ -11,7 +11,7 @@ import java.util.UUID
 data class ItemCreateRequest(
     @field:NotNull(message = "Year is required")
     @field:Min(value = 1900, message = "Year must be valid")
-    val year: Int,
+    var year: Int,
 
     @field:NotBlank(message = "Make is required")
     val make: String,
@@ -28,7 +28,7 @@ data class ItemCreateRequest(
 
     @field:NotNull(message = "Mileage is required")
     @field:Min(value = 0, message = "Mileage cannot be negative")
-    val mileage: Int,
+    var mileage: Int,
 
     @field:Size(max = 5000, message = "Description is too long")
     val description: String? = null,
@@ -39,11 +39,7 @@ data class ItemCreateRequest(
     val bodyStyle: String? = null,
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
-    val sellerType: String? = null,
-    val titleStatus: String? = null, // e.g. Clean, Salvage
-
-    @field:DecimalMin(value = "0.0", inclusive = true, message = "Price cannot be negative")
-    val buyNowPrice: BigDecimal? = null
+    val sellerType: String? = null
 )
 
 /**
@@ -69,11 +65,7 @@ data class ItemUpdateRequest(
     val bodyStyle: String? = null,
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
-    val sellerType: String? = null,
-    val titleStatus: String? = null,
-
-    @field:DecimalMin(value = "0.0", inclusive = true)
-    val buyNowPrice: BigDecimal? = null
+    val sellerType: String? = null
 )
 
 data class ItemImageDto(

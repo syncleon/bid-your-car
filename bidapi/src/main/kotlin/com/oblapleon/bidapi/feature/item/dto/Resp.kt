@@ -1,5 +1,6 @@
 package com.oblapleon.bidapi.feature.item.dto
 
+import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.user.dto.UserDto
 import java.math.BigDecimal
 import java.util.*
@@ -21,7 +22,10 @@ data class ItemDto(
     val exteriorColor: String?,
     val interiorColor: String?,
     val sellerType: String?,
-    val titleStatus: String?,
-    val buyNowPrice: BigDecimal?,
-    val images: List<ItemImageDto> = emptyList()
+    val images: List<ItemImageDto> = emptyList(),
+    val activeAuctionId: UUID?,
+    val auctionStatus: AuctionStatus?,
+    val isActive: Boolean,
+    val isSold: Boolean,
+    val isAvailable: Boolean
 )

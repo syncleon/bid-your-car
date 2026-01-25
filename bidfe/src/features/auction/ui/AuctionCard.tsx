@@ -1,0 +1,95 @@
+import { useState, useEffect } from "react";
+import {BaseCard} from "../../../widgets/BaseCard/BaseCard.tsx";
+import styles from "../../../widgets/BaseCard/styles.ts";
+import type {AuctionDto} from "../types.ts"; // Adjust path as needed
+
+interface AuctionCardProps {
+    auction: AuctionDto;
+}
+
+export const AuctionCard = ({ auction }: AuctionCardProps) => {
+    const { item, currentHighestBid, startPrice, endTime, bidCount } = auction;
+    const price = currentHighestBid ?? startPrice;
+    const mainImage = item.images?.[0]?.thumbnailUrl;
+
+    // --- Timer Logic ---
+    const [now, setNow] = useState(() => Date.now());
+
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 1000); // 1s tick for smoothness
+        return () => clearInterval(interval);
+    }, []);
+
+    const endDate = new Date(endTime);
+    const timeRemaining = endDate.getTime() - now;
+    const isEnded = timeRemaining <= 0;
+    const isUrgent = timeRemaining > 0 && timeRemaining < 60 * 60 * 1000;
+
+    let timerText = "Ended";
+    if (!isEnded) {
+        const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+        if (days > 0) timerText = `${days}d ${hours}h`;
+        else if (hours > 0) timerText = `${hours}h ${minutes}m`;
+        else timerText = `${minutes}m ${seconds}s`;
+    }
+    // -------------------
+
+    return (
+        <BaseCard
+            to={`/auctions/${auction.id}`}
+            imageUrl={mainImage}
+            title={{ year: item.year, make: item.make, model: item.model }}
+            overlays={{
+                // Auction Specific: Live badge top left
+                topLeft: (
+                    <div style={styles.badgeLive}>
+                        <span style={styles.dot} /> LIVE
+                    </div>
+                ),
+                // Auction Specific: Timer bottom left
+                bottomLeft: (
+                    <div
+                        style={{
+                            ...styles.badgeTimer,
+                            background: isUrgent ? "#dc2626" : "rgba(255, 255, 255, 0.95)",
+                            color: isUrgent ? "#fff" : "#111",
+                        }}
+                    >
+                        <ClockIcon /> {timerText}
+                    </div>
+                ),
+                // Auction Specific: Bids bottom right
+                bottomRight: (
+                    <div style={styles.badgeDark}>
+                        {bidCount} {bidCount === 1 ? "Bid" : "Bids"}
+                    </div>
+                )
+            }}
+        >
+            {/* Content Body */}
+            <div style={styles.metaRow}>
+                <div>
+                    <div style={styles.labelText}>CURRENT BID</div>
+                    <div style={styles.priceText}>${price.toLocaleString()}</div>
+                </div>
+
+                <div style={{ textAlign: "right" }}>
+                    <div style={styles.labelText}>LOCATION</div>
+                    <div style={styles.locationText}>{item.location}</div>
+                </div>
+            </div>
+        </BaseCard>
+    );
+};
+
+// Simple Icon component to keep inline SVG out of logic
+const ClockIcon = () => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }}>
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+);

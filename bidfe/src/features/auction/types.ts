@@ -3,7 +3,7 @@ import type {ItemDto} from "../item/types.ts";
 export type AuctionStatus = 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED';
 
 export interface AuctionDto {
-    id: string; // UUID
+    id: string;
     item: ItemDto;
     startTime: string;
     endTime: string;
@@ -37,5 +37,5 @@ export interface BidResp {
     bidderId: number;
     bidderName: string;
     amount: number;
-    bidTime: string; // ISO LocalDataTime string
+    bidTime: string;
 }

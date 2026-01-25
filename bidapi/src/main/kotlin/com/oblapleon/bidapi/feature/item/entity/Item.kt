@@ -2,6 +2,7 @@ package com.oblapleon.bidapi.feature.item.entity
 
 import com.oblapleon.bidapi.common.entity.BaseEntity
 import com.oblapleon.bidapi.feature.auction.entity.Auction
+import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.user.entity.User
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
@@ -47,10 +48,6 @@ class Item(
     @Column(columnDefinition = "TEXT")
     var description: String? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
-    var seller: User,
-
     @Column(name = "engine")
     var engine: String? = null,
 
@@ -72,16 +69,50 @@ class Item(
     @Column(name = "seller_type")
     var sellerType: String? = null,
 
-    @Column(name = "title_status")
-    var titleStatus: String? = null,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    var seller: User,
 
-    @Column(name = "buy_now_price", precision = 19, scale = 2)
-    var buyNowPrice: BigDecimal? = null,
-
-    @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "item",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true
+    )
     var images: MutableList<ItemImage> = mutableListOf(),
 
-    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
+    @OneToMany(
+        mappedBy = "item",
+        fetch = FetchType.LAZY,
+        cascade = [CascadeType.ALL]
+    )
     var auctions: MutableList<Auction> = mutableListOf()
 
-) : BaseEntity()
+) : BaseEntity() {
+
+    val activeAuctionId: UUID?
+        get() = auctions.find { it.status == AuctionStatus.ACTIVE }?.id
+
+    val currentStatus: AuctionStatus?
+        get() = auctions.find { it.status == AuctionStatus.ACTIVE }?.status
+            ?: auctions.maxByOrNull { it.endTime }?.status
+
+    // FLAGS
+
+    val isActive: Boolean
+        get() = currentStatus == AuctionStatus.ACTIVE
+
+    val isSold: Boolean
+        get() = currentStatus == AuctionStatus.SOLD
+
+    val isExpired: Boolean
+        get() = currentStatus == AuctionStatus.EXPIRED
+
+    val isCancelled: Boolean
+        get() = currentStatus == AuctionStatus.CANCELLED
+
+    val isAvailable: Boolean
+        get() = currentStatus == null ||
+                currentStatus == AuctionStatus.DRAFT ||
+                currentStatus == AuctionStatus.EXPIRED ||
+                currentStatus == AuctionStatus.CANCELLED
+}

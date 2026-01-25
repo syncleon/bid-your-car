@@ -2,7 +2,6 @@ import { Routes, Route } from "react-router-dom";
 
 import { LoginPage } from "../pages/LoginPage";
 import { ProfilePage } from "../pages/ProfilePage";
-import { ItemsPage } from "../pages/ItemsPage";
 import { SellCarPage } from "../pages/SellCarPage";
 import { SubmitItemPage } from "../pages/SubmitItemPage.tsx";
 import { PrivateRoute } from "../routes/PrivateRoute";
@@ -11,8 +10,7 @@ import {AuctionPage} from "../pages/AuctionPage.tsx";
 
 export const AppRouter = () => (
     <Routes>
-        <Route path="/" element={<ItemsPage />} />
-        <Route path="/auctions" element={<AuctionPage/>} />
+        <Route path="/" element={<AuctionPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
         <Route path="/sell-car" element={<SellCarPage />} />
