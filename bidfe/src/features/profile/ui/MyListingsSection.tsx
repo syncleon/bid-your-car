@@ -1,7 +1,7 @@
-import React from "react";
-import { ItemCard } from "../../item/ui/ItemCard";
 import type { ItemDto } from "../../item/types";
+import { ListingItem } from "./ListingItem"; // Import the sub-component above
 import { minStyles } from "./minimalStyles";
+import styles from "./mylistingstyles.ts";
 
 interface Props {
     items: ItemDto[];
@@ -10,7 +10,7 @@ interface Props {
     onEdit: (item: ItemDto) => void;
     onAuction: (item: ItemDto) => void;
     onDelete: (id: string) => void;
-    onCancel: (id: string) => void; // New prop for cancelling
+    onCancel: (id: string) => void;
 }
 
 export const MyListingsSection = ({
@@ -24,80 +24,34 @@ export const MyListingsSection = ({
                                   }: Props) => {
 
     return (
-        <section style={{
-            ...minStyles.section,
-            borderBottom: '1px solid #eee',
-            marginBottom: 12,
-            paddingBottom: 24,
-            paddingTop: 0,
-            marginTop: 0
-        }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h2 style={{ ...minStyles.header, marginBottom: 10 }}>My Garage</h2>
+        <section style={styles.section}>
+            {/* Header */}
+            <div style={styles.headerRow}>
+                <h2 style={{ ...minStyles.header, marginBottom: 0 }}>My Garage</h2>
                 <button onClick={onCreate} style={minStyles.primaryBtn}>
                     + Create New
                 </button>
             </div>
 
+            {/* Content Switch */}
             {isLoading ? (
-                <p style={{ color: "#999" }}>Loading...</p>
+                <ListingsSkeleton />
             ) : items.length === 0 ? (
-                <div style={{ padding: "24px 0", color: "#999", fontStyle: "italic" }}>
-                    No active listings.
+                <div style={styles.emptyState}>
+                    <p>No active listings found.</p>
+                    <button onClick={onCreate} style={styles.linkBtn}>Add your first car</button>
                 </div>
             ) : (
-                <div style={gridStyle}>
-                    {items.map((item: ItemDto) => (
-                        <div key={item.id} style={{ position: "relative" }}>
-                            <ItemCard item={item} />
-
-                            <div style={actionRow}>
-                                {/* CASE 1: Item is available to be listed (Draft, Expired, Cancelled, or New) */}
-                                {item.available && (
-                                    <>
-                                        <button onClick={() => onAuction(item)} style={auctionActionStyle}>
-                                            List for Auction
-                                        </button>
-                                        <span style={{ color: '#eee' }}>|</span>
-                                        <button onClick={() => onEdit(item)} style={actionLink}>
-                                            Edit
-                                        </button>
-                                        <span style={{ color: '#eee' }}>|</span>
-                                        <button
-                                            onClick={() => {
-                                                if(window.confirm("Are you sure you want to delete this car?")) {
-                                                    onDelete(item.id);
-                                                }
-                                            }}
-                                            style={{ ...actionLink, color: '#dc2626' }}
-                                        >
-                                            Delete
-                                        </button>
-                                    </>
-                                )}
-
-                                {/* CASE 2: Auction is currently LIVE */}
-                                {item.active && (
-                                    <button
-                                        onClick={() => {
-                                            if(window.confirm("Are you sure you want to cancel this active auction?")) {
-                                                onCancel(item.id);
-                                            }
-                                        }}
-                                        style={{ ...auctionActionStyle, color: '#dc2626' }}
-                                    >
-                                        Cancel Auction
-                                    </button>
-                                )}
-
-                                {/* CASE 3: Item is SOLD */}
-                                {item.sold && (
-                                    <span style={soldLabelStyle}>
-                                        Sold
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                <div style={styles.grid}>
+                    {items.map((item) => (
+                        <ListingItem
+                            key={item.id}
+                            item={item}
+                            onEdit={onEdit}
+                            onAuction={onAuction}
+                            onDelete={onDelete}
+                            onCancel={onCancel}
+                        />
                     ))}
                 </div>
             )}
@@ -105,52 +59,14 @@ export const MyListingsSection = ({
     );
 };
 
-// --- Styles ---
-
-const auctionActionStyle: React.CSSProperties = {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    padding: 0,
-    color: "#2563eb",
-    fontWeight: 700,
-    fontSize: "12px",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px"
-};
-
-const gridStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-    gap: "20px 24px"
-};
-
-const actionRow: React.CSSProperties = {
-    marginTop: 8,
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    fontSize: "13px",
-    height: "20px" // Fix height to prevent jumping when buttons change
-};
-
-const actionLink: React.CSSProperties = {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    padding: 0,
-    color: "#666",
-    fontWeight: 500,
-    fontSize: "12px",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px"
-};
-
-const soldLabelStyle: React.CSSProperties = {
-    color: "#d97706", // Amber-600
-    fontWeight: 700,
-    fontSize: "12px",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    cursor: "default"
-};
+const ListingsSkeleton = () => (
+    <div style={styles.grid}>
+        {[1, 2, 3].map((i) => (
+            <div key={i} style={{ ...styles.cardContainer, opacity: 0.6 }}>
+                <div style={{ aspectRatio: "16/10", background: "#f3f4f6", borderRadius: "4px", marginBottom: "12px" }} />
+                <div style={{ height: "20px", width: "70%", background: "#f3f4f6", marginBottom: "8px" }} />
+                <div style={{ height: "20px", width: "40%", background: "#f3f4f6" }} />
+            </div>
+        ))}
+    </div>
+);
