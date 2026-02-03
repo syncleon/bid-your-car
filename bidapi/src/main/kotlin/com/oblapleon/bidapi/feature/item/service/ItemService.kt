@@ -66,9 +66,7 @@ class ItemService(
             bodyStyle = request.bodyStyle,
             exteriorColor = request.exteriorColor,
             interiorColor = request.interiorColor,
-            sellerType = request.sellerType,
-            titleStatus = request.titleStatus,
-            buyNowPrice = request.buyNowPrice
+            sellerType = request.sellerType
         )
 
         return itemRepo.save(newItem)
@@ -92,8 +90,6 @@ class ItemService(
             request.exteriorColor?.let { exteriorColor = it }
             request.interiorColor?.let { interiorColor = it }
             request.sellerType?.let { sellerType = it }
-            request.titleStatus?.let { titleStatus = it }
-            request.buyNowPrice?.let { buyNowPrice = it }
         }.let { itemRepo.save(it) }
     }
 

@@ -1,60 +1,84 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
-import type { ItemCreateRequest, ItemDto, ItemImageDto } from "../types";
-import { FormInput, FormSelect } from "./form-ui";
+import { FormInput, FormSection, FormSelect } from "./form-ui";
 import { ImageUploader } from "./ImageUploader";
+import type { ItemImageDto } from "../types"; // Ensure you have this type defined
 
-// --- Constants & Helpers ---
-
+// --- Constants ---
 const currentYear = new Date().getFullYear();
-const YEARS = Array.from({ length: currentYear - 1899 }, (_, i) => {
+const YEARS = Array.from({ length: 100 }, (_, i) => {
     const y = currentYear + 1 - i;
     return { value: y.toString(), label: y.toString() };
 });
 
-const BODY_STYLES = ["Sedan", "Coupe", "SUV", "Convertible", "Hatchback", "Wagon", "Truck", "Van", "Motorcycle"].map(v => ({ value: v, label: v }));
-const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT", "PDK/Dual Clutch"].map(v => ({ value: v, label: v }));
-const DRIVETRAINS = ["RWD (Rear Wheel Drive)", "FWD (Front Wheel Drive)", "AWD (All Wheel Drive)", "4WD (Four Wheel Drive)"].map(v => ({ value: v.split(" ")[0], label: v }));
-const SELLER_TYPES = [{ value: "Private Party", label: "Private Party (I own the title)" }, { value: "Dealer", label: "Dealership (Business)" }];
+const BODY_STYLES = ["Sedan", "Coupe", "SUV", "Convertible", "Hatchback", "Wagon", "Truck", "Van", "Motorcycle"]
+    .map(v => ({ value: v, label: v }));
+
+const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT", "PDK/Dual Clutch"]
+    .map(v => ({ value: v, label: v }));
+
+const DRIVETRAINS = ["RWD", "FWD", "AWD", "4WD"]
+    .map(v => ({ value: v, label: v }));
+
+// --- Types ---
+export interface ItemCreateRequest {
+    year: number;
+    make: string;
+    model: string;
+    vin: string;
+    location: string;
+    mileage: number | "";
+    description: string;
+    engine: string;
+    transmission: string;
+    drivetrain: string;
+    bodyStyle: string;
+    exteriorColor: string;
+    interiorColor: string;
+}
 
 interface Props {
-    initialData?: ItemDto;
+    // initialData might contain 'images' if we are editing
+    initialData?: Partial<ItemCreateRequest> & { images?: ItemImageDto[] };
     onSubmit: (data: ItemCreateRequest, files: File[]) => void;
-    onDeleteImage?: (imageId: string) => void;
     isLoading: boolean;
 }
 
-export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading }: Props) => {
-
-    // --- State Logic ---
-    const initial = (key: keyof ItemCreateRequest, fallback: any = "") =>
-        initialData ? (initialData as any)[key] ?? fallback : fallback;
-
+export const SubmitItemForm = ({ initialData, onSubmit, isLoading }: Props) => {
+    // --- Form State ---
     const [formData, setFormData] = useState<ItemCreateRequest>({
-        year: initial("year", currentYear),
-        make: initial("make"),
-        model: initial("model"),
-        vin: initial("vin"),
-        location: initial("location"),
-        mileage: initial("mileage", ""), // Start empty string to avoid "0"
-        description: initial("description"),
-        engine: initial("engine"),
-        transmission: initial("transmission"),
-        drivetrain: initial("drivetrain"),
-        bodyStyle: initial("bodyStyle"),
-        exteriorColor: initial("exteriorColor"),
-        interiorColor: initial("interiorColor"),
-        sellerType: initial("sellerType"),
+        year: currentYear,
+        make: "",
+        model: "",
+        vin: "",
+        location: "",
+        mileage: "",
+        description: "",
+        engine: "",
+        transmission: "",
+        drivetrain: "",
+        bodyStyle: "",
+        exteriorColor: "",
+        interiorColor: "",
+        ...initialData,
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // --- Image State ---
+    // Track existing images from the backend (for edit mode)
     const [existingImages, setExistingImages] = useState<ItemImageDto[]>(initialData?.images || []);
+    // Track newly selected files
     const [files, setFiles] = useState<File[]>([]);
+    // Track previews for those new files
     const [previews, setPreviews] = useState<string[]>([]);
 
-    useEffect(() => { if (initialData?.images) setExistingImages(initialData.images); }, [initialData]);
-    useEffect(() => () => previews.forEach(url => URL.revokeObjectURL(url)), [previews]);
+    // Cleanup previews on unmount
+    useEffect(() => {
+        return () => previews.forEach(url => URL.revokeObjectURL(url));
+    }, [previews]);
 
     // --- Handlers ---
+
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
@@ -62,12 +86,13 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
         setFormData(prev => ({
             ...prev,
             [name]: name === "mileage" || name === "year"
-                ? (value === "" ? "" : Number(value)) // Handle empty string vs number
+                ? (value === "" ? "" : Number(value))
                 : name === "vin" ? value.toUpperCase()
                     : value
         }));
     };
 
+    // 1. Add New Files
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.length) {
             const newFiles = Array.from(e.target.files);
@@ -76,198 +101,221 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
         }
     };
 
+    // 2. Remove New File (Client-side only)
+    const handleRemoveNew = (index: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== index));
+        setPreviews(prev => {
+            const newPreviews = [...prev];
+            URL.revokeObjectURL(newPreviews[index]); // Free memory
+            newPreviews.splice(index, 1);
+            return newPreviews;
+        });
+    };
+
+    // 3. Remove Existing File (From server data)
+    const handleRemoveExisting = (id: string) => {
+        if(confirm("Are you sure you want to remove this photo?")) {
+            setExistingImages(prev => prev.filter(img => img.id !== id));
+            // NOTE: If your API requires deleting images immediately, call that API here.
+            // If your API handles deletion upon form submission, you need to track which IDs were deleted.
+        }
+    };
+
     const validate = () => {
         const newErrors: Record<string, string> = {};
-        if (!formData.vin || formData.vin.length !== 17) newErrors.vin = "Please enter a valid 17-character VIN.";
-        if (!formData.make) newErrors.make = "Make is required.";
-        if (!formData.model) newErrors.model = "Model is required.";
-        if (!formData.location) newErrors.location = "City and State are required.";
-        if (!formData.mileage) newErrors.mileage = "Mileage is required.";
+        if (!formData.make) newErrors.make = "Make is required";
+        if (!formData.model) newErrors.model = "Model is required";
+        if (!formData.location) newErrors.location = "Location is required";
+        if (formData.vin.length < 17) newErrors.vin = "VIN must be 17 characters";
+        if (formData.mileage === "") newErrors.mileage = "Mileage is required";
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        if (validate()) onSubmit(formData, files);
+        if (validate()) {
+            // Note: You might need to pass the 'existingImages' state to your onSubmit
+            // if you need to tell the backend which old images to KEEP.
+            onSubmit(formData, files);
+        } else {
+            alert("Please fix the errors before submitting.");
+        }
     };
 
     return (
-        <form onSubmit={handleSubmit} style={styles.container}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: "1000px", margin: "0 auto", paddingBottom: "80px" }}>
 
-            {/* Inject CSS to hide spinners on number inputs */}
+            {/* Inject CSS to hide number spinners */}
             <style>{`
                 input[type=number]::-webkit-inner-spin-button, 
                 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
                 input[type=number] { -moz-appearance: textfield; }
             `}</style>
 
-            <div style={styles.header}>
-                <h3 style={styles.title}>{initialData ? "Update Vehicle" : "List Your Vehicle"}</h3>
-                <p style={styles.subtitle}>Let's get the details right so buyers can trust your listing.</p>
-            </div>
+            <FormSection title="Vehicle Identity" description="Basic details to identify the car.">
+                <FormInput
+                    label="VIN"
+                    name="vin"
+                    value={formData.vin}
+                    onChange={handleChange}
+                    maxLength={17}
+                    error={errors.vin}
+                    hint="17 characters (Dashboard/Door Jamb)"
+                    placeholder="WBA..."
+                />
 
-            {/* SECTION 1: IDENTITY */}
-            <div style={styles.sectionHeader}>Basic Identity</div>
-            <div style={styles.grid3}>
-                <div style={styles.fieldWrapper}>
-                    <FormInput
-                        label="VIN"
-                        name="vin"
-                        value={formData.vin}
-                        onChange={handleChange}
-                        maxLength={17}
-                        error={errors.vin}
-                        placeholder="17 chars (Dashboard/Door Jamb)"
-                    />
-                    <div style={styles.helperText}>Used to verify factory specs.</div>
-                </div>
+                <FormSelect
+                    label="Year"
+                    name="year"
+                    value={formData.year}
+                    onChange={handleChange}
+                    options={YEARS}
+                />
 
-                <div style={styles.fieldWrapper}>
-                    <FormSelect
-                        label="Model Year"
-                        name="year"
-                        value={formData.year}
-                        onChange={handleChange}
-                        options={YEARS}
-                    />
-                </div>
+                <FormInput
+                    label="Make"
+                    name="make"
+                    value={formData.make}
+                    onChange={handleChange}
+                    error={errors.make}
+                    placeholder="e.g. Porsche"
+                />
 
-                <div style={styles.fieldWrapper}>
-                    {/* Mileage: Number input, but visually clean (no spinners) */}
-                    <FormInput
-                        label="Current Mileage"
-                        name="mileage"
-                        type="number"
-                        value={formData.mileage}
-                        onChange={handleChange}
-                        error={errors.mileage}
-                        placeholder="e.g. 45000"
-                    />
-                    <div style={styles.helperText}>Exact odometer reading.</div>
-                </div>
+                <FormInput
+                    label="Model"
+                    name="model"
+                    value={formData.model}
+                    onChange={handleChange}
+                    error={errors.model}
+                    placeholder="e.g. 911 Carrera S"
+                />
 
-                <FormInput label="Make" name="make" value={formData.make} onChange={handleChange} error={errors.make} placeholder="e.g. BMW" />
-                <FormInput label="Model" name="model" value={formData.model} onChange={handleChange} error={errors.model} placeholder="e.g. M3 Competition" />
+                <FormInput
+                    label="Mileage"
+                    name="mileage"
+                    type="number"
+                    value={formData.mileage}
+                    onChange={handleChange}
+                    error={errors.mileage}
+                    placeholder="Odometer reading"
+                />
 
-                <div style={styles.fieldWrapper}>
-                    <FormInput
-                        label="Vehicle Location"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleChange}
-                        error={errors.location}
-                        placeholder="City, State (Zip Optional)"
-                    />
-                </div>
-            </div>
+                <FormInput
+                    label="Location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    error={errors.location}
+                    placeholder="City, State"
+                />
+            </FormSection>
 
-            <div style={styles.divider} />
+            <FormSection title="Specifications" description="Technical details buyers care about.">
+                <FormSelect
+                    label="Body Style"
+                    name="bodyStyle"
+                    value={formData.bodyStyle}
+                    onChange={handleChange}
+                    options={BODY_STYLES}
+                />
 
-            {/* SECTION 2: SPECS */}
-            <div style={styles.sectionHeader}>Specifications</div>
-            <div style={styles.grid4}>
-                <FormSelect label="Body Style" name="bodyStyle" value={formData.bodyStyle || ""} onChange={handleChange} options={BODY_STYLES} />
-                <FormSelect label="Transmission" name="transmission" value={formData.transmission || ""} onChange={handleChange} options={TRANSMISSIONS} />
-                <FormSelect label="Drivetrain" name="drivetrain" value={formData.drivetrain || ""} onChange={handleChange} options={DRIVETRAINS} />
-                <FormSelect label="Who are you?" name="sellerType" value={formData.sellerType || ""} onChange={handleChange} options={SELLER_TYPES} />
+                <FormSelect
+                    label="Transmission"
+                    name="transmission"
+                    value={formData.transmission}
+                    onChange={handleChange}
+                    options={TRANSMISSIONS}
+                />
 
-                <FormInput label="Engine Details" name="engine" value={formData.engine || ""} onChange={handleChange} placeholder="e.g. 3.0L Twin-Turbo Inline-6" />
-                <FormInput label="Exterior Color" name="exteriorColor" value={formData.exteriorColor || ""} onChange={handleChange} placeholder="Factory paint name" />
-                <FormInput label="Interior Color" name="interiorColor" value={formData.interiorColor || ""} onChange={handleChange} placeholder="e.g. Black Leather" />
-                <div />
-            </div>
+                <FormSelect
+                    label="Drivetrain"
+                    name="drivetrain"
+                    value={formData.drivetrain}
+                    onChange={handleChange}
+                    options={DRIVETRAINS}
+                />
 
-            <div style={styles.divider} />
+                <FormInput
+                    label="Engine"
+                    name="engine"
+                    value={formData.engine}
+                    onChange={handleChange}
+                    placeholder="e.g. 3.0L Flat-6 Twin Turbo"
+                />
 
-            {/* SECTION 3: STORY */}
-            <div style={{ marginBottom: 24 }}>
-                <label style={styles.label}>Tell the car's story</label>
-                <div style={styles.helperText}>
-                    Be honest. Mention upgrades, service history, known flaws, and ownership history.
-                </div>
+                <FormInput
+                    label="Exterior Color"
+                    name="exteriorColor"
+                    value={formData.exteriorColor}
+                    onChange={handleChange}
+                    placeholder="Factory paint name"
+                />
+
+                <FormInput
+                    label="Interior Color"
+                    name="interiorColor"
+                    value={formData.interiorColor}
+                    onChange={handleChange}
+                    placeholder="e.g. Black Leather"
+                />
+            </FormSection>
+
+            {/* Description */}
+            <div style={{ marginBottom: "40px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#1e293b" }}>Story & Condition</h3>
                 <textarea
                     name="description"
-                    value={formData.description || ""}
+                    value={formData.description}
                     onChange={handleChange}
-                    style={styles.textarea}
-                    placeholder="Example: I am the second owner of this 911. It has been garage-kept and dealer-serviced its whole life. Recent maintenance includes..."
+                    rows={6}
+                    style={{
+                        width: "100%",
+                        padding: "16px",
+                        borderRadius: "8px",
+                        borderColor: "#e2e8f0",
+                        fontSize: "15px",
+                        fontFamily: "inherit",
+                        boxSizing: "border-box",
+                        resize: "vertical"
+                    }}
+                    placeholder="Tell the story of the car. Mention service history, modifications, and any known flaws..."
                 />
             </div>
 
-            {/* SECTION 4: VISUALS */}
-            <div style={{ marginBottom: 32 }}>
-                <label style={styles.label}>Photo Gallery</label>
-                <div style={{...styles.helperText, marginBottom: "12px"}}>
-                    High-quality landscape photos get higher bids. Add at least 5 photos.
-                </div>
+            {/* Photos - Replaced with the new ImageUploader */}
+            <div style={{ marginBottom: "40px" }}>
                 <ImageUploader
                     existingImages={existingImages}
                     newPreviews={previews}
                     onAddFiles={handleFileChange}
-                    onRemoveExisting={(id) => {
-                        if (confirm("Remove this photo?")) { onDeleteImage?.(id); setExistingImages(prev => prev.filter(img => img.id !== id)); }
-                    }}
-                    onRemoveNew={(idx) => {
-                        setFiles(prev => prev.filter((_, i) => i !== idx));
-                        setPreviews(prev => prev.filter((_, i) => i !== idx));
-                    }}
+                    onRemoveExisting={handleRemoveExisting}
+                    onRemoveNew={handleRemoveNew}
                 />
             </div>
 
-            <div style={styles.footer}>
-                <button type="submit" disabled={isLoading} style={styles.submitBtn}>
-                    {isLoading ? "Processing..." : "Submit Listing"}
+            {/* Submit Button */}
+            <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #f1f5f9", paddingTop: "24px" }}>
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    style={{
+                        backgroundColor: "#1e293b",
+                        color: "white",
+                        padding: "14px 32px",
+                        borderRadius: "8px",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                        border: "none",
+                        cursor: isLoading ? "not-allowed" : "pointer",
+                        opacity: isLoading ? 0.7 : 1
+                    }}
+                >
+                    {isLoading ? "Submitting..." : "Submit Listing"}
                 </button>
             </div>
+
         </form>
     );
-};
-
-// --- Styles ---
-const styles = {
-    container: {
-        maxWidth: "900px",
-        margin: "0 auto",
-        padding: "0 20px 80px 20px",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-    },
-    header: { marginBottom: "32px" },
-    title: { fontSize: "24px", fontWeight: 600, margin: "0 0 8px 0", letterSpacing: "-0.5px", color: "#111" },
-    subtitle: { fontSize: "15px", color: "#666", margin: 0 },
-
-    // Tiny Section Headers to group content visually without boxes
-    sectionHeader: {
-        fontSize: "11px",
-        fontWeight: 700,
-        textTransform: "uppercase" as const,
-        letterSpacing: "1px",
-        color: "#999",
-        marginBottom: "16px",
-        marginTop: "10px"
-    },
-    divider: { height: "1px", backgroundColor: "#eee", margin: "40px 0 24px 0" },
-
-    // Grid
-    grid3: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px 20px" },
-    grid4: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "24px 20px" },
-
-    fieldWrapper: { display: "flex", flexDirection: "column" as const },
-
-    label: { display: "block", marginBottom: "6px", fontSize: "13px", fontWeight: 600, color: "#333" },
-
-    // New Helper Text Style
-    helperText: { fontSize: "12px", color: "#888", marginTop: "4px", lineHeight: "1.4" },
-
-    textarea: {
-        width: "100%", minHeight: "140px", padding: "14px", borderRadius: "6px",
-        border: "1px solid #e0e0e0", fontSize: "15px", lineHeight: "1.6",
-        resize: "vertical" as const, outline: "none", backgroundColor: "#fafafa", marginTop: "8px"
-    },
-    footer: { display: "flex", justifyContent: "flex-end", borderTop: "1px solid #eee", paddingTop: "24px" },
-    submitBtn: {
-        padding: "14px 40px", background: "#111", color: "#fff", border: "none",
-        borderRadius: "6px", fontWeight: 600, fontSize: "15px", cursor: "pointer",
-        transition: "opacity 0.2s", boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-    }
 };
