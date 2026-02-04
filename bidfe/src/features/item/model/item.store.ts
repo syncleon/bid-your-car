@@ -1,6 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import {
     getAllItems,
+    getItemById, // ✅ Import this
     submitItem,
     getMyItems,
     deleteItem,
@@ -13,6 +14,7 @@ import type { ItemDto, ItemCreateRequest } from "../types";
 export class ItemStore {
     items: ItemDto[] = [];
     myItems: ItemDto[] = [];
+    selectedItem: ItemDto | null = null; // ✅ NEW STATE
 
     // Pagination State
     totalItems = 0;
@@ -33,18 +35,12 @@ export class ItemStore {
         this.isLoading = true;
         this.error = null;
         try {
-            // API returns Page<ItemDto>
             const pageData = await getAllItems(page);
-
             runInAction(() => {
-                // We extract the array from the 'content' field
                 this.items = pageData.content;
-
-                // Update pagination state
                 this.totalItems = pageData.totalElements;
                 this.totalPages = pageData.totalPages;
                 this.currentPage = pageData.number;
-
                 this.isLoading = false;
             });
         } catch (err: any) {
@@ -54,7 +50,6 @@ export class ItemStore {
             });
         }
     };
-
 
     loadMyItems = async (page = 0) => {
         this.isLoading = true;
@@ -71,6 +66,29 @@ export class ItemStore {
                 this.isLoading = false;
             });
         }
+    };
+
+    // ✅ NEW ACTION: Fetch single item details
+    loadItemDetails = async (id: string) => {
+        this.isLoading = true;
+        this.error = null;
+        try {
+            const item = await getItemById(id);
+            runInAction(() => {
+                this.selectedItem = item;
+                this.isLoading = false;
+            });
+        } catch (err: any) {
+            runInAction(() => {
+                this.error = err.message || "Failed to load item details";
+                this.isLoading = false;
+            });
+        }
+    };
+
+    // ✅ NEW ACTION: Cleanup when leaving page
+    clearSelectedItem = () => {
+        this.selectedItem = null;
     };
 
     // --- Actions ---
@@ -98,7 +116,6 @@ export class ItemStore {
                 this.uploadProgress = null;
             });
 
-            // Reload user items to reflect changes
             await this.loadMyItems();
             return true;
         } catch (err: any) {
@@ -126,13 +143,11 @@ export class ItemStore {
                     });
                     await uploadItemImage(id, newFiles[i]);
                 }
-                await this.loadMyItems(); // Full refresh if images added
+                await this.loadMyItems();
             } else {
                 runInAction(() => {
-                    // Optimistic update for text-only changes
                     const index = this.myItems.findIndex(i => i.id === id);
                     if (index !== -1) {
-                        // We preserve existing images since the update response might lazily load them
                         const existingImages = this.myItems[index].images;
                         this.myItems[index] = { ...updatedItem, images: existingImages };
                     }

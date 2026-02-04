@@ -1,6 +1,7 @@
 package com.oblapleon.bidapi.feature.auction.service
 
 import com.oblapleon.bidapi.common.exceptions.NotFoundException
+import com.oblapleon.bidapi.common.exceptions.OwnItemBidException
 import com.oblapleon.bidapi.common.exceptions.UnauthorizedException
 import com.oblapleon.bidapi.feature.auction.dto.AuctionDto
 import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
@@ -95,7 +96,7 @@ class AuctionService(
 
         check(auction.status == AuctionStatus.ACTIVE) { "Auction is not active." }
         check(LocalDateTime.now().isBefore(auction.endTime)) { "Auction has ended." }
-        check(auction.item.seller.id != bidderId) { "You cannot bid on your own item." }
+        check(auction.item.seller.id != bidderId) { throw OwnItemBidException("You cannot bid on your own item.") }
 
         val isFirstBid = auction.bids.isEmpty()
         val minRequired = if (isFirstBid) auction.startPrice

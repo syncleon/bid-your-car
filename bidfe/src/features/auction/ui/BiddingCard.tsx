@@ -9,15 +9,16 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const [bidAmount, setBidAmount] = useState<string>("");
     const [timeLeft, setTimeLeft] = useState("");
 
-    // Calculate minimum next bid
+    // 1. Calculate status and ownership
+    const isActive = auction.status === 'ACTIVE';
+    const isEnded = new Date(auction.endTime).getTime() < Date.now();
+    const isOwner = authStore.user?.id === auction.item.seller.id
+
+    // 2. Calculate minimum next bid
     const currentPrice = auction.currentHighestBid || auction.startPrice;
-    // If no bids yet, min bid is startPrice. If bids exist, must be price + increment.
     const minBid = auction.bidCount === 0
         ? auction.startPrice
         : currentPrice + auction.minBidIncrement;
-
-    const isActive = auction.status === 'ACTIVE';
-    const isEnded = new Date(auction.endTime).getTime() < Date.now();
 
     // Timer Logic
     useEffect(() => {
@@ -51,9 +52,14 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
             return;
         }
 
+        if (isOwner) {
+            alert("You cannot bid on your own auction.");
+            return;
+        }
+
         const amount = Number(bidAmount);
-        if (amount < minBid) {
-            return; // Browser validation usually handles this via min attribute
+        if (!amount || amount < minBid) {
+            return;
         }
 
         const success = await auctionStore.submitBid({
@@ -62,8 +68,78 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
         });
 
         if (success) {
-            setBidAmount(""); // Reset form
+            setBidAmount("");
         }
+    };
+
+    // Render Logic for the bottom section
+    const renderActionSection = () => {
+        if (!isActive || isEnded) {
+            return (
+                <div style={styles.endedState}>
+                    This auction has ended.
+                    {auction.status === 'SOLD' && (
+                        <div style={styles.soldText}>SOLD for ${currentPrice.toLocaleString()}</div>
+                    )}
+                </div>
+            );
+        }
+
+        if (isOwner) {
+            return (
+                <div style={styles.ownerState}>
+                    <div style={{fontWeight: 600, color: '#1e40af'}}>You listed this vehicle</div>
+                    <div style={{fontSize: '13px', marginTop: '4px'}}>
+                        You cannot place bids on your own items.
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <form onSubmit={handleBid}>
+                {/* Display Backend Error (e.g., from the ExceptionHandler we just wrote) */}
+                {auctionStore.error && (
+                    <div style={styles.error}>{auctionStore.error}</div>
+                )}
+
+                <div style={{ marginBottom: "12px" }}>
+                    <div style={styles.helper}>
+                        Minimum bid: <strong>${minBid.toLocaleString()}</strong>
+                    </div>
+                    {/* Added position: relative here to anchor the '$' prefix */}
+                    <div style={{ display: "flex", position: 'relative' }}>
+                        <span style={styles.prefix}>$</span>
+                        <input
+                            type="number"
+                            value={bidAmount}
+                            onChange={(e) => setBidAmount(e.target.value)}
+                            min={minBid}
+                            step={auction.minBidIncrement}
+                            style={styles.input}
+                            placeholder={minBid.toString()}
+                            required
+                        />
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={auctionStore.isBidding}
+                    style={{
+                        ...minStyles.primaryBtn,
+                        width: "100%",
+                        opacity: auctionStore.isBidding ? 0.7 : 1
+                    }}
+                >
+                    {auctionStore.isBidding ? "Placing Bid..." : "Place Bid"}
+                </button>
+
+                <p style={styles.disclaimer}>
+                    Bids are legally binding. A hold may be placed on your card.
+                </p>
+            </form>
+        );
     };
 
     return (
@@ -83,54 +159,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
 
             <div style={styles.divider} />
 
-            {/* Bidding Form */}
-            {isActive && !isEnded ? (
-                <form onSubmit={handleBid}>
-                    {auctionStore.error && (
-                        <div style={styles.error}>{auctionStore.error}</div>
-                    )}
-
-                    <div style={{ marginBottom: "12px" }}>
-                        <div style={styles.helper}>
-                            Minimum bid: <strong>${minBid.toLocaleString()}</strong>
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <span style={styles.prefix}>$</span>
-                            <input
-                                type="number"
-                                value={bidAmount}
-                                onChange={(e) => setBidAmount(e.target.value)}
-                                min={minBid}
-                                step={auction.minBidIncrement}
-                                style={styles.input}
-                                placeholder={minBid.toString()}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={auctionStore.isBidding}
-                        style={{
-                            ...minStyles.primaryBtn,
-                            width: "100%",
-                            opacity: auctionStore.isBidding ? 0.7 : 1
-                        }}
-                    >
-                        {auctionStore.isBidding ? "Placing Bid..." : "Place Bid"}
-                    </button>
-
-                    <p style={styles.disclaimer}>
-                        Bids are legally binding. A hold may be placed on your card.
-                    </p>
-                </form>
-            ) : (
-                <div style={styles.endedState}>
-                    This auction has ended.
-                    {auction.status === 'SOLD' && <div style={{color: '#16a34a', fontWeight: 'bold', marginTop: 8}}>SOLD for ${currentPrice.toLocaleString()}</div>}
-                </div>
-            )}
+            {renderActionSection()}
         </div>
     );
 });
@@ -156,7 +185,7 @@ const styles = {
 
     input: {
         width: "100%",
-        padding: "12px 12px 12px 24px", // Space for $ prefix
+        padding: "12px 12px 12px 24px",
         fontSize: "16px",
         border: "1px solid #e5e7eb",
         borderRadius: "8px",
@@ -165,10 +194,11 @@ const styles = {
     },
     prefix: {
         position: "absolute" as const,
-        marginTop: "12px",
-        marginLeft: "12px",
+        top: "12px", // Changed from margin-top to top/left for cleaner absolute positioning
+        left: "12px",
         color: "#999",
-        fontWeight: 600
+        fontWeight: 600,
+        pointerEvents: "none" as const // Ensures clicks pass through to the input
     },
     helper: { fontSize: "13px", color: "#666", marginBottom: "8px" },
     error: { color: "#dc2626", fontSize: "13px", marginBottom: "12px", backgroundColor: "#fee2e2", padding: "8px", borderRadius: "6px" },
@@ -181,5 +211,18 @@ const styles = {
         borderRadius: "8px",
         color: "#666",
         fontWeight: 500
+    },
+    soldText: {
+        color: '#16a34a',
+        fontWeight: 'bold',
+        marginTop: 8
+    },
+    ownerState: {
+        textAlign: "center" as const,
+        padding: "20px",
+        backgroundColor: "#eff6ff", // Light blue background
+        borderRadius: "8px",
+        color: "#1e40af",
+        border: "1px solid #dbeafe"
     }
 };

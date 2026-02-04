@@ -1,102 +1,115 @@
-import type { CSSProperties } from "react";
+import type {CSSProperties} from "react";
 
-export const minStyles = {
+export const minStyles: Record<string, CSSProperties> = {
     section: {
-        padding: "24px 0",
-        borderBottom: "1px solid #f0f0f0",
-    } as CSSProperties,
+        background: "#fff",
+        borderRadius: "8px",
+        padding: "24px",
+        marginBottom: "24px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+        border: "1px solid #e5e7eb"
+    },
+    compactHeader: {
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        marginBottom: "24px"
+    },
     header: {
-        fontSize: "16px",
+        fontSize: "18px",
         fontWeight: 600,
-        marginBottom: "16px",
-        color: "#111",
-        textTransform: "uppercase",
-        letterSpacing: "0.5px"
-    } as CSSProperties,
+        marginBottom: "20px",
+        color: "#111"
+    },
     label: {
         display: "block",
         fontSize: "12px",
-        color: "#666",
-        marginBottom: "4px",
-        fontWeight: 500
-    } as CSSProperties,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        color: "#6b7280",
+        marginBottom: "6px",
+        letterSpacing: "0.5px"
+    },
     input: {
         width: "100%",
-        padding: "8px 0",
-        border: "none",
-        borderBottom: "1px solid #e5e5e5",
+        padding: "10px 12px",
+        borderRadius: "6px",
+        border: "1px solid #d1d5db",
         fontSize: "14px",
-        outline: "none",
-        background: "transparent",
         transition: "border-color 0.2s",
-        marginBottom: "16px"
-    } as CSSProperties,
+        outline: "none"
+    },
     primaryBtn: {
-        background: "#000",
+        background: "#111",
         color: "#fff",
         border: "none",
-        padding: "8px 16px",
-        fontSize: "13px",
-        fontWeight: 500,
+        padding: "10px 20px",
+        borderRadius: "6px",
+        fontSize: "14px",
+        fontWeight: 600,
         cursor: "pointer",
-        borderRadius: "4px",
-    } as CSSProperties,
+        transition: "opacity 0.2s"
+    },
+    // ✅ ADDED THIS MISSING STYLE
+    secondaryBtn: {
+        background: "#fff",
+        color: "#374151",
+        border: "1px solid #d1d5db",
+        padding: "10px 20px",
+        borderRadius: "6px",
+        fontSize: "14px",
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "all 0.2s"
+    },
     textBtn: {
         background: "none",
         border: "none",
-        padding: 0,
-        color: "#666",
-        textDecoration: "underline",
+        color: "#4b5563",
+        fontSize: "13px",
+        fontWeight: 500,
         cursor: "pointer",
-        fontSize: "12px",
-    } as CSSProperties,
+        textDecoration: "underline",
+        padding: 0
+    },
     avatar: {
         width: "64px",
         height: "64px",
         borderRadius: "50%",
-        background: "#f3f4f6",
-        color: "#111",
+        backgroundColor: "#f3f4f6",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontSize: "24px",
         fontWeight: 600,
-        marginRight: "24px"
-    } as CSSProperties,
-    compactHeader: {
+        color: "#9ca3af"
+    },
+    settingsBtn: {
         display: "flex",
         alignItems: "center",
-        paddingBottom: "32px",
-        borderBottom: "1px solid #eee",
-        marginBottom: "32px"
-    } as CSSProperties,
-    settingsBtn: {
+        gap: "6px",
         background: "#fff",
-        border: "1px solid #e5e5e5",
-        color: "#111",
+        border: "1px solid #e5e7eb",
         padding: "6px 12px",
-        borderRadius: "4px",
-        cursor: "pointer",
+        borderRadius: "20px",
         fontSize: "12px",
         fontWeight: 500,
-        display: "flex",
-        alignItems: "center",
-        gap: "6px"
-    } as CSSProperties,
+        color: "#374151",
+        cursor: "pointer"
+    },
     tabBtn: {
+        padding: "0 0 8px 0",
+        marginRight: "24px",
         background: "none",
         border: "none",
         borderBottom: "2px solid transparent",
-        padding: "0 0 8px 0",
-        marginRight: "20px",
-        cursor: "pointer",
         fontSize: "14px",
-        fontWeight: 500,
-        color: "#999",
-        transition: "all 0.2s"
-    } as CSSProperties,
+        color: "#6b7280",
+        cursor: "pointer",
+        fontWeight: 500
+    },
     activeTab: {
-        color: "#000",
-        borderBottom: "2px solid #000"
-    } as CSSProperties
+        color: "#111",
+        borderBottomColor: "#111"
+    }
 };

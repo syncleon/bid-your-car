@@ -8,6 +8,7 @@ import { PrivateRoute } from "../routes/PrivateRoute";
 import { VerifyPage } from "../pages/VerifyPage.tsx";
 import { AuctionPage } from "../pages/AuctionPage.tsx";
 import {AuctionDetailsPage} from "../features/auction/ui/AuctionDetails.tsx";
+import {ItemDetailsPage} from "../features/item/ui/ItemDetailsPage.tsx";
 
 
 export const AppRouter = () => (
@@ -18,6 +19,7 @@ export const AppRouter = () => (
 
         {/* ✅ New Detail Route */}
         <Route path="/auctions/:id" element={<AuctionDetailsPage />} />
+        <Route path="/items/:id" element={<ItemDetailsPage />} />
 
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />

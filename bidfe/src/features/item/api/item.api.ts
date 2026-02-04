@@ -80,6 +80,9 @@ export const getMyItems = async (page = 0, size = 20): Promise<Page<ItemDto>> =>
     return handleResponse<Page<ItemDto>>(response);
 };
 
+export const getItemById = (id: string) =>
+    http<ItemDto>(`/items/${id}`, { method: "GET" });
+
 export const updateItem = (id: string, data: ItemCreateRequest) =>
     http<ItemDto>(`/items/${id}`, {
         method: "PUT",
