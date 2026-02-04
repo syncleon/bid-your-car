@@ -11,7 +11,7 @@ import {
 } from "../api/auction.api";
 import type { AuctionDto, CreateAuctionDto, BidResp, PlaceBidReq } from "../types";
 
-class AuctionStore {
+export class AuctionStore {
     auctions: AuctionDto[] = [];
     endingSoon: AuctionDto[] = [];
     myWins: AuctionDto[] = [];

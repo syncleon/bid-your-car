@@ -5,17 +5,27 @@ import { ProfilePage } from "../pages/ProfilePage";
 import { SellCarPage } from "../pages/SellCarPage";
 import { SubmitItemPage } from "../pages/SubmitItemPage.tsx";
 import { PrivateRoute } from "../routes/PrivateRoute";
-import {VerifyPage} from "../pages/VerifyPage.tsx";
-import {AuctionPage} from "../pages/AuctionPage.tsx";
+import { VerifyPage } from "../pages/VerifyPage.tsx";
+import { AuctionPage } from "../pages/AuctionPage.tsx";
+import {AuctionDetailsPage} from "../features/auction/ui/AuctionDetails.tsx";
+
 
 export const AppRouter = () => (
     <Routes>
+        {/* Home / Auction Feed */}
         <Route path="/" element={<AuctionPage />} />
+        <Route path="/auctions" element={<AuctionPage />} />
+
+        {/* ✅ New Detail Route */}
+        <Route path="/auctions/:id" element={<AuctionDetailsPage />} />
+
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
         <Route path="/sell-car" element={<SellCarPage />} />
         <Route path="/verify" element={<VerifyPage />} />
 
+        {/* Private Routes */}
         <Route
             path="/profile"
             element={

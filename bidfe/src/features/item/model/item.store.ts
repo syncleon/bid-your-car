@@ -10,7 +10,7 @@ import {
 } from "../api/item.api";
 import type { ItemDto, ItemCreateRequest } from "../types";
 
-class ItemStore {
+export class ItemStore {
     items: ItemDto[] = [];
     myItems: ItemDto[] = [];
 
@@ -54,6 +54,7 @@ class ItemStore {
             });
         }
     };
+
 
     loadMyItems = async (page = 0) => {
         this.isLoading = true;
