@@ -1,7 +1,7 @@
-import type { ItemDto } from "../../item/types";
-import { ListingItem } from "./ListingItem"; // Import the sub-component above
+import { ListingItem } from "./ListingItem";
 import { minStyles } from "./minimalStyles";
 import styles from "./mylistingstyles.ts";
+import type {ItemDto} from "../../item/types.ts";
 
 interface Props {
     items: ItemDto[];
@@ -34,7 +34,7 @@ export const MyListingsSection = ({
             </div>
 
             {/* Content Switch */}
-            {isLoading ? (
+            {isLoading && items.length === 0 ? (
                 <ListingsSkeleton />
             ) : items.length === 0 ? (
                 <div style={styles.emptyState}>

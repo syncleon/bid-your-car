@@ -9,6 +9,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.Customizer
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -23,64 +24,49 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
-/**
- * Main configuration class for Spring Security.
- * Defines the security filter chain, password encoding, CORS settings,
- * and the mechanism for converting JWTs into authenticated user tokens.
- */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true) // ✅ Vital: Enables @PreAuthorize in controllers
 class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val jwtDecoder: JwtDecoder
-)
-{
-    @Value("\${cors.allowed-origins:http://localhost:5173}")
-    lateinit var allowedOrigins: List<String>
+) {
 
-    /**
-     * Configures the security filter chain.
-     * Sets up public endpoints, OAuth2 resource server integration, session management,
-     * and disables CSRF protection for stateless API operation.
-     *
-     * @param http The HttpSecurity object used to build the filter chain.
-     * @return The configured SecurityFilterChain.
-     */
+    @Value("\${cors.allowed-origins:http://localhost:5173}")
+    lateinit var allowedOrigins: String
+
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
-            .authorizeHttpRequests { authorize ->
-                authorize
-                    .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/v1/login",
-                        "/api/v1/register",
-                        "/api/v1/restore"
-                    ).permitAll()
-                    .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/v1/verify"
-                    ).permitAll()
-                    .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/v1/items",
-                        "/api/v1/items/{id}").permitAll()
-                    .requestMatchers(
-                        HttpMethod.GET,
+            .csrf { it.disable() }
+            .cors(Customizer.withDefaults())
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { auth ->
+                auth
+                    // --- Public Endpoints ---
+                    // Auth
+                    .requestMatchers(HttpMethod.POST, "/api/v1/login", "/api/v1/register", "/api/v1/restore").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/verify").permitAll()
+
+                    // Read-only Item data
+                    .requestMatchers(HttpMethod.GET, "/api/v1/items", "/api/v1/items/{id}").permitAll()
+
+                    // Read-only Auction data
+                    .requestMatchers(HttpMethod.GET,
                         "/api/v1/auctions",
-                        "/api/v1/auctions/active",
                         "/api/v1/auctions/{id}",
                         "/api/v1/auctions/ending-soon",
                         "/api/v1/bids/auction/{auctionId}"
                     ).permitAll()
-                    .requestMatchers(
-                        HttpMethod.GET,
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**"
-                    ).permitAll()
-                    .requestMatchers(
-                        "/api/v1/**"
-                    ).authenticated()
+
+                    // Swagger / OpenAPI
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+
+                    // --- Secured Endpoints ---
+                    // Any other API call requires a valid token
+                    .requestMatchers("/api/v1/**").authenticated()
+
+                    // Allow error handling or other non-api paths
                     .anyRequest().permitAll()
             }
             .oauth2ResourceServer { oauth2 ->
@@ -89,9 +75,6 @@ class SecurityConfig(
                     jwt.jwtAuthenticationConverter(UserAuthenticationConverter(jwtTokenProvider))
                 }
             }
-            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .csrf { it.disable() }
-            .cors(Customizer.withDefaults())
             .headers { headers ->
                 headers.frameOptions { it.disable() }
                 headers.xssProtection { it.disable() }
@@ -100,33 +83,16 @@ class SecurityConfig(
         return http.build()
     }
 
-    /**
-     * Provides the password encoder bean used for hashing and verifying passwords.
-     * Uses the BCrypt hashing algorithm.
-     *
-     * @return A BCryptPasswordEncoder instance.
-     */
     @Bean
-    fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
-    }
+    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
-    /**
-     * Configures Cross-Origin Resource Sharing (CORS) settings.
-     * Defines allowed origins, methods, and headers for incoming requests.
-     *
-     * @return The configured CorsConfigurationSource.
-     */
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-
-        // Use the injected list instead of hardcoded strings
-        configuration.allowedOrigins = allowedOrigins
-
-        configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        configuration.allowedOrigins = allowedOrigins.split(",").map { it.trim() }
+        configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         configuration.allowedHeaders = listOf("*")
-        configuration.allowCredentials = true // Usually needed if frontend sends cookies/headers
+        configuration.allowCredentials = true
 
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
@@ -134,26 +100,16 @@ class SecurityConfig(
     }
 
     /**
-     * Custom converter that transforms a standard Spring Security JWT into an
-     * application-specific AbstractAuthenticationToken.
-     * It uses the JwtTokenProvider to extract the User entity from the JWT claims
-     * and map authorities/roles.
+     * Converts JWT to Authentication Token.
+     * Relies on the fixed UserRepo to load roles eagerly via @EntityGraph.
      */
     class UserAuthenticationConverter(
         private val jwtTokenProvider: JwtTokenProvider
     ) : Converter<Jwt, AbstractAuthenticationToken> {
 
-        /**
-         * Converts the source JWT into a UsernamePasswordAuthenticationToken.
-         *
-         * @param jwt The source JWT to convert.
-         * @return An authentication token containing the user principal and authorities.
-         * @throws InvalidBearerTokenException if the user cannot be found from the token claims.
-         */
         override fun convert(jwt: Jwt): AbstractAuthenticationToken {
             val user = jwtTokenProvider.getUserFromClaims(jwt.claims)
-                ?: throw InvalidBearerTokenException("User not found")
-
+                ?: throw InvalidBearerTokenException("User not found in token claims")
             val authorities = user.roles.map { role ->
                 SimpleGrantedAuthority("${role.name}")
             }

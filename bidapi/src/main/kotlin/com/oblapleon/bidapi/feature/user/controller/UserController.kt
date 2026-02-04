@@ -1,12 +1,14 @@
 package com.oblapleon.bidapi.feature.user.controller
 
-import com.oblapleon.bidapi.common.controller.BaseController
 import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.feature.user.dto.*
 import com.oblapleon.bidapi.feature.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
@@ -16,65 +18,57 @@ import org.springframework.web.bind.annotation.*
 class UserController(
     private val userService: UserService,
     private val authHelper: AuthorizationHelper
-) : BaseController() {
+) {
 
     @Operation(summary = "Get current user profile")
     @GetMapping("/me")
-    fun getCurrentUser() = handleRequest {
-        authHelper.getCurrentUser().toDto()
+    fun getCurrentUser(): UserDto {
+        return authHelper.getCurrentUser().toDto()
     }
 
     @Operation(summary = "Update current user profile")
     @PutMapping("/me/profile")
-    fun updateCurrentUserProfile(
-        @Valid @RequestBody request: UpdateProfileReqDto
-    ) = handleRequest {
+    fun updateCurrentUserProfile(@Valid @RequestBody request: UpdateProfileReqDto): UserDto {
         val currentUser = authHelper.getCurrentUser()
-        userService.updateProfile(
-            id = currentUser.id!!,
-            username = request.username,
-            email = request.email
-        ).toDto()
+        // Convert UpdateProfileReqDto to UpdateUserReqDto for shared service logic
+        val updateReq = UpdateUserReqDto(username = request.username, email = request.email)
+        return userService.updateUser(currentUser.id!!, updateReq, isSelfUpdate = true).toDto()
     }
 
     @Operation(summary = "Change password")
     @PutMapping("/me/change-password")
-    fun changePassword(
-        @Valid @RequestBody request: UpdatePasswordReqDto
-    ) = handleRequest {
+    fun changePassword(@Valid @RequestBody request: UpdatePasswordReqDto) {
         val currentUser = authHelper.getCurrentUser()
         userService.changePassword(
             id = currentUser.id!!,
-            oldPassword = request.oldPassword,
-            newPassword = request.newPassword
+            oldPass = request.oldPassword,
+            newPass = request.newPassword
         )
-        null
     }
 
-    @Operation(summary = "Get all users", description = "Returns all users (Admin only)")
+    @Operation(summary = "Get all users (Admin)")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    fun getAllUsers() = handleRequest {
-        userService.findAll().map { it.toDto() }
+    fun getAllUsers(@PageableDefault(size = 20) pageable: Pageable): Page<UserDto> {
+        return userService.findAll(pageable).map { it.toDto() }
     }
 
     @Operation(summary = "Get user by ID")
     @GetMapping("/{id}")
-    fun getUserById(@PathVariable id: Long) = handleRequest {
-        // Automatically checks if requester is Admin or Owner of 'id'
+    fun getUserById(@PathVariable id: Long): UserDto {
         authHelper.checkOwnerOrAdmin(id)
-        userService.findById(id).toDto()
+        return userService.findById(id).toDto()
     }
 
-    @Operation(summary = "Update user", description = "Update user data (Admin or owner)")
+    @Operation(summary = "Update user (Admin)")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     fun updateUser(
         @PathVariable id: Long,
         @Valid @RequestBody request: UpdateUserReqDto
-    ) = handleRequest {
-        // Fixed: No longer passing 'currentUser'
-        authHelper.checkOwnerOrAdmin(id)
-        userService.update(id, request).toDto()
+    ): UserDto {
+        // We assume only Admin hits this specific endpoint to modify others
+        return userService.updateUser(id, request, isSelfUpdate = false).toDto()
     }
 
     @Operation(summary = "Delete user (Soft Delete)")
@@ -82,43 +76,26 @@ class UserController(
     fun deleteUser(
         @PathVariable id: Long,
         @RequestBody(required = false) payload: DeleteAccountReqDto?
-    ) = handleRequest {
-        // Fixed: Extracts user internally and verifies ownership/admin
+    ) {
         val currentUser = authHelper.checkOwnerOrAdmin(id)
-
         userService.deleteWithVerification(
             initiator = currentUser,
             targetUserId = id,
             password = payload?.password
         )
-        null
     }
 
-    // Admin & Search Endpoints
-    @GetMapping("/search/username")
+    @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN')")
-    fun searchByUsername(@RequestParam query: String) =
-        handleRequest { userService.searchByUsernameContains(query).map { it.toDto() } }
-
-    @GetMapping("/search/email")
-    @PreAuthorize("hasRole('ADMIN')")
-    fun searchByEmail(@RequestParam query: String) =
-        handleRequest { userService.searchByEmailContains(query).map { it.toDto() } }
-
-    @GetMapping("/exists/username/{username}")
-    fun checkUsernameExists(@PathVariable username: String) =
-        handleRequest { userService.existsByName(username) }
-
-    @GetMapping("/exists/email/{email}")
-    fun checkEmailExists(@PathVariable email: String) =
-        handleRequest { userService.existsByEmail(email) }
-
-    @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
-    fun getUserStats() = handleRequest { UserStatsDto(totalUsers = userService.countAll()) }
-
-    @PostMapping("/batch")
-    @PreAuthorize("hasRole('ADMIN')")
-    fun getUsersByIds(@RequestBody request: UserBatchRequest) =
-        handleRequest { userService.findByIds(request.userIds).map { it.toDto() } }
+    fun searchUsers(
+        @RequestParam(required = false) username: String?,
+        @RequestParam(required = false) email: String?,
+        @PageableDefault(size = 20) pageable: Pageable
+    ): Page<UserDto> {
+        return when {
+            !username.isNullOrBlank() -> userService.searchByUsername(username, pageable).map { it.toDto() }
+            !email.isNullOrBlank() -> userService.searchByEmail(email, pageable).map { it.toDto() }
+            else -> Page.empty()
+        }
+    }
 }

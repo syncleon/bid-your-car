@@ -1,16 +1,31 @@
-import { http } from "../../../shared/api/HttpClient.ts";
-import { tokenStorage } from "../../../shared/lib/token.ts";
-import type { AuctionDto, CreateAuctionDto, BidResp, PlaceBidReq } from "../types.ts";
+import { tokenStorage } from "../../../shared/lib/token";
+import { http } from "../../../shared/api/HttpClient";
+import type { AuctionDto, CreateAuctionDto, BidResp, PlaceBidReq, Page } from "../types";
 
 const BASE_URL = "http://localhost:8080/api/v1/auctions";
 
-/**
- * Creates a new auction listing.
- * Strictly follows the CreateAuctionDto which maps to Kotlin's ItemCreateRequest logic.
- */
+// Helper to handle the specific error format from your backend
+const handleResponse = async <T>(response: Response): Promise<T> => {
+    if (!response.ok) {
+        let errorMessage = `Request failed: ${response.status}`;
+        try {
+            const body = await response.json();
+            // Match GlobalExceptionHandler structure
+            if (body.error) errorMessage = body.error;
+            else if (body.details) errorMessage = Object.values(body.details).join(", ");
+            else if (body.message) errorMessage = body.message;
+        } catch {
+            const text = await response.text();
+            if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
+    }
+    return response.json();
+};
+
 export const createAuction = async (data: CreateAuctionDto): Promise<AuctionDto> => {
     const token = tokenStorage.get();
-    if (!token) throw new Error("Authentication required to create an auction.");
+    if (!token) throw new Error("Authentication required.");
 
     const response = await fetch(BASE_URL, {
         method: "POST",
@@ -21,71 +36,43 @@ export const createAuction = async (data: CreateAuctionDto): Promise<AuctionDto>
         body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to create auction");
-    }
-
-    return response.json();
+    return handleResponse<AuctionDto>(response);
 };
 
-/**
- * Places a bid on an active auction.
- * The bidderId is extracted from the JWT on the backend for security.
- */
 export const placeBid = async (req: PlaceBidReq): Promise<BidResp> => {
     const token = tokenStorage.get();
     if (!token) throw new Error("Please log in to place a bid.");
 
-    // Using URLSearchParams because your controller expects @RequestParam for 'amount'
     const response = await fetch(`${BASE_URL}/${req.auctionId}/bid?amount=${req.amount}`, {
         method: "POST",
-        headers: {
-            "Authorization": `Bearer ${token}`
-        }
+        headers: { "Authorization": `Bearer ${token}` }
     });
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        // This will catch logic errors like "Bid amount must be at least X"
-        throw new Error(errorText || "Failed to place bid");
-    }
-
-    return response.json();
+    return handleResponse<BidResp>(response);
 };
 
-/**
- * Fetches all auctions, optionally filtered by status.
- */
-export const getAllAuctions = (status?: string) =>
-    http<AuctionDto[]>(status ? `/auctions?status=${status}` : "/auctions", { method: "GET" });
+// Updated: Returns Page<AuctionDto>
+export const getAllAuctions = (status?: string, page = 0, size = 20) => {
+    const query = new URLSearchParams({ page: page.toString(), size: size.toString() });
+    if (status) query.append("status", status);
 
-/**
- * Fetches single auction details by ID.
- */
+    return http<Page<AuctionDto>>(`/auctions?${query.toString()}`, { method: "GET" });
+};
+
 export const getAuctionById = (id: string) =>
     http<AuctionDto>(`/auctions/${id}`, { method: "GET" });
 
-/**
- * Fetches auctions ending soon (Top 10 by default).
- */
-export const getEndingSoon = (limit: number = 10) =>
-    http<AuctionDto[]>(`/auctions/ending-soon?limit=${limit}`, { method: "GET" });
+// Updated: Returns Page<AuctionDto>
+export const getEndingSoon = (page = 0, size = 10) =>
+    http<Page<AuctionDto>>(`/auctions/ending-soon?page=${page}&size=${size}`, { method: "GET" });
 
-/**
- * Fetches the current user's won auctions.
- */
-export const getMyWins = () =>
-    http<AuctionDto[]>("/auctions/my-wins", { method: "GET" });
+// Updated: Returns Page<AuctionDto>
+export const getMyWins = (page = 0, size = 20) =>
+    http<Page<AuctionDto>>(`/auctions/my-wins?page=${page}&size=${size}`, { method: "GET" });
 
-/**
- * Cancels an auction (restricted to owners/admins).
- */
 export const cancelAuction = (id: string) =>
     http<void>(`/auctions/${id}`, { method: "DELETE" });
 
-/**
- * Fetches the full bid history for a specific auction.
- */
-export const getAuctionBidHistory = (auctionId: string) =>
-    http<BidResp[]>(`/bids/auction/${auctionId}`, { method: "GET" });
+// Updated: Returns Page<BidResp>
+export const getAuctionBidHistory = (auctionId: string, page = 0, size = 20) =>
+    http<Page<BidResp>>(`/bids/auction/${auctionId}?page=${page}&size=${size}`, { method: "GET" });

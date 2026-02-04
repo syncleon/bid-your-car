@@ -26,4 +26,13 @@ class ItemImage(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
     var item: Item
-) : BaseEntity ()
+) : BaseEntity() {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ItemImage) return false
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = id?.hashCode() ?: 0
+}

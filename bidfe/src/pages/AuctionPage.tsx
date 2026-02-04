@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { auctionStore } from "../features/auction/model/auction.store";
+import {auctionStore} from "../features/auction/model/auction.store.ts";
 import {AuctionCard} from "../features/auction/ui/AuctionCard.tsx";
 
 export const AuctionPage = observer(() => {
@@ -10,7 +10,6 @@ export const AuctionPage = observer(() => {
         auctionStore.loadAuctions("ACTIVE");
     }, []);
 
-    // Loading State
     if (auctionStore.isLoading && auctionStore.auctions.length === 0) {
         return (
             <div style={{ padding: 60, textAlign: "center", color: "#999", fontSize: "14px" }}>
@@ -19,7 +18,6 @@ export const AuctionPage = observer(() => {
         );
     }
 
-    // Error State
     if (auctionStore.error) {
         return (
             <div style={{ padding: 40 }}>
@@ -58,46 +56,10 @@ export const AuctionPage = observer(() => {
     );
 });
 
-// --- Styles ---
-
-const containerStyle: React.CSSProperties = {
-    padding: "40px 24px",
-    maxWidth: 1200,
-    margin: "0 auto"
-};
-
-const headerStyle: React.CSSProperties = {
-    marginBottom: "40px",
-    paddingBottom: "16px",
-    borderBottom: "1px solid #eee"
-};
-
-const pageTitleStyle: React.CSSProperties = {
-    fontSize: "28px",
-    fontWeight: 700,
-    color: "#111",
-    margin: "0 0 8px 0",
-    letterSpacing: "-0.5px"
-};
-
-const subtitleStyle: React.CSSProperties = {
-    fontSize: "14px",
-    color: "#666",
-    margin: 0
-};
-
-const gridStyle: React.CSSProperties = {
-    display: "grid",
-    // Slightly wider cards (300px) for auctions to accommodate timer/bid info comfortably
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-    gap: "40px 32px",
-    alignItems: "start"
-};
-
-const emptyStateStyle: React.CSSProperties = {
-    textAlign: "center",
-    marginTop: 80,
-    color: "#999",
-    padding: "40px",
-    fontSize: "14px"
-};
+// Styles remain the same...
+const containerStyle: React.CSSProperties = { padding: "40px 24px", maxWidth: 1200, margin: "0 auto" };
+const headerStyle: React.CSSProperties = { marginBottom: "40px", paddingBottom: "16px", borderBottom: "1px solid #eee" };
+const pageTitleStyle: React.CSSProperties = { fontSize: "28px", fontWeight: 700, color: "#111", margin: "0 0 8px 0", letterSpacing: "-0.5px" };
+const subtitleStyle: React.CSSProperties = { fontSize: "14px", color: "#666", margin: 0 };
+const gridStyle: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "40px 32px", alignItems: "start" };
+const emptyStateStyle: React.CSSProperties = { textAlign: "center", marginTop: 80, color: "#999", padding: "40px", fontSize: "14px" };

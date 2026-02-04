@@ -1,7 +1,7 @@
 import { memo } from "react";
-import { ItemCard } from "../../item/ui/ItemCard"; // Ensure path is correct
-import type { ItemDto } from "../../item/types";
 import styles from "./mylistingstyles.ts";
+import type {ItemDto} from "../../item/types.ts";
+import {ItemCard} from "../../item/ui/ItemCard.tsx";
 
 interface ListingItemProps {
     item: ItemDto;
@@ -11,7 +11,6 @@ interface ListingItemProps {
     onCancel: (id: string) => void;
 }
 
-// React.memo ensures this only re-renders if this specific item changes
 export const ListingItem = memo(({ item, onEdit, onAuction, onDelete, onCancel }: ListingItemProps) => {
 
     const handleDelete = () => {
@@ -26,37 +25,44 @@ export const ListingItem = memo(({ item, onEdit, onAuction, onDelete, onCancel }
         }
     };
 
-    // Encapsulate status logic here
     const renderActions = () => {
+        // Backend Flag: isSold
         if (item.sold) {
             return <span style={styles.statusSold}>Sold</span>;
         }
 
+        // Backend Flag: isActive
         if (item.active) {
             return (
-                <button onClick={handleCancel} style={styles.btnDestructive}>
-                Cancel Auction
-            </button>
-        );
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: 8, height: 8, background: '#16a34a', borderRadius: '50%', display: 'inline-block' }}/>
+                        Live Auction
+                    </span>
+                    <button onClick={handleCancel} style={styles.btnDestructive}>
+                        Cancel
+                    </button>
+                </div>
+            );
         }
 
-        // Default: Available (Draft, Expired, etc)
+        // Backend Flag: isAvailable (Draft, Expired, Cancelled)
         if (item.available) {
             return (
                 <div style={styles.actionGroup}>
-                <button onClick={() => onAuction(item)} style={styles.btnPrimary}>
-                List for Auction
-                         </button>
-                         <span style={styles.divider}>|</span>
-                <button onClick={() => onEdit(item)} style={styles.btnNeutral}>
-                Edit
-                </button>
-                <span style={styles.divider}>|</span>
-                <button onClick={handleDelete} style={styles.btnDestructive}>
-                Delete
-                </button>
+                    <button onClick={() => onAuction(item)} style={styles.btnPrimary}>
+                        List for Auction
+                    </button>
+                    <span style={styles.divider}>|</span>
+                    <button onClick={() => onEdit(item)} style={styles.btnNeutral}>
+                        Edit
+                    </button>
+                    <span style={styles.divider}>|</span>
+                    <button onClick={handleDelete} style={styles.btnDestructive}>
+                        Delete
+                    </button>
                 </div>
-        );
+            );
         }
 
         return null;
@@ -64,13 +70,10 @@ export const ListingItem = memo(({ item, onEdit, onAuction, onDelete, onCancel }
 
     return (
         <div style={styles.cardContainer}>
-            {/* The Reusable Card */}
             <ItemCard item={item} />
-
-    {/* The Actions Footer */}
-    <div style={styles.actionRow}>
-        {renderActions()}
+            <div style={styles.actionRow}>
+                {renderActions()}
+            </div>
         </div>
-        </div>
-);
+    );
 });

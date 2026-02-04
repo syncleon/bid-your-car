@@ -1,13 +1,16 @@
-import {BaseCard} from "../../../widgets/BaseCard/BaseCard.tsx";
+import { BaseCard } from "../../../widgets/BaseCard/BaseCard.tsx";
 import styles from "../../../widgets/BaseCard/styles.ts";
-import type {ItemDto} from "../types.ts"; // Adjust path as needed
+import type { ItemDto } from "../types";
 
 interface ItemCardProps {
     item: ItemDto;
 }
 
 export const ItemCard = ({ item }: ItemCardProps) => {
-    const mainImage = item.images?.[0]?.thumbnailUrl;
+    // Safely access the first image's thumbnail
+    const mainImage = item.images && item.images.length > 0
+        ? item.images[0].thumbnailUrl
+        : null;
 
     const specs = [item.transmission, item.drivetrain]
         .filter(Boolean)
@@ -19,18 +22,21 @@ export const ItemCard = ({ item }: ItemCardProps) => {
             imageUrl={mainImage}
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
-                // Item specific: Mileage on bottom left
                 bottomLeft: (
                     <div style={styles.badgeDark}>
+                        {/* Ensure number formatting */}
                         {item.mileage.toLocaleString()} mi
                     </div>
                 ),
+                // Example: Show a badge if it's sold
+                ...(item.sold && {
+                    topLeft: <div style={{...styles.badgeDark, backgroundColor: '#dc2626'}}>SOLD</div>
+                })
             }}
         >
-            {/* Content Body */}
             <div style={styles.metaRow}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                    {/* Add Price here if your DTO has it, otherwise empty like before */}
+                    {/* Placeholder for Price if added later */}
                 </div>
                 <div style={styles.locationText}>{item.location}</div>
             </div>

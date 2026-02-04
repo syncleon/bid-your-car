@@ -16,6 +16,6 @@ data class AuctionDto(
     val minBidIncrement: BigDecimal,
     val currentHighestBid: BigDecimal?,
     val bidCount: Int,
-    val isReserveMet: Boolean?,
-    val winnerId: Long? = null
+    val isReserveMet: Boolean,
+    val winnerId: Long?
 )

@@ -5,8 +5,8 @@ import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.user.entity.User
 import jakarta.persistence.*
+import org.hibernate.annotations.BatchSize
 import org.hibernate.annotations.JdbcTypeCode
-import java.math.BigDecimal
 import java.sql.Types
 import java.util.UUID
 
@@ -15,12 +15,11 @@ import java.util.UUID
     name = "items",
     indexes = [
         Index(name = "idx_item_make_model", columnList = "make, model"),
-        Index(name = "idx_item_year", columnList = "year"), // Useful for sorting
+        Index(name = "idx_item_year", columnList = "year"),
         Index(name = "idx_item_seller_id", columnList = "seller_id")
     ]
 )
 class Item(
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @JdbcTypeCode(Types.VARCHAR)
@@ -73,22 +72,18 @@ class Item(
     @JoinColumn(name = "seller_id", nullable = false)
     var seller: User,
 
-    @OneToMany(
-        mappedBy = "item",
-        cascade = [CascadeType.ALL],
-        orphanRemoval = true
-    )
-    var images: MutableList<ItemImage> = mutableListOf(),
+    // Performance: Use Set + BatchSize to avoid N+1 problems when listing items
+    @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @BatchSize(size = 20)
+    var images: MutableSet<ItemImage> = mutableSetOf(),
 
-    @OneToMany(
-        mappedBy = "item",
-        fetch = FetchType.LAZY,
-        cascade = [CascadeType.ALL]
-    )
-    var auctions: MutableList<Auction> = mutableListOf()
+    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @BatchSize(size = 20)
+    var auctions: MutableSet<Auction> = mutableSetOf()
 
 ) : BaseEntity() {
 
+    // Helper accessors for business logic
     val activeAuctionId: UUID?
         get() = auctions.find { it.status == AuctionStatus.ACTIVE }?.id
 
@@ -96,23 +91,20 @@ class Item(
         get() = auctions.find { it.status == AuctionStatus.ACTIVE }?.status
             ?: auctions.maxByOrNull { it.endTime }?.status
 
-    // FLAGS
-
-    val isActive: Boolean
-        get() = currentStatus == AuctionStatus.ACTIVE
-
-    val isSold: Boolean
-        get() = currentStatus == AuctionStatus.SOLD
-
-    val isExpired: Boolean
-        get() = currentStatus == AuctionStatus.EXPIRED
-
-    val isCancelled: Boolean
-        get() = currentStatus == AuctionStatus.CANCELLED
-
+    val isActive: Boolean get() = currentStatus == AuctionStatus.ACTIVE
+    val isSold: Boolean get() = currentStatus == AuctionStatus.SOLD
     val isAvailable: Boolean
         get() = currentStatus == null ||
                 currentStatus == AuctionStatus.DRAFT ||
                 currentStatus == AuctionStatus.EXPIRED ||
                 currentStatus == AuctionStatus.CANCELLED
+
+    // Essential for Entities in Sets
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Item) return false
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = id?.hashCode() ?: 0
 }

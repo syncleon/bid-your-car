@@ -2,8 +2,7 @@ package com.oblapleon.bidapi.feature.item.dto
 
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.user.dto.UserDto
-import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 
 data class ItemDto(
     val id: UUID,
@@ -22,10 +21,23 @@ data class ItemDto(
     val exteriorColor: String?,
     val interiorColor: String?,
     val sellerType: String?,
+    // Default to empty list to avoid null safety issues on frontend
     val images: List<ItemImageDto> = emptyList(),
     val activeAuctionId: UUID?,
     val auctionStatus: AuctionStatus?,
     val isActive: Boolean,
     val isSold: Boolean,
     val isAvailable: Boolean
+)
+
+data class ItemImageDto(
+    val id: UUID,
+
+    // Internal S3/Storage URL
+    val originalUrl: String,
+
+    // Derived/Optimized URLs (e.g. for ImageKit/Cloudinary)
+    val thumbnailUrl: String,
+    val previewUrl: String,
+    val fullHdUrl: String
 )

@@ -9,7 +9,8 @@ export interface LoginRequestDto {
     password: string;
 }
 
-export interface LoginResponseDto {
+// Matches AuthRespDto from backend
+export interface AuthResponseDto {
     token: string;
 }
 
@@ -22,4 +23,15 @@ export interface UserDto {
     username: string;
     email: string;
     roles: RoleDto[];
+}
+
+// Matches GlobalExceptionHandler response
+export interface ApiErrorResponse {
+    error: string;
+    timestamp: number;
+    details?: Record<string, string>; // For validation errors
+}
+
+export interface RestoreResponseDto {
+    message: string;
 }

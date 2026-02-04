@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
-import { useStore } from "../shared/hooks/useStore";
-import { itemStore } from "../features/item/model/item.store";
-import { auctionStore } from "../features/auction/model/auction.store";
-
-import { EditItemModal } from "../features/item/ui/EditItemModal";
-import { CreateAuctionModal } from "../features/auction/ui/CreateAuctionModal";
-import type { ItemDto, ItemCreateRequest } from "../features/item/types";
-import type { CreateAuctionDto } from "../features/auction/types";
-import { MyListingsSection } from "../features/profile/ui/MyListingsSection";
-import { ProfileInfoSection } from "../features/profile/ui/ProfileInfoCard";
-import { ProfileSettingsModal } from "../features/profile/ui/ProfileSettingsModal";
+import type {ItemCreateRequest, ItemDto} from "../features/item/types.ts";
+import {useStore} from "../shared/hooks/useStore.ts";
+import {itemStore} from "../features/item/model/item.store.ts";
+import type {CreateAuctionDto} from "../features/auction/types.ts";
+import {auctionStore} from "../features/auction/model/auction.store.ts";
+import {ProfileInfoSection} from "../features/profile/ui/ProfileInfoCard.tsx";
+import {MyListingsSection} from "../features/profile/ui/MyListingsSection.tsx";
+import {ProfileSettingsModal} from "../features/profile/ui/ProfileSettingsModal.tsx";
+import {EditItemModal} from "../features/item/ui/EditItemModal.tsx";
+import {CreateAuctionModal} from "../features/auction/ui/CreateAuctionModal.tsx";
 
 export const ProfilePage = observer(() => {
     const { profileStore } = useStore();
@@ -24,7 +23,9 @@ export const ProfilePage = observer(() => {
 
     useEffect(() => {
         profileStore.loadProfile();
+        // Backend is paginated now. This loads Page 0 by default.
         itemStore.loadMyItems();
+
         return () => profileStore.clearMessages();
     }, [profileStore]);
 
@@ -50,21 +51,16 @@ export const ProfilePage = observer(() => {
         const success = await auctionStore.startAuction(data);
         if (success) {
             setAuctioningItem(null);
-            // Refresh items so the UI updates from "Available" to "Live"
+            // Refresh items to update status badge from "Available" to "Live"
             await itemStore.loadMyItems();
 
-            const newAuctionId = auctionStore.auctions[0]?.id;
-            if (newAuctionId) {
-                navigate(`/auctions/${newAuctionId}`);
-            } else {
-                navigate("/auctions");
-            }
+            // Navigate to the specific auction if we have the ID (assuming store tracks current created one)
+            // Or just go to the auction list
+            navigate("/auctions");
         }
     };
 
-    // ✅ New Handler: Cancel Active Auction
     const handleCancelAuction = async (itemId: string) => {
-        // 1. Find the item in our store to get the activeAuctionId
         const item = itemStore.myItems.find((i) => i.id === itemId);
 
         if (!item || !item.activeAuctionId) {
@@ -72,20 +68,19 @@ export const ProfilePage = observer(() => {
             return;
         }
 
-        // 2. Call the auction store to cancel using the AUCTION ID
         const success = await auctionStore.cancelActiveAuction(item.activeAuctionId);
 
         if (success) {
-            // 3. Refresh the list so the badge updates from "Live" to "Cancelled"
+            // Refresh the list so the badge updates
             await itemStore.loadMyItems();
         }
     };
 
     if (profileStore.isLoading && !profileStore.profile)
-        return <div style={{ padding: 40, textAlign: "center", fontSize: 14 }}>Loading...</div>;
+        return <div style={{ padding: 40, textAlign: "center", fontSize: 14 }}>Loading profile...</div>;
 
     if (!profileStore.profile)
-        return <div style={{ padding: 40 }}>No profile found.</div>;
+        return <div style={{ padding: 40 }}>No profile found. Please log in.</div>;
 
     return (
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px" }}>
@@ -104,7 +99,7 @@ export const ProfilePage = observer(() => {
                 onDelete={(id) => {
                     if (window.confirm("Delete listing?")) itemStore.deleteListing(id);
                 }}
-                onCancel={handleCancelAuction} // <--- Pass the new handler here
+                onCancel={handleCancelAuction}
             />
 
             <ProfileSettingsModal

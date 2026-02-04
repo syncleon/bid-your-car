@@ -13,6 +13,12 @@ import type { ItemDto, ItemCreateRequest } from "../types";
 class ItemStore {
     items: ItemDto[] = [];
     myItems: ItemDto[] = [];
+
+    // Pagination State
+    totalItems = 0;
+    totalPages = 0;
+    currentPage = 0;
+
     isLoading = false;
     error: string | null = null;
     uploadProgress: string | null = null;
@@ -23,13 +29,22 @@ class ItemStore {
 
     // --- Data Loading ---
 
-    loadItems = async () => {
+    loadItems = async (page = 0) => {
         this.isLoading = true;
         this.error = null;
         try {
-            const data = await getAllItems();
+            // API returns Page<ItemDto>
+            const pageData = await getAllItems(page);
+
             runInAction(() => {
-                this.items = data;
+                // We extract the array from the 'content' field
+                this.items = pageData.content;
+
+                // Update pagination state
+                this.totalItems = pageData.totalElements;
+                this.totalPages = pageData.totalPages;
+                this.currentPage = pageData.number;
+
                 this.isLoading = false;
             });
         } catch (err: any) {
@@ -40,13 +55,13 @@ class ItemStore {
         }
     };
 
-    loadMyItems = async () => {
+    loadMyItems = async (page = 0) => {
         this.isLoading = true;
         this.error = null;
         try {
-            const data = await getMyItems();
+            const pageData = await getMyItems(page);
             runInAction(() => {
-                this.myItems = data;
+                this.myItems = pageData.content;
                 this.isLoading = false;
             });
         } catch (err: any) {
@@ -65,11 +80,9 @@ class ItemStore {
         this.uploadProgress = "Initializing listing...";
 
         try {
-            // 1. Create the Item record first (Kotlin backend)
             const newItem = await submitItem(data);
             const itemId = newItem.id;
 
-            // 2. Sequential Upload (Avoids overwhelming the S3/API connection)
             if (files.length > 0) {
                 for (let i = 0; i < files.length; i++) {
                     runInAction(() => {
@@ -83,7 +96,8 @@ class ItemStore {
                 this.isLoading = false;
                 this.uploadProgress = null;
             });
-            // Refresh local items to show the new listing with its images
+
+            // Reload user items to reflect changes
             await this.loadMyItems();
             return true;
         } catch (err: any) {
@@ -102,10 +116,8 @@ class ItemStore {
         this.uploadProgress = "Saving changes...";
 
         try {
-            // 1. Update text metadata (Year, Mileage, VIN, etc.)
             const updatedItem = await updateItem(id, data);
 
-            // 2. Process new image uploads if any
             if (newFiles.length > 0) {
                 for (let i = 0; i < newFiles.length; i++) {
                     runInAction(() => {
@@ -113,12 +125,16 @@ class ItemStore {
                     });
                     await uploadItemImage(id, newFiles[i]);
                 }
-                // Refresh to get new CDN URLs for the images
-                await this.loadMyItems();
+                await this.loadMyItems(); // Full refresh if images added
             } else {
                 runInAction(() => {
+                    // Optimistic update for text-only changes
                     const index = this.myItems.findIndex(i => i.id === id);
-                    if (index !== -1) this.myItems[index] = updatedItem;
+                    if (index !== -1) {
+                        // We preserve existing images since the update response might lazily load them
+                        const existingImages = this.myItems[index].images;
+                        this.myItems[index] = { ...updatedItem, images: existingImages };
+                    }
                 });
             }
 
@@ -155,7 +171,6 @@ class ItemStore {
         try {
             await apiDeleteImage(imageId);
             runInAction(() => {
-                // Optimistically update the store to remove image from UI immediately
                 const item = this.myItems.find(i => i.id === itemId) || this.items.find(i => i.id === itemId);
                 if (item) {
                     item.images = item.images.filter(img => img.id !== imageId);

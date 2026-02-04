@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { itemStore } from "../features/item/model/item.store";
-import { ItemCard } from "../features/item/ui/ItemCard";
+import {itemStore} from "../features/item/model/item.store.ts";
+import {ItemCard} from "../features/item/ui/ItemCard.tsx";
 
 export const ItemsPage = observer(() => {
 
     useEffect(() => {
+        // Now loads page 0 by default.
+        // You can add pagination controls later using itemStore.totalPages
         itemStore.loadItems();
     }, []);
 
@@ -60,7 +62,7 @@ const gridStyle: React.CSSProperties = {
     display: "grid",
     // Cards min-width set to 260px for a clean look on desktop
     gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-    gap: "40px 24px", // More vertical gap (40px) vs horizontal (24px)
+    gap: "40px 24px",
     alignItems: "start"
 };
 

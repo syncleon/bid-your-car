@@ -18,23 +18,25 @@ class AuctionStore {
     selectedAuction: AuctionDto | null = null;
     bidHistory: BidResp[] = [];
 
+    // Tracks the newly created auction for navigation
+    currentAuction: AuctionDto | null = null;
+
     isLoading = false;
-    isBidding = false; // Separate loading state for the bid button
+    isBidding = false;
     error: string | null = null;
 
     constructor() {
         makeAutoObservable(this);
     }
 
-    // --- Data Loading ---
-
     loadAuctions = async (status?: string) => {
         this.isLoading = true;
         this.error = null;
         try {
-            const data = await getAllAuctions(status);
+            // Unwraps Page<AuctionDto>
+            const pageData = await getAllAuctions(status);
             runInAction(() => {
-                this.auctions = data;
+                this.auctions = pageData.content;
                 this.isLoading = false;
             });
         } catch (err: any) {
@@ -48,13 +50,14 @@ class AuctionStore {
     loadAuctionDetails = async (id: string) => {
         this.isLoading = true;
         try {
-            const [details, history] = await Promise.all([
+            // Note: getAuctionById returns Dto directly, History returns Page<BidResp>
+            const [details, historyPage] = await Promise.all([
                 getAuctionById(id),
                 getAuctionBidHistory(id)
             ]);
             runInAction(() => {
                 this.selectedAuction = details;
-                this.bidHistory = history;
+                this.bidHistory = historyPage.content;
                 this.isLoading = false;
             });
         } catch (err: any) {
@@ -65,11 +68,11 @@ class AuctionStore {
         }
     };
 
-    loadEndingSoon = async (limit?: number) => {
+    loadEndingSoon = async () => {
         try {
-            const data = await getEndingSoon(limit);
+            const pageData = await getEndingSoon();
             runInAction(() => {
-                this.endingSoon = data;
+                this.endingSoon = pageData.content;
             });
         } catch (err: any) {
             console.error("Failed to load ending soon auctions", err);
@@ -79,9 +82,9 @@ class AuctionStore {
     loadMyWins = async () => {
         this.isLoading = true;
         try {
-            const data = await getMyWins();
+            const pageData = await getMyWins();
             runInAction(() => {
-                this.myWins = data;
+                this.myWins = pageData.content;
                 this.isLoading = false;
             });
         } catch (err: any) {
@@ -92,14 +95,15 @@ class AuctionStore {
         }
     };
 
-    // --- Actions ---
-
     startAuction = async (data: CreateAuctionDto) => {
         this.isLoading = true;
         this.error = null;
+        this.currentAuction = null;
+
         try {
             const newAuction = await createAuction(data);
             runInAction(() => {
+                this.currentAuction = newAuction;
                 this.auctions.unshift(newAuction);
                 this.isLoading = false;
             });
@@ -118,21 +122,16 @@ class AuctionStore {
         this.error = null;
         try {
             const newBid = await placeBid(req);
-
-            // After a successful bid, we should refresh the selected auction
-            // to get the new 'currentHighestBid' and 'bidCount'
             const updatedAuction = await getAuctionById(req.auctionId);
 
             runInAction(() => {
                 this.bidHistory.unshift(newBid);
                 this.selectedAuction = updatedAuction;
 
-                // Also update the auction in the main list if it exists there
                 const index = this.auctions.findIndex(a => a.id === req.auctionId);
                 if (index !== -1) {
                     this.auctions[index] = updatedAuction;
                 }
-
                 this.isBidding = false;
             });
             return true;
@@ -149,7 +148,6 @@ class AuctionStore {
         try {
             await cancelAuction(id);
             runInAction(() => {
-                // Remove or update status locally
                 this.auctions = this.auctions.filter(a => a.id !== id);
                 if (this.selectedAuction?.id === id) {
                     this.selectedAuction.status = 'CANCELLED';

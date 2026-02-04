@@ -2,7 +2,6 @@ package com.oblapleon.bidapi.feature.item.service
 
 import com.oblapleon.bidapi.common.exceptions.AlreadyExistsException
 import com.oblapleon.bidapi.common.exceptions.NotFoundException
-import com.oblapleon.bidapi.common.service.BaseService
 import com.oblapleon.bidapi.common.service.StorageService
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
@@ -11,6 +10,8 @@ import com.oblapleon.bidapi.feature.item.entity.ItemImage
 import com.oblapleon.bidapi.feature.item.repo.ItemImageRepo
 import com.oblapleon.bidapi.feature.item.repo.ItemRepo
 import com.oblapleon.bidapi.feature.user.entity.User
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -18,39 +19,36 @@ import java.nio.file.AccessDeniedException
 import java.util.*
 
 @Service
+@Transactional
 class ItemService(
     private val itemRepo: ItemRepo,
     private val itemImageRepo: ItemImageRepo,
     private val storageService: StorageService
-) : BaseService<Item, UUID> {
+) {
 
     @Transactional(readOnly = true)
-    override fun findAll(): List<Item> {
-        return itemRepo.findAllActive()
-    }
+    fun findAll(pageable: Pageable): Page<Item> = itemRepo.findAllActive(pageable)
 
     @Transactional(readOnly = true)
-    override fun findById(id: UUID): Item {
+    fun findBySeller(sellerId: Long, pageable: Pageable): Page<Item> =
+        itemRepo.findBySellerId(sellerId, pageable)
+
+    @Transactional(readOnly = true)
+    fun findById(id: UUID): Item {
         val item = itemRepo.findById(id)
-            .orElseThrow { NotFoundException("Item with id $id not found") }
+            .orElseThrow { NotFoundException("Item not found") }
 
         if (item.seller.deletedAt != null) {
             throw NotFoundException("Item listing is no longer available")
         }
-
         return item
     }
 
-    @Transactional(readOnly = true)
-    fun findBySeller(sellerId: Long): List<Item> = itemRepo.findBySellerId(sellerId)
-
-    @Transactional
     fun create(currentUser: User, request: ItemCreateRequest): Item {
         if (itemRepo.existsByVin(request.vin)) {
             throw AlreadyExistsException("Car with VIN ${request.vin} already exists")
         }
 
-        // Manual mapping ensures all new fields are captured correctly
         val newItem = Item(
             seller = currentUser,
             year = request.year,
@@ -72,29 +70,27 @@ class ItemService(
         return itemRepo.save(newItem)
     }
 
-    @Transactional
     fun update(id: UUID, request: ItemUpdateRequest): Item {
         val item = findById(id)
 
-        return item.apply {
-            request.year?.let { year = it }
-            request.make?.let { make = it }
-            request.model?.let { model = it }
-            request.location?.let { location = it }
-            request.mileage?.let { mileage = it }
-            request.description?.let { description = it }
-            request.engine?.let { engine = it }
-            request.drivetrain?.let { drivetrain = it }
-            request.transmission?.let { transmission = it }
-            request.bodyStyle?.let { bodyStyle = it }
-            request.exteriorColor?.let { exteriorColor = it }
-            request.interiorColor?.let { interiorColor = it }
-            request.sellerType?.let { sellerType = it }
-        }.let { itemRepo.save(it) }
+        request.year?.let { item.year = it }
+        request.make?.let { item.make = it }
+        request.model?.let { item.model = it }
+        request.location?.let { item.location = it }
+        request.mileage?.let { item.mileage = it }
+        request.description?.let { item.description = it }
+        request.engine?.let { item.engine = it }
+        request.drivetrain?.let { item.drivetrain = it }
+        request.transmission?.let { item.transmission = it }
+        request.bodyStyle?.let { item.bodyStyle = it }
+        request.exteriorColor?.let { item.exteriorColor = it }
+        request.interiorColor?.let { item.interiorColor = it }
+        request.sellerType?.let { item.sellerType = it }
+
+        return itemRepo.save(item)
     }
 
-    @Transactional
-    override fun delete(id: UUID) {
+    fun delete(id: UUID) {
         if (!itemRepo.existsById(id)) throw NotFoundException("Item not found")
         itemRepo.deleteById(id)
     }
@@ -102,30 +98,18 @@ class ItemService(
     @Transactional
     fun uploadImage(itemId: UUID, file: MultipartFile): ItemImage {
         val item = findById(itemId)
-
-        // Assuming storageService returns the full URL or path
         val imageUrl = storageService.uploadFile(file)
-
         val imageEntity = ItemImage(url = imageUrl, item = item)
-        item.images.add(imageEntity)
-
-        // Saving the item cascades the new image due to CascadeType.ALL
-        itemRepo.save(item)
-
-        return item.images.last()
+        return itemImageRepo.save(imageEntity)
     }
 
-    @Transactional
     fun deleteImage(imageId: UUID, userId: Long) {
         val image = itemImageRepo.findById(imageId)
             .orElseThrow { NotFoundException("Image not found") }
 
-        // Security check: ensure the user owns the car this image belongs to
         if (image.item.seller.id != userId) {
             throw AccessDeniedException("You do not own this image")
         }
-
         itemImageRepo.delete(image)
-        // Optional: Trigger async job to delete actual file from S3
     }
 }

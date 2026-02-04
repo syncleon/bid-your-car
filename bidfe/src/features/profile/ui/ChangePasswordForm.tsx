@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
-import { useStore } from "../../../shared/hooks/useStore";
-
-/**
- * Component providing a form for users to update their account password.
- * Interfaces with the ProfileStore to validate the current password
- * before applying the new one.
- */
-export const ChangePasswordForm = observer(() => {
+import { useStore } from "../../../shared/hooks/useStore";observer(() => {
     const { profileStore } = useStore();
     const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "" });
 

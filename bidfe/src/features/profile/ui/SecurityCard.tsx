@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../../shared/hooks/useStore";
-import { minStyles } from "./minimalStyles";
-
-export const SecuritySection = observer(() => {
+import { minStyles } from "./minimalStyles";observer(() => {
     const { profileStore } = useStore();
     const [isEditing, setIsEditing] = useState(false);
     const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "" });

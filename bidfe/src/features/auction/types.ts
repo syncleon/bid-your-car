@@ -1,26 +1,37 @@
+// Standard Spring Data Page Interface
 import type {ItemDto} from "../item/types.ts";
 
-export type AuctionStatus = 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED';
+export interface Page<T> {
+    content: T[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
+}
+
+export type AuctionStatus = 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED' | 'DRAFT';
 
 export interface AuctionDto {
     id: string;
     item: ItemDto;
-    startTime: string;
-    endTime: string;
+    startTime: string; // ISO Instant
+    endTime: string;   // ISO Instant
     status: AuctionStatus;
     startPrice: number;
     minBidIncrement: number;
     currentHighestBid: number | null;
-    minNextBid: number;
     bidCount: number;
-    isReserveMet: boolean | null;
+    isReserveMet: boolean;
     winnerId: number | null;
 }
 
 export interface CreateAuctionDto {
     itemId: string;
-    startTime: string;
-    endTime: string;
+    startTime: string; // ISO String
+    endTime: string;   // ISO String
     startingBid: number;
     reservePrice?: number;
     minBidIncrement?: number;

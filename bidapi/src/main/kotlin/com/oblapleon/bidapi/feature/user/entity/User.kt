@@ -9,6 +9,9 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "users")
+// Optional: Hibernate native soft delete annotations (if you want to automate filtering)
+// @SQLDelete(sql = "UPDATE users SET deleted_at = NOW() WHERE id = ?")
+// @Where(clause = "deleted_at IS NULL")
 class User(
 
     @Id
@@ -24,7 +27,8 @@ class User(
     @Column(nullable = false, unique = true)
     var email: String,
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    // Performance: Switch to LAZY. We will load this explicitly when needed.
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
         joinColumns = [JoinColumn(name = "user_id")],
@@ -32,17 +36,14 @@ class User(
     )
     var roles: MutableSet<Role> = mutableSetOf(),
 
-    // Items this user is selling
     @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY)
-    var items: MutableList<Item> = mutableListOf(),
+    var items: MutableSet<Item> = mutableSetOf(),
 
-    // Added: Auctions won by this user
     @OneToMany(mappedBy = "winnerUser", fetch = FetchType.LAZY)
-    var wonAuctions: MutableList<Auction> = mutableListOf(),
+    var wonAuctions: MutableSet<Auction> = mutableSetOf(),
 
-    // Added: Bids made by this user
     @OneToMany(mappedBy = "bidder", fetch = FetchType.LAZY)
-    var bids: MutableList<Bid> = mutableListOf(),
+    var bids: MutableSet<Bid> = mutableSetOf(),
 
     @Column(name = "deleted_at")
     var deletedAt: LocalDateTime? = null,
@@ -50,4 +51,14 @@ class User(
     @Column(nullable = false)
     var enabled: Boolean = false
 
-) : BaseEntity()
+) : BaseEntity() {
+
+    // Essential for Entities used in Sets
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is User) return false
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = id?.hashCode() ?: 0
+}

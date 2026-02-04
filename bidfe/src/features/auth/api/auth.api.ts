@@ -1,51 +1,62 @@
-import type { LoginRequestDto, LoginResponseDto, RegisterRequestDto } from "../types.ts";
+import type {
+    LoginRequestDto,
+    AuthResponseDto,
+    RegisterRequestDto,
+    RestoreResponseDto
+} from "../types";
 
 const BASE_URL = "http://localhost:8080/api/v1";
 
 /**
- * A robust fetch wrapper that handles response parsing for both JSON and plain text.
- * Uses response cloning to allow error message extraction without locking the
- * primary response stream.
- *
- * @param url The full endpoint URL.
- * @param options Fetch configuration including method, headers, and body.
- * @returns Parsed response data of type T.
- * @throws Error with a message extracted from the response body.
+ * Generic request wrapper.
+ * Handles the new GlobalExceptionHandler format: { error: "Message", timestamp: 123 }
  */
 async function request<T>(url: string, options: RequestInit): Promise<T> {
     const response = await fetch(url, options);
 
+    // Handle Errors
     if (!response.ok) {
-        const errorClone = response.clone();
-        const contentType = errorClone.headers.get("content-type");
-        let message = "Request failed";
+        const contentType = response.headers.get("content-type");
+        let errorMessage = `Request failed: ${response.status} ${response.statusText}`;
 
         try {
             if (contentType?.includes("application/json")) {
-                const body = await errorClone.json();
-                message = body.message || body.error || message;
+                const body = await response.json();
+                // 1. Check for standard "error" field from GlobalExceptionHandler
+                if (body.error) {
+                    errorMessage = body.error;
+                }
+                // 2. Check for Validation errors
+                else if (body.details) {
+                    // specific field errors exist, but we flatten to a string for simple display
+                    errorMessage = Object.values(body.details).join(", ");
+                }
+                // 3. Fallback
+                else if (body.message) {
+                    errorMessage = body.message;
+                }
             } else {
-                message = await errorClone.text();
+                // Handle plain text errors (rare in your new setup, but safe to keep)
+                const text = await response.text();
+                if (text) errorMessage = text;
             }
-        } catch {
-            message = response.statusText || message;
+        } catch (e) {
+            // parsing failed, use default message
         }
-        throw new Error(message);
+
+        throw new Error(errorMessage);
     }
 
+    // Handle Success
     const contentType = response.headers.get("content-type");
-    if (contentType?.includes("application/json")) {
+    if (contentType && contentType.includes("application/json")) {
         return response.json();
     }
 
+    // Handle plain text responses (e.g., Register/Verify endpoints return strings)
     return response.text() as unknown as T;
 }
 
-/**
- * Registers a new user account.
- * @param dto User registration details.
- * @returns Success confirmation message.
- */
 export const register = (dto: RegisterRequestDto) =>
     request<string>(`${BASE_URL}/register`, {
         method: "POST",
@@ -53,37 +64,20 @@ export const register = (dto: RegisterRequestDto) =>
         body: JSON.stringify(dto),
     });
 
-/**
- * Authenticates a user and retrieves a session token.
- * @param dto Login credentials.
- * @returns Session data including JWT.
- */
 export const login = (dto: LoginRequestDto) =>
-    request<LoginResponseDto>(`${BASE_URL}/login`, {
+    request<AuthResponseDto>(`${BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dto),
     });
 
-/**
- * Verifies an account via an email token.
- * @param token The unique verification token.
- */
 export const verifyEmail = (token: string) =>
     request<string>(`${BASE_URL}/verify?token=${token}`, {
         method: "GET",
     });
 
-interface RestoreResponse {
-    message: string;
-}
-
-/**
- * Reactivates a soft-deleted account.
- * @param data User credentials for validation.
- */
 export const restoreAccount = (data: LoginRequestDto) =>
-    request<RestoreResponse>(`${BASE_URL}/restore`, {
+    request<RestoreResponseDto>(`${BASE_URL}/restore`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

@@ -1,8 +1,10 @@
 package com.oblapleon.bidapi.common.helpers
 
+import com.oblapleon.bidapi.common.exceptions.UnauthorizedException
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.entity.User
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
@@ -11,38 +13,52 @@ import org.springframework.stereotype.Component
 class AuthorizationHelper {
 
     /**
-     * Retrieves the User entity directly from the SecurityContext.
+     * Retrieves the currently authenticated User entity from the SecurityContext.
+     *
+     * @return The authenticated User entity.
+     * @throws UnauthorizedException If the user is not logged in (401).
+     * @throws AccessDeniedException If the security context is invalid (500/403).
      */
     fun getCurrentUser(): User {
         val auth = SecurityContextHolder.getContext().authentication
-            ?: throw AccessDeniedException("No authentication found")
+
+        if (auth == null || !auth.isAuthenticated || auth is AnonymousAuthenticationToken) {
+            throw UnauthorizedException("User is not authenticated.")
+        }
+
         return auth.toUser()
     }
 
     /**
-     * Combines user retrieval and permission checking.
-     * Returns the current user if they are an ADMIN or the OWNER.
+     * Gatekeeper Method:
+     * Returns the current user only if they are the **Owner** of the target resource
+     * OR if they have the **ADMIN** role.
+     *
+     * @param targetUserId The ID of the resource owner.
+     * @return The current User entity (detached).
+     * @throws AccessDeniedException If the user lacks permission (403).
      */
     fun checkOwnerOrAdmin(targetUserId: Long): User {
         val user = getCurrentUser()
-        val isAdmin = user.roles.any { it.name == ERole.ADMIN }
-        val isOwner = user.id == targetUserId
 
-        if (!isAdmin && !isOwner) {
-            throw AccessDeniedException("You are not authorized to access this resource")
-        }
-        return user
+        // 1. Check Ownership (Fastest check)
+        if (user.id == targetUserId) return user
+
+        // 2. Check Admin Role (Requires iterating roles, which are eager loaded now)
+        if (user.roles.any { it.name == ERole.ADMIN }) return user
+
+        throw AccessDeniedException("You do not have permission to access or modify this resource.")
     }
 
     /**
-     * Extension to extract the domain User entity from the Authentication object.
-     * This works because of our custom UserAuthenticationConverter.
+     * Safe cast extension to extract our Domain User from the Authentication principal.
      */
-    fun Authentication.toUser(): User {
+    private fun Authentication.toUser(): User {
         val principal = this.principal
         if (principal is User) {
             return principal
         }
-        throw AccessDeniedException("Principal is not a valid User entity")
+        // This should only happen if the UserAuthenticationConverter in SecurityConfig is misconfigured
+        throw AccessDeniedException("Security Principal is not a valid User entity.")
     }
 }

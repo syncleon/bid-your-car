@@ -1,16 +1,30 @@
+// ✅ NEW: Generic Page interface matching Spring Data
+export interface Page<T> {
+    content: T[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number; // Current page index (0-based)
+    first: boolean;
+    last: boolean;
+    empty: boolean;
+}
+
 export type AuctionStatus = "DRAFT" | "ACTIVE" | "SOLD" | "EXPIRED" | "CANCELLED";
 
 export interface ItemImageDto {
-    /** Unique ID for database referencing (e.g., for deletion) */
     id: string;
-    /** Raw S3 URL */
     originalUrl: string;
-    /** List/Grid view optimized (400x300px) */
     thumbnailUrl: string;
-    /** Main details page optimized (1000px) */
     previewUrl: string;
-    /** Full resolution for zoom/lightbox */
     fullHdUrl: string;
+}
+
+export interface SellerDto {
+    id: number;
+    username: string;
+    email: string;
+    // Add other UserDto fields if needed
 }
 
 export interface ItemDto {
@@ -20,14 +34,9 @@ export interface ItemDto {
     model: string;
     vin: string;
     location: string;
-    mileage: number | string;
+    mileage: number;
     description: string | null;
-    seller: {
-        id: number;
-        firstName: string;
-        lastName: string;
-        email: string;
-    };
+    seller: SellerDto; // Updated to use strict DTO
     engine: string | null;
     drivetrain: string | null;
     transmission: string | null;
@@ -49,7 +58,7 @@ export interface ItemCreateRequest {
     model: string;
     vin: string;
     location: string;
-    mileage: number | string;
+    mileage: number;
     description?: string;
     engine?: string;
     drivetrain?: string;
