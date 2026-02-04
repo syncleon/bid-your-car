@@ -20,7 +20,7 @@ export interface ItemDto {
     model: string;
     vin: string;
     location: string;
-    mileage: number;
+    mileage: number | string;
     description: string | null;
     seller: {
         id: number;
@@ -49,7 +49,7 @@ export interface ItemCreateRequest {
     model: string;
     vin: string;
     location: string;
-    mileage: number;
+    mileage: number | string;
     description?: string;
     engine?: string;
     drivetrain?: string;

@@ -1,7 +1,7 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { FormInput, FormSection, FormSelect } from "./form-ui";
 import { ImageUploader } from "./ImageUploader";
-import type { ItemImageDto } from "../types"; // Ensure you have this type defined
+import type {ItemCreateRequest, ItemImageDto} from "../types"; // Ensure you have this type defined
 
 // --- Constants ---
 const currentYear = new Date().getFullYear();
@@ -18,23 +18,6 @@ const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT", "PDK/Dual Clutch"]
 
 const DRIVETRAINS = ["RWD", "FWD", "AWD", "4WD"]
     .map(v => ({ value: v, label: v }));
-
-// --- Types ---
-export interface ItemCreateRequest {
-    year: number;
-    make: string;
-    model: string;
-    vin: string;
-    location: string;
-    mileage: number | "";
-    description: string;
-    engine: string;
-    transmission: string;
-    drivetrain: string;
-    bodyStyle: string;
-    exteriorColor: string;
-    interiorColor: string;
-}
 
 interface Props {
     // initialData might contain 'images' if we are editing
