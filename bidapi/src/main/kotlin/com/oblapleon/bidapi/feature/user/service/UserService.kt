@@ -4,6 +4,8 @@ import com.oblapleon.bidapi.common.exceptions.BadRequestException
 import com.oblapleon.bidapi.common.exceptions.ConflictException
 import com.oblapleon.bidapi.common.exceptions.NotFoundException
 import com.oblapleon.bidapi.common.exceptions.UnauthorizedException
+import com.oblapleon.bidapi.common.security.Hashing
+import com.oblapleon.bidapi.feature.auction.repo.AuctionRepo
 import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
 import com.oblapleon.bidapi.feature.user.dto.UpdateUserReqDto
 import com.oblapleon.bidapi.feature.user.entity.ERole
@@ -19,7 +21,8 @@ import java.time.LocalDateTime
 @Transactional
 class UserService(
     private val userRepo: UserRepo,
-    private val passwordService: PasswordService
+    private val hashing: Hashing,
+    private val auctionRepo: AuctionRepo
 ) {
 
     @Transactional(readOnly = true)
@@ -42,7 +45,7 @@ class UserService(
             if (password.isNullOrBlank()) {
                 throw BadRequestException("Current password is required to delete your account.")
             }
-            if (!passwordService.matches(password, initiator.password)) {
+            if (!hashing.checkBcrypt(password, initiator.password)) {
                 throw UnauthorizedException("Incorrect password.")
             }
         }
@@ -50,6 +53,14 @@ class UserService(
     }
 
     private fun softDeleteUser(user: User) {
+        val userId = user.id ?: return
+        if (auctionRepo.hasActiveAuctionsWithBids(userId)) {
+            throw ConflictException(
+                "Cannot delete account. You have active auctions with existing bids. " +
+                        "Please wait for auctions to conclude or contact support."
+            )
+        }
+        auctionRepo.cancelAllActiveAuctionsByUserId(userId)
         user.deletedAt = LocalDateTime.now()
         userRepo.save(user)
     }
@@ -58,7 +69,7 @@ class UserService(
         val user = userRepo.findByUsername(payload.username)
             ?: throw UnauthorizedException("Invalid credentials.")
 
-        if (!passwordService.matches(payload.password, user.password)) {
+        if (!hashing.checkBcrypt(payload.password, user.password)) {
             throw UnauthorizedException("Invalid credentials.")
         }
 
@@ -68,13 +79,8 @@ class UserService(
         userRepo.save(user)
     }
 
-    // Consolidated update logic to remove code duplication
     fun updateUser(id: Long, request: UpdateUserReqDto, isSelfUpdate: Boolean): User {
         val user = findById(id)
-
-        // If self update, we might allow changing username/email,
-        // but typically critical info requires verification.
-        // Here we apply the changes directly as per your logic.
 
         request.username?.let { newName ->
             if (newName != user.username) {
@@ -90,10 +96,9 @@ class UserService(
             }
         }
 
-        // Only allow password update here if it's an Admin override.
-        // Self-password change should go through changePassword()
         if (!isSelfUpdate && request.password != null) {
-            user.password = passwordService.encode(request.password)
+            validatePassword(request.password)
+            user.password = hashing.hashBcrypt(request.password)
         }
 
         return userRepo.save(user)
@@ -101,10 +106,11 @@ class UserService(
 
     fun changePassword(id: Long, oldPass: String, newPass: String) {
         val user = findById(id)
-        if (!passwordService.matches(oldPass, user.password)) {
+        if (!hashing.checkBcrypt(oldPass, user.password)) {
             throw BadRequestException("Old password is incorrect")
         }
-        user.password = passwordService.encode(newPass)
+        validatePassword(newPass)
+        user.password = hashing.hashBcrypt(newPass)
         userRepo.save(user)
     }
 
@@ -117,17 +123,27 @@ class UserService(
         userRepo.findByEmailContainingIgnoreCase(query, pageable)
 
     // Helpers
+    @Transactional(readOnly = true)
     fun findByName(username: String): User =
         userRepo.findByUsername(username) ?: throw NotFoundException("User '$username' not found")
 
+    @Transactional(readOnly = true)
     fun existsByName(username: String) = userRepo.existsByUsername(username)
+
+    @Transactional(readOnly = true)
     fun existsByEmail(email: String) = userRepo.existsByEmail(email)
 
     private fun validateUniqueUsername(username: String) {
-        if (userRepo.existsByUsername(username)) throw ConflictException("Username '$username' is already taken")
+        if (existsByName(username)) throw ConflictException("Username '$username' is already taken")
     }
 
     private fun validateUniqueEmail(email: String) {
-        if (userRepo.existsByEmail(email)) throw ConflictException("Email '$email' is already registered")
+        if (existsByEmail(email)) throw ConflictException("Email '$email' is already registered")
+    }
+
+    private fun validatePassword(password: String) {
+        if (password.length < 6) {
+            throw BadRequestException("Password must be at least 6 characters long")
+        }
     }
 }

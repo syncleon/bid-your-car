@@ -31,7 +31,7 @@ class AuthService(
         if (userService.existsByName(payload.username)) throw AlreadyExistsException("Username taken.")
         if (userService.existsByEmail(payload.email)) throw AlreadyExistsException("Email in use.")
 
-        val userRole = roleRepo.findByName(ERole.USER) ?: throw NotFoundException("Role not found")
+        val userRole = roleRepo.findByName(ERole.USER)
 
         val user = User(
             username = payload.username,
@@ -40,7 +40,6 @@ class AuthService(
             roles = mutableSetOf(userRole),
             enabled = false
         )
-        // Direct save to Repo usually preferred for pure creates
         val savedUser = userRepo.save(user)
 
         val token = VerificationToken(user = savedUser)
@@ -54,20 +53,23 @@ class AuthService(
         val user = try {
             userService.findByName(payload.username)
         } catch (e: NotFoundException) {
-            // Security: Don't reveal if user exists or not
-            throw UnauthorizedException("Invalid credentials")
+            throw UnauthorizedException("Invalid credentials. " +
+                    "Check your username and password.")
         }
 
         if (!hashing.checkBcrypt(payload.password, user.password!!)) {
-            throw UnauthorizedException("Invalid credentials")
+            throw UnauthorizedException("Invalid credentials. " +
+                    "Check your username and password.")
         }
 
         if (user.deletedAt != null) {
-            throw UnauthorizedException("Account deleted. Restore it via /restore endpoint.")
+            throw UnauthorizedException("Account deleted. " +
+                    "You can restore it clicking on Restore Account button.")
         }
 
         if (!user.enabled) {
-            throw UnauthorizedException("Account not verified.")
+            throw UnauthorizedException("Account not verified." +
+                    "You can verify it via email.")
         }
 
         return AuthRespDto(token = jwtTokenProvider.createToken(user))
@@ -79,7 +81,7 @@ class AuthService(
             ?: throw BadRequestException("Invalid or expired token")
 
         if (verificationToken.expiryDate.isBefore(LocalDateTime.now())) {
-            throw BadRequestException("Token has expired")
+            throw BadRequestException("Token has expired.")
         }
 
         val user = verificationToken.user
@@ -90,7 +92,7 @@ class AuthService(
 
         // Clean up token after use
         verificationTokenRepo.delete(verificationToken)
-        return "Account verified successfully!"
+        return "Account verified successfully! Now you can login."
     }
 
     fun restoreAccount(payload: LoginReqDto) {

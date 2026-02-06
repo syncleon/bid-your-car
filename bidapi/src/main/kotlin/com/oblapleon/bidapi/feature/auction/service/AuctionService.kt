@@ -1,5 +1,6 @@
 package com.oblapleon.bidapi.feature.auction.service
 
+import com.oblapleon.bidapi.common.exceptions.ConflictException
 import com.oblapleon.bidapi.common.exceptions.NotFoundException
 import com.oblapleon.bidapi.common.exceptions.OwnItemBidException
 import com.oblapleon.bidapi.common.exceptions.UnauthorizedException
@@ -155,20 +156,18 @@ class AuctionService(
     fun getAuctionsWonByUser(userId: Long, pageable: Pageable): Page<AuctionDto> =
         auctionRepo.findAllByWinnerUserIdAndStatus(userId, AuctionStatus.SOLD, pageable).map { it.toDto() }
 
-    // ✅ FIX: Security check moved inside transaction to support Lazy Loading
     fun cancelAuction(id: UUID, initiator: User) {
         val auction = auctionRepo.findById(id).orElseThrow { NotFoundException("Auction not found") }
 
-        // This traversal (auction -> item -> seller) is now safe because we are in a transaction
         val isOwner = auction.item.seller.id == initiator.id
         val isAdmin = initiator.roles.any { it.name == ERole.ADMIN }
 
         if (!isOwner && !isAdmin) {
-            throw AccessDeniedException("You do not have permission to cancel this auction.")
+            throw UnauthorizedException("You do not have permission to cancel this auction.")
         }
 
         if (auction.bids.isNotEmpty()) {
-            throw IllegalStateException("Cannot delete auction with existing bids.")
+            throw ConflictException("Cannot delete auction with existing bids.")
         }
 
         auction.status = AuctionStatus.CANCELLED

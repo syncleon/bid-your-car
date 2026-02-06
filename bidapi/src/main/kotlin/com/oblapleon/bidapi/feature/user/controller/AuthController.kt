@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -27,9 +28,9 @@ class AuthController(
         ]
     )
     @PostMapping("/login")
-    fun login(@RequestBody payload: LoginReqDto) =
+    fun login(@RequestBody payload: LoginReqDto): ResponseEntity<Any> =
         handleRequest {
-            if (payload.username.isEmpty() || payload.password.isEmpty()) {
+            if (payload.username.isBlank() || payload.password.isBlank()) {
                 throw BadRequestException("Username or password cannot be empty.")
             }
             authService.login(payload)
@@ -43,9 +44,9 @@ class AuthController(
         ]
     )
     @PostMapping("/register")
-    fun signup(@RequestBody payload: RegisterReqDto) =
+    fun signup(@RequestBody payload: RegisterReqDto): ResponseEntity<Any> =
         handleRequest {
-            if (payload.username.isEmpty() || payload.password.isEmpty()) {
+            if (payload.username.isBlank() || payload.password.isBlank()) {
                 throw BadRequestException("Username or password cannot be empty.")
             }
             authService.register(payload)
@@ -53,12 +54,11 @@ class AuthController(
 
     @Operation(summary = "Verify Account", description = "Verifies email token")
     @GetMapping("/verify")
-    fun verify(@RequestParam token: String) =
+    fun verify(@RequestParam token: String): ResponseEntity<Any> =
         handleRequest {
             authService.verifyAccount(token)
         }
 
-    // --- NEW ENDPOINT ---
     @Operation(
         summary = "Restore deleted account",
         description = "Reactivates a soft-deleted account. Requires valid Username and Password."
@@ -71,8 +71,11 @@ class AuthController(
         ]
     )
     @PostMapping("/restore")
-    fun restore(@RequestBody payload: LoginReqDto) =
+    fun restore(@RequestBody payload: LoginReqDto): ResponseEntity<Any> =
         handleRequest {
+            if (payload.username.isBlank() || payload.password.isBlank()) {
+                throw BadRequestException("Credentials are required for restoration.")
+            }
             authService.restoreAccount(payload)
             mapOf("message" to "Account restored successfully. You can now log in.")
         }
