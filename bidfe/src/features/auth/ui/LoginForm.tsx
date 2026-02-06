@@ -1,111 +1,94 @@
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useStore } from "../../../shared/hooks/useStore";
-import { formStyles } from "./formStyles"; // Assumed shared or defined below
+import { formStyles } from "./formStyles";
 
-interface Props {
-    onSwitchToRegister: () => void;
-    onSuccess: () => void;
-}
-
-export const LoginForm = observer(({ onSwitchToRegister, onSuccess }: Props) => {
+export const LoginForm = observer(() => {
     const { authStore } = useStore();
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const [formData, setFormData] = useState({ username: "", password: "" });
 
-    const submit = async (e?: React.FormEvent) => {
-        if (e) e.preventDefault();
-        try {
-            await authStore.login(formData);
-            onSuccess();
-        } catch {
-            // Error managed by store
+    useEffect(() => {
+        authStore.reset();
+    }, [authStore]);
+
+    const submit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await authStore.login(formData);
+
+        if (!authStore.error) {
+            const bg = location.state?.backgroundLocation;
+
+            // FIX 1: Robust Navigation
+            // Instead of navigate(-1), we explicitly go to the background path.
+            // This ensures the modal closes even if the history stack is messy.
+            if (bg) {
+                navigate(bg.pathname, { replace: true });
+            } else {
+                navigate("/profile");
+            }
         }
     };
 
     const handleRestore = async () => {
         await authStore.restore(formData);
-        if (authStore.isAuthenticated) {
-            setTimeout(() => onSuccess(), 1500);
-        }
     };
 
     const handleChange = (key: string, value: string) => {
         setFormData({ ...formData, [key]: value });
-        if (authStore.error || authStore.successMessage) authStore.reset();
+        if (authStore.error && !authStore.isDeletedAccount) authStore.reset();
     };
 
     return (
-        <div style={formStyles.container}>
+        <div>
             <h2 style={formStyles.header}>Welcome back</h2>
             <p style={formStyles.subHeader}>Please enter your details to sign in.</p>
 
-            {/* Error Message */}
-            {authStore.error && (
+            {authStore.error && !authStore.isDeletedAccount && (
                 <div style={formStyles.errorBanner}>{authStore.error}</div>
             )}
 
-            {/* Success Message */}
-            {authStore.successMessage && (
-                <div style={formStyles.successBanner}>{authStore.successMessage}</div>
-            )}
-
-            {/* Deleted Account Recovery UI */}
-            {authStore.isDeletedAccount && !authStore.successMessage && (
+            {authStore.isDeletedAccount && (
                 <div style={formStyles.warningBox}>
                     <p style={{ margin: "0 0 12px 0", fontSize: "0.9rem", color: "#854d0e" }}>
-                        This account is currently deactivated.
+                        This account is deactivated.
                     </p>
-                    <button
-                        onClick={handleRestore}
-                        disabled={authStore.isLoading}
-                        style={formStyles.restoreBtn}
-                    >
+                    <button type="button" onClick={handleRestore} disabled={authStore.isLoading} style={formStyles.restoreBtn}>
                         {authStore.isLoading ? "Restoring..." : "Restore Account"}
                     </button>
                 </div>
             )}
 
-            {/* Main Form */}
             <form onSubmit={submit}>
                 <div style={formStyles.inputGroup}>
                     <label style={formStyles.label}>Username</label>
-                    <input
-                        style={formStyles.input}
-                        placeholder="Enter your username"
-                        value={formData.username}
-                        onChange={(e) => handleChange("username", e.target.value)}
-                    />
+                    <input style={formStyles.input} placeholder="Enter your username" value={formData.username} onChange={(e) => handleChange("username", e.target.value)} />
                 </div>
-
                 <div style={formStyles.inputGroup}>
                     <label style={formStyles.label}>Password</label>
-                    <input
-                        style={formStyles.input}
-                        placeholder="••••••••"
-                        type="password"
-                        value={formData.password}
-                        onChange={(e) => handleChange("password", e.target.value)}
-                    />
+                    <input style={formStyles.input} type="password" placeholder="••••••••" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} />
                 </div>
-
-                <button
-                    type="submit"
-                    onClick={submit}
-                    disabled={authStore.isLoading}
-                    style={{
-                        ...formStyles.primaryBtn,
-                        opacity: authStore.isLoading ? 0.7 : 1
-                    }}
-                >
+                <button type="submit" disabled={authStore.isLoading} style={{ ...formStyles.primaryBtn, opacity: authStore.isLoading ? 0.7 : 1 }}>
                     {authStore.isLoading ? "Signing in..." : "Sign in"}
                 </button>
             </form>
 
             <div style={formStyles.footer}>
                 <span style={{ color: "#666" }}>Don't have an account? </span>
-                <button onClick={onSwitchToRegister} style={formStyles.linkBtn}>
+
+                {/* FIX 2: Add replace={true} */}
+                {/* This prevents adding a new history entry when switching forms */}
+                <Link
+                    to="/register"
+                    replace={true}
+                    state={{ backgroundLocation: location.state?.backgroundLocation }}
+                    style={formStyles.linkBtn}
+                >
                     Sign up
-                </button>
+                </Link>
             </div>
         </div>
     );

@@ -2,6 +2,8 @@ package com.oblapleon.bidapi.feature.user.controller
 
 import com.oblapleon.bidapi.common.controller.BaseController
 import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
+import com.oblapleon.bidapi.feature.item.dto.toDto
+import com.oblapleon.bidapi.feature.item.service.ItemService
 import com.oblapleon.bidapi.feature.user.dto.*
 import com.oblapleon.bidapi.feature.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
@@ -18,7 +20,8 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Users", description = "User management APIs")
 class UserController(
     private val userService: UserService,
-    private val authHelper: AuthorizationHelper
+    private val authHelper: AuthorizationHelper,
+    private val itemService: ItemService
 ) : BaseController() {
 
     @Operation(summary = "Get current user profile")
@@ -26,6 +29,15 @@ class UserController(
     fun getCurrentUser(): ResponseEntity<Any> {
         return handleRequest {
             authHelper.getCurrentUser().toDto()
+        }
+    }
+
+    @Operation(summary = "Get items listed by the current user")
+    @GetMapping("/me/items")
+    fun getCurrentUserItems(@PageableDefault(size = 20) pageable: Pageable): ResponseEntity<Any> {
+        return handleRequest {
+            val currentUser = authHelper.getCurrentUser()
+            itemService.findBySeller(currentUser.id!!, pageable).map { it.toDto() }
         }
     }
 

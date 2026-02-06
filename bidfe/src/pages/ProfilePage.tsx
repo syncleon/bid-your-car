@@ -1,131 +1,123 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { useNavigate } from "react-router-dom";
-import type {ItemCreateRequest, ItemDto} from "../features/item/types.ts";
-import {useStore} from "../shared/hooks/useStore.ts";
-import {itemStore} from "../features/item/model/item.store.ts";
-import type {CreateAuctionDto} from "../features/auction/types.ts";
-import {auctionStore} from "../features/auction/model/auction.store.ts";
-import {ProfileInfoSection} from "../features/profile/ui/ProfileInfoCard.tsx";
-import {MyListingsSection} from "../features/profile/ui/MyListingsSection.tsx";
-import {ProfileSettingsModal} from "../features/profile/ui/ProfileSettingsModal.tsx";
-import {EditItemModal} from "../features/item/ui/EditItemModal.tsx";
-import {CreateAuctionModal} from "../features/auction/ui/CreateAuctionModal.tsx";
+import {useStoreContext} from "../app/providers/useStoreContext.ts";
+import {useUserListings} from "../features/profile/hooks/useUserListings.ts";
+import {ChangePasswordForm, EditProfileForm} from "../features/profile/ui/ProfileActions.tsx";
+import {ListingCardAdapter} from "../features/profile/ui/ListingCardsAdapter.tsx";
+
 
 export const ProfilePage = observer(() => {
-    const { profileStore } = useStore();
-    const navigate = useNavigate();
+    // 2. Access the store safely using your Context
+    const { profileStore } = useStoreContext();
 
-    // --- State ---
-    const [editingItem, setEditingItem] = useState<ItemDto | null>(null);
-    const [auctioningItem, setAuctioningItem] = useState<ItemDto | null>(null);
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    // 3. Logic Hooks (Data Fetching for items)
+    const { items, isLoading: itemsLoading, error: itemsError } = useUserListings();
 
+    // 4. Local UI State for view switching
+    const [viewMode, setViewMode] = useState<'view' | 'edit' | 'password'>('view');
+
+    // 5. Lifecycle: Load Profile Data
     useEffect(() => {
-        profileStore.loadProfile();
-        // Backend is paginated now. This loads Page 0 by default.
-        itemStore.loadMyItems();
-
+        // We only load if we don't have it, or you can force reload
+        if (!profileStore.profile) {
+            profileStore.loadProfile();
+        }
         return () => profileStore.clearMessages();
     }, [profileStore]);
 
-    // --- Handlers ---
+    // 6. Loading Guards
+    if (profileStore.isLoading && !profileStore.profile) {
+        return <div style={{ padding: 20 }}>Loading Profile...</div>;
+    }
 
-    const handleAccountDelete = async (password: string) => {
-        await profileStore.deleteAccount(password);
-        navigate("/login");
-    };
+    if (!profileStore.profile) {
+        return <div style={{ padding: 20 }}>Access Denied or Failed to Load</div>;
+    }
 
-    const handleItemUpdate = async (data: ItemCreateRequest, files: File[]) => {
-        if (!editingItem) return;
-        const success = await itemStore.updateListing(editingItem.id, data, files);
-        if (success) setEditingItem(null);
-    };
-
-    const handleDeleteImage = async (imageId: string) => {
-        if (!editingItem) return;
-        await itemStore.deleteImage(editingItem.id, imageId);
-    };
-
-    const handleCreateAuction = async (data: CreateAuctionDto) => {
-        const success = await auctionStore.startAuction(data);
-        if (success) {
-            setAuctioningItem(null);
-            // Refresh items to update status badge from "Available" to "Live"
-            await itemStore.loadMyItems();
-
-            // Navigate to the specific auction if we have the ID (assuming store tracks current created one)
-            // Or just go to the auction list
-            navigate("/auctions");
+    // 7. Handlers
+    const handleDeleteAccount = () => {
+        const password = prompt("Enter password to confirm deletion:");
+        if (password) {
+            profileStore.deleteAccount(password);
         }
     };
-
-    const handleCancelAuction = async (itemId: string) => {
-        const item = itemStore.myItems.find((i) => i.id === itemId);
-
-        if (!item || !item.activeAuctionId) {
-            alert("Error: No active auction found for this item.");
-            return;
-        }
-
-        const success = await auctionStore.cancelActiveAuction(item.activeAuctionId);
-
-        if (success) {
-            // Refresh the list so the badge updates
-            await itemStore.loadMyItems();
-        }
-    };
-
-    if (profileStore.isLoading && !profileStore.profile)
-        return <div style={{ padding: 40, textAlign: "center", fontSize: 14 }}>Loading profile...</div>;
-
-    if (!profileStore.profile)
-        return <div style={{ padding: 40 }}>No profile found. Please log in.</div>;
 
     return (
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px" }}>
+        <div style={styles.container}>
+            {/* Global Messages from Store */}
+            {profileStore.error && (
+                <div style={styles.alertError}>{profileStore.error}</div>
+            )}
+            {profileStore.successMessage && (
+                <div style={styles.alertSuccess}>{profileStore.successMessage}</div>
+            )}
 
-            <ProfileInfoSection
-                profile={profileStore.profile}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-            />
+            {/* Header / Profile Info */}
+            <header style={styles.header}>
+                <h1 style={styles.title}>My Profile</h1>
 
-            <MyListingsSection
-                items={itemStore.myItems}
-                isLoading={itemStore.isLoading}
-                onCreate={() => navigate("/sell-car/submit")}
-                onEdit={setEditingItem}
-                onAuction={setAuctioningItem}
-                onDelete={(id) => {
-                    if (window.confirm("Delete listing?")) itemStore.deleteListing(id);
-                }}
-                onCancel={handleCancelAuction}
-            />
+                {viewMode === 'view' && (
+                    <div style={styles.infoBlock}>
+                        <div style={styles.details}>
+                            <p><strong>Username:</strong> {profileStore.profile.username}</p>
+                            <p><strong>Email:</strong> {profileStore.profile.email}</p>
+                            <p><strong>Member Since:</strong> {profileStore.profile.createDate ? new Date(profileStore.profile.createDate).toLocaleDateString() : "N/A"}</p>
+                        </div>
+                        <div style={styles.actions}>
+                            <button style={styles.btnSecondary} onClick={() => setViewMode('edit')}>Edit Info</button>
+                            <button style={styles.btnSecondary} onClick={() => setViewMode('password')}>Change Password</button>
+                            <button style={{...styles.btnSecondary, ...styles.textRed}} onClick={handleDeleteAccount}>Delete Account</button>
+                        </div>
+                    </div>
+                )}
 
-            <ProfileSettingsModal
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-                onDeleteAccount={handleAccountDelete}
-            />
+                {viewMode === 'edit' && (
+                    <EditProfileForm store={profileStore} onCancel={() => setViewMode('view')} />
+                )}
 
-            <EditItemModal
-                isOpen={!!editingItem}
-                item={editingItem}
-                onClose={() => setEditingItem(null)}
-                onSubmit={handleItemUpdate}
-                onDeleteImage={handleDeleteImage}
-                isLoading={itemStore.isLoading}
-            />
+                {viewMode === 'password' && (
+                    <ChangePasswordForm store={profileStore} onCancel={() => setViewMode('view')} />
+                )}
+            </header>
 
-            <CreateAuctionModal
-                key={auctioningItem ? auctioningItem.id : "empty"}
-                error={auctionStore.error}
-                isOpen={!!auctioningItem}
-                item={auctioningItem}
-                onClose={() => setAuctioningItem(null)}
-                onSubmit={handleCreateAuction}
-                isLoading={auctionStore.isLoading}
-            />
+            {/* Listings Section */}
+            <section style={styles.listingsSection}>
+                <h2 style={styles.subtitle}>My Garage</h2>
+
+                {itemsLoading && <p style={{color: '#666'}}>Loading your listings...</p>}
+                {itemsError && <p style={{ color: 'red' }}>{itemsError}</p>}
+
+                {!itemsLoading && !itemsError && items.length === 0 && (
+                    <p style={{ color: '#9ca3af' }}>You have no active listings.</p>
+                )}
+
+                <div style={styles.grid}>
+                    {/* Defensive check: Ensure items is an array before mapping */}
+                    {Array.isArray(items) && items.map(item => (
+                        // The Adapter handles the logic of WHICH card to show
+                        <ListingCardAdapter key={item.id} item={item} />
+                    ))}
+                </div>
+            </section>
         </div>
     );
 });
+
+export default ProfilePage;
+
+// --- Simple CSS-in-JS for this page ---
+const styles = {
+    container: { maxWidth: 1200, margin: "0 auto", padding: "20px", fontFamily: "system-ui, sans-serif" },
+    header: { borderBottom: "1px solid #eee", paddingBottom: 20, marginBottom: 30 },
+    title: { fontSize: "2rem", marginBottom: 20, fontWeight: 700 },
+    subtitle: { fontSize: "1.5rem", marginBottom: 15, fontWeight: 600 },
+    infoBlock: { background: "#f9fafb", padding: 24, borderRadius: 12 },
+    details: { marginBottom: 20, lineHeight: "1.8", color: "#374151" },
+    actions: { display: "flex", gap: 12, flexWrap: "wrap" as "wrap" },
+    listingsSection: { marginTop: 20 },
+    grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px", marginTop: 20 },
+    alertError: { padding: 12, marginBottom: 20, background: "#fee2e2", color: "#991b1b", borderRadius: 8 },
+    alertSuccess: { padding: 12, marginBottom: 20, background: "#dcfce7", color: "#166534", borderRadius: 8 },
+    btnSecondary: { padding: "8px 16px", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, cursor: "pointer", fontWeight: 500, color: "#374151" },
+    textRed: { color: "#dc2626", borderColor: "#fca5a5", background: "#fef2f2" }
+};

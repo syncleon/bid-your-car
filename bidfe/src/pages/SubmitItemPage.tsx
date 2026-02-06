@@ -1,10 +1,29 @@
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
-import { itemStore } from "../features/item/model/item.store";
+
 import { SubmitItemForm } from "../features/item/ui/SubmitItemForm";
+import type { ItemCreateRequest } from "../features/item/types";
+import {useStore} from "../shared/hooks/useStore.ts";
 
 export const SubmitItemPage = observer(() => {
     const navigate = useNavigate();
+    const { itemStore } = useStore(); // Access store via context
+
+    const handleSubmit = async (data: ItemCreateRequest, files: File[]) => {
+        // 1. Submit the item
+        const success = await itemStore.submitItem(data, files);
+
+        // 2. Navigate on success
+        if (success) {
+            // Assuming itemStore.submitItem sets 'this.selectedItem' to the new object
+            if (itemStore.selectedItem?.id) {
+                navigate(`/items/${itemStore.selectedItem.id}`);
+            } else {
+                // Fallback if ID is missing
+                navigate("/profile");
+            }
+        }
+    };
 
     return (
         <div style={{ padding: "60px 24px", maxWidth: "800px", margin: "0 auto" }}>
@@ -20,7 +39,7 @@ export const SubmitItemPage = observer(() => {
             )}
 
             <SubmitItemForm
-                onSubmit={async (data, files) => { if (await itemStore.submitItem(data, files)) navigate("/"); }}
+                onSubmit={handleSubmit}
                 isLoading={itemStore.isLoading}
             />
         </div>

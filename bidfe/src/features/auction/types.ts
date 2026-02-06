@@ -42,7 +42,7 @@ export interface PlaceBidReq {
     amount: number;
 }
 
-export interface BidResp {
+export interface BidDto {
     id: string;
     auctionId: string;
     bidderId: number;

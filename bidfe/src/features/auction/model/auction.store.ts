@@ -6,7 +6,7 @@ import {
     placeBid,
     getEndingSoon,
     getMyWins,
-    cancelAuction,
+    cancelAuction as apiCancelAuction, // Aliased to avoid name collision
     getAuctionBidHistory
 } from "../api/auction.api";
 import type { AuctionDto, CreateAuctionDto, BidResp, PlaceBidReq } from "../types";
@@ -33,7 +33,6 @@ export class AuctionStore {
         this.isLoading = true;
         this.error = null;
         try {
-            // Unwraps Page<AuctionDto>
             const pageData = await getAllAuctions(status);
             runInAction(() => {
                 this.auctions = pageData.content;
@@ -49,8 +48,8 @@ export class AuctionStore {
 
     loadAuctionDetails = async (id: string) => {
         this.isLoading = true;
+        this.error = null; // Reset error on new load
         try {
-            // Note: getAuctionById returns Dto directly, History returns Page<BidResp>
             const [details, historyPage] = await Promise.all([
                 getAuctionById(id),
                 getAuctionBidHistory(id)
@@ -81,6 +80,7 @@ export class AuctionStore {
 
     loadMyWins = async () => {
         this.isLoading = true;
+        this.error = null;
         try {
             const pageData = await getMyWins();
             runInAction(() => {
@@ -144,11 +144,19 @@ export class AuctionStore {
         }
     };
 
-    cancelActiveAuction = async (id: string) => {
+    // Renamed to match Component call: cancelAuction
+    cancelAuction = async (id: string) => {
+        this.error = null;
+        // We do NOT set isLoading=true here, because that would
+        // trigger the page loader and hide the content.
+
         try {
-            await cancelAuction(id);
+            await apiCancelAuction(id);
             runInAction(() => {
+                // Remove from main list if present
                 this.auctions = this.auctions.filter(a => a.id !== id);
+
+                // Update detail view status immediately
                 if (this.selectedAuction?.id === id) {
                     this.selectedAuction.status = 'CANCELLED';
                 }
@@ -165,6 +173,12 @@ export class AuctionStore {
     clearSelectedAuction = () => {
         this.selectedAuction = null;
         this.bidHistory = [];
+        this.error = null;
+    };
+
+    // New action to manually clear errors (for the banner close button)
+    clearError = () => {
+        this.error = null;
     };
 }
 

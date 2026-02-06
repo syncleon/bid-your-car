@@ -1,6 +1,6 @@
 import { tokenStorage } from "../../../shared/lib/token";
 import { http } from "../../../shared/api/HttpClient";
-import type { AuctionDto, CreateAuctionDto, BidResp, PlaceBidReq, Page } from "../types";
+import type {AuctionDto, CreateAuctionDto, PlaceBidReq, Page, BidDto} from "../types";
 
 const BASE_URL = "http://localhost:8080/api/v1/auctions";
 
@@ -39,7 +39,7 @@ export const createAuction = async (data: CreateAuctionDto): Promise<AuctionDto>
     return handleResponse<AuctionDto>(response);
 };
 
-export const placeBid = async (req: PlaceBidReq): Promise<BidResp> => {
+export const placeBid = async (req: PlaceBidReq): Promise<BidDto> => {
     const token = tokenStorage.get();
     if (!token) throw new Error("Please log in to place a bid.");
 
@@ -48,7 +48,7 @@ export const placeBid = async (req: PlaceBidReq): Promise<BidResp> => {
         headers: { "Authorization": `Bearer ${token}` }
     });
 
-    return handleResponse<BidResp>(response);
+    return handleResponse<BidDto>(response);
 };
 
 // Updated: Returns Page<AuctionDto>
@@ -75,4 +75,4 @@ export const cancelAuction = (id: string) =>
 
 // Updated: Returns Page<BidResp>
 export const getAuctionBidHistory = (auctionId: string, page = 0, size = 20) =>
-    http<Page<BidResp>>(`/bids/auction/${auctionId}?page=${page}&size=${size}`, { method: "GET" });
+    http<Page<BidDto>>(`/bids/auction/${auctionId}?page=${page}&size=${size}`, { method: "GET" });

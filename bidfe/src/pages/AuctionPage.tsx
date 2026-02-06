@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import {auctionStore} from "../features/auction/model/auction.store.ts";
 import {AuctionCard} from "../features/auction/ui/AuctionCard.tsx";
@@ -56,7 +56,6 @@ export const AuctionPage = observer(() => {
     );
 });
 
-// Styles remain the same...
 const containerStyle: React.CSSProperties = { padding: "40px 24px", maxWidth: 1200, margin: "0 auto" };
 const headerStyle: React.CSSProperties = { marginBottom: "40px", paddingBottom: "16px", borderBottom: "1px solid #eee" };
 const pageTitleStyle: React.CSSProperties = { fontSize: "28px", fontWeight: 700, color: "#111", margin: "0 0 8px 0", letterSpacing: "-0.5px" };

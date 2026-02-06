@@ -1,4 +1,6 @@
 // ✅ NEW: Generic Page interface matching Spring Data
+import type {AuctionDto} from "../auction/types.ts";
+
 export interface Page<T> {
     content: T[];
     totalPages: number;
@@ -47,6 +49,7 @@ export interface ItemDto {
     images: ItemImageDto[];
     auctionStatus: AuctionStatus | null;
     activeAuctionId: string | null;
+    auction?: AuctionDto | null;
     active: boolean;
     available: boolean;
     sold: boolean;

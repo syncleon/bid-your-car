@@ -9,42 +9,36 @@ const BASE_URL = "http://localhost:8080/api/v1";
 
 /**
  * Generic request wrapper.
- * Handles the new GlobalExceptionHandler format: { error: "Message", timestamp: 123 }
+ * Properly parses the Spring Boot error structure:
+ * { status: 401, error: "Unauthorized", message: "Account deleted...", ... }
  */
 async function request<T>(url: string, options: RequestInit): Promise<T> {
     const response = await fetch(url, options);
 
     // Handle Errors
     if (!response.ok) {
-        const contentType = response.headers.get("content-type");
         let errorMessage = `Request failed: ${response.status} ${response.statusText}`;
 
-        try {
-            if (contentType?.includes("application/json")) {
+        // Attempt to parse JSON error body
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+            try {
                 const body = await response.json();
-                // 1. Check for standard "error" field from GlobalExceptionHandler
-                if (body.error) {
+                // Prioritize 'message' because that's where your custom exception message lives
+                if (body.message) {
+                    errorMessage = body.message;
+                } else if (body.error) {
                     errorMessage = body.error;
                 }
-                // 2. Check for Validation errors
-                else if (body.details) {
-                    // specific field errors exist, but we flatten to a string for simple display
-                    errorMessage = Object.values(body.details).join(", ");
-                }
-                // 3. Fallback
-                else if (body.message) {
-                    errorMessage = body.message;
-                }
-            } else {
-                // Handle plain text errors (rare in your new setup, but safe to keep)
-                const text = await response.text();
-                if (text) errorMessage = text;
+            } catch (e) {
+                // JSON parse failed, stick to statusText
             }
-        } catch (e) {
-            // parsing failed, use default message
         }
 
-        throw new Error(errorMessage);
+        // Create an error object that preserves the status for checking later if needed
+        const error = new Error(errorMessage);
+        (error as any).status = response.status;
+        throw error;
     }
 
     // Handle Success
@@ -53,7 +47,6 @@ async function request<T>(url: string, options: RequestInit): Promise<T> {
         return response.json();
     }
 
-    // Handle plain text responses (e.g., Register/Verify endpoints return strings)
     return response.text() as unknown as T;
 }
 

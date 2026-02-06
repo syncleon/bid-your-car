@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo, type ChangeEvent, type FormEvent } from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { Modal } from "../../../shared/ui/Modal";
 import type { CreateAuctionDto } from "../types";
-import { FormInput } from "../../item/ui/form-ui";
 import type { ItemDto } from "../../item/types";
 
 interface Props {
@@ -13,14 +12,35 @@ interface Props {
     error: string | null;
 }
 
+// Duration options in minutes (calculated for logic)
+const DURATION_OPTIONS = [
+    { label: "1 Min (Test)", value: 1 / (24 * 60) }, // 1 minute as fraction of day
+    { label: "3 Days", value: 3 },
+    { label: "5 Days", value: 5 },
+    { label: "7 Days", value: 7 },
+];
+
 export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading, error }: Props) => {
     const [visibleError, setVisibleError] = useState<string | null>(null);
-    const [formData, setFormData] = useState({
-        startingBid: 0,
-        reservePrice: undefined as number | undefined,
-        minBidIncrement: 100,
-        durationDays: 7,
-    });
+
+    // Form State
+    const [startPrice, setStartPrice] = useState<string>("");
+    const [reservePrice, setReservePrice] = useState<string>("");
+    const [hasReserve, setHasReserve] = useState(false);
+    const [durationDays, setDurationDays] = useState<number>(7); // Default 7 days
+    const [bidIncrement, setBidIncrement] = useState<number>(100);
+
+    // Reset when opening new item
+    useEffect(() => {
+        if (isOpen) {
+            setStartPrice("");
+            setReservePrice("");
+            setHasReserve(false);
+            setDurationDays(7);
+            setBidIncrement(100);
+            setVisibleError(null);
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (error) {
@@ -30,61 +50,51 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
         }
     }, [error]);
 
-    // Calculate the dynamic end date for user preview
+    // Derived: End Date Preview
     const endDatePreview = useMemo(() => {
-        const date = new Date();
-        date.setDate(date.getDate() + (formData.durationDays || 0));
-        // Add 2 minutes buffer to match the submit logic
-        date.setMinutes(date.getMinutes() + 2);
-        return date.toLocaleDateString("en-US", {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit'
+        const now = new Date();
+        // Add duration (days * 24h * 60m * 60s * 1000ms)
+        const durationMs = durationDays * 24 * 60 * 60 * 1000;
+        const end = new Date(now.getTime() + durationMs + (2 * 60000)); // +2 min buffer logic
+
+        // Format relative time if < 24h (e.g., "Today at 5:00 PM")
+        if (durationDays < 1) {
+            return `Today, ${end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+        }
+
+        return end.toLocaleDateString("en-US", {
+            weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
         });
-    }, [formData.durationDays]);
+    }, [durationDays]);
 
     if (!isOpen || !item) return null;
-
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value === "" ? undefined : Number(value)
-        }));
-    };
-
-    const handleDurationSelect = (days: number) => {
-        setFormData(prev => ({ ...prev, durationDays: days }));
-    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setVisibleError(null);
 
-        const start = new Date(Date.now() + 2 * 60000);
-        const end = new Date(start.getTime() + formData.durationDays * 24 * 60 * 60 * 1000);
+        const start = new Date(Date.now() + 60000); // Start in 1 min (buffer)
+        const end = new Date(start.getTime() + (durationDays * 24 * 60 * 60 * 1000));
 
         const payload: CreateAuctionDto = {
             itemId: item.id,
             startTime: start.toISOString(),
             endTime: end.toISOString(),
-            startingBid: formData.startingBid,
-            reservePrice: formData.reservePrice || undefined,
-            minBidIncrement: formData.minBidIncrement || 100
+            startingBid: Number(startPrice),
+            reservePrice: hasReserve && reservePrice ? Number(reservePrice) : undefined,
+            minBidIncrement: bidIncrement
         };
 
         await onSubmit(payload);
     };
 
     const mainImage = item.images?.[0]?.thumbnailUrl;
-    const isFormValid = formData.startingBid > 0 && formData.durationDays > 0;
+    const isFormValid = Number(startPrice) > 0 && durationDays > 0;
+    const listingFee = hasReserve ? "$99.00" : "Free"; // Mock fee logic like real apps
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="List Vehicle for Auction">
+        <Modal isOpen={isOpen} onClose={onClose} title="List Vehicle">
             <form onSubmit={handleSubmit} style={styles.container}>
-                {/* Global Style Injection for Number Inputs */}
                 <style>{`
                     input[type=number]::-webkit-inner-spin-button, 
                     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -94,136 +104,129 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                 {visibleError && (
                     <div style={styles.errorBanner}>
                         <div style={styles.errorContent}>
-                            <AlertCircleIcon />
-                            <span>{visibleError}</span>
+                            <AlertCircleIcon /> <span>{visibleError}</span>
                         </div>
-                        <button type="button" onClick={() => setVisibleError(null)} style={styles.closeErrorBtn}>
-                            <CloseIcon />
-                        </button>
+                        <button type="button" onClick={() => setVisibleError(null)} style={styles.closeErrorBtn}><CloseIcon /></button>
                     </div>
                 )}
 
-                {/* SECTION 1: VEHICLE PREVIEW */}
+                {/* 1. Vehicle Identity Card */}
                 <div style={styles.vehicleCard}>
                     <div style={styles.imageWrapper}>
-                        {mainImage ? (
-                            <img src={mainImage} alt={item.model} style={styles.img} />
-                        ) : (
-                            <div style={styles.placeholder}>No Photo</div>
-                        )}
+                        {mainImage ? <img src={mainImage} alt={item.model} style={styles.img} /> : <div style={styles.placeholder}>No Photo</div>}
                     </div>
-                    <div style={styles.infoCol}>
-                        <div style={styles.badgeRow}>
-                            <span style={styles.yearBadge}>{item.year}</span>
-                            <span style={styles.vinBadge}>VIN: {item.vin.slice(-6)}</span>
+                    <div>
+                        <div style={styles.vinBadge}>VIN: {item.vin}</div>
+                        <h3 style={styles.itemTitle}>{item.year} {item.make} {item.model}</h3>
+                        <div style={styles.mileage}>{item.mileage.toLocaleString()} Miles</div>
+                    </div>
+                </div>
+
+                <div style={styles.scrollArea}>
+
+                    {/* 2. Pricing Section */}
+                    <SectionTitle icon={<DollarIcon />} title="Pricing Strategy" />
+
+                    <div style={styles.fieldRow}>
+                        <div style={{flex: 1}}>
+                            <label style={styles.label}>Starting Bid</label>
+                            <div style={styles.inputGroup}>
+                                <span style={styles.prefix}>$</span>
+                                <input
+                                    type="number"
+                                    value={startPrice}
+                                    onChange={e => setStartPrice(e.target.value)}
+                                    style={styles.input}
+                                    placeholder="0"
+                                    required
+                                />
+                            </div>
                         </div>
-                        <h3 style={styles.itemTitle}>{item.make} {item.model}</h3>
-                    </div>
-                </div>
 
-                {/* SECTION 2: PRICING */}
-                <div style={styles.sectionHeader}>
-                    <DollarIcon /> Pricing Strategy
-                </div>
-                <div style={styles.grid}>
-                    <div style={styles.fieldWrapper}>
-                        <div style={styles.inputGroup}>
-                            <span style={styles.currencyPrefix}>$</span>
-                            <FormInput
-                                label="Starting Bid"
-                                name="startingBid"
-                                type="number"
-                                value={formData.startingBid}
-                                onChange={handleChange}
-                                placeholder="0"
-                                required
-                            />
+                        <div style={{flex: 1}}>
+                            <label style={styles.label}>
+                                Reserve Price
+                                <span style={styles.optionalLabel}>(Optional)</span>
+                            </label>
+                            {hasReserve ? (
+                                <div style={styles.inputGroup}>
+                                    <span style={styles.prefix}>$</span>
+                                    <input
+                                        type="number"
+                                        value={reservePrice}
+                                        onChange={e => setReservePrice(e.target.value)}
+                                        style={styles.input}
+                                        placeholder="Min sale price"
+                                        autoFocus
+                                    />
+                                    <button type="button" onClick={() => setHasReserve(false)} style={styles.removeBtn}>✕</button>
+                                </div>
+                            ) : (
+                                <button type="button" onClick={() => setHasReserve(true)} style={styles.addReserveBtn}>
+                                    + Add Reserve Price
+                                </button>
+                            )}
                         </div>
-                        <div style={styles.helperText}>Opening price for the first bidder.</div>
                     </div>
 
-                    <div style={styles.fieldWrapper}>
-                        <div style={styles.inputGroup}>
-                            <span style={styles.currencyPrefix}>$</span>
-                            <FormInput
-                                label="Reserve Price"
-                                name="reservePrice"
-                                type="number"
-                                value={formData.reservePrice ?? ""}
-                                onChange={handleChange}
-                                placeholder="Optional"
-                            />
-                        </div>
-                        <div style={styles.helperText}>Minimum price to sell (Hidden).</div>
-                    </div>
-                </div>
+                    <p style={styles.helperText}>
+                        {hasReserve
+                            ? "A listing fee of $99 applies for reserve auctions."
+                            : "No Reserve auctions attract 40% more bidders on average."}
+                    </p>
 
-                {/* SECTION 3: TIMING */}
-                <div style={styles.divider} />
-                <div style={styles.sectionHeader}>
-                    <ClockIcon /> Auction Duration
-                </div>
+                    <div style={styles.divider} />
 
-                <div style={styles.durationContainer}>
+                    {/* 3. Duration Section */}
+                    <SectionTitle icon={<ClockIcon />} title="Auction Duration" />
+
                     <div style={styles.pillContainer}>
-                        {[3, 5, 7, 14].map(days => (
+                        {DURATION_OPTIONS.map(opt => (
                             <button
-                                key={days}
+                                key={opt.label}
                                 type="button"
-                                onClick={() => handleDurationSelect(days)}
-                                style={formData.durationDays === days ? styles.pillActive : styles.pill}
+                                onClick={() => setDurationDays(opt.value)}
+                                style={Math.abs(durationDays - opt.value) < 0.001 ? styles.pillActive : styles.pill}
                             >
-                                {days} Days
+                                {opt.label}
                             </button>
                         ))}
                     </div>
 
-                    <div style={styles.grid}>
-                        <div style={styles.fieldWrapper}>
-                            <FormInput
-                                label="Custom Duration (Days)"
-                                name="durationDays"
+                    <div style={{marginTop: 12}}>
+                        <label style={styles.label}>Minimum Bid Increment</label>
+                        <div style={styles.inputGroupSimple}>
+                            <span style={styles.prefixSimple}>$</span>
+                            <input
                                 type="number"
-                                min={1}
-                                max={30}
-                                value={formData.durationDays}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div style={styles.fieldWrapper}>
-                            <FormInput
-                                label="Bid Increment"
-                                name="minBidIncrement"
-                                type="number"
-                                value={formData.minBidIncrement}
-                                onChange={handleChange}
+                                value={bidIncrement}
+                                onChange={e => setBidIncrement(Number(e.target.value))}
+                                style={styles.inputSimple}
                             />
                         </div>
                     </div>
+
                 </div>
 
-                {/* SUMMARY BOX */}
-                <div style={styles.summaryBox}>
-                    <div style={styles.summaryRow}>
-                        <span style={styles.summaryLabel}>Est. End Date:</span>
-                        <span style={styles.summaryValue}>{endDatePreview}</span>
-                    </div>
-                    <div style={styles.summaryRow}>
-                        <span style={styles.summaryLabel}>Listing Fee:</span>
-                        <span style={styles.summaryValue}>Free</span>
-                    </div>
-                </div>
-
+                {/* 4. Footer Summary */}
                 <div style={styles.footer}>
-                    <button type="button" onClick={onClose} disabled={isLoading} style={styles.cancelBtn}>
-                        Cancel
-                    </button>
+                    <div style={styles.summaryBox}>
+                        <div style={styles.summaryItem}>
+                            <div style={styles.summaryLabel}>Ends</div>
+                            <div style={styles.summaryValue}>{endDatePreview}</div>
+                        </div>
+                        <div style={styles.summaryItem}>
+                            <div style={styles.summaryLabel}>Fee</div>
+                            <div style={styles.summaryValue}>{listingFee}</div>
+                        </div>
+                    </div>
+
                     <button
                         type="submit"
                         disabled={isLoading || !isFormValid}
                         style={isFormValid ? styles.submitBtn : styles.submitBtnDisabled}
                     >
-                        {isLoading ? "Processing..." : `List for $${formData.startingBid}`}
+                        {isLoading ? "Publishing..." : "Launch Auction"}
                     </button>
                 </div>
             </form>
@@ -231,124 +234,75 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
     );
 };
 
+// --- Components ---
+const SectionTitle = ({icon, title}: {icon: any, title: string}) => (
+    <div style={styles.sectionHeader}>
+        {icon} <span style={{marginLeft: 8}}>{title}</span>
+    </div>
+);
+
 // --- Icons ---
-const AlertCircleIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
-        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-);
-const CloseIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-);
-const DollarIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: 6}}><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-);
-const ClockIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: 6}}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-);
+const AlertCircleIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>);
+const CloseIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>);
+const DollarIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>);
+const ClockIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>);
 
 // --- Styles ---
-const styles: Record<string, React.CSSProperties> = {
-    container: {
-        padding: "8px 4px 0 4px",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-    },
-    sectionHeader: {
-        fontSize: "12px",
-        fontWeight: 700,
-        textTransform: "uppercase",
-        letterSpacing: "0.5px",
-        color: "#555",
-        marginBottom: "16px",
-        marginTop: "10px",
-        display: "flex",
-        alignItems: "center"
-    },
-    vehicleCard: {
-        display: "flex",
-        gap: "16px",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        paddingBottom: "20px",
-        borderBottom: "1px solid #f0f0f0",
-        marginBottom: "20px"
-    },
-    imageWrapper: {
-        width: "80px",
-        height: "60px",
-        borderRadius: "8px",
-        overflow: "hidden",
-        background: "#eee",
-        flexShrink: 0,
-        boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
-    },
-    img: { width: "100%", height: "100%", objectFit: "cover" },
-    placeholder: {
-        height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "10px", color: "#999", fontWeight: 700
-    },
-    infoCol: { display: "flex", flexDirection: "column", gap: "4px" },
-    badgeRow: { display: "flex", gap: "8px", alignItems: "center" },
-    itemTitle: { margin: 0, fontSize: "16px", fontWeight: 700, color: "#111" },
-    yearBadge: {
-        fontSize: "11px", fontWeight: 700, color: "#111", background: "#e0e0e0",
-        padding: "2px 6px", borderRadius: "4px"
-    },
-    vinBadge: { fontSize: "11px", color: "#888", fontFamily: "monospace" },
+const styles = {
+    container: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" },
 
+    // Vehicle Card
+    vehicleCard: { display: "flex", gap: "16px", padding: "0 0 20px", borderBottom: "1px solid #f0f0f0", marginBottom: "20px" },
+    imageWrapper: { width: "70px", height: "50px", borderRadius: "6px", overflow: "hidden", background: "#f3f4f6", flexShrink: 0 },
+    img: { width: "100%", height: "100%", objectFit: "cover" as const },
+    placeholder: { height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#999" },
+    vinBadge: { fontSize: "11px", color: "#6b7280", fontFamily: "monospace", letterSpacing: "0.5px", marginBottom: "2px" },
+    itemTitle: { margin: 0, fontSize: "15px", fontWeight: 700, color: "#111", lineHeight: 1.2 },
+    mileage: { fontSize: "12px", color: "#666", marginTop: "2px" },
+
+    // Layout
+    scrollArea: { paddingBottom: "10px" },
+    fieldRow: { display: "flex", gap: "20px", marginBottom: "8px" },
     divider: { height: "1px", backgroundColor: "#f0f0f0", margin: "24px 0" },
 
-    grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "12px" },
-    fieldWrapper: { display: "flex", flexDirection: "column" },
-    inputGroup: { position: "relative" },
-    currencyPrefix: {
-        position: "absolute", left: "0", top: "28px", zIndex: 10,
-        fontSize: "14px", color: "#999", fontWeight: 500, pointerEvents: "none",
-        width: "20px", textAlign: "center" // Adjust based on FormInput padding
-    },
-    helperText: { fontSize: "11px", color: "#888", marginTop: "4px" },
+    // Headers
+    sectionHeader: { fontSize: "12px", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.5px", color: "#9ca3af", marginBottom: "16px", display: "flex", alignItems: "center" },
 
-    durationContainer: { marginBottom: "20px" },
-    pillContainer: { display: "flex", gap: "8px", marginBottom: "16px" },
-    pill: {
-        padding: "6px 12px", borderRadius: "20px", border: "1px solid #ddd",
-        background: "#fff", fontSize: "12px", cursor: "pointer", color: "#666",
-        transition: "all 0.2s"
-    },
-    pillActive: {
-        padding: "6px 12px", borderRadius: "20px", border: "1px solid #000",
-        background: "#000", color: "#fff", fontSize: "12px", cursor: "pointer",
-        fontWeight: 600
-    },
+    // Inputs
+    label: { display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" },
+    optionalLabel: { fontSize: "11px", fontWeight: 400, color: "#9ca3af", marginLeft: "4px" },
 
-    summaryBox: {
-        background: "#f8f9fa", borderRadius: "8px", padding: "16px",
-        marginTop: "10px", border: "1px solid #eee"
-    },
-    summaryRow: { display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "13px" },
-    summaryLabel: { color: "#666" },
-    summaryValue: { fontWeight: 600, color: "#333" },
+    inputGroup: { position: "relative" as const, display: "flex", alignItems: "center" },
+    prefix: { position: "absolute" as const, left: "12px", color: "#9ca3af", fontSize: "14px", fontWeight: 500, pointerEvents: "none" as const },
+    input: { width: "100%", height: "40px", padding: "0 12px 0 26px", fontSize: "15px", fontWeight: 500, color: "#111", border: "1px solid #e5e7eb", borderRadius: "6px", outline: "none", transition: "border 0.2s" },
 
-    errorBanner: {
-        background: "#FEF2F2", border: "1px solid #FCA5A5", color: "#991B1B",
-        padding: "12px 16px", borderRadius: "8px", fontSize: "13px",
-        marginBottom: "20px", display: "flex", alignItems: "center", justifyContent: "space-between"
-    },
-    errorContent: { display: "flex", alignItems: "center", gap: "8px", fontWeight: 500 },
-    closeErrorBtn: { background: "none", border: "none", color: "#991B1B", cursor: "pointer" },
+    // Reserve Logic
+    addReserveBtn: { width: "100%", height: "40px", border: "1px dashed #d1d5db", borderRadius: "6px", background: "#f9fafb", color: "#6b7280", fontSize: "13px", fontWeight: 500, cursor: "pointer", transition: "all 0.2s" },
+    removeBtn: { position: "absolute" as const, right: "8px", background: "none", border: "none", color: "#9ca3af", fontSize: "14px", cursor: "pointer", padding: "4px" },
+    helperText: { fontSize: "11px", color: "#6b7280", marginTop: "8px", lineHeight: 1.4 },
 
-    footer: { marginTop: "24px", display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "16px", borderTop: "1px solid #eee" },
-    submitBtn: {
-        background: "#111", color: "#fff", border: "none", padding: "10px 24px",
-        borderRadius: "6px", fontWeight: 600, cursor: "pointer", fontSize: "14px",
-        boxShadow: "0 2px 5px rgba(0,0,0,0.1)", transition: "opacity 0.2s"
-    },
-    submitBtnDisabled: {
-        background: "#ccc", color: "#fff", border: "none", padding: "10px 24px",
-        borderRadius: "6px", fontWeight: 600, cursor: "not-allowed", fontSize: "14px"
-    },
-    cancelBtn: {
-        background: "none", border: "none", color: "#666", fontWeight: 500,
-        cursor: "pointer", padding: "0 12px", fontSize: "14px"
-    }
+    // Duration Pills
+    pillContainer: { display: "flex", gap: "8px", flexWrap: "wrap" as const },
+    pill: { padding: "8px 14px", borderRadius: "20px", border: "1px solid #e5e7eb", background: "#fff", color: "#374151", fontSize: "13px", fontWeight: 500, cursor: "pointer", transition: "all 0.2s" },
+    pillActive: { padding: "8px 14px", borderRadius: "20px", border: "1px solid #111", background: "#111", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" },
+
+    // Simple Input (Increment)
+    inputGroupSimple: { position: "relative" as const, maxWidth: "150px" },
+    prefixSimple: { position: "absolute" as const, left: "10px", top: "50%", transform: "translateY(-50%)", color: "#6b7280", fontSize: "13px" },
+    inputSimple: { width: "100%", height: "36px", padding: "0 10px 0 22px", borderRadius: "6px", border: "1px solid #e5e7eb", fontSize: "13px", fontWeight: 500 },
+
+    // Footer
+    footer: { marginTop: "24px", paddingTop: "20px", borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "center" },
+    summaryBox: { display: "flex", gap: "24px" },
+    summaryItem: { display: "flex", flexDirection: "column" as const, gap: "2px" },
+    summaryLabel: { fontSize: "10px", textTransform: "uppercase" as const, color: "#9ca3af", fontWeight: 700 },
+    summaryValue: { fontSize: "13px", fontWeight: 600, color: "#111" },
+
+    submitBtn: { height: "40px", padding: "0 24px", background: "#111", color: "#fff", border: "none", borderRadius: "6px", fontWeight: 600, fontSize: "14px", cursor: "pointer", boxShadow: "0 4px 6px -2px rgba(0,0,0,0.1)" },
+    submitBtnDisabled: { height: "40px", padding: "0 24px", background: "#e5e7eb", color: "#a1a1aa", border: "none", borderRadius: "6px", fontWeight: 600, fontSize: "14px", cursor: "not-allowed" },
+
+    // Error
+    errorBanner: { background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", padding: "10px 14px", borderRadius: "6px", fontSize: "13px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" },
+    errorContent: { display: "flex", alignItems: "center", gap: "8px" },
+    closeErrorBtn: { background: "none", border: "none", cursor: "pointer", color: "#991b1b", padding: 0 }
 };

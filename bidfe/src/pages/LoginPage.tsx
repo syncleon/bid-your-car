@@ -1,74 +1,89 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
-import { Modal } from "../shared/ui/Modal";
+import { useLocation, useNavigate } from "react-router-dom";
 import { LoginForm } from "../features/auth/ui/LoginForm";
 import { RegisterForm } from "../features/auth/ui/RegisterForm";
-import { useStore } from "../shared/hooks/useStore";
 
-/**
- * Page component that serves as the entry point for user authentication.
- * Manages the high-level state between login and registration views within a modal,
- * ensuring the global auth store is reset during transitions and closures.
- */
-export const LoginPage = () => {
-    const { authStore } = useStore();
-    const [mode, setMode] = useState<"login" | "register">("login");
-    const navigate = useNavigate();
+interface LoginPageProps {
+    isModal?: boolean;
+}
+
+export const LoginPage = ({ isModal = false }: LoginPageProps) => {
     const location = useLocation();
+    const navigate = useNavigate();
+    const isRegister = location.pathname === "/register";
 
-    const redirect = new URLSearchParams(location.search).get("redirect") || "/";
-
-    /**
-     * Finalizes the authentication process upon success.
-     * Cleans up transient store states before navigating the user
-     * to their intended destination.
-     */
-    const handleSuccess = () => {
-        authStore.reset();
-        navigate(redirect, { replace: true });
-    };
-
-    /**
-     * Handles the dismissal of the authentication modal.
-     * Resets the auth store to prevent stale errors or messages
-     * from appearing when the modal is reopened.
-     */
+    // 1. Handle closing the modal (go back)
     const handleClose = () => {
-        authStore.reset();
-        navigate("/");
+        // If it's a modal, go back one step in history to close it
+        // If it's a full page, maybe go home
+        if (isModal) {
+            navigate(-1);
+        } else {
+            navigate("/");
+        }
     };
 
-    /**
-     * Transitions the view to the registration form.
-     * Clears any existing login errors before switching modes.
-     */
-    const switchToRegister = () => {
-        authStore.reset();
-        setMode("register");
-    };
-
-    /**
-     * Transitions the view to the login form.
-     * Clears any existing registration success or error messages before switching modes.
-     */
-    const switchToLogin = () => {
-        authStore.reset();
-        setMode("login");
-    };
+    // 2. Styles configuration
+    const containerStyle: React.CSSProperties = isModal
+        ? {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Dimmed background
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000, // Ensure it's on top
+            backdropFilter: "blur(4px)" // Optional nice blur effect
+        }
+        : {
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "100vh",
+            backgroundColor: "#f5f5f5",
+        };
 
     return (
-        <Modal isOpen onClose={handleClose}>
-            {mode === "login" ? (
-                <LoginForm
-                    onSwitchToRegister={switchToRegister}
-                    onSuccess={handleSuccess}
-                />
-            ) : (
-                <RegisterForm
-                    onSwitchToLogin={switchToLogin}
-                    onSuccess={handleSuccess}
-                />
-            )}
-        </Modal>
+        <div
+            style={containerStyle}
+            onClick={handleClose} // Click outside to close
+        >
+            <div
+                onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside form
+                style={{
+                    position: "relative", // For positioning close button
+                    width: "100%",
+                    maxWidth: "400px",
+                    padding: "40px",
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                    animation: isModal ? "fadeIn 0.2s ease-out" : "none"
+                }}
+            >
+                {/* Optional Close Button (X) */}
+                {isModal && (
+                    <button
+                        onClick={handleClose}
+                        style={{
+                            position: "absolute",
+                            top: "10px",
+                            right: "15px",
+                            background: "none",
+                            border: "none",
+                            fontSize: "24px",
+                            cursor: "pointer",
+                            color: "#666"
+                        }}
+                    >
+                        &times;
+                    </button>
+                )}
+
+                {isRegister ? <RegisterForm /> : <LoginForm />}
+            </div>
+        </div>
     );
 };

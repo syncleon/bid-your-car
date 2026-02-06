@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom"; // 1. Import useLocation
 import "./Navbar.css";
 
 interface Props {
@@ -10,6 +10,9 @@ interface Props {
 export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // 2. Get the current location to pass it to the Login state
+    const location = useLocation();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -23,7 +26,6 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
 
     return (
         <header className="navbar">
-            {/* Left: Logo, Links, and Sell Button */}
             <div className="navbar__left">
                 <Link to="/" className="navbar__logo">
                     BidYourCar
@@ -89,9 +91,27 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                         )}
                     </div>
                 ) : (
-                    <Link to="/login" className="navbar__link" style={{ fontWeight: 700 }}>
-                        Sign In
-                    </Link>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        {/* 3. Pass state to trigger the Modal behavior */}
+                        <Link
+                            to="/login"
+                            state={{ backgroundLocation: location }}
+                            className="navbar__link"
+                            style={{ fontWeight: 700 }}
+                        >
+                            Sign In
+                        </Link>
+
+                        {/* Optional: Add Sign Up button if you want it in the navbar too */}
+                        {/* <Link
+                            to="/register"
+                            state={{ backgroundLocation: location }}
+                            className="navbar__cta"
+                        >
+                            Sign Up
+                        </Link>
+                        */}
+                    </div>
                 )}
             </div>
         </header>

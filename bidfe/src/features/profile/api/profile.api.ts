@@ -1,5 +1,7 @@
 import { http } from "../../../shared/api/HttpClient";
 import type { Profile } from "../types";
+import type {ItemDto} from "../../item/types.ts";
+import type {Page} from "../../../shared/types";
 
 export const getProfile = () =>
     http<Profile>("/users/me", { method: "GET" });
@@ -21,3 +23,6 @@ export const deleteUserById = (userId: number, password: string) =>
         method: "DELETE",
         body: JSON.stringify({ password }),
     });
+
+export const getUserItems = () =>
+    http<Page<ItemDto>>("/users/me/items", { method: "GET" });

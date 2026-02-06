@@ -1,20 +1,19 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { login, register, restoreAccount, verifyEmail } from "../api/auth.api";
+import { login, register, restoreAccount } from "../api/auth.api";
 import { tokenStorage } from "../../../shared/lib/token";
-import type { LoginRequestDto, RegisterRequestDto } from "../types";
+import type {LoginRequestDto, RegisterRequestDto} from "../types.ts";
 
-// ✅ Define the User shape based on your JWT claims
-export interface AuthUser {
-    id: number;
-    username: string;
+export type ModalView = 'login' | 'register' | null;
+
+class AuthUser {
 }
 
 export class AuthStore {
     token: string | null = tokenStorage.get();
-
-    // ✅ ADD THIS: The property missing in your error
     user: AuthUser | null = null;
 
+    // UI State
+    modalView: ModalView = null;
     isLoading = false;
     error: string | null = null;
     successMessage: string | null = null;
@@ -22,7 +21,6 @@ export class AuthStore {
 
     constructor() {
         makeAutoObservable(this);
-        // ✅ Initialize user from stored token on app load
         if (this.token) {
             this.decodeAndSetUser(this.token);
         }
@@ -32,11 +30,56 @@ export class AuthStore {
         return Boolean(this.token);
     }
 
+    // --- Modal Management ---
+    openLogin = () => {
+        this.reset();
+        this.modalView = 'login';
+    }
+
+    openRegister = () => {
+        this.reset();
+        this.modalView = 'register';
+    }
+
+    closeModal = () => {
+        this.reset();
+        this.modalView = null;
+    }
+
     reset() {
         this.error = null;
         this.successMessage = null;
         this.isLoading = false;
         this.isDeletedAccount = false;
+    }
+
+    // --- Actions ---
+
+    async login(data: LoginRequestDto) {
+        this.isLoading = true;
+        this.error = null;
+        this.isDeletedAccount = false;
+
+        try {
+            const { token } = await login(data);
+            runInAction(() => {
+                this.setToken(token);
+                this.closeModal(); // Close modal on success
+            });
+        } catch (e: any) {
+            runInAction(() => {
+                const msg = e.message || "An error occurred";
+                this.error = msg;
+
+                // Check specifically for the text returned by backend
+                if (msg.toLowerCase().includes("account deleted")) {
+                    this.isDeletedAccount = true;
+                }
+            });
+            throw e;
+        } finally {
+            runInAction(() => this.isLoading = false);
+        }
     }
 
     async register(data: RegisterRequestDto) {
@@ -48,128 +91,59 @@ export class AuthStore {
             runInAction(() => {
                 this.successMessage = message;
             });
-        } catch (e) {
+        } catch (e: any) {
             runInAction(() => {
-                this.error = (e as Error).message;
-            });
-            throw e;
-        } finally {
-            runInAction(() => {
-                this.isLoading = false;
-            });
-        }
-    }
-
-    async verify(token: string) {
-        this.isLoading = true;
-        this.error = null;
-        try {
-            const message = await verifyEmail(token);
-            runInAction(() => {
-                this.successMessage = message;
-            });
-        } catch (e) {
-            runInAction(() => {
-                this.error = (e as Error).message;
+                this.error = e.message;
             });
         } finally {
-            runInAction(() => {
-                this.isLoading = false;
-            });
-        }
-    }
-
-    async login(data: LoginRequestDto) {
-        this.isLoading = true;
-        this.error = null;
-        this.isDeletedAccount = false;
-
-        try {
-            const { token } = await login(data);
-            runInAction(() => {
-                this.setToken(token);
-            });
-        } catch (e) {
-            runInAction(() => {
-                const msg = (e as Error).message;
-                this.error = msg;
-                if (msg.toLowerCase().includes("deleted")) {
-                    this.isDeletedAccount = true;
-                }
-            });
-            throw e;
-        } finally {
-            runInAction(() => {
-                this.isLoading = false;
-            });
+            runInAction(() => this.isLoading = false);
         }
     }
 
     async restore(data: LoginRequestDto) {
         this.isLoading = true;
         this.error = null;
-        this.successMessage = null;
 
         try {
             const response = await restoreAccount(data);
-
             runInAction(() => {
                 this.successMessage = response.message;
             });
 
+            // Auto-login after restore
             await this.login(data);
-
+        } catch (e: any) {
             runInAction(() => {
-                this.isDeletedAccount = false;
-            });
-        } catch (e) {
-            runInAction(() => {
-                this.error = (e as Error).message;
+                this.error = e.message;
             });
         } finally {
-            runInAction(() => {
-                this.isLoading = false;
-            });
+            runInAction(() => this.isLoading = false);
         }
     }
 
     logout() {
         this.token = null;
-        this.user = null; // ✅ Clear user on logout
+        this.user = null;
         tokenStorage.clear();
     }
 
     private setToken(token: string) {
         this.token = token;
         tokenStorage.set(token);
-        // ✅ Decode immediately when setting token
         this.decodeAndSetUser(token);
     }
 
-    // ✅ Helper to parse JWT without external libraries
     private decodeAndSetUser(token: string) {
         try {
-            // Split header.payload.signature
             const base64Url = token.split('.')[1];
-            // Fix Base64Url to Base64
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            // Decode
             const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
-
             const payload = JSON.parse(jsonPayload);
-
-            // Map backend claims to frontend User object
-            // Backend sends: { sub: "username", userId: 123, ... }
-            this.user = {
-                id: payload.userId,
-                username: payload.sub
-            };
+            this.user = { id: payload.userId, username: payload.sub };
         } catch (e) {
-            console.error("Failed to decode token", e);
             this.user = null;
-            // If token is corrupt, clear it
             this.logout();
         }
     }

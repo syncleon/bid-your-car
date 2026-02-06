@@ -1,50 +1,53 @@
-import type { ReactNode } from "react";
-import { useEffect } from "react";
-import "./Modal.css";
+import React from 'react';
 
-interface Props {
+interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    children: ReactNode;
-    title?: string;
+    children: React.ReactNode;
 }
 
-export const Modal = ({ isOpen, onClose, children, title }: Props) => {
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => { document.body.style.overflow = 'unset'; };
-    }, [isOpen]);
-
+export const Modal = ({ isOpen, onClose, children }: ModalProps) => {
     if (!isOpen) return null;
 
     return (
-        <div className="modal__overlay" onClick={onClose}>
-            <div className="modal__card" onClick={(e) => e.stopPropagation()}>
-
-                {/* Header */}
-                <div className="modal__header">
-                    <h3 className="modal__title">{title}</h3>
-                    <button
-                        className="modal__close-btn"
-                        onClick={onClose}
-                        aria-label="Close"
-                    >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="modal__body">
-                    {children}
-                </div>
+        <div style={overlayStyle} onClick={onClose}>
+            <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+                <button style={closeButtonStyle} onClick={onClose}>&times;</button>
+                {children}
             </div>
         </div>
     );
+};
+
+const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    backdropFilter: 'blur(2px)'
+};
+
+const modalStyle: React.CSSProperties = {
+    backgroundColor: '#fff',
+    padding: '32px',
+    borderRadius: '12px',
+    width: '100%',
+    maxWidth: '420px',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    position: 'relative',
+    animation: 'fadeIn 0.2s ease-out'
+};
+
+const closeButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '12px',
+    right: '16px',
+    background: 'none',
+    border: 'none',
+    fontSize: '24px',
+    cursor: 'pointer',
+    color: '#9ca3af'
 };
