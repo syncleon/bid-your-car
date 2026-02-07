@@ -5,35 +5,37 @@ import type { ItemCreateRequest, ItemImageDto } from "../types";
 
 // --- Constants ---
 const currentYear = new Date().getFullYear();
-const YEARS = Array.from({ length: 100 }, (_, i) => {
-    const y = currentYear + 1 - i;
-    return { value: y.toString(), label: y.toString() };
-});
+const YEARS = Array.from({ length: 100 }, (_, i) => ({
+    value: (currentYear + 1 - i).toString(),
+    label: (currentYear + 1 - i).toString()
+}));
+const BODY_STYLES = ["Sedan", "Coupe", "SUV", "Convertible", "Hatchback", "Wagon", "Truck", "Van", "Motorcycle"].map(v => ({ value: v, label: v }));
+const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT", "PDK/Dual Clutch"].map(v => ({ value: v, label: v }));
+const DRIVETRAINS = ["RWD", "FWD", "AWD", "4WD"].map(v => ({ value: v, label: v }));
 
-const BODY_STYLES = ["Sedan", "Coupe", "SUV", "Convertible", "Hatchback", "Wagon", "Truck", "Van", "Motorcycle"]
-    .map(v => ({ value: v, label: v }));
-
-const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT", "PDK/Dual Clutch"]
-    .map(v => ({ value: v, label: v }));
-
-const DRIVETRAINS = ["RWD", "FWD", "AWD", "4WD"]
-    .map(v => ({ value: v, label: v }));
-
-// We define a local state type that allows mileage to be empty string during input
 type FormState = Omit<ItemCreateRequest, 'mileage'> & {
     mileage: number | "";
+    images: ItemImageDto[];
 };
 
 interface Props {
-    // initialData includes the raw form fields + existing images from the DTO
     initialData?: Partial<ItemCreateRequest> & { images?: ItemImageDto[] };
-    onSubmit: (data: ItemCreateRequest, files: File[]) => void;
-    onDeleteImage?: (imageId: string) => void; // Optional callback for immediate deletion
+    onSubmit: (data: ItemCreateRequest, files: File[], deletedImageIds: string[]) => void;
+    onCancel?: () => void;
     isLoading: boolean;
+    submitLabel?: string;
+    isEditMode?: boolean;
 }
 
-export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading }: Props) => {
-    // --- Form State ---
+export const SubmitItemForm = ({
+                                   initialData,
+                                   onSubmit,
+                                   onCancel,
+                                   isLoading,
+                                   submitLabel = "Submit Listing",
+                                   isEditMode = false
+                               }: Props) => {
+
     const [formData, setFormData] = useState<FormState>({
         year: currentYear,
         make: "",
@@ -49,21 +51,18 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
         exteriorColor: "",
         interiorColor: "",
         sellerType: "",
+        images: initialData?.images || [],
         ...initialData,
     });
 
+    const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
-
-    // --- Image State ---
-    const [existingImages, setExistingImages] = useState<ItemImageDto[]>(initialData?.images || []);
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
 
     useEffect(() => {
         return () => previews.forEach(url => URL.revokeObjectURL(url));
     }, [previews]);
-
-    // --- Handlers ---
 
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -73,8 +72,7 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
             ...prev,
             [name]: name === "mileage" || name === "year"
                 ? (value === "" ? "" : Number(value))
-                : name === "vin" ? value.toUpperCase()
-                    : value
+                : name === "vin" ? value.toUpperCase() : value
         }));
     };
 
@@ -97,13 +95,14 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
     };
 
     const handleRemoveExisting = (id: string) => {
-        if(confirm("Are you sure you want to remove this photo?")) {
-            setExistingImages(prev => prev.filter(img => img.id !== id));
-            // Triggers the API delete immediately if provided (used in Edit Mode)
-            if (onDeleteImage) {
-                onDeleteImage(id);
-            }
-        }
+        if (!confirm("Are you sure you want to remove this photo?")) return;
+
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.filter(img => img.id !== id)
+        }));
+
+        setDeletedImageIds(prev => [...prev, id]);
     };
 
     const validate = () => {
@@ -113,7 +112,6 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
         if (!formData.location) newErrors.location = "Location is required";
         if (!formData.vin || formData.vin.length !== 17) newErrors.vin = "VIN must be 17 characters";
         if (formData.mileage === "") newErrors.mileage = "Mileage is required";
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -121,157 +119,55 @@ export const SubmitItemForm = ({ initialData, onSubmit, onDeleteImage, isLoading
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            // Cast formData back to strict ItemCreateRequest (mileage is definitely number here)
-            onSubmit(formData as ItemCreateRequest, files);
+            const { images, ...cleanPayload } = formData;
+            const keepImageIds = images.filter(img => img.id).map(img => img.id);
+            const payload = { ...cleanPayload, keepImageIds };
+
+            onSubmit(payload as ItemCreateRequest, files, deletedImageIds);
         } else {
-            // Scroll to top or alert
-            alert("Please fix the errors before submitting.");
+            const firstError = document.querySelector('[data-error="true"]');
+            if(firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ maxWidth: "1000px", margin: "0 auto", paddingBottom: "80px" }}>
-            <style>{`
-                input[type=number]::-webkit-inner-spin-button, 
-                input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-                input[type=number] { -moz-appearance: textfield; }
-            `}</style>
-
-            <FormSection title="Vehicle Identity" description="Basic details to identify the car.">
-                <FormInput
-                    label="VIN"
-                    name="vin"
-                    value={formData.vin}
-                    onChange={handleChange}
-                    maxLength={17}
-                    error={errors.vin}
-                    hint="17 characters (Dashboard/Door Jamb)"
-                    placeholder="WBA..."
-                />
-                <FormSelect
-                    label="Year"
-                    name="year"
-                    value={formData.year}
-                    onChange={handleChange}
-                    options={YEARS}
-                />
-                <FormInput
-                    label="Make"
-                    name="make"
-                    value={formData.make}
-                    onChange={handleChange}
-                    error={errors.make}
-                    placeholder="e.g. Porsche"
-                />
-                <FormInput
-                    label="Model"
-                    name="model"
-                    value={formData.model}
-                    onChange={handleChange}
-                    error={errors.model}
-                    placeholder="e.g. 911 Carrera S"
-                />
-                <FormInput
-                    label="Mileage"
-                    name="mileage"
-                    type="number"
-                    value={formData.mileage}
-                    onChange={handleChange}
-                    error={errors.mileage}
-                    placeholder="Odometer reading"
-                />
-                <FormInput
-                    label="Location"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    error={errors.location}
-                    placeholder="City, State"
-                />
+        <form onSubmit={handleSubmit}>
+            {/* Vehicle Identity Section */}
+            <FormSection title="Vehicle Identity">
+                <FormInput disabled={isEditMode} label="VIN" name="vin" value={formData.vin} onChange={handleChange} maxLength={17} error={errors.vin} />
+                <FormSelect label="Year" name="year" value={formData.year} onChange={handleChange} options={YEARS} />
+                <FormInput label="Make" name="make" value={formData.make} onChange={handleChange} error={errors.make} />
+                <FormInput label="Model" name="model" value={formData.model} onChange={handleChange} error={errors.model} />
+                <FormInput label="Mileage" name="mileage" type="number" value={formData.mileage} onChange={handleChange} error={errors.mileage} />
+                <FormInput label="Location" name="location" value={formData.location} onChange={handleChange} error={errors.location} />
             </FormSection>
 
-            <FormSection title="Specifications" description="Technical details buyers care about.">
-                <FormSelect
-                    label="Body Style"
-                    name="bodyStyle"
-                    value={formData.bodyStyle}
-                    onChange={handleChange}
-                    options={BODY_STYLES}
-                />
-                <FormSelect
-                    label="Transmission"
-                    name="transmission"
-                    value={formData.transmission}
-                    onChange={handleChange}
-                    options={TRANSMISSIONS}
-                />
-                <FormSelect
-                    label="Drivetrain"
-                    name="drivetrain"
-                    value={formData.drivetrain}
-                    onChange={handleChange}
-                    options={DRIVETRAINS}
-                />
-                <FormInput
-                    label="Engine"
-                    name="engine"
-                    value={formData.engine || ""}
-                    onChange={handleChange}
-                    placeholder="e.g. 3.0L Flat-6 Twin Turbo"
-                />
-                <FormInput
-                    label="Exterior Color"
-                    name="exteriorColor"
-                    value={formData.exteriorColor || ""}
-                    onChange={handleChange}
-                    placeholder="Factory paint name"
-                />
-                <FormInput
-                    label="Interior Color"
-                    name="interiorColor"
-                    value={formData.interiorColor || ""}
-                    onChange={handleChange}
-                    placeholder="e.g. Black Leather"
-                />
+            {/* Specifications */}
+            <FormSection title="Specifications">
+                <FormSelect label="Body Style" name="bodyStyle" value={formData.bodyStyle} onChange={handleChange} options={BODY_STYLES} />
+                <FormSelect label="Transmission" name="transmission" value={formData.transmission} onChange={handleChange} options={TRANSMISSIONS} />
+                <FormSelect label="Drivetrain" name="drivetrain" value={formData.drivetrain} onChange={handleChange} options={DRIVETRAINS} />
+                <FormInput label="Engine" name="engine" value={formData.engine || ""} onChange={handleChange} />
+                <FormInput label="Exterior Color" name="exteriorColor" value={formData.exteriorColor || ""} onChange={handleChange} />
+                <FormInput label="Interior Color" name="interiorColor" value={formData.interiorColor || ""} onChange={handleChange} />
             </FormSection>
 
-            <div style={{ marginBottom: "40px" }}>
-                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#1e293b" }}>Story & Condition</h3>
-                <textarea
-                    name="description"
-                    value={formData.description || ""}
-                    onChange={handleChange}
-                    rows={6}
-                    style={{
-                        width: "100%", padding: "16px", borderRadius: "8px", borderColor: "#e2e8f0",
-                        fontSize: "15px", fontFamily: "inherit", boxSizing: "border-box", resize: "vertical"
-                    }}
-                    placeholder="Tell the story of the car..."
-                />
-            </div>
+            {/* Description */}
+            <textarea name="description" value={formData.description || ""} onChange={handleChange} rows={6} placeholder="Tell the story of the car..." />
 
-            <div style={{ marginBottom: "40px" }}>
-                <ImageUploader
-                    existingImages={existingImages}
-                    newPreviews={previews}
-                    onAddFiles={handleFileChange}
-                    onRemoveExisting={handleRemoveExisting}
-                    onRemoveNew={handleRemoveNew}
-                />
-            </div>
+            {/* Image Uploader */}
+            <ImageUploader
+                existingImages={formData.images}
+                newPreviews={previews}
+                onAddFiles={handleFileChange}
+                onRemoveExisting={handleRemoveExisting}
+                onRemoveNew={handleRemoveNew}
+            />
 
-            <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #f1f5f9", paddingTop: "24px" }}>
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    style={{
-                        backgroundColor: "#1e293b", color: "white", padding: "14px 32px",
-                        borderRadius: "8px", fontSize: "16px", fontWeight: 600, border: "none",
-                        cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1
-                    }}
-                >
-                    {isLoading ? "Saving..." : "Submit Listing"}
-                </button>
+            {/* Actions */}
+            <div className="form-actions">
+                {onCancel && <button type="button" onClick={onCancel}>Cancel</button>}
+                <button type="submit" disabled={isLoading}>{isLoading ? "Saving..." : submitLabel}</button>
             </div>
         </form>
     );

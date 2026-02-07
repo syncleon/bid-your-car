@@ -6,10 +6,9 @@ import {
     getMyItems,
     deleteItem,
     updateItem,
-    uploadItemImage,
-    deleteImage as apiDeleteImage
+    uploadItemImage
 } from "../api/item.api";
-import type { ItemDto, ItemCreateRequest } from "../types";
+import type {ItemDto, ItemCreateRequest, ItemUpdateRequest} from "../types";
 
 export class ItemStore {
     items: ItemDto[] = [];
@@ -116,10 +115,10 @@ export class ItemStore {
                 this.isLoading = false;
                 this.uploadProgress = null;
 
-                // ✅ CRITICAL FIX: Set selectedItem so the Page component can navigate to it
+                // Set selectedItem so the Page component can navigate to it
                 this.selectedItem = newItem;
 
-                // Optional: Add to the beginning of the local list to avoid a re-fetch
+                // Add to the beginning of the local list
                 this.myItems.unshift(newItem);
             });
 
@@ -134,30 +133,62 @@ export class ItemStore {
         }
     };
 
-    updateListing = async (id: string, data: ItemCreateRequest, newFiles: File[]) => {
+    updateListing = async (
+        id: string,
+        data: ItemUpdateRequest,
+        newFiles: File[],
+        deletedImageIds: string[] = []
+    ) => {
         this.isLoading = true;
         this.error = null;
         this.uploadProgress = "Saving changes...";
 
         try {
-            const updatedItem = await updateItem(id, data);
+            // 1️⃣ Calculate keepImageIds (backend-driven sync)
+            const keepImageIds =
+                this.selectedItem?.images
+                    .filter(img => !deletedImageIds.includes(img.id))
+                    .map(img => img.id) || [];
 
+            // 2️⃣ Send update request with keepImageIds
+            const updatedItem = await updateItem(id, {
+                ...data,
+                keepImageIds
+            });
+
+            // 3️⃣ Upload new images (if any)
             if (newFiles.length > 0) {
                 for (let i = 0; i < newFiles.length; i++) {
                     runInAction(() => {
                         this.uploadProgress = `Adding photo ${i + 1} of ${newFiles.length}...`;
                     });
+
                     await uploadItemImage(id, newFiles[i]);
                 }
-                // If we uploaded files, we should reload the item to get new image URLs
+            }
+
+            // 4️⃣ Always reload if images changed
+            if (newFiles.length > 0 || deletedImageIds.length > 0) {
                 await this.loadItemDetails(id);
-            } else {
+
                 runInAction(() => {
-                    // Update local lists
+                    const updateInList = (list: ItemDto[]) => {
+                        const index = list.findIndex(i => i.id === id);
+                        if (index !== -1 && this.selectedItem) {
+                            list[index] = { ...this.selectedItem };
+                        }
+                    };
+
+                    updateInList(this.myItems);
+                    updateInList(this.items);
+                });
+
+            } else {
+                // Fast path (text only)
+                runInAction(() => {
                     const updateInList = (list: ItemDto[]) => {
                         const index = list.findIndex(i => i.id === id);
                         if (index !== -1) {
-                            // Preserve existing images since we didn't upload new ones
                             const existingImages = list[index].images;
                             list[index] = { ...updatedItem, images: existingImages };
                         }
@@ -166,9 +197,11 @@ export class ItemStore {
                     updateInList(this.myItems);
                     updateInList(this.items);
 
-                    // Update selectedItem if it matches
                     if (this.selectedItem?.id === id) {
-                        this.selectedItem = { ...updatedItem, images: this.selectedItem.images };
+                        this.selectedItem = {
+                            ...updatedItem,
+                            images: this.selectedItem.images
+                        };
                     }
                 });
             }
@@ -177,7 +210,9 @@ export class ItemStore {
                 this.isLoading = false;
                 this.uploadProgress = null;
             });
+
             return true;
+
         } catch (err: any) {
             runInAction(() => {
                 this.error = err.message || "Update failed";
@@ -187,6 +222,7 @@ export class ItemStore {
             return false;
         }
     };
+
 
     deleteListing = async (id: string) => {
         try {
@@ -202,34 +238,6 @@ export class ItemStore {
         } catch (err: any) {
             runInAction(() => {
                 this.error = err.message || "Failed to delete item";
-            });
-        }
-    };
-
-    deleteImage = async (itemId: string, imageId: string) => {
-        try {
-            await apiDeleteImage(imageId);
-            runInAction(() => {
-                // Helper to remove image from an item
-                const removeImg = (item: ItemDto) => {
-                    item.images = item.images.filter(img => img.id !== imageId);
-                };
-
-                // Update lists
-                const inMyItems = this.myItems.find(i => i.id === itemId);
-                if (inMyItems) removeImg(inMyItems);
-
-                const inItems = this.items.find(i => i.id === itemId);
-                if (inItems) removeImg(inItems);
-
-                // Update currently selected item
-                if (this.selectedItem?.id === itemId) {
-                    removeImg(this.selectedItem);
-                }
-            });
-        } catch (err: any) {
-            runInAction(() => {
-                this.error = "Failed to remove image";
             });
         }
     };

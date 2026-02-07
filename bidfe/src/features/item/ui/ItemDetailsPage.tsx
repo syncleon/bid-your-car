@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../../../shared/hooks/useStore";
-import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo, ResponsiveGrid, SidebarCard } from "../../../shared/ui/details"; // Import from step 1
+import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo, ResponsiveGrid, SidebarCard } from "../../../shared/ui/details";
 import { CreateAuctionModal } from "../../auction/ui/CreateAuctionModal";
 import { EditItemModal } from "../ui/EditItemModal";
 import type { CreateAuctionDto } from "../../auction/types";
@@ -30,9 +30,14 @@ export const ItemDetailsPage = observer(() => {
         }
     };
 
-    const handleItemUpdate = async (data: ItemCreateRequest, files: File[]) => {
+    // ✅ Теперь handleItemUpdate принимает deletedImageIds
+    const handleItemUpdate = async (
+        data: ItemCreateRequest,
+        newFiles: File[],
+        deletedImageIds: string[] = []
+    ) => {
         if (!id) return;
-        const success = await itemStore.updateListing(id, data, files);
+        const success = await itemStore.updateListing(id, data, newFiles, deletedImageIds);
         if (success) {
             setIsEditModalOpen(false);
             await itemStore.loadItemDetails(id);
@@ -46,7 +51,9 @@ export const ItemDetailsPage = observer(() => {
         }
     };
 
-    if (itemStore.isLoading || !itemStore.selectedItem) return <div style={{padding:80,textAlign:'center'}}>Loading...</div>;
+    if (itemStore.isLoading || !itemStore.selectedItem) {
+        return <div style={{ padding: 80, textAlign: 'center' }}>Loading...</div>;
+    }
 
     const item = itemStore.selectedItem;
     const isOwner = authStore.user?.id === item.seller.id;
@@ -83,9 +90,8 @@ export const ItemDetailsPage = observer(() => {
                             </div>
                         )}
 
-                        {/* If on auction, link to it */}
                         {item.activeAuctionId && (
-                            <button onClick={() => navigate(`/auctions/${item.activeAuctionId}`)} style={{...pageStyles.btnPrimary, marginTop: 16}}>
+                            <button onClick={() => navigate(`/auctions/${item.activeAuctionId}`)} style={{ ...pageStyles.btnPrimary, marginTop: 16 }}>
                                 View Live Auction
                             </button>
                         )}
@@ -95,12 +101,20 @@ export const ItemDetailsPage = observer(() => {
 
             {/* Modals */}
             <CreateAuctionModal
-                item={item} isOpen={isListModalOpen} onClose={() => setIsListModalOpen(false)}
-                onSubmit={handleCreateAuction} isLoading={auctionStore.isLoading} error={auctionStore.error}
+                item={item}
+                isOpen={isListModalOpen}
+                onClose={() => setIsListModalOpen(false)}
+                onSubmit={handleCreateAuction}
+                isLoading={auctionStore.isLoading}
+                error={auctionStore.error}
             />
+
             <EditItemModal
-                item={item} isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}
-                onSubmit={handleItemUpdate} onDeleteImage={async () => {}} isLoading={itemStore.isLoading}
+                item={item}
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSubmit={handleItemUpdate} // теперь передает deletedImageIds
+                isLoading={itemStore.isLoading}
             />
         </DetailPageLayout>
     );
@@ -111,6 +125,7 @@ const badges = {
     live: { background: "#16a34a", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
     sold: { background: "#dc2626", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 }
 };
+
 const pageStyles = {
     statusBox: { background: "#f9fafb", padding: 16, borderRadius: 6, textAlign: "center" as const, color: "#666", fontWeight: 500 },
     btnPrimary: { width: "100%", padding: "12px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer" },

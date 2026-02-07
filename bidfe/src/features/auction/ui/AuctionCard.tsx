@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BaseCard } from "../../../widgets/BaseCard/BaseCard"; // Ensure no .tsx in import path usually
+import { BaseCard } from "../../../widgets/BaseCard/BaseCard";
 import styles from "../../../widgets/BaseCard/styles";
 import type { AuctionDto } from "../types";
 
@@ -11,9 +11,9 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
     const { item, currentHighestBid, startPrice, endTime, bidCount } = auction;
     const price = currentHighestBid ?? startPrice;
 
-    // Safely access the first image thumbnail
+    // UPDATE: Use previewUrl (w-1000) instead of thumbnail for sharper card images
     const mainImage = item.images && item.images.length > 0
-        ? item.images[0].thumbnailUrl
+        ? (item.images[0].previewUrl || item.images[0].originalUrl)
         : null;
 
     // --- Timer Logic ---
@@ -27,7 +27,6 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
     const endDate = new Date(endTime);
     const timeRemaining = endDate.getTime() - now;
     const isEnded = timeRemaining <= 0;
-    // Urgent if less than 1 hour remaining
     const isUrgent = timeRemaining > 0 && timeRemaining < 60 * 60 * 1000;
 
     let timerText = "Ended";
@@ -39,7 +38,7 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
 
         if (days > 0) timerText = `${days}d ${hours}h`;
         else if (hours > 0) timerText = `${hours}h ${minutes}m`;
-        else timerText = `${minutes}m ${seconds}s`; // Added seconds for urgency
+        else timerText = `${minutes}m ${seconds}s`;
     }
 
     return (

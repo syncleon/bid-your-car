@@ -26,7 +26,6 @@ export interface SellerDto {
     id: number;
     username: string;
     email: string;
-    // Add other UserDto fields if needed
 }
 
 export interface ItemDto {
@@ -38,7 +37,7 @@ export interface ItemDto {
     location: string;
     mileage: number;
     description: string | null;
-    seller: SellerDto; // Updated to use strict DTO
+    seller: SellerDto;
     engine: string | null;
     drivetrain: string | null;
     transmission: string | null;
@@ -70,4 +69,22 @@ export interface ItemCreateRequest {
     exteriorColor?: string;
     interiorColor?: string;
     sellerType?: string;
+}
+
+export interface ItemUpdateRequest {
+    vin?: string;
+    year?: number;
+    make?: string;
+    model?: string;
+    location?: string;
+    mileage?: number;
+    description?: string;
+    engine?: string;
+    drivetrain?: string;
+    transmission?: string;
+    bodyStyle?: string;
+    exteriorColor?: string;
+    interiorColor?: string;
+    sellerType?: string;
+    keepImageIds?: string[];
 }

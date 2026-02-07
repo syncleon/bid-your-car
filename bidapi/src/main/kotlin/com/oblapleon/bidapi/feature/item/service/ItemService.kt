@@ -87,6 +87,13 @@ class ItemService(
         request.interiorColor?.let { item.interiorColor = it }
         request.sellerType?.let { item.sellerType = it }
 
+        request.keepImageIds?.let { keepIds ->
+            val imagesToRemove = item.images.filter { it.id !in keepIds }
+            item.images.removeAll(imagesToRemove)
+            imagesToRemove.forEach { storageService.deleteFile(it.url) }
+            itemImageRepo.deleteAll(imagesToRemove)
+        }
+
         return itemRepo.save(item)
     }
 
@@ -110,6 +117,11 @@ class ItemService(
         if (image.item.seller.id != userId) {
             throw AccessDeniedException("You do not own this image")
         }
+
+        // 🔥 сначала удаляем файл
+        storageService.deleteFile(image.url)
+
+        // потом запись из БД
         itemImageRepo.delete(image)
     }
 }

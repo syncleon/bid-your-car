@@ -44,7 +44,12 @@ export const ImageUploader = ({
                 {/* Existing Images (From Server) */}
                 {existingImages.map((img, index) => (
                     <div key={img.id} className="gallery-item">
-                        <img src={img.thumbnailUrl || img.originalUrl} alt="Vehicle" className="gallery-img" />
+                        {/* UPDATE: Use previewUrl (High Res) instead of thumbnail */}
+                        <img
+                            src={img.previewUrl || img.originalUrl}
+                            alt="Vehicle"
+                            className="gallery-img"
+                        />
                         {index === 0 && <div style={styles.mainBadge}><StarIcon /> Main Cover</div>}
                         <button type="button" onClick={() => onRemoveExisting(img.id)} className="delete-btn" style={styles.deleteBtn} title="Remove photo">
                             <TrashIcon />
@@ -87,7 +92,7 @@ export const ImageUploader = ({
     );
 };
 
-// --- Styles & Icons (Keep as provided in previous prompt) ---
+// ... (Icons and Styles remain the same)
 const styles = {
     header: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "16px" },
     title: { fontSize: "16px", fontWeight: 700, color: "#1e293b", marginRight: "12px" },

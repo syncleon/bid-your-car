@@ -1,4 +1,4 @@
-import type { ItemCreateRequest, ItemDto, ItemImageDto, Page } from "../types";
+import type {ItemCreateRequest, ItemDto, ItemImageDto, ItemUpdateRequest, Page} from "../types";
 import { tokenStorage } from "../../../shared/lib/token";
 import { http } from "../../../shared/api/HttpClient";
 
@@ -83,11 +83,10 @@ export const getMyItems = async (page = 0, size = 20): Promise<Page<ItemDto>> =>
 export const getItemById = (id: string) =>
     http<ItemDto>(`/items/${id}`, { method: "GET" });
 
-export const updateItem = (id: string, data: ItemCreateRequest) =>
+export const updateItem = (id: string, data: ItemUpdateRequest) =>
     http<ItemDto>(`/items/${id}`, {
         method: "PUT",
         body: JSON.stringify(data)
     });
-
 export const deleteItem = (id: string) =>
     http<void>(`/items/${id}`, { method: "DELETE" });

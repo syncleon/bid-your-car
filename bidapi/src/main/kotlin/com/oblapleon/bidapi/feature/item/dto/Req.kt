@@ -1,6 +1,7 @@
 package com.oblapleon.bidapi.feature.item.dto
 
 import jakarta.validation.constraints.*
+import java.util.UUID
 
 /**
  * DTO for creating a new car listing.
@@ -43,8 +44,10 @@ data class ItemCreateRequest(
  * DTO for updating existing listings.
  */
 data class ItemUpdateRequest(
+
     @field:Min(value = 1900, message = "Year must be valid")
     val year: Int? = null,
+
     val make: String? = null,
     val model: String? = null,
     val location: String? = null,
@@ -61,5 +64,6 @@ data class ItemUpdateRequest(
     val bodyStyle: String? = null,
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
-    val sellerType: String? = null
+    val sellerType: String? = null,
+    val keepImageIds: List<UUID>? = null
 )
