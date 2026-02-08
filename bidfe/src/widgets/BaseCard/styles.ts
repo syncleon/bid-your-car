@@ -1,4 +1,4 @@
-import type {CSSProperties} from "react";
+import type { CSSProperties } from "react";
 
 const styles = {
     // Layout & Container
@@ -8,7 +8,6 @@ const styles = {
         borderRadius: "8px",
         overflow: "hidden",
         cursor: "pointer",
-        // Adding subtle hover effect transition
         transition: "transform 0.2s, box-shadow 0.2s",
     } as CSSProperties,
 
@@ -17,13 +16,13 @@ const styles = {
         aspectRatio: "16/10",
         width: "100%",
         background: "#f3f4f6",
-        position: "relative" as "relative",
+        position: "relative",
         overflow: "hidden",
     } as CSSProperties,
     image: {
         width: "100%",
         height: "100%",
-        objectFit: "cover" as "cover",
+        objectFit: "cover",
         display: "block",
     } as CSSProperties,
     placeholder: {
@@ -34,7 +33,7 @@ const styles = {
         justifyContent: "center",
         color: "#9ca3af",
         fontSize: "12px",
-        textTransform: "uppercase" as "uppercase",
+        textTransform: "uppercase",
     } as CSSProperties,
 
     // Typography
@@ -61,14 +60,14 @@ const styles = {
         fontWeight: 700,
         letterSpacing: "0.5px",
         marginBottom: "2px",
-        textTransform: "uppercase" as "uppercase",
+        textTransform: "uppercase",
     } as CSSProperties,
     priceText: { fontSize: "18px", fontWeight: 700, color: "#111", fontVariantNumeric: "tabular-nums" } as CSSProperties,
     locationText: { fontSize: "13px", color: "#666", fontWeight: 500 } as CSSProperties,
     specsText: {
         fontSize: "12px",
         color: "#999",
-        whiteSpace: "nowrap" as "nowrap",
+        whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
         marginTop: "8px",
@@ -76,7 +75,7 @@ const styles = {
         paddingTop: "8px",
     } as CSSProperties,
 
-    // Overlays / Badges
+    // Overlays / Badges Containers
     overlayTopLeft: { position: "absolute", top: "10px", left: "10px", zIndex: 2 } as CSSProperties,
     overlayBottomContainer: {
         position: "absolute",
@@ -89,7 +88,34 @@ const styles = {
         zIndex: 2
     } as CSSProperties,
 
-    // Specific Badge Styles
+    // --- MISSING BADGE STYLES ADDED HERE ---
+
+    // 1. Generic Badge (Used for PENDING)
+    badge: {
+        padding: "4px 8px",
+        borderRadius: "4px",
+        fontSize: "11px",
+        fontWeight: 700,
+        letterSpacing: "0.5px",
+        textTransform: "uppercase",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        background: "#fff", // Fallback
+        color: "#111"       // Fallback
+    } as CSSProperties,
+
+    // 2. Ended Badge (Used for ENDED)
+    badgeEnded: {
+        background: "#9ca3af",
+        color: "#fff",
+        padding: "4px 8px",
+        borderRadius: "4px",
+        fontSize: "11px",
+        fontWeight: 700,
+        letterSpacing: "0.5px",
+    } as CSSProperties,
+
+    // --- Existing Badge Styles ---
+
     badgeDark: {
         background: "rgba(0, 0, 0, 0.7)",
         color: "white",

@@ -1,5 +1,4 @@
-// ✅ NEW: Generic Page interface matching Spring Data
-import type {AuctionDto} from "../auction/types.ts";
+import type { AuctionDto } from "../auction/types"; // Ensure path is correct
 
 export interface Page<T> {
     content: T[];
@@ -12,11 +11,18 @@ export interface Page<T> {
     empty: boolean;
 }
 
-export type AuctionStatus = "DRAFT" | "ACTIVE" | "SOLD" | "EXPIRED" | "CANCELLED";
+export type AuctionStatus =
+    | "DRAFT"
+    | "ACTIVE"
+    | "SOLD"
+    | "EXPIRED"
+    | "CANCELLED"
+    | "PENDING_APPROVAL"
+    | "REJECTED";
 
 export interface ItemImageDto {
     id: string;
-    originalUrl: string;
+    url: string;
     thumbnailUrl: string;
     previewUrl: string;
     fullHdUrl: string;

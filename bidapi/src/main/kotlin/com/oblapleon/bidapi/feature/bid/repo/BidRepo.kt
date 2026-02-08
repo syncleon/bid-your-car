@@ -17,6 +17,11 @@ interface BidRepo : JpaRepository<Bid, UUID> {
     // Returns history for a specific user (Paginated)
     fun findAllByBidderId(bidderId: Long, pageable: Pageable): Page<Bid>
 
+    // --- NEW METHOD START ---
+    // Efficiently gets the single highest bid for an auction
+    fun findTopByAuctionIdOrderByAmountDesc(auctionId: UUID): Bid?
+    // --- NEW METHOD END ---
+
     // Statistical query: How many unique auctions has a user participated in?
     @Query("SELECT COUNT(DISTINCT b.auction.id) FROM Bid b WHERE b.bidder.id = :bidderId")
     fun countDistinctAuctionIdByBidderId(bidderId: Long): Long

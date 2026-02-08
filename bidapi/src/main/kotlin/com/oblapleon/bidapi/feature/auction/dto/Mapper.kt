@@ -6,20 +6,24 @@ import java.time.ZoneId
 
 
 fun Auction.toDto(): AuctionDto {
-    val highestBid = this.currentHighestBid
     val zone = ZoneId.systemDefault()
+    val currentBid = this.currentHighestBid
 
     return AuctionDto(
         id = this.id!!,
         item = this.item.toDto(),
+
         startTime = this.startTime.atZone(zone).toInstant(),
         endTime = this.endTime.atZone(zone).toInstant(),
+
         status = this.status,
         startPrice = this.startPrice,
         minBidIncrement = this.minBidIncrement,
-        currentHighestBid = highestBid,
+        currentHighestBid = currentBid,
         bidCount = this.bids.size,
-        isReserveMet = this.reservePrice?.let { highestBid >= it } ?: true,
+
+        isReserveMet = this.reservePrice?.let { currentBid >= it } ?: true,
+
         winnerId = this.winnerUser?.id
     )
 }

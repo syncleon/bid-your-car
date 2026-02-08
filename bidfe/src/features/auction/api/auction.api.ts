@@ -51,28 +51,31 @@ export const placeBid = async (req: PlaceBidReq): Promise<BidDto> => {
     return handleResponse<BidDto>(response);
 };
 
-// Updated: Returns Page<AuctionDto>
 export const getAllAuctions = (status?: string, page = 0, size = 20) => {
     const query = new URLSearchParams({ page: page.toString(), size: size.toString() });
     if (status) query.append("status", status);
-
     return http<Page<AuctionDto>>(`/auctions?${query.toString()}`, { method: "GET" });
 };
 
 export const getAuctionById = (id: string) =>
     http<AuctionDto>(`/auctions/${id}`, { method: "GET" });
 
-// Updated: Returns Page<AuctionDto>
 export const getEndingSoon = (page = 0, size = 10) =>
     http<Page<AuctionDto>>(`/auctions/ending-soon?page=${page}&size=${size}`, { method: "GET" });
 
-// Updated: Returns Page<AuctionDto>
 export const getMyWins = (page = 0, size = 20) =>
     http<Page<AuctionDto>>(`/auctions/my-wins?page=${page}&size=${size}`, { method: "GET" });
+
+export const getAuctionBidHistory = (auctionId: string, page = 0, size = 20) =>
+    http<Page<BidDto>>(`/bids/auction/${auctionId}?page=${page}&size=${size}`, { method: "GET" });
 
 export const cancelAuction = (id: string) =>
     http<void>(`/auctions/${id}`, { method: "DELETE" });
 
-// Updated: Returns Page<BidResp>
-export const getAuctionBidHistory = (auctionId: string, page = 0, size = 20) =>
-    http<Page<BidDto>>(`/bids/auction/${auctionId}?page=${page}&size=${size}`, { method: "GET" });
+// --- NEW: Approval Workflow ---
+
+export const approveAuction = (id: string) =>
+    http<void>(`/auctions/${id}/approve`, { method: "PATCH" });
+
+export const rejectAuction = (id: string) =>
+    http<void>(`/auctions/${id}/reject`, { method: "PATCH" });

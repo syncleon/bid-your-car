@@ -1,13 +1,14 @@
 import { Modal } from "../../../shared/ui/Modal";
 import { SubmitItemForm } from "./SubmitItemForm";
-import type { ItemDto, ItemUpdateRequest } from "../types";
+import type { ItemDto, ItemCreateRequest } from "../types";
 
 interface Props {
     item: ItemDto | null;
     isOpen: boolean;
     onClose: () => void;
+    // Fix: Use ItemCreateRequest because the form returns a full object, not a partial update
     onSubmit: (
-        data: ItemUpdateRequest,
+        data: ItemCreateRequest,
         files: File[],
         deletedImageIds: string[]
     ) => Promise<void>;
@@ -23,7 +24,8 @@ export const EditItemModal = ({
                               }: Props) => {
     if (!isOpen || !item) return null;
 
-    const initialData: Partial<ItemUpdateRequest> & { images: any[] } = {
+    // Map existing ItemDto to the Form's expected structure
+    const initialData: Partial<ItemCreateRequest> & { images: any[] } = {
         year: item.year,
         make: item.make,
         model: item.model,
@@ -49,7 +51,7 @@ export const EditItemModal = ({
         >
             <div style={{ padding: "0 4px" }}>
                 <SubmitItemForm
-                    key={item.id}
+                    key={item.id} // Forces reset when item changes
                     isEditMode={true}
                     initialData={initialData}
                     onSubmit={onSubmit}

@@ -1,16 +1,11 @@
 package com.oblapleon.bidapi.feature.auction.dto
 
-import com.oblapleon.bidapi.feature.auction.entity.Auction
-import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
-import com.oblapleon.bidapi.feature.item.dto.ItemDto
-import com.oblapleon.bidapi.feature.item.dto.toDto
 import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Future
 import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
 import java.time.Instant
-import java.time.ZoneId
-import java.util.UUID
+import java.util.*
 
 data class CreateAuctionDto(
     @field:NotNull(message = "Item ID is required")

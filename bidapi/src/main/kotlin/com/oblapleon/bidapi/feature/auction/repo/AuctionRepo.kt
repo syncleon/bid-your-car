@@ -15,28 +15,33 @@ import java.util.UUID
 @Repository
 interface AuctionRepo : JpaRepository<Auction, UUID> {
 
+    // 1. Basic Finders
     fun findAllByStatus(status: AuctionStatus, pageable: Pageable): Page<Auction>
 
-    // For automated tasks (no pagination needed usually, as we process all)
-    fun findAllByStatusAndEndTimeBefore(status: AuctionStatus, now: LocalDateTime): List<Auction>
+    fun findAllByItemSellerId(sellerId: Long, pageable: Pageable): Page<Auction>
 
-    // Optimized "Ending Soon" query
+    fun findAllByWinnerUserIdAndStatus(userId: Long, status: AuctionStatus, pageable: Pageable): Page<Auction>
+
+    // 2. Optimized "Ending Soon" (Status must be ACTIVE)
     fun findByStatusAndEndTimeAfter(
         status: AuctionStatus,
         now: LocalDateTime,
         pageable: Pageable
     ): Page<Auction>
 
-    fun findAllByItemSellerId(sellerId: Long, pageable: Pageable): Page<Auction>
+    // 3. Automated Tasks (Expired check)
+    fun findAllByStatusAndEndTimeBefore(status: AuctionStatus, now: LocalDateTime): List<Auction>
 
-    fun findAllByWinnerUserIdAndStatus(userId: Long, status: AuctionStatus, pageable: Pageable): Page<Auction>
-
-    @Query("SELECT COUNT(a) > 0 FROM Auction a WHERE a.item.id = :itemId AND a.status = 'ACTIVE'")
+    // 4. Validation Checks
+    // CHANGE: Added 'PENDING_APPROVAL' to the check.
+    // An item cannot be listed if it is currently Active OR waiting for approval.
+    @Query("""
+        SELECT COUNT(a) > 0 
+        FROM Auction a 
+        WHERE a.item.id = :itemId 
+        AND (a.status = 'ACTIVE' OR a.status = 'PENDING_APPROVAL')
+    """)
     fun isItemInActiveAuction(@Param("itemId") itemId: UUID): Boolean
-
-    @Modifying
-    @Query("UPDATE Auction a SET a.status = 'CANCELLED' WHERE a.item.seller.id = :userId AND a.status = 'ACTIVE'")
-    fun cancelAllActiveAuctionsByUserId(userId: Long)
 
     @Query("""
         SELECT COUNT(a) > 0 
@@ -46,4 +51,9 @@ interface AuctionRepo : JpaRepository<Auction, UUID> {
         AND a.bids IS NOT EMPTY
     """)
     fun hasActiveAuctionsWithBids(@Param("userId") userId: Long): Boolean
+
+    // 5. Bulk Actions
+    @Modifying
+    @Query("UPDATE Auction a SET a.status = 'CANCELLED' WHERE a.item.seller.id = :userId AND a.status = 'ACTIVE'")
+    fun cancelAllActiveAuctionsByUserId(userId: Long)
 }

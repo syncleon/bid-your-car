@@ -1,15 +1,21 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { login, register, restoreAccount } from "../api/auth.api";
 import { tokenStorage } from "../../../shared/lib/token";
-import type {LoginRequestDto, RegisterRequestDto} from "../types.ts";
+import type { LoginRequestDto, RegisterRequestDto } from "../types";
 
 export type ModalView = 'login' | 'register' | null;
 
-class AuthUser {
+// 1. Define the User shape explicitly
+export interface AuthUser {
+    id: number;
+    username: string;
+    roles: { name: string }[]; // Matches: user?.roles.some(r => r.name === 'ADMIN')
 }
 
 export class AuthStore {
     token: string | null = tokenStorage.get();
+
+    // 2. Apply the interface here
     user: AuthUser | null = null;
 
     // UI State
@@ -61,17 +67,16 @@ export class AuthStore {
         this.isDeletedAccount = false;
 
         try {
-            const { token } = await login(data);
+            const { token } = await login(data); // returns { token: string }
             runInAction(() => {
                 this.setToken(token);
-                this.closeModal(); // Close modal on success
+                this.closeModal();
             });
         } catch (e: any) {
             runInAction(() => {
                 const msg = e.message || "An error occurred";
                 this.error = msg;
 
-                // Check specifically for the text returned by backend
                 if (msg.toLowerCase().includes("account deleted")) {
                     this.isDeletedAccount = true;
                 }
@@ -109,7 +114,6 @@ export class AuthStore {
             runInAction(() => {
                 this.successMessage = response.message;
             });
-
             // Auto-login after restore
             await this.login(data);
         } catch (e: any) {
@@ -140,9 +144,27 @@ export class AuthStore {
             const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
+
             const payload = JSON.parse(jsonPayload);
-            this.user = { id: payload.userId, username: payload.sub };
+
+            // 3. Robust Role Parsing
+            // Handles cases where roles might be strings ["ADMIN"] or objects [{authority:"ADMIN"}]
+            let roles = [];
+            if (Array.isArray(payload.roles)) {
+                roles = payload.roles.map((r: any) => {
+                    if (typeof r === 'string') return { name: r };
+                    if (typeof r === 'object' && r.authority) return { name: r.authority };
+                    return r; // Assume it's already { name: '...' }
+                });
+            }
+
+            this.user = {
+                id: payload.userId, // Ensure your JWT claim is named 'userId'
+                username: payload.sub,
+                roles: roles
+            };
         } catch (e) {
+            console.error("Failed to decode token", e);
             this.user = null;
             this.logout();
         }

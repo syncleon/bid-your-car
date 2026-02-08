@@ -1,5 +1,5 @@
 // Standard Spring Data Page Interface
-import type {ItemDto} from "../item/types.ts";
+import type { ItemDto } from "../item/types.ts";
 
 export interface Page<T> {
     content: T[];
@@ -12,7 +12,15 @@ export interface Page<T> {
     empty: boolean;
 }
 
-export type AuctionStatus = 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED' | 'DRAFT';
+// UPDATE: Added 'PENDING_APPROVAL' and 'REJECTED'
+export type AuctionStatus =
+    | 'ACTIVE'
+    | 'SOLD'
+    | 'EXPIRED'
+    | 'CANCELLED'
+    | 'DRAFT'
+    | 'PENDING_APPROVAL'
+    | 'REJECTED';
 
 export interface AuctionDto {
     id: string;

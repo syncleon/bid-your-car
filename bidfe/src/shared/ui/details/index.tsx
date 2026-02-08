@@ -15,33 +15,72 @@ export const DetailHeader = ({ onBack, title }: { onBack: () => void, title?: st
     </div>
 );
 
-// --- Image Gallery ---
-export const ImageGallery = ({ item, statusLabel }: { item: ItemDto, statusLabel?: React.ReactNode }) => {
-    // UPDATE: Ensure we use the Full HD URL for the hero image
-    const mainImage = item.images?.[0]?.fullHdUrl || item.images?.[0]?.originalUrl;
+// --- Image Gallery (Refactored) ---
+interface GalleryProps {
+    item: ItemDto;
+    statusLabel?: React.ReactNode;
+    onImageClick?: (index: number) => void;
+}
+
+export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) => {
+    const images = item.images || [];
+    const mainImage = images[0]?.fullHdUrl || images[0]?.url;
+
+    // We show max 4 thumbnails below the main image
+    const thumbnails = images.slice(1, 5);
+    const remainingCount = Math.max(0, images.length - 5);
+
+    if (!mainImage) {
+        return <div style={styles.placeholder}>No Photos Available</div>;
+    }
 
     return (
-        <div style={{ marginBottom: 40 }}>
-            <div style={styles.imageContainer}>
-                {mainImage ? (
-                    <img src={mainImage} alt={item.model} style={styles.mainImg} />
-                ) : (
-                    <div style={styles.placeholder}>No Photos</div>
-                )}
+        <div style={styles.galleryContainer}>
+            {/* Main Hero Image */}
+            <div
+                style={styles.mainWrapper}
+                onClick={() => onImageClick?.(0)}
+            >
+                <img src={mainImage} alt={item.model} style={styles.mainImg} />
                 {statusLabel && <div style={styles.statusOverlay}>{statusLabel}</div>}
+
+                {/* Hover Hint Overlay */}
+                <div style={styles.hoverOverlay}>
+                    <span>View Fullscreen</span>
+                </div>
             </div>
 
-            {item.images.length > 1 && (
+            {/* Thumbnails Grid */}
+            {thumbnails.length > 0 && (
                 <div style={styles.thumbGrid}>
-                    {item.images.slice(1, 5).map(img => (
-                        <img
-                            key={img.id}
-                            // UPDATE: Use previewUrl (w-1000) for gallery thumbs to be sharp
-                            src={img.previewUrl || img.originalUrl}
-                            alt="Gallery"
-                            style={styles.thumb}
-                        />
-                    ))}
+                    {thumbnails.map((img, idx) => {
+                        // The actual index in the full array is idx + 1
+                        const realIndex = idx + 1;
+
+                        // Check if this is the last visible thumbnail and we have overflow
+                        const isLastAndOverflowing = idx === 3 && remainingCount > 0;
+
+                        return (
+                            <div
+                                key={img.id}
+                                style={styles.thumbWrapper}
+                                onClick={() => onImageClick?.(realIndex)}
+                            >
+                                <img
+                                    src={img.previewUrl || img.url}
+                                    alt={`View ${realIndex}`}
+                                    style={styles.thumbImg}
+                                />
+
+                                {/* "+X" Overlay for the last item */}
+                                {isLastAndOverflowing && (
+                                    <div style={styles.moreOverlay}>
+                                        +{remainingCount + 1}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -117,15 +156,88 @@ const styles = {
 
     grid: { display: "grid", alignItems: "start" },
 
-    // Images
-    imageContainer: { width: "100%", aspectRatio: "16/10", backgroundColor: "#f3f4f6", borderRadius: "4px", overflow: "hidden", position: "relative" as const, marginBottom: "12px" },
-    mainImg: { width: "100%", height: "100%", objectFit: "cover" as const },
-    placeholder: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#999" },
-    statusOverlay: { position: "absolute" as const, top: 16, left: 16 },
-    thumbGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" },
-    thumb: { width: "100%", aspectRatio: "4/3", borderRadius: "2px", objectFit: "cover" as const, backgroundColor: "#eee", cursor: "pointer" },
+    // --- Gallery Styles (Updated) ---
+    galleryContainer: {
+        display: "flex",
+        flexDirection: "column" as const,
+        gap: "12px",
+        marginBottom: "32px"
+    },
+    mainWrapper: {
+        position: "relative" as const,
+        width: "100%",
+        aspectRatio: "16/10",
+        borderRadius: "12px",
+        overflow: "hidden",
+        cursor: "zoom-in",
+        backgroundColor: "#f3f4f6",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+    },
+    mainImg: {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover" as const,
+        transition: "transform 0.3s ease",
+    },
+    hoverOverlay: {
+        position: "absolute" as const,
+        inset: 0,
+        background: "rgba(0,0,0,0.2)",
+        opacity: 0, // In CSS this would be :hover { opacity: 1 }
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontWeight: 600,
+        fontSize: "14px",
+        pointerEvents: "none" as const,
+    },
+    statusOverlay: { position: "absolute" as const, top: 16, left: 16, zIndex: 10 },
 
-    // Info
+    // Thumbnails
+    thumbGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: "12px"
+    },
+    thumbWrapper: {
+        position: "relative" as const,
+        aspectRatio: "4/3",
+        borderRadius: "8px",
+        overflow: "hidden",
+        cursor: "pointer",
+        backgroundColor: "#f3f4f6",
+    },
+    thumbImg: {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover" as const,
+    },
+    moreOverlay: {
+        position: "absolute" as const,
+        inset: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "16px",
+        fontWeight: 600,
+        backdropFilter: "blur(2px)"
+    },
+    placeholder: {
+        width: "100%",
+        height: "300px",
+        backgroundColor: "#f3f4f6",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#9ca3af",
+        fontSize: "14px"
+    },
+
+    // --- Info Styles ---
     title: { fontSize: "32px", fontWeight: 700, color: "#111", margin: "0 0 8px 0", letterSpacing: "-0.5px" },
     subtitle: { fontSize: "18px", color: "#555", margin: 0 },
     specsContainer: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 40px", marginTop: "32px", padding: "24px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee" },

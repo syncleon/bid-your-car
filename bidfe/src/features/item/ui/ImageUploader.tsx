@@ -46,7 +46,7 @@ export const ImageUploader = ({
                     <div key={img.id} className="gallery-item">
                         {/* UPDATE: Use previewUrl (High Res) instead of thumbnail */}
                         <img
-                            src={img.previewUrl || img.originalUrl}
+                            src={img.previewUrl || img.url}
                             alt="Vehicle"
                             className="gallery-img"
                         />

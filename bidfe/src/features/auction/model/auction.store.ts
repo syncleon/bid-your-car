@@ -6,17 +6,19 @@ import {
     placeBid,
     getEndingSoon,
     getMyWins,
-    cancelAuction as apiCancelAuction, // Aliased to avoid name collision
-    getAuctionBidHistory
+    cancelAuction as apiCancelAuction,
+    getAuctionBidHistory,
+    approveAuction,
+    rejectAuction
 } from "../api/auction.api";
-import type { AuctionDto, CreateAuctionDto, BidResp, PlaceBidReq } from "../types";
+import type { AuctionDto, CreateAuctionDto, BidDto, PlaceBidReq } from "../types";
 
 export class AuctionStore {
     auctions: AuctionDto[] = [];
     endingSoon: AuctionDto[] = [];
     myWins: AuctionDto[] = [];
     selectedAuction: AuctionDto | null = null;
-    bidHistory: BidResp[] = [];
+    bidHistory: BidDto[] = [];
 
     // Tracks the newly created auction for navigation
     currentAuction: AuctionDto | null = null;
@@ -34,8 +36,19 @@ export class AuctionStore {
         this.error = null;
         try {
             const pageData = await getAllAuctions(status);
+            let content = pageData.content;
+
+            // --- SORTING UPDATE ---
+            // If viewing Active auctions, sort by End Time (Ascending)
+            // so auctions ending soonest appear first.
+            if (!status || status === 'ACTIVE') {
+                content = content.sort((a, b) =>
+                    new Date(a.endTime).getTime() - new Date(b.endTime).getTime()
+                );
+            }
+
             runInAction(() => {
-                this.auctions = pageData.content;
+                this.auctions = content;
                 this.isLoading = false;
             });
         } catch (err: any) {
@@ -48,7 +61,7 @@ export class AuctionStore {
 
     loadAuctionDetails = async (id: string) => {
         this.isLoading = true;
-        this.error = null; // Reset error on new load
+        this.error = null;
         try {
             const [details, historyPage] = await Promise.all([
                 getAuctionById(id),
@@ -61,7 +74,7 @@ export class AuctionStore {
             });
         } catch (err: any) {
             runInAction(() => {
-                this.error = err.message || "Failed to load auction details";
+                this.error = err.message || "Failed to load details";
                 this.isLoading = false;
             });
         }
@@ -104,7 +117,6 @@ export class AuctionStore {
             const newAuction = await createAuction(data);
             runInAction(() => {
                 this.currentAuction = newAuction;
-                this.auctions.unshift(newAuction);
                 this.isLoading = false;
             });
             return true;
@@ -122,12 +134,14 @@ export class AuctionStore {
         this.error = null;
         try {
             const newBid = await placeBid(req);
+            // Fetch updated details to get new price/bid count immediately
             const updatedAuction = await getAuctionById(req.auctionId);
 
             runInAction(() => {
                 this.bidHistory.unshift(newBid);
                 this.selectedAuction = updatedAuction;
 
+                // Update the item in the main list if it exists there
                 const index = this.auctions.findIndex(a => a.id === req.auctionId);
                 if (index !== -1) {
                     this.auctions[index] = updatedAuction;
@@ -144,19 +158,64 @@ export class AuctionStore {
         }
     };
 
-    // Renamed to match Component call: cancelAuction
+    // --- Approval Workflow Actions ---
+
+    approveAuction = async (id: string) => {
+        this.isLoading = true;
+        this.error = null;
+
+        try {
+            await approveAuction(id);
+            runInAction(() => {
+                if (this.selectedAuction && this.selectedAuction.id === id) {
+                    this.selectedAuction.status = 'ACTIVE';
+                }
+                const index = this.auctions.findIndex(a => a.id === id);
+                if (index !== -1) {
+                    this.auctions[index].status = 'ACTIVE';
+                }
+                this.isLoading = false;
+            });
+            return true;
+        } catch (err: any) {
+            runInAction(() => {
+                this.error = err.message || "Failed to approve auction";
+                this.isLoading = false;
+            });
+            return false;
+        }
+    };
+
+    rejectAuction = async (id: string) => {
+        this.isLoading = true;
+        this.error = null;
+
+        try {
+            await rejectAuction(id);
+            runInAction(() => {
+                if (this.selectedAuction && this.selectedAuction.id === id) {
+                    this.selectedAuction.status = 'REJECTED';
+                }
+                // Remove rejected items from the main feed immediately
+                this.auctions = this.auctions.filter(a => a.id !== id);
+                this.isLoading = false;
+            });
+            return true;
+        } catch (err: any) {
+            runInAction(() => {
+                this.error = err.message || "Failed to reject auction";
+                this.isLoading = false;
+            });
+            return false;
+        }
+    };
+
     cancelAuction = async (id: string) => {
         this.error = null;
-        // We do NOT set isLoading=true here, because that would
-        // trigger the page loader and hide the content.
-
         try {
             await apiCancelAuction(id);
             runInAction(() => {
-                // Remove from main list if present
                 this.auctions = this.auctions.filter(a => a.id !== id);
-
-                // Update detail view status immediately
                 if (this.selectedAuction?.id === id) {
                     this.selectedAuction.status = 'CANCELLED';
                 }
@@ -176,7 +235,6 @@ export class AuctionStore {
         this.error = null;
     };
 
-    // New action to manually clear errors (for the banner close button)
     clearError = () => {
         this.error = null;
     };

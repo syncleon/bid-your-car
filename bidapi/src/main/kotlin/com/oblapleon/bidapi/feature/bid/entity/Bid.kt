@@ -20,7 +20,7 @@ class Bid(
     @GeneratedValue(strategy = GenerationType.UUID)
     @JdbcTypeCode(Types.VARCHAR)
     @Column(updatable = false, nullable = false)
-    var id: UUID? = null,
+    override var id: UUID? = null,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "auction_id", nullable = false)
@@ -36,14 +36,4 @@ class Bid(
     @Column(nullable = false)
     var bidTime: LocalDateTime = LocalDateTime.now()
 
-) : BaseEntity() {
-
-    // Essential for Entity comparison in Sets/Lists
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Bid) return false
-        return id != null && id == other.id
-    }
-
-    override fun hashCode(): Int = id?.hashCode() ?: 0
-}
+) : BaseEntity<UUID>()

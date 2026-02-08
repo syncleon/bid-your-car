@@ -24,7 +24,7 @@ class Item(
     @GeneratedValue(strategy = GenerationType.UUID)
     @JdbcTypeCode(Types.VARCHAR)
     @Column(updatable = false, nullable = false)
-    var id: UUID? = null,
+    override var id: UUID? = null,
 
     @Column(nullable = false)
     var year: Int,
@@ -72,7 +72,6 @@ class Item(
     @JoinColumn(name = "seller_id", nullable = false)
     var seller: User,
 
-    // Performance: Use Set + BatchSize to avoid N+1 problems when listing items
     @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true)
     @BatchSize(size = 20)
     var images: MutableSet<ItemImage> = mutableSetOf(),
@@ -81,9 +80,8 @@ class Item(
     @BatchSize(size = 20)
     var auctions: MutableSet<Auction> = mutableSetOf()
 
-) : BaseEntity() {
+) : BaseEntity<UUID>() {
 
-    // Helper accessors for business logic
     val activeAuctionId: UUID?
         get() = auctions.find { it.status == AuctionStatus.ACTIVE }?.id
 
@@ -95,16 +93,7 @@ class Item(
     val isSold: Boolean get() = currentStatus == AuctionStatus.SOLD
     val isAvailable: Boolean
         get() = currentStatus == null ||
-                currentStatus == AuctionStatus.DRAFT ||
+                currentStatus == AuctionStatus.REJECTED ||
                 currentStatus == AuctionStatus.EXPIRED ||
                 currentStatus == AuctionStatus.CANCELLED
-
-    // Essential for Entities in Sets
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Item) return false
-        return id != null && id == other.id
-    }
-
-    override fun hashCode(): Int = id?.hashCode() ?: 0
 }

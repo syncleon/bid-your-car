@@ -20,9 +20,9 @@ class Auction(
     @GeneratedValue(strategy = GenerationType.UUID)
     @JdbcTypeCode(Types.VARCHAR)
     @Column(updatable = false, nullable = false)
-    var id: UUID? = null,
+    override var id: UUID? = null,
 
-    @Version // Optimistic Locking: Prevents concurrent bid race conditions
+    @Version
     var version: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -60,18 +60,10 @@ class Auction(
     @OrderBy("amount DESC")
     var bids: MutableSet<Bid> = mutableSetOf()
 
-) : BaseEntity() {
+) : BaseEntity<UUID>() {
 
     fun isReserveMet(): Boolean {
         val reserve = reservePrice ?: return true
         return currentHighestBid >= reserve
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Auction) return false
-        return id != null && id == other.id
-    }
-
-    override fun hashCode(): Int = id?.hashCode() ?: 0
 }

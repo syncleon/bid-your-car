@@ -6,17 +6,15 @@ import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.item.entity.Item
 import jakarta.persistence.*
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Entity
 @Table(name = "users")
-// Optional: Hibernate native soft delete annotations (if you want to automate filtering)
-// @SQLDelete(sql = "UPDATE users SET deleted_at = NOW() WHERE id = ?")
-// @Where(clause = "deleted_at IS NULL")
 class User(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    override var id: Long? = null,
 
     @Column(nullable = false, unique = true)
     var username: String,
@@ -27,7 +25,6 @@ class User(
     @Column(nullable = false, unique = true)
     var email: String,
 
-    // Performance: Switch to LAZY. We will load this explicitly when needed.
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
@@ -51,14 +48,40 @@ class User(
     @Column(nullable = false)
     var enabled: Boolean = false
 
-) : BaseEntity() {
+) : BaseEntity<Long>()
 
-    // Essential for Entities used in Sets
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is User) return false
-        return id != null && id == other.id
-    }
+@Entity
+@Table(name = "roles")
+class Role(
 
-    override fun hashCode(): Int = id?.hashCode() ?: 0
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    override var id: Long? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    var name: ERole = ERole.USER
+
+) : BaseEntity<Long>()
+
+enum class ERole {
+    USER,
+    ADMIN
 }
+
+@Entity
+class VerificationToken(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
+
+    @Column(nullable = false)
+    val token: String = UUID.randomUUID().toString(),
+
+    @OneToOne(targetEntity = User::class, fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false, name = "user_id")
+    val user: User,
+
+    @Column(nullable = false)
+    val expiryDate: LocalDateTime = LocalDateTime.now().plusHours(24)
+)
