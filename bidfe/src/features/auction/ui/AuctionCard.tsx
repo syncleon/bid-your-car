@@ -65,8 +65,10 @@ export const AuctionCard = ({ auction }: Props) => {
         ? (firstImage.previewUrl || firstImage.url || firstImage.thumbnailUrl)
         : null;
 
+    // --- Улучшенные флаги статусов ---
     const isActive = status === 'ACTIVE';
     const isPending = status === 'PENDING_APPROVAL';
+    const isSold = status === 'SOLD'; // Новый статус для проданных авто
 
     // --- Dynamic Styles ---
     const timerStyle = {
@@ -84,30 +86,65 @@ export const AuctionCard = ({ auction }: Props) => {
         minWidth: "fit-content"
     };
 
+    const soldPriceStyle = {
+        ...timerStyle,
+        backgroundColor: "rgba(17, 17, 17, 0.7)",
+    };
+
     return (
         <BaseCard
             to={`/auctions/${auction.id}`}
             imageUrl={mainImage}
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
-                // 1. Status Badge
-                topLeft: isPending ? (
-                    <div style={{...styles.badge, background: "#f59e0b", color: "#fff"}}>
-                        PENDING
-                    </div>
-                ) : isEnded ? (
-                    <div style={styles.badgeEnded}>ENDED</div>
-                ) : null,
+                // 1. Status Badge (Верхний левый угол)
+                topLeft: (
+                    <>
+                        {isPending && (
+                            <div style={{...styles.badge, background: "#f59e0b", color: "#fff"}}>
+                                PENDING
+                            </div>
+                        )}
+                        {isSold && (
+                            <div style={{...styles.badge, background: "rgba(250,0,0,0.7)", color: "#fff"}}>
+                                SOLD
+                            </div>
+                        )}
+                        {/* Показываем ENDED только если статус не SOLD и не PENDING */}
+                        {!isSold && !isPending && isEnded && (
+                            <div style={styles.badgeEnded}>ENDED</div>
+                        )}
+                    </>
+                ),
 
-                // 2. Timer Badge (Bottom Left)
-                bottomLeft: isActive && !isEnded && timeLeft ? (
-                    <div style={timerStyle}>
-                        <ClockIcon />
-                        <span>{timeLeft}</span>
-                        <span style={{opacity: 0.8, fontWeight: 300}}>|</span>
-                        <span>Bid ${price.toLocaleString()}</span>
-                    </div>
-                ) : null
+                // 2. Info Badge (Нижний левый угол)
+                bottomLeft: (
+                    <>
+                        {/* Активный аукцион: Таймер + Ставка */}
+                        {isActive && !isEnded && timeLeft && (
+                            <div style={timerStyle}>
+                                <ClockIcon />
+                                <span>{timeLeft}</span>
+                                <span style={{opacity: 0.8, fontWeight: 300}}>|</span>
+                                <span>Bid ${price.toLocaleString()}</span>
+                            </div>
+                        )}
+
+                        {/* Проданный автомобиль: Финальная цена */}
+                        {isSold && (
+                            <div style={soldPriceStyle}>
+                                <span style={{fontSize: '10px', opacity: 0.8}}>Sold for</span>
+                                <span>${price.toLocaleString()}</span>
+                            </div>
+                        )}
+
+                        {!isSold && isEnded && !isPending && (
+                            <div style={timerStyle}>
+                                <span>Final Bid: ${price.toLocaleString()}</span>
+                            </div>
+                        )}
+                    </>
+                )
             }}
         >
             <div style={styles.metaRow}>
@@ -115,7 +152,6 @@ export const AuctionCard = ({ auction }: Props) => {
                     <div style={styles.labelText}>LOCATION</div>
                     <div style={styles.locationText}>{item.location}</div>
                 </div>
-                {/* Price/Bid column removed */}
             </div>
         </BaseCard>
     );

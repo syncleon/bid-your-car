@@ -2,7 +2,7 @@ import { tokenStorage } from "../../../shared/lib/token";
 import { http } from "../../../shared/api/HttpClient";
 import type {AuctionDto, CreateAuctionDto, PlaceBidReq, Page, BidDto} from "../types";
 
-const BASE_URL = "http://localhost:8080/api/v1/auctions";
+const BASE_URL = "https://green-mangos-crash.loca.lt/api/v1/auctions";
 
 // Helper to handle the specific error format from your backend
 const handleResponse = async <T>(response: Response): Promise<T> => {
@@ -25,29 +25,27 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 
 export const createAuction = async (data: CreateAuctionDto): Promise<AuctionDto> => {
     const token = tokenStorage.get();
-    if (!token) throw new Error("Authentication required.");
-
     const response = await fetch(BASE_URL, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Authorization": `Bearer ${token}`,
+            "Bypass-Tunnel-Reminder": "true" // <--- ДОБАВЛЕНО
         },
         body: JSON.stringify(data),
     });
-
     return handleResponse<AuctionDto>(response);
 };
 
 export const placeBid = async (req: PlaceBidReq): Promise<BidDto> => {
     const token = tokenStorage.get();
-    if (!token) throw new Error("Please log in to place a bid.");
-
     const response = await fetch(`${BASE_URL}/${req.auctionId}/bid?amount=${req.amount}`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Bypass-Tunnel-Reminder": "true" // <--- ДОБАВЛЕНО
+        }
     });
-
     return handleResponse<BidDto>(response);
 };
 

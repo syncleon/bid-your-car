@@ -1,0 +1,274 @@
+/* --- Container & Layout --- */
+.auction-container {
+    padding: 20px 16px; /* Reduced side padding for mobile */
+    max-width: 1360px;
+    margin: 0 auto;
+    font-family: 'Inter', sans-serif;
+}
+
+/* --- Header & Typography --- */
+.auction-header {
+    margin-bottom: 24px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #111;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.result-count {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* --- Controls & Filters --- */
+.mobile-filter-toggle {
+    display: none; /* Hidden on desktop */
+    width: 100%;
+    padding: 12px;
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #333;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.controls-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.filters-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #999;
+    margin-left: 2px;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 10px 36px 10px 12px; /* Larger touch target */
+    font-size: 14px; /* Prevent IOS zoom on focus (needs 16px usually, but 14px with adequate padding works) */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #333;
+    font-weight: 500;
+    min-width: 140px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.reset-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #666;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.reset-btn:hover {
+    background: #e0e0e0;
+    color: #000;
+}
+
+/* --- Grid System --- */
+.auction-grid {
+    display: grid;
+    /* Auto-fit magic: Will create as many columns as fit with min-width 280px */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+/* --- States --- */
+.loading-state, .error-state {
+    min-height: 50vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    font-weight: 500;
+}
+
+.error-state { color: #dc2626; }
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: #f9f9f9;
+    border-radius: 12px;
+}
+
+/* --- Pagination --- */
+.pagination {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid #eee;
+}
+
+.page-btn {
+    padding: 10px 20px; /* Larger touch target */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    transition: background 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: #f7f7f7;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+}
+
+/* --- Mobile Breakpoint (max-width 768px) --- */
+@media (max-width: 768px) {
+    .auction-container {
+        padding: 16px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    /* Filters: Show toggle button, hide content by default */
+    .mobile-filter-toggle {
+        display: flex;
+    }
+
+    .controls-wrapper {
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        align-items: stretch;
+        background: #f9f9f9;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 8px;
+    }
+
+    .controls-wrapper.is-open {
+        display: flex;
+        animation: slideDown 0.2s ease-out;
+    }
+
+    .filters-row {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .filter-select {
+        width: 100%; /* Full width dropdowns */
+    }
+
+    .reset-btn {
+        width: 100%;
+        text-align: center;
+        margin-top: 8px;
+    }
+
+    /* Grid: 1 column on very small screens usually handled by auto-fill,
+       but we can force simpler gaps */
+    .auction-grid {
+        gap: 16px;
+        /* Ensure it doesn't get too squashed */
+        grid-template-columns: 1fr;
+    }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.scroll-loader {
+    text-align: center;
+    padding: 24px;
+    color: #888;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* --- Fade In Animation --- */
+.fade-in-item {
+    animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* "will-change" tells browser to optimize for this property, making it buttery smooth */
+    will-change: opacity, transform;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Loader --- */
+.scroll-loader {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-size: 13px;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}

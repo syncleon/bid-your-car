@@ -45,6 +45,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")
     implementation("software.amazon.awssdk:s3:2.21.0")
+    implementation("net.datafaker:datafaker:2.1.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

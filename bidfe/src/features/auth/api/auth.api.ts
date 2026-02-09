@@ -5,51 +5,48 @@ import type {
     RestoreResponseDto
 } from "../types";
 
-const BASE_URL = "http://localhost:8080/api/v1";
+// Убедитесь, что ссылка свежая!
+const BASE_URL = "https://green-mangos-crash.loca.lt/api/v1";
 
-/**
- * Generic request wrapper.
- * Properly parses the Spring Boot error structure:
- * { status: 401, error: "Unauthorized", message: "Account deleted...", ... }
- */
 async function request<T>(url: string, options: RequestInit): Promise<T> {
-    const response = await fetch(url, options);
+    // --- ДОБАВЛЯЕМ ЗАГОЛОВОК СЮДА ---
+    const headers = {
+        "Bypass-Tunnel-Reminder": "true",
+        ...options.headers,
+    };
 
-    // Handle Errors
+    const response = await fetch(url, { ...options, headers });
+    // --------------------------------
+
     if (!response.ok) {
         let errorMessage = `Request failed: ${response.status} ${response.statusText}`;
-
-        // Attempt to parse JSON error body
         const contentType = response.headers.get("content-type");
         if (contentType?.includes("application/json")) {
             try {
                 const body = await response.json();
-                // Prioritize 'message' because that's where your custom exception message lives
-                if (body.message) {
-                    errorMessage = body.message;
-                } else if (body.error) {
-                    errorMessage = body.error;
-                }
-            } catch (e) {
-                // JSON parse failed, stick to statusText
-            }
+                if (body.message) errorMessage = body.message;
+                else if (body.error) errorMessage = body.error;
+            } catch (e) {}
+        }
+        // Если пришел HTML от туннеля (ошибка)
+        if (contentType?.includes("text/html")) {
+            throw new Error("Tunnel Error: Received HTML instead of JSON. Check headers.");
         }
 
-        // Create an error object that preserves the status for checking later if needed
         const error = new Error(errorMessage);
         (error as any).status = response.status;
         throw error;
     }
 
-    // Handle Success
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
         return response.json();
     }
-
     return response.text() as unknown as T;
 }
 
+// Остальные функции (register, login...) остаются без изменений,
+// так как они используют исправленный `request`.
 export const register = (dto: RegisterRequestDto) =>
     request<string>(`${BASE_URL}/register`, {
         method: "POST",

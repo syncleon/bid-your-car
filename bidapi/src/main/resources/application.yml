@@ -6,7 +6,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: true
     properties:
       jdbc:
@@ -15,7 +15,7 @@ spring:
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 2525
-    username: f251d039e25de7
+    username: f251d039e25de7 # Можно тоже вынести в env, если нужно
     password: c01f28a5e4b9d7
     properties:
       mail:
@@ -39,13 +39,20 @@ jwt:
   expiration: 86400000
 
 cors:
-  allowed-origins: "http://localhost:5173,http://localhost:8080,http://localhost:3000"
+  allowed-origins: "
+  http://localhost:5173,
+  http://localhost:8080,
+  https://bidfe-app.web.app,
+  https://bidfe-app.firebaseapp.com
+  "
 
-aws:
-  s3:
-    bucket: ${AWS_BUCKET}
-    access-key: ${AWS_ACCESS_KEY_ID}
-    secret-key: ${AWS_SECRET_ACCESS_KEY}
-    region: "eu-north-1"
-  cdn:
-    base-url: "https://ik.imagekit.io/lfv0hg4nv"
+cloudflare:
+  r2:
+    bucket: ${R2_BUCKET_NAME}
+    access-key: ${R2_ACCESS_KEY}
+    secret-key: ${R2_SECRET_KEY}
+    endpoint: "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    region: "auto"
+
+imagekit:
+  url-endpoint: ${IMAGEKIT_URL_ENDPOINT}

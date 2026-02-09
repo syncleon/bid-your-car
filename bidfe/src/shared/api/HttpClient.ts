@@ -1,21 +1,23 @@
 import { tokenStorage } from "../lib/token";
 
-const BASE_URL = "http://localhost:8080/api/v1";
+// Убедитесь, что ссылка совпадает с той, что выдал lt (без пробелов)
+const BASE_URL = "https://green-mangos-crash.loca.lt/api/v1";
 
-/**
- * A centralized HTTP utility for making authenticated API requests.
- * Standardizes the consumption of the response body to prevent
- * "stream already read" errors by reading the body exactly once.
- */
 export async function http<T>(
     path: string,
     options: RequestInit = {}
 ): Promise<T> {
     const token = tokenStorage.get();
-    const url = `${BASE_URL}${path}`;
+
+    // Исправление двойных слешей
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    const url = `${BASE_URL}${cleanPath}`;
 
     const headers: HeadersInit = {
         "Content-Type": "application/json",
+        "Bypass-Tunnel-Reminder": "true",
+        // ------------------------------------------
+
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
     };
@@ -25,18 +27,21 @@ export async function http<T>(
         headers,
     });
 
-    // Determine if there is actually a body to read
+    // ... остальной код (обработка JSON/Text) ...
     const contentType = response.headers.get("Content-Type");
     const isJson = contentType?.includes("application/json");
 
-    // READ THE BODY ONCE
     let body: any = null;
     if (response.status !== 204) {
+        // Дополнительная проверка: если пришел HTML, значит туннель вернул ошибку
+        if (contentType?.includes("text/html")) {
+            console.error("Received HTML response from Tunnel:", await response.text());
+            throw new Error("Tunnel Error: Received HTML instead of JSON.");
+        }
         body = isJson ? await response.json() : await response.text();
     }
 
     if (!response.ok) {
-        // Since we already read the body, we just extract the message
         let errorMessage = "HTTP Error";
         if (isJson && typeof body === 'object') {
             errorMessage = body.message || body.error || errorMessage;

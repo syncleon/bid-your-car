@@ -18,4 +18,7 @@ interface ItemRepo : JpaRepository<Item, UUID> {
     fun findBySellerId(sellerId: Long, pageable: Pageable): Page<Item>
 
     fun existsByVin(vin: String): Boolean
+
+    @Query("SELECT i FROM Item i WHERE i.auctions IS EMPTY")
+    fun findItemsWithoutAuctions(pageable: Pageable): List<Item>
 }

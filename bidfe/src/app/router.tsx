@@ -8,7 +8,8 @@ import { VerifyPage } from "../pages/VerifyPage.tsx";
 import { AuctionPage } from "../pages/AuctionPage.tsx";
 import { AuctionDetailsPage } from "../features/auction/ui/AuctionDetailsPage.tsx";
 import { ItemDetailsPage } from "../features/item/ui/ItemDetailsPage.tsx";
-import ProfilePage from "../pages/ProfilePage.tsx";
+import {PastAuctionsPage} from "../pages/PastAuctionsPage.tsx";
+import {ProfilePage} from "../pages/ProfilePage.tsx";
 
 export const AppRouter = () => {
     const location = useLocation();
@@ -28,7 +29,7 @@ export const AppRouter = () => {
                 {/* Home / Auction Feed */}
                 <Route path="/" element={<AuctionPage />} />
                 <Route path="/auctions" element={<AuctionPage />} />
-
+                <Route path="/past-auctions" element={<PastAuctionsPage />} />
                 <Route path="/auctions/:id" element={<AuctionDetailsPage />} />
                 <Route path="/items/:id" element={<ItemDetailsPage />} />
 

@@ -38,7 +38,7 @@ class AuthService(
             password = hashing.hashBcrypt(payload.password),
             email = payload.email,
             roles = mutableSetOf(userRole),
-            enabled = false
+            enabled = true
         )
         val savedUser = userRepo.save(user)
 

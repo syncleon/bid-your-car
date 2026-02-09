@@ -5,13 +5,7 @@ import com.oblapleon.bidapi.feature.item.entity.ItemImage
 import com.oblapleon.bidapi.feature.user.dto.toDto
 import java.util.UUID
 
-private const val CDN_BASE_URL = "https://ik.imagekit.io/lfv0hg4nv"
-
 fun Item.toDto(): ItemDto {
-    // Note: accessing 'images' and 'auctions' (via currentStatus) here triggers Lazy Loading.
-    // The @BatchSize(size=20) in the Entity ensures this happens efficiently in batches
-    // rather than 1-by-1 queries when mapping a list of items.
-
     return ItemDto(
         id = this.id!!,
         year = this.year,
@@ -29,7 +23,7 @@ fun Item.toDto(): ItemDto {
         exteriorColor = this.exteriorColor,
         interiorColor = this.interiorColor,
         sellerType = this.sellerType,
-        images = this.images.map { it.toDto() }, // Maps Set to List for JSON
+        images = this.images.map { it.toDto() },
         activeAuctionId = this.activeAuctionId,
         auctionStatus = this.currentStatus,
         isActive = this.isActive,
@@ -40,14 +34,15 @@ fun Item.toDto(): ItemDto {
 
 fun ItemImage.toDto(): ItemImageDto {
     val safeUrl = this.url ?: ""
-    val filename = if (safeUrl.contains("/")) safeUrl.substringAfterLast("/") else safeUrl
-    val cdnPath = "${CDN_BASE_URL}/$filename"
 
+    // We simply use the original URL for all fields.
+    // Since we aren't using ImageKit, we can't auto-resize for thumbnails,
+    // so we return the full URL for everything.
     return ItemImageDto(
         id = this.id ?: UUID.randomUUID(),
         originalUrl = safeUrl,
-        thumbnailUrl = "$cdnPath?tr=w-400,h-300,f-auto,q-80",
-        previewUrl = "$cdnPath?tr=w-1000,f-auto,q-90",
-        fullHdUrl = "$cdnPath?tr=f-auto,q-95"
+        thumbnailUrl = safeUrl,
+        previewUrl = safeUrl,
+        fullHdUrl = safeUrl
     )
 }

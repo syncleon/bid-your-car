@@ -1,11 +1,11 @@
 import {AuctionListTemplate} from "../features/auction/ui/AuctionListTemplate.tsx";
 
-export const AuctionPage = () => {
+export const PastAuctionsPage = () => {
     return (
         <AuctionListTemplate
-            title="Auctions"
-            status="ACTIVE"
-            defaultSort="ending_soon"
+            title="Results"
+            status="SOLD"
+            defaultSort="newly_ended"
             pageSize={1000}
         />
     );

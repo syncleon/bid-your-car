@@ -20,10 +20,12 @@ export class AuctionStore {
     selectedAuction: AuctionDto | null = null;
     bidHistory: BidDto[] = [];
 
-    // Tracks the newly created auction for navigation
-    currentAuction: AuctionDto | null = null;
-
+    // --- Pagination State ---
+    currentPage = 0;
+    totalPages = 0;
     isLoading = false;
+
+    currentAuction: AuctionDto | null = null;
     isBidding = false;
     error: string | null = null;
 
@@ -31,29 +33,41 @@ export class AuctionStore {
         makeAutoObservable(this);
     }
 
-    loadAuctions = async (status?: string) => {
+    /**
+     * Helper to safely extract error messages from unknown types
+     */
+    private getErrorMessage(error: unknown, defaultMessage: string): string {
+        if (error instanceof Error) {
+            return error.message;
+        }
+        if (typeof error === "string") {
+            return error;
+        }
+        return defaultMessage;
+    }
+
+    /**
+     * Loads auctions replacing the current list.
+     * @param status Status (ACTIVE, SOLD)
+     * @param page Page number
+     * @param size Page size
+     */
+    loadAuctions = async (status: string | undefined, page: number, size: number) => {
         this.isLoading = true;
         this.error = null;
-        try {
-            const pageData = await getAllAuctions(status);
-            let content = pageData.content;
 
-            // --- SORTING UPDATE ---
-            // If viewing Active auctions, sort by End Time (Ascending)
-            // so auctions ending soonest appear first.
-            if (!status || status === 'ACTIVE') {
-                content = content.sort((a, b) =>
-                    new Date(a.endTime).getTime() - new Date(b.endTime).getTime()
-                );
-            }
+        try {
+            const pageData = await getAllAuctions(status, page, size);
 
             runInAction(() => {
-                this.auctions = content;
+                this.auctions = pageData.content;
+                this.currentPage = pageData.number;
+                this.totalPages = pageData.totalPages;
                 this.isLoading = false;
             });
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to load auctions";
+                this.error = this.getErrorMessage(error, "Failed to load auctions");
                 this.isLoading = false;
             });
         }
@@ -72,9 +86,9 @@ export class AuctionStore {
                 this.bidHistory = historyPage.content;
                 this.isLoading = false;
             });
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to load details";
+                this.error = this.getErrorMessage(error, "Failed to load details");
                 this.isLoading = false;
             });
         }
@@ -86,8 +100,8 @@ export class AuctionStore {
             runInAction(() => {
                 this.endingSoon = pageData.content;
             });
-        } catch (err: any) {
-            console.error("Failed to load ending soon auctions", err);
+        } catch (error: unknown) {
+            console.error("Failed to load ending soon auctions", error);
         }
     };
 
@@ -100,9 +114,9 @@ export class AuctionStore {
                 this.myWins = pageData.content;
                 this.isLoading = false;
             });
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to load won auctions";
+                this.error = this.getErrorMessage(error, "Failed to load won auctions");
                 this.isLoading = false;
             });
         }
@@ -120,9 +134,9 @@ export class AuctionStore {
                 this.isLoading = false;
             });
             return true;
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to start auction";
+                this.error = this.getErrorMessage(error, "Failed to start auction");
                 this.isLoading = false;
             });
             return false;
@@ -134,7 +148,6 @@ export class AuctionStore {
         this.error = null;
         try {
             const newBid = await placeBid(req);
-            // Fetch updated details to get new price/bid count immediately
             const updatedAuction = await getAuctionById(req.auctionId);
 
             runInAction(() => {
@@ -149,9 +162,9 @@ export class AuctionStore {
                 this.isBidding = false;
             });
             return true;
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to place bid";
+                this.error = this.getErrorMessage(error, "Failed to place bid");
                 this.isBidding = false;
             });
             return false;
@@ -177,9 +190,9 @@ export class AuctionStore {
                 this.isLoading = false;
             });
             return true;
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to approve auction";
+                this.error = this.getErrorMessage(error, "Failed to approve auction");
                 this.isLoading = false;
             });
             return false;
@@ -196,14 +209,13 @@ export class AuctionStore {
                 if (this.selectedAuction && this.selectedAuction.id === id) {
                     this.selectedAuction.status = 'REJECTED';
                 }
-                // Remove rejected items from the main feed immediately
                 this.auctions = this.auctions.filter(a => a.id !== id);
                 this.isLoading = false;
             });
             return true;
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to reject auction";
+                this.error = this.getErrorMessage(error, "Failed to reject auction");
                 this.isLoading = false;
             });
             return false;
@@ -221,9 +233,9 @@ export class AuctionStore {
                 }
             });
             return true;
-        } catch (err: any) {
+        } catch (error: unknown) {
             runInAction(() => {
-                this.error = err.message || "Failed to cancel auction";
+                this.error = this.getErrorMessage(error, "Failed to cancel auction");
             });
             return false;
         }

@@ -1,21 +1,19 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { login, register, restoreAccount } from "../api/auth.api";
+// Add verifyEmail to the imports
+import { login, register, restoreAccount, verifyEmail } from "../api/auth.api";
 import { tokenStorage } from "../../../shared/lib/token";
 import type { LoginRequestDto, RegisterRequestDto } from "../types";
 
 export type ModalView = 'login' | 'register' | null;
 
-// 1. Define the User shape explicitly
 export interface AuthUser {
     id: number;
     username: string;
-    roles: { name: string }[]; // Matches: user?.roles.some(r => r.name === 'ADMIN')
+    roles: { name: string }[];
 }
 
 export class AuthStore {
     token: string | null = tokenStorage.get();
-
-    // 2. Apply the interface here
     user: AuthUser | null = null;
 
     // UI State
@@ -28,7 +26,8 @@ export class AuthStore {
     constructor() {
         makeAutoObservable(this);
         if (this.token) {
-            this.decodeAndSetUser(this.token);
+            // Re-validate or decode token on load
+            this.setToken(this.token);
         }
     }
 
@@ -59,6 +58,16 @@ export class AuthStore {
         this.isDeletedAccount = false;
     }
 
+    // --- Helper Methods (Fixes for VerifyPage) ---
+
+    clearError() {
+        this.error = null;
+    }
+
+    clearSuccessMessage() {
+        this.successMessage = null;
+    }
+
     // --- Actions ---
 
     async login(data: LoginRequestDto) {
@@ -67,7 +76,7 @@ export class AuthStore {
         this.isDeletedAccount = false;
 
         try {
-            const { token } = await login(data); // returns { token: string }
+            const { token } = await login(data);
             runInAction(() => {
                 this.setToken(token);
                 this.closeModal();
@@ -105,6 +114,29 @@ export class AuthStore {
         }
     }
 
+    // --- NEW: Verify Method ---
+    async verify(token: string) {
+        this.isLoading = true;
+        this.error = null;
+        this.successMessage = null;
+
+        try {
+            // You need to ensure verifyEmail is exported from ../api/auth.api
+            const message = await verifyEmail(token);
+            runInAction(() => {
+                this.successMessage = message;
+            });
+        } catch (e: any) {
+            runInAction(() => {
+                this.error = e.message || "Verification failed";
+            });
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
     async restore(data: LoginRequestDto) {
         this.isLoading = true;
         this.error = null;
@@ -114,7 +146,6 @@ export class AuthStore {
             runInAction(() => {
                 this.successMessage = response.message;
             });
-            // Auto-login after restore
             await this.login(data);
         } catch (e: any) {
             runInAction(() => {
@@ -147,26 +178,24 @@ export class AuthStore {
 
             const payload = JSON.parse(jsonPayload);
 
-            // 3. Robust Role Parsing
-            // Handles cases where roles might be strings ["ADMIN"] or objects [{authority:"ADMIN"}]
-            let roles = [];
+            let roles: { name: string }[] = [];
             if (Array.isArray(payload.roles)) {
                 roles = payload.roles.map((r: any) => {
                     if (typeof r === 'string') return { name: r };
                     if (typeof r === 'object' && r.authority) return { name: r.authority };
-                    return r; // Assume it's already { name: '...' }
+                    if (typeof r === 'object' && r.name) return { name: r.name };
+                    return { name: String(r) };
                 });
             }
 
             this.user = {
-                id: payload.userId, // Ensure your JWT claim is named 'userId'
+                id: payload.userId,
                 username: payload.sub,
                 roles: roles
             };
         } catch (e) {
             console.error("Failed to decode token", e);
             this.user = null;
-            this.logout();
         }
     }
 }

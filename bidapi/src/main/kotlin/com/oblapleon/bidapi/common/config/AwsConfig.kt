@@ -7,26 +7,35 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3Configuration
+import java.net.URI
 
 @Configuration
-class AwsConfig {
+class R2Config {
 
-    @Value("\${aws.s3.access-key}")
-    lateinit var accessKey: String
+    @Value("\${cloudflare.r2.access-key}")
+    private lateinit var accessKey: String
 
-    @Value("\${aws.s3.secret-key}")
-    lateinit var secretKey: String
+    @Value("\${cloudflare.r2.secret-key}")
+    private lateinit var secretKey: String
 
-    @Value("\${aws.s3.region}")
-    lateinit var region: String
+    @Value("\${cloudflare.r2.endpoint}")
+    private lateinit var endpoint: String
 
     @Bean
     fun s3Client(): S3Client {
         val credentials = AwsBasicCredentials.create(accessKey, secretKey)
 
+        // R2 требует path-style access
+        val serviceConfiguration = S3Configuration.builder()
+            .pathStyleAccessEnabled(true)
+            .build()
+
         return S3Client.builder()
-            .region(Region.of(region))
+            .endpointOverride(URI.create(endpoint))
+            .region(Region.of("auto"))
             .credentialsProvider(StaticCredentialsProvider.create(credentials))
+            .serviceConfiguration(serviceConfiguration)
             .build()
     }
 }

@@ -10,6 +10,7 @@ import com.oblapleon.bidapi.feature.item.entity.ItemImage
 import com.oblapleon.bidapi.feature.item.repo.ItemImageRepo
 import com.oblapleon.bidapi.feature.item.repo.ItemRepo
 import com.oblapleon.bidapi.feature.user.entity.User
+import org.slf4j.LoggerFactory // Recommended for logging deletion errors
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -26,6 +27,8 @@ class ItemService(
     private val storageService: StorageService
 ) {
 
+    private val logger = LoggerFactory.getLogger(ItemService::class.java)
+
     @Transactional(readOnly = true)
     fun findAll(pageable: Pageable): Page<Item> = itemRepo.findAllActive(pageable)
 
@@ -38,6 +41,7 @@ class ItemService(
         val item = itemRepo.findById(id)
             .orElseThrow { NotFoundException("Item not found") }
 
+        // Business check: don't show items from deleted users
         if (item.seller.deletedAt != null) {
             throw NotFoundException("Item listing is no longer available")
         }
@@ -88,18 +92,53 @@ class ItemService(
         request.sellerType?.let { item.sellerType = it }
 
         request.keepImageIds?.let { keepIds ->
+            // Find images that are NOT in the keep list
             val imagesToRemove = item.images.filter { it.id !in keepIds }
+
+            // Remove them from the list
             item.images.removeAll(imagesToRemove)
-            imagesToRemove.forEach { storageService.deleteFile(it.url) }
+
+            // 1. Delete physical files from R2
+            imagesToRemove.forEach {
+                try {
+                    storageService.deleteFile(it.url)
+                } catch (e: Exception) {
+                    logger.error("Failed to delete file from R2: ${it.url}", e)
+                    // We continue execution so DB record is still cleaned up
+                }
+            }
+
+            // 2. Delete image records from DB
             itemImageRepo.deleteAll(imagesToRemove)
         }
 
         return itemRepo.save(item)
     }
 
+    /**
+     * Deletes the item and all associated images from Cloudflare R2.
+     */
     fun delete(id: UUID) {
-        if (!itemRepo.existsById(id)) throw NotFoundException("Item not found")
-        itemRepo.deleteById(id)
+        // Use raw findById here to ignore "seller.deletedAt" check.
+        // If we want to delete an item, we should be able to do it even if the seller is gone.
+        val item = itemRepo.findById(id)
+            .orElseThrow { NotFoundException("Item not found") }
+
+        // 1. Iterate over all images and delete them from Cloudflare R2
+        item.images.forEach { image ->
+            try {
+                storageService.deleteFile(image.url)
+            } catch (e: Exception) {
+                // Log the error but don't stop the transaction.
+                // Otherwise, a single missing file on S3 could prevent deleting the Item from DB.
+                logger.error("Failed to delete file from Storage: ${image.url}", e)
+            }
+        }
+
+        // 2. Delete the item from DB
+        // JPA Cascade will handle deleting the ItemImage rows automatically if configured (CascadeType.ALL/REMOVE)
+        // If not, you might need: itemImageRepo.deleteAll(item.images) before this.
+        itemRepo.delete(item)
     }
 
     @Transactional
@@ -118,10 +157,10 @@ class ItemService(
             throw AccessDeniedException("You do not own this image")
         }
 
-        // 🔥 сначала удаляем файл
+        // 1. Delete file from R2
         storageService.deleteFile(image.url)
 
-        // потом запись из БД
+        // 2. Delete record from DB
         itemImageRepo.delete(image)
     }
 }
