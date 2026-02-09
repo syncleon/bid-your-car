@@ -1,0 +1,38 @@
+package com.oblapleon.bidapi.common.controller
+
+import com.oblapleon.bidapi.common.config.AuctionSeederService
+import com.oblapleon.bidapi.common.config.ItemSeederService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
+
+@RestController
+@RequestMapping("/api/v1/debug")
+@Tag(name = "Debug Tools", description = "Endpoints for testing and seeding data")
+class DebugController(
+    private val itemSeederService: ItemSeederService,
+    private val auctionSeederService: AuctionSeederService
+) {
+
+    @Operation(summary = "Generate random cars")
+    @PostMapping("/seed-items")
+    fun seedItems(@RequestParam(defaultValue = "100") count: Int): ResponseEntity<Any> {
+        itemSeederService.seedItems(count)
+        return ResponseEntity.ok(mapOf("message" to "Successfully generated $count items"))
+    }
+
+    @Operation(summary = "Generate auctions for existing items")
+    @PostMapping("/seed-auctions")
+    fun seedAuctions(@RequestParam(defaultValue = "50") count: Int): ResponseEntity<Any> {
+        try {
+            auctionSeederService.seedAuctions(count)
+            return ResponseEntity.ok(mapOf("message" to "Successfully generated auctions for $count items"))
+        } catch (e: Exception) {
+            return ResponseEntity.badRequest().body(mapOf("error" to e.message))
+        }
+    }
+}
