@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Auction WebSocket Tester</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .log { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; height: 300px; overflow-y: scroll; }
+        .message { padding: 5px; border-bottom: 1px solid #eee; }
+        .highlight { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+<h2>🏎️ Auction Real-Time Monitor</h2>
+
+<div>
+    <label>Auction UUID:</label>
+    <input type="text" id="auctionId" placeholder="e.g. 550e8400-e29b-..." style="width: 300px;">
+    <button onclick="connect()">Connect & Subscribe</button>
+</div>
+
+<h3>Live Updates:</h3>
+<div id="log" class="log"></div>
+
+<script>
+    var stompClient = null;
+
+    function log(message) {
+        var logDiv = document.getElementById('log');
+        logDiv.innerHTML = `<div class="message">${message}</div>` + logDiv.innerHTML;
+    }
+
+    function connect() {
+        var auctionId = document.getElementById('auctionId').value;
+        if (!auctionId) { alert("Please enter an Auction ID"); return; }
+
+        // 1. Connect to the Endpoint defined in WebSocketConfig
+        var socket = new SockJS('http://localhost:8080/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            log("✅ Connected: " + frame);
+
+            // 2. Subscribe to the Topic defined in AuctionService
+            var topic = '/topic/auctions/' + auctionId;
+            log("📡 Subscribing to: " + topic);
+
+            stompClient.subscribe(topic, function (notification) {
+                var body = JSON.parse(notification.body);
+                log(`<span class="highlight">⚡ NEW BID RECEIVED!</span> <br/>
+                         Bidder: ${body.bidderUsername} <br/>
+                         Price: $${body.newPrice}`);
+            });
+        }, function(error) {
+            log("❌ Connection Error: " + error);
+        });
+    }
+</script>
+</body>
+</html>
