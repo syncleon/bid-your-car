@@ -1,6 +1,7 @@
 services:
+  # --- Database Service ---
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: car-auction-db
     restart: always
     environment:
@@ -11,33 +12,62 @@ services:
       - "5432:5432"
     volumes:
       - car-auction-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: car-auction-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # --- Backend Service ---
   backend:
     build:
       context: .
+      dockerfile: Dockerfile
     container_name: car-auction-backend
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: always
     environment:
-      # Database Config
+      # 1. Database Configuration (Internal Docker Network)
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/carauction
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
 
-      # Cloudflare R2 Config
-      # Слева - имя переменной внутри Spring (см. application.yml)
-      # Справа - имя переменной в вашем .env файле
+      # 2. Mail Configuration (Mapped from .env)
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      # 3. Security Configuration (Mapped from .env)
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+      # 4. Storage Configuration (Mapped from .env)
       R2_BUCKET_NAME: ${R2_BUCKET_NAME}
       R2_ACCESS_KEY: ${R2_ACCESS_KEY}
       R2_SECRET_KEY: ${R2_SECRET_KEY}
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
-
-      # ImageKit Config
       IMAGEKIT_URL_ENDPOINT: ${IMAGEKIT_URL_ENDPOINT}
-    ports:
-      - "8080:8080"
-    restart: always
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_CACHE_TYPE: redis
 
 volumes:
   car-auction-data:

@@ -1,26 +1,33 @@
-# Step 1: Build stage
-# Gradle 8.5+ is recommended for full Java 21 support
+# Stage 1: Build
+# We use the standard JDK 21 image which supports all platforms (Mac M1/M2, Linux, Windows)
 FROM gradle:8.5-jdk21 AS builder
 WORKDIR /bidapi
 
-# Copy configuration files first to leverage Docker layer caching
+# 1. Copy configuration first to cache dependencies
 COPY build.gradle.kts settings.gradle.kts gradlew ./
 COPY gradle ./gradle
+
+# 2. Grant permissions
 RUN chmod +x gradlew
 
-# Warm Gradle cache (downloads dependencies)
-RUN ./gradlew build -x test --no-daemon || true
+# 3. Download dependencies (cached layer)
+RUN ./gradlew dependencies --no-daemon || true
 
-# Copy source and build the application
-COPY . .
-RUN ./gradlew clean build -x test --no-daemon
+# 4. Copy source and build
+COPY src ./src
+# build -x test skips tests to save time during Docker build
+RUN ./gradlew bootJar -x test --no-daemon
 
-# Step 2: Runtime stage
-FROM eclipse-temurin:21-jre-jammy
+# Stage 2: Runtime
+# We KEEP Alpine here to ensure the final production image is small (~100MB)
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /bidapi
 
-# Copy the built jar from the builder stage
-# Using a specific name check if you have multiple jars (like plain-jars)
+# Add non-root user for security
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
+# Copy the JAR from the builder stage
 COPY --from=builder /bidapi/build/libs/*-SNAPSHOT.jar app.jar
 
 EXPOSE 8080

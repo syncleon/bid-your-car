@@ -1,4 +1,14 @@
 spring:
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -15,8 +25,8 @@ spring:
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 2525
-    username: f251d039e25de7 # Можно тоже вынести в env, если нужно
-    password: c01f28a5e4b9d7
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -35,15 +45,17 @@ server:
 
 jwt:
   secret:
-    key: "thisissecretkeyformypersonalspringbootapp"
+    key: ${JWT_SECRET_KEY}
   expiration: 86400000
 
 cors:
   allowed-origins: "
+  *,
   http://localhost:5173,
   http://localhost:8080,
   https://bidfe-app.web.app,
   https://bidfe-app.firebaseapp.com
+  
   "
 
 cloudflare:

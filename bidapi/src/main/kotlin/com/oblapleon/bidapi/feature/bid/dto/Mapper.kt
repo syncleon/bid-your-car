@@ -1,7 +1,6 @@
 package com.oblapleon.bidapi.feature.bid.dto
 
 import com.oblapleon.bidapi.feature.bid.entity.Bid
-import java.time.ZoneId
 
 fun Bid.toDto(): BidDto {
     return BidDto(
@@ -10,6 +9,8 @@ fun Bid.toDto(): BidDto {
         bidderId = this.bidder.id!!,
         bidderName = this.bidder.username,
         amount = this.amount,
-        bidTime = this.bidTime.atZone(ZoneId.systemDefault()).toInstant()
+        // Entity returns Instant (UTC), DTO passes it through.
+        // Frontend converts to local time.
+        bidTime = this.bidTime
     )
 }

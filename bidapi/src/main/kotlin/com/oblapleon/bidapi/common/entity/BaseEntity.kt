@@ -1,48 +1,49 @@
 package com.oblapleon.bidapi.common.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.MappedSuperclass
+import org.hibernate.Hibernate
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.io.Serializable
 import java.time.Instant
 
-/**
- * Abstract base class for persistent entities providing automated auditing
- * and standardized identity equality.
- *
- * @param ID The type of the entity's identifier (e.g., Long, UUID).
- */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
 abstract class BaseEntity<ID : Serializable> {
 
-    /**
-     * Abstract ID allows concrete classes to define specific JPA annotations
-     * (e.g., @Id, @GeneratedValue) and types while allowing BaseEntity
-     * to perform equality checks.
-     */
     abstract var id: ID?
 
     @CreatedDate
+    @Column(name = "created_date", nullable = false, updatable = false)
     var createdDate: Instant? = null
 
     @LastModifiedDate
+    @Column(name = "modified_date")
     var modifiedDate: Instant? = null
 
+    /**
+     * Standard Hibernate-safe equality check.
+     * Uses Hibernate.getClass() to handle proxies correctly.
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-
-        // Ensure strictly same class (or handle Hibernate proxies if strictly needed)
-        // This replaces the repeated 'if (other !is Entity)' checks
-        if (other == null || this::class != other::class) return false
+        if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
 
         other as BaseEntity<*>
 
-        // Entities are only equal if IDs are non-null and match
+        // For transient entities (null ID), we fall back to object identity (false)
+        // unless it is literally the same memory reference (handled in line 1).
         return id != null && id == other.id
     }
 
-    override fun hashCode(): Int = id?.hashCode() ?: 0
+    /**
+     * HashCode must be constant across all state transitions.
+     * Returning a constant is the only safe way to ensure the hash doesn't
+     * change when the ID is generated after persist(), which would loose the object
+     * inside a HashSet.
+     */
+    override fun hashCode(): Int = javaClass.hashCode()
 }

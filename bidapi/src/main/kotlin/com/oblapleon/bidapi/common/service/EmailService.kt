@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 @Service
 class EmailService(
     private val mailSender: JavaMailSender,
-    @Value($$"${app.base-url:http://localhost:8080}") private val baseUrl: String
+    @Value("\${app.base-url:http://localhost:8080}") private val baseUrl: String
         ) {
             /**
              * Constructs and sends a plain-text email containing an account

@@ -11,8 +11,12 @@ class ItemImage(
     @GeneratedValue(strategy = GenerationType.UUID)
     override var id: UUID? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1024)
     var url: String,
+
+    // Production necessity: Order matters (e.g., Front, Side, Interior)
+    @Column(name = "sort_order", nullable = false)
+    var sortOrder: Int = 0,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)

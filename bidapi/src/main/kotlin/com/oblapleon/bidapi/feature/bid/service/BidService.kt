@@ -1,44 +1,44 @@
 package com.oblapleon.bidapi.feature.bid.service
 
-import com.oblapleon.bidapi.common.exceptions.NotFoundException
+import com.oblapleon.bidapi.common.exception.NotFoundException
 import com.oblapleon.bidapi.feature.bid.entity.Bid
-import com.oblapleon.bidapi.feature.bid.repo.BidRepo
+import com.oblapleon.bidapi.feature.bid.repository.BidRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
+import java.util.UUID
 
 @Service
-@Transactional(readOnly = true) // Mostly read operations here
+@Transactional(readOnly = true)
 class BidService(
-    private val bidRepo: BidRepo
+    private val bidRepository: BidRepository
 ) {
 
     fun findById(id: UUID): Bid {
-        return bidRepo.findById(id).orElseThrow {
+        return bidRepository.findById(id).orElseThrow {
             NotFoundException("Bid with id $id not found.")
         }
     }
 
     /**
-     * Gets the full bidding history for an auction, most recent first.
+     * Returns the bid history for a specific auction (Highest value first).
      */
-    fun getBidHistoryForAuction(auctionId: UUID, pageable: Pageable): Page<Bid> {
-        return bidRepo.findAllByAuctionId(auctionId, pageable)
+    fun findHistoryByAuctionId(auctionId: UUID, pageable: Pageable): Page<Bid> {
+        return bidRepository.findAllByAuctionIdOrderByAmountDesc(auctionId, pageable)
     }
 
     /**
-     * Finds all bids placed by a specific user across all auctions.
+     * Returns the bid history for a specific user (Most recent first).
      */
-    fun getBidsByUser(userId: Long, pageable: Pageable): Page<Bid> {
-        return bidRepo.findAllByBidderId(userId, pageable)
+    fun findHistoryByUserId(userId: Long, pageable: Pageable): Page<Bid> {
+        return bidRepository.findAllByBidderIdOrderByBidTimeDesc(userId, pageable)
     }
 
     /**
-     * Counts how many unique auctions a user has participated in.
+     * Returns statistics for a user profile.
      */
-    fun countDistinctAuctionsParticipated(userId: Long): Long {
-        return bidRepo.countDistinctAuctionIdByBidderId(userId)
+    fun countAuctionsParticipated(userId: Long): Long {
+        return bidRepository.countDistinctAuctionsByBidderId(userId)
     }
 }

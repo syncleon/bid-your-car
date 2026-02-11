@@ -1,6 +1,6 @@
 package com.oblapleon.bidapi.common.helpers
 
-import com.oblapleon.bidapi.common.exceptions.UnauthorizedException
+import com.oblapleon.bidapi.common.exception.UnauthorizedException
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.entity.User
 import org.springframework.security.access.AccessDeniedException

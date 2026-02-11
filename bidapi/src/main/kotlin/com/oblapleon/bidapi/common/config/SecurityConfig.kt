@@ -13,12 +13,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
@@ -26,50 +24,62 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
-    private val jwtDecoder: JwtDecoder
+    private val jwtDecoder: JwtDecoder,
+    @Value("\${cors.allowed-origins:http://localhost:5173}") private val allowedOrigins: String
 ) {
 
-    @Value("\${cors.allowed-origins:http://localhost:5173,http://localhost:8080}")
-    lateinit var allowedOriginsString: String
+    companion object {
+        private val AUTH_WHITELIST = arrayOf(
+            "/api/v1/auth/**"
+        )
+        private val SWAGGER_WHITELIST = arrayOf(
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+        )
+        private val PUBLIC_READ_WHITELIST = arrayOf(
+            "/api/v1/items/**",
+            "/api/v1/auctions/**",
+            "/api/v1/bids/auction/**"
+        )
+    }
+
 
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http
+        return http
             .csrf { it.disable() }
-            .cors(Customizer.withDefaults()) // Использует бин corsConfigurationSource
+            .cors(Customizer.withDefaults())
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers(HttpMethod.POST, "/api/v1/login", "/api/v1/register", "/api/v1/restore").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/verify").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/items", "/api/v1/items/{id}").permitAll()
-                    .requestMatchers(HttpMethod.GET,
-                        "/api/v1/auctions",
-                        "/api/v1/auctions/{id}",
-                        "/api/v1/auctions/ending-soon",
-                        "/api/v1/bids/auction/{auctionId}"
-                    ).permitAll()
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                    .requestMatchers("/api/v1/debug/**").permitAll()
-                    .requestMatchers("/api/v1/**").authenticated()
+                    // ✅ NEW: Allow WebSocket Handshake
+                    .requestMatchers("/ws/**").permitAll()
 
-                    .anyRequest().permitAll()
+                    // Existing rules
+                    .requestMatchers(*AUTH_WHITELIST).permitAll()
+                    .requestMatchers(*SWAGGER_WHITELIST).permitAll()
+                    .requestMatchers(HttpMethod.GET, *PUBLIC_READ_WHITELIST).permitAll()
+                    .anyRequest().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { jwt ->
                     jwt.decoder(jwtDecoder)
-                    jwt.jwtAuthenticationConverter(UserAuthenticationConverter(jwtTokenProvider))
+                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 }
             }
-            .headers { headers ->
-                headers.frameOptions { it.disable() }
-                headers.xssProtection { it.disable() }
-            }
+            .build()
+    }
 
-        return http.build()
+    private fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> {
+        return Converter { jwt ->
+            val authorities = jwtTokenProvider.extractAuthorities(jwt)
+            val username = jwtTokenProvider.extractUsername(jwt)
+            UsernamePasswordAuthenticationToken(username, jwt, authorities)
+        }
     }
 
     @Bean
@@ -77,39 +87,21 @@ class SecurityConfig(
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
-        val configuration = CorsConfiguration()
+        val configuration = CorsConfiguration().apply {
+            // ❌ DELETE OR COMMENT OUT THIS LINE:
+            // allowedOrigins = this@SecurityConfig.allowedOrigins.split(",").map { it.trim() }
 
-        // Парсим строку из конфига в список
-        val originsList = allowedOriginsString.split(",").map { it.trim() }
+            // ✅ ADD THIS LINE INSTEAD:
+            // "allowedOriginPatterns" supports wildcards (*) even with credentials enabled
+            allowedOriginPatterns = this@SecurityConfig.allowedOrigins.split(",").map { it.trim() }
 
-        // Устанавливаем конкретные источники вместо "*" для безопасности Credentials
-        configuration.allowedOrigins = originsList
-
-        configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-        configuration.allowedHeaders = listOf("*")
-        configuration.allowCredentials = true
-
-        val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/**", configuration)
-        return source
-    }
-
-    /**
-     * Converts JWT to Authentication Token.
-     */
-    class UserAuthenticationConverter(
-        private val jwtTokenProvider: JwtTokenProvider
-    ) : Converter<Jwt, AbstractAuthenticationToken> {
-
-        override fun convert(jwt: Jwt): AbstractAuthenticationToken {
-            val user = jwtTokenProvider.getUserFromClaims(jwt.claims)
-                ?: throw InvalidBearerTokenException("User not found in token claims")
-
-            val authorities = user.roles.map { role ->
-                SimpleGrantedAuthority("${role.name}")
-            }
-
-            return UsernamePasswordAuthenticationToken(user, jwt, authorities)
+            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+            allowedHeaders = listOf("*")
+            allowCredentials = true
+            maxAge = 3600L
+        }
+        return UrlBasedCorsConfigurationSource().apply {
+            registerCorsConfiguration("/**", configuration)
         }
     }
 }

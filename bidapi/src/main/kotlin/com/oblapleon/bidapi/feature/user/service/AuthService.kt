@@ -1,101 +1,126 @@
 package com.oblapleon.bidapi.feature.user.service
 
-import com.oblapleon.bidapi.common.exceptions.*
-import com.oblapleon.bidapi.common.security.Hashing
+import com.oblapleon.bidapi.common.exception.AlreadyExistsException
+import com.oblapleon.bidapi.common.exception.BadRequestException
+import com.oblapleon.bidapi.common.exception.UnauthorizedException
 import com.oblapleon.bidapi.common.security.JwtTokenProvider
 import com.oblapleon.bidapi.common.service.EmailService
-import com.oblapleon.bidapi.feature.user.dto.*
-import com.oblapleon.bidapi.feature.user.entity.*
-import com.oblapleon.bidapi.feature.user.repo.*
+import com.oblapleon.bidapi.feature.user.dto.AuthRespDto
+import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
+import com.oblapleon.bidapi.feature.user.dto.RegisterReqDto
+import com.oblapleon.bidapi.feature.user.entity.ERole
+import com.oblapleon.bidapi.feature.user.entity.User
+import com.oblapleon.bidapi.feature.user.entity.VerificationToken
+import com.oblapleon.bidapi.feature.user.repository.RoleRepository
+import com.oblapleon.bidapi.feature.user.repository.UserRepository
+import com.oblapleon.bidapi.feature.user.repository.VerificationTokenRepository
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
-/**
- * Service responsible for handling user authentication flows including registration,
- * login, email verification, and account restoration.
- */
 @Service
 class AuthService(
-    private val userService: UserService,
-    private val roleRepo: RoleRepo,
-    private val userRepo: UserRepo,
-    private val verificationTokenRepo: VerificationTokenRepo,
+    private val userRepository: UserRepository,
+    private val roleRepository: RoleRepository,
+    private val verificationTokenRepository: VerificationTokenRepository,
     private val emailService: EmailService,
-    private val hashing: Hashing,
-    private val jwtTokenProvider: JwtTokenProvider
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val userService: UserService // Injected to delegate restore logic
 ) {
 
     @Transactional
     fun register(payload: RegisterReqDto): String {
-        if (userService.existsByName(payload.username)) throw AlreadyExistsException("Username taken.")
-        if (userService.existsByEmail(payload.email)) throw AlreadyExistsException("Email in use.")
+        // FIX: Handle potential nullable fields from DTO safely
+        val safeUsername = payload.username ?: throw BadRequestException("Username is required")
+        val safeEmail = payload.email ?: throw BadRequestException("Email is required")
+        val safePassword = payload.password ?: throw BadRequestException("Password is required")
 
-        val userRole = roleRepo.findByName(ERole.USER)
+        // 1. Validation
+        if (userRepository.existsByUsername(safeUsername)) {
+            throw AlreadyExistsException("Username '$safeUsername' is already taken.")
+        }
+        if (userRepository.existsByEmail(safeEmail)) {
+            throw AlreadyExistsException("Email '$safeEmail' is already in use.")
+        }
 
+        // 2. Fetch Role
+        val userRole = roleRepository.findByName(ERole.USER)
+            ?: throw IllegalStateException("System Error: Default role USER not initialized in DB.")
+
+        // 3. Create User
         val user = User(
-            username = payload.username,
-            password = hashing.hashBcrypt(payload.password),
-            email = payload.email,
+            username = safeUsername,
+            password = passwordEncoder.encode(safePassword), // Now guaranteed non-null
+            email = safeEmail,
             roles = mutableSetOf(userRole),
-            enabled = true
+            enabled = false
         )
-        val savedUser = userRepo.save(user)
 
+        val savedUser = userRepository.save(user)
+
+        // 4. Generate & Send Token
         val token = VerificationToken(user = savedUser)
-        verificationTokenRepo.save(token)
+        verificationTokenRepository.save(token)
         emailService.sendVerificationEmail(savedUser.email, token.token)
 
-        return "Registration successful. Please verify email."
+        return "Registration successful. Please check your email to verify your account."
     }
 
     fun login(payload: LoginReqDto): AuthRespDto {
-        val user = try {
-            userService.findByName(payload.username)
-        } catch (e: NotFoundException) {
-            throw UnauthorizedException("Invalid credentials. " +
-                    "Check your username and password.")
+        val safeUsername = payload.username ?: throw BadRequestException("Username required")
+        val safePassword = payload.password ?: throw BadRequestException("Password required")
+
+        val user = userRepository.findByUsername(safeUsername)
+
+        // 1. Timing Attack Protection
+        if (user == null) {
+            passwordEncoder.matches(safePassword, "dummy_hash")
+            throw UnauthorizedException("Invalid credentials.")
         }
 
-        if (!hashing.checkBcrypt(payload.password, user.password!!)) {
-            throw UnauthorizedException("Invalid credentials. " +
-                    "Check your username and password.")
+        // 2. Password Check (user.password is non-null String in Entity)
+        if (!passwordEncoder.matches(safePassword, user.password)) {
+            throw UnauthorizedException("Invalid credentials.")
         }
 
+        // 3. Status Checks
         if (user.deletedAt != null) {
-            throw UnauthorizedException("Account deleted. " +
-                    "You can restore it clicking on Restore Account button.")
+            throw UnauthorizedException("Account deleted. You can restore it by clicking 'Restore Account'.")
         }
 
         if (!user.enabled) {
-            throw UnauthorizedException("Account not verified." +
-                    "You can verify it via email.")
+            throw UnauthorizedException("Account not verified. Please verify via the email sent to you.")
         }
 
+        // 4. Issue Token
         return AuthRespDto(token = jwtTokenProvider.createToken(user))
     }
 
     @Transactional
-    fun verifyAccount(token: String): String {
-        val verificationToken = verificationTokenRepo.findByToken(token)
-            ?: throw BadRequestException("Invalid or expired token")
+    fun verifyAccount(tokenString: String): String {
+        val verificationToken = verificationTokenRepository.findByToken(tokenString)
+            ?: throw BadRequestException("Invalid or expired verification token.")
 
-        if (verificationToken.expiryDate.isBefore(LocalDateTime.now())) {
-            throw BadRequestException("Token has expired.")
+        if (verificationToken.isExpired()) {
+            throw BadRequestException("Token has expired. Please request a new one.")
         }
 
         val user = verificationToken.user
+
         if (!user.enabled) {
             user.enabled = true
-            userRepo.save(user)
+            userRepository.save(user)
         }
 
-        // Clean up token after use
-        verificationTokenRepo.delete(verificationToken)
-        return "Account verified successfully! Now you can login."
+        verificationTokenRepository.delete(verificationToken)
+        return "Account verified successfully! You can now login."
     }
 
-    fun restoreAccount(payload: LoginReqDto) {
+    @Transactional
+    fun restoreAccount(payload: LoginReqDto): String {
+        // Delegate to UserService to handle the logic of finding and restoring
         userService.restoreUser(payload)
+        return "Account restored successfully."
     }
 }

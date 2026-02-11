@@ -1,11 +1,13 @@
 package com.oblapleon.bidapi.feature.item.dto
 
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
+import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.user.dto.UserDto
 import java.util.UUID
 
 data class ItemDto(
     val id: UUID,
+    val status: ItemStatus, // <--- Replaces isActive, isSold, etc.
     val year: Int,
     val make: String,
     val model: String,
@@ -14,6 +16,9 @@ data class ItemDto(
     val mileage: Int,
     val description: String?,
     val seller: UserDto,
+    val thumbnailUrl: String?, // <--- Added for performance (List views)
+
+    // Grouped specs for cleaner frontend handling
     val engine: String?,
     val drivetrain: String?,
     val transmission: String?,
@@ -21,23 +26,12 @@ data class ItemDto(
     val exteriorColor: String?,
     val interiorColor: String?,
     val sellerType: String?,
-    // Default to empty list to avoid null safety issues on frontend
-    val images: List<ItemImageDto> = emptyList(),
-    val activeAuctionId: UUID?,
-    val auctionStatus: AuctionStatus?,
-    val isActive: Boolean,
-    val isSold: Boolean,
-    val isAvailable: Boolean
+
+    val images: List<ItemImageDto> = emptyList()
 )
 
 data class ItemImageDto(
     val id: UUID,
-
-    // Internal S3/Storage URL
-    val originalUrl: String,
-
-    // Derived/Optimized URLs (e.g. for ImageKit/Cloudinary)
-    val thumbnailUrl: String,
-    val previewUrl: String,
-    val fullHdUrl: String
+    val url: String,
+    val sortOrder: Int
 )

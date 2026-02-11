@@ -9,13 +9,20 @@ import java.util.UUID
 data class AuctionDto(
     val id: UUID,
     val item: ItemDto,
+    val status: AuctionStatus,
     val startTime: Instant,
     val endTime: Instant,
-    val status: AuctionStatus,
+
+    // Financials
     val startPrice: BigDecimal,
+    val currentPrice: BigDecimal, // Highest bid or start price
     val minBidIncrement: BigDecimal,
-    val currentHighestBid: BigDecimal?,
-    val bidCount: Int,
+    val reservePrice: BigDecimal?,
     val isReserveMet: Boolean,
+
+    // Stats
+    val bidCount: Int,
+
+    // Relationships
     val winnerId: Long?
 )

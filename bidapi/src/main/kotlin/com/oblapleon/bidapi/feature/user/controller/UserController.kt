@@ -1,130 +1,148 @@
 package com.oblapleon.bidapi.feature.user.controller
 
-import com.oblapleon.bidapi.common.controller.BaseController
-import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
+import com.oblapleon.bidapi.common.exception.BadRequestException
+import com.oblapleon.bidapi.feature.item.dto.ItemDto
 import com.oblapleon.bidapi.feature.item.dto.toDto
 import com.oblapleon.bidapi.feature.item.service.ItemService
 import com.oblapleon.bidapi.feature.user.dto.*
 import com.oblapleon.bidapi.feature.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1/users")
-@Tag(name = "Users", description = "User management APIs")
+@Tag(name = "Users", description = "User profile and administration")
+@SecurityRequirement(name = "bearerAuth") // Swagger: Require JWT for all endpoints here
 class UserController(
     private val userService: UserService,
-    private val authHelper: AuthorizationHelper,
     private val itemService: ItemService
-) : BaseController() {
+) {
 
-    @Operation(summary = "Get current user profile")
+    // ========================================================================
+    //  Current User Profile (/me)
+    // ========================================================================
+
+    @Operation(summary = "Get My Profile", description = "Returns the profile of the currently logged-in user.")
     @GetMapping("/me")
-    fun getCurrentUser(): ResponseEntity<Any> {
-        return handleRequest {
-            authHelper.getCurrentUser().toDto()
-        }
+    fun getCurrentUser(@AuthenticationPrincipal username: String): ResponseEntity<UserDto> {
+        // We fetch fresh data from DB to ensure roles/email are up to date
+        val user = userService.findByUsername(username)
+        return ResponseEntity.ok(user.toDto())
     }
 
-    @Operation(summary = "Get items listed by the current user")
+    @Operation(summary = "Update My Profile", description = "Update email or username.")
+    @PatchMapping("/me")
+    fun updateCurrentUser(
+        @AuthenticationPrincipal username: String,
+        @Valid @RequestBody request: UpdateProfileReqDto
+    ): ResponseEntity<UserDto> {
+        val user = userService.findByUsername(username)
+
+        // Convert Profile DTO to Update DTO for the service
+        val serviceRequest = UpdateUserReqDto(
+            username = request.username,
+            email = request.email
+        )
+
+        val updatedUser = userService.updateUser(user.id!!, serviceRequest, isSelfUpdate = true)
+        return ResponseEntity.ok(updatedUser.toDto())
+    }
+
+    @Operation(summary = "Change Password", description = "Update login password.")
+    @PutMapping("/me/password")
+    fun changePassword(
+        @AuthenticationPrincipal username: String,
+        @Valid @RequestBody request: UpdatePasswordReqDto
+    ): ResponseEntity<Map<String, String>> {
+        val user = userService.findByUsername(username)
+        userService.changePassword(user.id!!, request)
+        return ResponseEntity.ok(mapOf("message" to "Password updated successfully"))
+    }
+
+    @Operation(summary = "My Items", description = "Get items listed by the current user.")
     @GetMapping("/me/items")
-    fun getCurrentUserItems(@PageableDefault(size = 20) pageable: Pageable): ResponseEntity<Any> {
-        return handleRequest {
-            val currentUser = authHelper.getCurrentUser()
-            itemService.findBySeller(currentUser.id!!, pageable).map { it.toDto() }
-        }
+    fun getCurrentUserItems(
+        @AuthenticationPrincipal username: String,
+        @PageableDefault(size = 20) pageable: Pageable
+    ): ResponseEntity<Page<ItemDto>> {
+        val user = userService.findByUsername(username)
+        // Assuming ItemService has findAllBySellerId
+        val items = itemService.findAllBySellerId(user.id!!, pageable)
+        return ResponseEntity.ok(items.map { it.toDto() })
     }
 
-    @Operation(summary = "Update current user profile")
-    @PutMapping("/me/profile")
-    fun updateCurrentUserProfile(@Valid @RequestBody request: UpdateProfileReqDto): ResponseEntity<Any> {
-        return handleRequest {
-            val currentUser = authHelper.getCurrentUser()
-            val updateReq = UpdateUserReqDto(username = request.username, email = request.email)
-            userService.updateUser(currentUser.id!!, updateReq, isSelfUpdate = true).toDto()
-        }
+    @Operation(summary = "Delete My Account", description = "Soft-delete account. Requires password confirmation.")
+    @DeleteMapping("/me")
+    fun deleteMyAccount(
+        @AuthenticationPrincipal username: String,
+        @Valid @RequestBody request: DeleteAccountReqDto
+    ): ResponseEntity<Map<String, String>> {
+        val user = userService.findByUsername(username)
+        userService.deleteMyAccount(user.id!!, request.password)
+        return ResponseEntity.ok(mapOf("message" to "Account deleted successfully"))
     }
 
-    @Operation(summary = "Change password")
-    @PutMapping("/me/change-password")
-    fun changePassword(@Valid @RequestBody request: UpdatePasswordReqDto): ResponseEntity<Any> {
-        return handleRequest {
-            val currentUser = authHelper.getCurrentUser()
-            userService.changePassword(
-                id = currentUser.id!!,
-                oldPass = request.oldPassword,
-                newPass = request.newPassword
-            )
-            mapOf("message" to "Password updated successfully")
-        }
-    }
+    // ========================================================================
+    //  Admin Operations
+    // ========================================================================
 
-    @Operation(summary = "Get all users (Admin)")
+    @Operation(summary = "List All Users", description = "Admin only. Returns paginated list of users.")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    fun getAllUsers(@PageableDefault(size = 20) pageable: Pageable): ResponseEntity<Any> {
-        return handleRequest {
-            userService.findAll(pageable).map { it.toDto() }
-        }
+    fun getAllUsers(@PageableDefault(size = 20) pageable: Pageable): ResponseEntity<Page<UserDto>> {
+        val users = userService.findAll(pageable)
+        return ResponseEntity.ok(users.map { it.toDto() })
     }
 
-    @Operation(summary = "Get user by ID")
+    @Operation(summary = "Get User by ID", description = "Admin only.")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    fun getUserById(@PathVariable id: Long): ResponseEntity<Any> {
-        return handleRequest {
-            authHelper.checkOwnerOrAdmin(id)
-            userService.findById(id).toDto()
-        }
+    fun getUserById(@PathVariable id: Long): ResponseEntity<UserDto> {
+        val user = userService.findById(id)
+        return ResponseEntity.ok(user.toDto())
     }
 
-    @Operation(summary = "Update user (Admin)")
-    @PutMapping("/{id}")
+    @Operation(summary = "Update User (Admin)", description = "Admin force update.")
     @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
     fun updateUser(
         @PathVariable id: Long,
         @Valid @RequestBody request: UpdateUserReqDto
-    ): ResponseEntity<Any> {
-        return handleRequest {
-            userService.updateUser(id, request, isSelfUpdate = false).toDto()
-        }
+    ): ResponseEntity<UserDto> {
+        val updatedUser = userService.updateUser(id, request, isSelfUpdate = false)
+        return ResponseEntity.ok(updatedUser.toDto())
     }
 
-    @Operation(summary = "Delete user (Soft Delete)")
-    @DeleteMapping("/{id}")
-    fun deleteUser(
-        @PathVariable id: Long,
-        @RequestBody(required = false) payload: DeleteAccountReqDto?
-    ): ResponseEntity<Any> {
-        return handleRequest {
-            val currentUser = authHelper.checkOwnerOrAdmin(id)
-            userService.deleteWithVerification(
-                initiator = currentUser,
-                targetUserId = id,
-                password = payload?.password
-            )
-            mapOf("message" to "User account soft-deleted successfully")
-        }
-    }
-
-    @GetMapping("/search")
+    @Operation(summary = "Ban/Deactivate User", description = "Admin soft-delete without password.")
     @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    fun adminDeleteUser(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
+        userService.adminDeactivateUser(id)
+        return ResponseEntity.ok(mapOf("message" to "User deactivated successfully"))
+    }
+
+    @Operation(summary = "Search Users", description = "Admin search by username or email.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/search")
     fun searchUsers(
-        @RequestParam(required = false) username: String?,
-        @RequestParam(required = false) email: String?,
+        @Parameter(description = "Search query") @RequestParam query: String,
         @PageableDefault(size = 20) pageable: Pageable
-    ): ResponseEntity<Any> {
-        return handleRequest {
-            when {
-                !username.isNullOrBlank() -> userService.searchByUsername(username, pageable).map { it.toDto() }
-                !email.isNullOrBlank() -> userService.searchByEmail(email, pageable).map { it.toDto() }
-                else -> emptyList<UserDto>()
-            }
-        }
+    ): ResponseEntity<Page<UserDto>> {
+        if (query.isBlank()) throw BadRequestException("Query cannot be empty")
+
+        // Simple search strategy: Try username first, then email
+        // Or strictly check parameter if you prefer specific params like ?username=...
+        val results = userService.searchByUsername(query, pageable)
+        return ResponseEntity.ok(results.map { it.toDto() })
     }
 }

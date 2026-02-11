@@ -1,60 +1,99 @@
 package com.oblapleon.bidapi.feature.item.service
 
-import com.oblapleon.bidapi.common.exceptions.AlreadyExistsException
-import com.oblapleon.bidapi.common.exceptions.NotFoundException
+import com.oblapleon.bidapi.common.exception.AlreadyExistsException
+import com.oblapleon.bidapi.common.exception.ForbiddenException
+import com.oblapleon.bidapi.common.exception.NotFoundException
 import com.oblapleon.bidapi.common.service.StorageService
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.item.entity.ItemImage
-import com.oblapleon.bidapi.feature.item.repo.ItemImageRepo
-import com.oblapleon.bidapi.feature.item.repo.ItemRepo
+import com.oblapleon.bidapi.feature.item.entity.ItemStatus
+import com.oblapleon.bidapi.feature.item.repository.ItemImageRepository
+import com.oblapleon.bidapi.feature.item.repository.ItemRepository
+import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.entity.User
-import org.slf4j.LoggerFactory // Recommended for logging deletion errors
+import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.nio.file.AccessDeniedException
-import java.util.*
+import java.util.UUID
 
+/**
+ * Service responsible for managing the lifecycle of vehicle inventory items.
+ * Handles creation, updates, deletion, image management, and ownership validation.
+ */
 @Service
-@Transactional
 class ItemService(
-    private val itemRepo: ItemRepo,
-    private val itemImageRepo: ItemImageRepo,
+    private val itemRepository: ItemRepository,
+    private val itemImageRepository: ItemImageRepository,
     private val storageService: StorageService
 ) {
 
     private val logger = LoggerFactory.getLogger(ItemService::class.java)
 
-    @Transactional(readOnly = true)
-    fun findAll(pageable: Pageable): Page<Item> = itemRepo.findAllActive(pageable)
-
-    @Transactional(readOnly = true)
-    fun findBySeller(sellerId: Long, pageable: Pageable): Page<Item> =
-        itemRepo.findBySellerId(sellerId, pageable)
-
-    @Transactional(readOnly = true)
+    /**
+     * Retrieves an item by its UUID.
+     *
+     * @param id The unique identifier of the item.
+     * @return The requested Item entity.
+     * @throws NotFoundException if the item does not exist or if the seller's account has been deleted.
+     */
+    @Cacheable(value = ["items"], key = "#id")
     fun findById(id: UUID): Item {
-        val item = itemRepo.findById(id)
+        val item = itemRepository.findById(id)
             .orElseThrow { NotFoundException("Item not found") }
 
-        // Business check: don't show items from deleted users
         if (item.seller.deletedAt != null) {
-            throw NotFoundException("Item listing is no longer available")
+            throw NotFoundException("Item listing is no longer available.")
         }
         return item
     }
 
+    /**
+     * Retrieves a paginated list of items that are approved and available for public viewing.
+     *
+     * @param pageable Pagination information.
+     * @return A page of available items.
+     */
+    fun findAllAvailable(pageable: Pageable): Page<Item> {
+        return itemRepository.findAllByStatus(ItemStatus.AVAILABLE, pageable)
+    }
+
+    /**
+     * Retrieves all items associated with a specific seller, regardless of status.
+     * Used primarily for seller dashboards.
+     *
+     * @param sellerId The ID of the seller.
+     * @param pageable Pagination information.
+     * @return A page of the seller's items.
+     */
+    fun findAllBySellerId(sellerId: Long, pageable: Pageable): Page<Item> {
+        return itemRepository.findAllBySellerId(sellerId, pageable)
+    }
+
+    /**
+     * Creates a new item listing.
+     * The item is initialized with a PENDING_REVIEW status.
+     *
+     * @param currentUser The user attempting to create the listing.
+     * @param request The data transfer object containing item details.
+     * @return The persisted Item entity.
+     * @throws AlreadyExistsException if a vehicle with the same VIN is already listed.
+     */
+    @Transactional
     fun create(currentUser: User, request: ItemCreateRequest): Item {
-        if (itemRepo.existsByVin(request.vin)) {
-            throw AlreadyExistsException("Car with VIN ${request.vin} already exists")
+        if (itemRepository.existsByVin(request.vin)) {
+            throw AlreadyExistsException("Vehicle with VIN ${request.vin} is already listed.")
         }
 
         val newItem = Item(
             seller = currentUser,
+            status = ItemStatus.PENDING_REVIEW,
             year = request.year,
             make = request.make,
             model = request.model,
@@ -71,18 +110,33 @@ class ItemService(
             sellerType = request.sellerType
         )
 
-        return itemRepo.save(newItem)
+        return itemRepository.save(newItem)
     }
 
-    fun update(id: UUID, request: ItemUpdateRequest): Item {
+    /**
+     * Updates an existing item listing.
+     * Handles updating vehicle specifications and synchronizing the image gallery.
+     *
+     * @param id The UUID of the item to update.
+     * @param currentUser The user attempting the update (must be owner or admin).
+     * @param request The update payload containing modified fields and image retention logic.
+     * @return The updated Item entity.
+     * @throws ForbiddenException if the current user is not the owner or an admin.
+     */
+    @CacheEvict(value = ["items"], key = "#id")
+    @Transactional
+    fun update(id: UUID, currentUser: User, request: ItemUpdateRequest): Item {
         val item = findById(id)
+
+        validateOwnership(item, currentUser)
 
         request.year?.let { item.year = it }
         request.make?.let { item.make = it }
         request.model?.let { item.model = it }
-        request.location?.let { item.location = it }
         request.mileage?.let { item.mileage = it }
+        request.location?.let { item.location = it }
         request.description?.let { item.description = it }
+
         request.engine?.let { item.engine = it }
         request.drivetrain?.let { item.drivetrain = it }
         request.transmission?.let { item.transmission = it }
@@ -92,75 +146,93 @@ class ItemService(
         request.sellerType?.let { item.sellerType = it }
 
         request.keepImageIds?.let { keepIds ->
-            // Find images that are NOT in the keep list
             val imagesToRemove = item.images.filter { it.id !in keepIds }
 
-            // Remove them from the list
             item.images.removeAll(imagesToRemove)
 
-            // 1. Delete physical files from R2
-            imagesToRemove.forEach {
-                try {
-                    storageService.deleteFile(it.url)
-                } catch (e: Exception) {
-                    logger.error("Failed to delete file from R2: ${it.url}", e)
-                    // We continue execution so DB record is still cleaned up
-                }
+            imagesToRemove.forEach { image ->
+                safelyDeleteFile(image.url)
             }
 
-            // 2. Delete image records from DB
-            itemImageRepo.deleteAll(imagesToRemove)
+            itemImageRepository.deleteAll(imagesToRemove)
+
+            if (imagesToRemove.any { it.url == item.thumbnailUrl }) {
+                item.thumbnailUrl = item.images.sortedBy { it.sortOrder }.firstOrNull()?.url
+            }
         }
 
-        return itemRepo.save(item)
+        return itemRepository.save(item)
     }
 
     /**
-     * Deletes the item and all associated images from Cloudflare R2.
+     * Permanently deletes an item and its associated images from storage.
+     *
+     * @param id The UUID of the item to delete.
+     * @param currentUser The user attempting the deletion.
+     * @throws ForbiddenException if the current user is not the owner or an admin.
      */
-    fun delete(id: UUID) {
-        // Use raw findById here to ignore "seller.deletedAt" check.
-        // If we want to delete an item, we should be able to do it even if the seller is gone.
-        val item = itemRepo.findById(id)
-            .orElseThrow { NotFoundException("Item not found") }
-
-        // 1. Iterate over all images and delete them from Cloudflare R2
-        item.images.forEach { image ->
-            try {
-                storageService.deleteFile(image.url)
-            } catch (e: Exception) {
-                // Log the error but don't stop the transaction.
-                // Otherwise, a single missing file on S3 could prevent deleting the Item from DB.
-                logger.error("Failed to delete file from Storage: ${image.url}", e)
-            }
-        }
-
-        // 2. Delete the item from DB
-        // JPA Cascade will handle deleting the ItemImage rows automatically if configured (CascadeType.ALL/REMOVE)
-        // If not, you might need: itemImageRepo.deleteAll(item.images) before this.
-        itemRepo.delete(item)
-    }
-
     @Transactional
-    fun uploadImage(itemId: UUID, file: MultipartFile): ItemImage {
-        val item = findById(itemId)
-        val imageUrl = storageService.uploadFile(file)
-        val imageEntity = ItemImage(url = imageUrl, item = item)
-        return itemImageRepo.save(imageEntity)
+    @CacheEvict(value = ["items"], key = "#id")
+    fun delete(id: UUID, currentUser: User) {
+        val item = itemRepository.findById(id).orElseThrow { NotFoundException("Item not found") }
+
+        validateOwnership(item, currentUser)
+
+        item.images.forEach { safelyDeleteFile(it.url) }
+
+        itemRepository.delete(item)
     }
 
-    fun deleteImage(imageId: UUID, userId: Long) {
-        val image = itemImageRepo.findById(imageId)
-            .orElseThrow { NotFoundException("Image not found") }
+    /**
+     * Uploads an image to cloud storage and associates it with the item.
+     * If the item has no thumbnail, the uploaded image becomes the default thumbnail.
+     *
+     * @param itemId The UUID of the item.
+     * @param currentUser The user uploading the image.
+     * @param file The multipart file to upload.
+     * @return The created ItemImage entity.
+     */
+    @Transactional
+    fun uploadImage(itemId: UUID, currentUser: User, file: MultipartFile): ItemImage {
+        val item = findById(itemId)
+        validateOwnership(item, currentUser)
 
-        if (image.item.seller.id != userId) {
-            throw AccessDeniedException("You do not own this image")
+        val imageUrl = storageService.uploadFile(file)
+
+        val image = ItemImage(
+            url = imageUrl,
+            item = item,
+            sortOrder = item.images.size
+        )
+
+        item.addImage(image)
+
+        return itemImageRepository.save(image)
+    }
+
+    /**
+     * Validates that the current user has permission to modify the item.
+     * Only the original seller or an administrator can modify items.
+     */
+    private fun validateOwnership(item: Item, user: User) {
+        val isOwner = item.seller.id == user.id
+        val isAdmin = user.roles.any { it.name == ERole.ADMIN }
+
+        if (!isOwner && !isAdmin) {
+            throw ForbiddenException("You are not authorized to modify this item.")
         }
+    }
 
-        // 1. Delete file from R2
-        storageService.deleteFile(image.url)
-
-        // 2. Delete record from DB
-        itemImageRepo.delete(image)
+    /**
+     * Attempts to delete a file from cloud storage safely.
+     * Errors are logged but swallowed to prevent rolling back database transactions
+     * during cleanup operations.
+     */
+    private fun safelyDeleteFile(url: String) {
+        try {
+            storageService.deleteFile(url)
+        } catch (e: Exception) {
+            logger.error("Failed to delete file from storage: $url", e)
+        }
     }
 }

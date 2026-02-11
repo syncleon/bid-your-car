@@ -8,6 +8,7 @@ import java.util.UUID
 fun Item.toDto(): ItemDto {
     return ItemDto(
         id = this.id!!,
+        status = this.status,
         year = this.year,
         make = this.make,
         model = this.model,
@@ -15,6 +16,7 @@ fun Item.toDto(): ItemDto {
         location = this.location,
         mileage = this.mileage,
         description = this.description,
+        thumbnailUrl = this.thumbnailUrl,
         seller = this.seller.toDto(),
         engine = this.engine,
         drivetrain = this.drivetrain,
@@ -23,26 +25,14 @@ fun Item.toDto(): ItemDto {
         exteriorColor = this.exteriorColor,
         interiorColor = this.interiorColor,
         sellerType = this.sellerType,
-        images = this.images.map { it.toDto() },
-        activeAuctionId = this.activeAuctionId,
-        auctionStatus = this.currentStatus,
-        isActive = this.isActive,
-        isSold = this.isSold,
-        isAvailable = this.isAvailable
+        images = this.images.map { it.toDto() }.sortedBy { it.sortOrder }
     )
 }
 
 fun ItemImage.toDto(): ItemImageDto {
-    val safeUrl = this.url ?: ""
-
-    // We simply use the original URL for all fields.
-    // Since we aren't using ImageKit, we can't auto-resize for thumbnails,
-    // so we return the full URL for everything.
     return ItemImageDto(
-        id = this.id ?: UUID.randomUUID(),
-        originalUrl = safeUrl,
-        thumbnailUrl = safeUrl,
-        previewUrl = safeUrl,
-        fullHdUrl = safeUrl
+        id = this.id!!,
+        url = this.url,
+        sortOrder = this.sortOrder
     )
 }

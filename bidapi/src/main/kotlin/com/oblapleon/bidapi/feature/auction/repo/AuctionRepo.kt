@@ -1,59 +1,88 @@
-package com.oblapleon.bidapi.feature.auction.repo
+package com.oblapleon.bidapi.feature.auction.repository
 
+import com.oblapleon.bidapi.common.repository.BaseRepository
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 @Repository
-interface AuctionRepo : JpaRepository<Auction, UUID> {
+interface AuctionRepository : BaseRepository<Auction, UUID> {
 
-    // 1. Basic Finders
-    fun findAllByStatus(status: AuctionStatus, pageable: Pageable): Page<Auction>
+    // -------------------------------------------------------------------------
+    // Public Widgets
+    // -------------------------------------------------------------------------
 
-    fun findAllByItemSellerId(sellerId: Long, pageable: Pageable): Page<Auction>
-
-    fun findAllByWinnerUserIdAndStatus(userId: Long, status: AuctionStatus, pageable: Pageable): Page<Auction>
-
-    // 2. Optimized "Ending Soon" (Status must be ACTIVE)
-    fun findByStatusAndEndTimeAfter(
+    /**
+     * "Ending Soon": Active auctions ordered by end time (ASC).
+     */
+    fun findByStatusAndEndTimeAfterOrderByEndTimeAsc(
         status: AuctionStatus,
-        now: LocalDateTime,
+        now: Instant,
         pageable: Pageable
     ): Page<Auction>
 
-    // 3. Automated Tasks (Expired check)
-    fun findAllByStatusAndEndTimeBefore(status: AuctionStatus, now: LocalDateTime): List<Auction>
+    /**
+     * "Just Listed": Active auctions ordered by start time (DESC).
+     */
+    fun findByStatusAndStartTimeBeforeOrderByStartTimeDesc(
+        status: AuctionStatus,
+        now: Instant,
+        pageable: Pageable
+    ): Page<Auction>
 
-    // 4. Validation Checks
-    // CHANGE: Added 'PENDING_APPROVAL' to the check.
-    // An item cannot be listed if it is currently Active OR waiting for approval.
+    // -------------------------------------------------------------------------
+    // Dashboards
+    // -------------------------------------------------------------------------
+
+    @Query("SELECT a FROM Auction a WHERE a.item.seller.id = :sellerId")
+    fun findAllBySellerId(@Param("sellerId") sellerId: Long, pageable: Pageable): Page<Auction>
+
+    @Query("SELECT a FROM Auction a WHERE a.winnerUser.id = :userId")
+    fun findAllWonByUserId(@Param("userId") userId: Long, pageable: Pageable): Page<Auction>
+
+    // -------------------------------------------------------------------------
+    // Validation
+    // -------------------------------------------------------------------------
+
+    @Query("SELECT COUNT(a) > 0 FROM Auction a WHERE a.item.id = :itemId AND a.status IN :statuses")
+    fun existsByItemIdAndStatusIn(
+        @Param("itemId") itemId: UUID,
+        @Param("statuses") statuses: Collection<AuctionStatus>
+    ): Boolean
+
     @Query("""
         SELECT COUNT(a) > 0 
         FROM Auction a 
-        WHERE a.item.id = :itemId 
-        AND (a.status = 'ACTIVE' OR a.status = 'PENDING_APPROVAL')
-    """)
-    fun isItemInActiveAuction(@Param("itemId") itemId: UUID): Boolean
-
-    @Query("""
-        SELECT COUNT(a) > 0 
-        FROM Auction a 
-        WHERE a.item.seller.id = :userId 
+        WHERE a.item.seller.id = :sellerId 
         AND a.status = 'ACTIVE' 
-        AND a.bids IS NOT EMPTY
+        AND a.bidCount > 0
     """)
-    fun hasActiveAuctionsWithBids(@Param("userId") userId: Long): Boolean
+    fun existsBySellerIdAndStatusAndBidsIsNotEmpty(@Param("sellerId") sellerId: Long): Boolean
 
-    // 5. Bulk Actions
+    // -------------------------------------------------------------------------
+    // Batch Jobs & Admin
+    // -------------------------------------------------------------------------
+
+    fun findAllByStatusAndEndTimeBefore(
+        status: AuctionStatus,
+        now: Instant,
+        pageable: Pageable
+    ): List<Auction>
+
+    fun findAllByStatusAndStartTimeBefore(
+        status: AuctionStatus,
+        now: Instant,
+        pageable: Pageable
+    ): List<Auction>
+
     @Modifying
-    @Query("UPDATE Auction a SET a.status = 'CANCELLED' WHERE a.item.seller.id = :userId AND a.status = 'ACTIVE'")
-    fun cancelAllActiveAuctionsByUserId(userId: Long)
+    @Query("UPDATE Auction a SET a.status = 'CANCELLED' WHERE a.item.seller.id = :sellerId AND a.status = 'ACTIVE'")
+    fun cancelAllActiveAuctionsBySellerId(@Param("sellerId") sellerId: Long)
 }
