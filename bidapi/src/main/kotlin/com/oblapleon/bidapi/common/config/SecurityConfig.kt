@@ -45,8 +45,11 @@ class SecurityConfig(
             "/api/v1/auctions/**",
             "/api/v1/bids/auction/**"
         )
+        // ✅ NEW: Whitelist Actuator endpoints so Prometheus can scrape metrics
+        private val ACTUATOR_WHITELIST = arrayOf(
+            "/actuator/**"
+        )
     }
-
 
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -56,8 +59,11 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    // ✅ NEW: Allow WebSocket Handshake
+                    // Allow WebSocket Handshake
                     .requestMatchers("/ws/**").permitAll()
+
+                    // ✅ NEW: Apply Actuator Whitelist
+                    .requestMatchers(*ACTUATOR_WHITELIST).permitAll()
 
                     // Existing rules
                     .requestMatchers(*AUTH_WHITELIST).permitAll()
@@ -88,10 +94,6 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
-            // ❌ DELETE OR COMMENT OUT THIS LINE:
-            // allowedOrigins = this@SecurityConfig.allowedOrigins.split(",").map { it.trim() }
-
-            // ✅ ADD THIS LINE INSTEAD:
             // "allowedOriginPatterns" supports wildcards (*) even with credentials enabled
             allowedOriginPatterns = this@SecurityConfig.allowedOrigins.split(",").map { it.trim() }
 

@@ -68,3 +68,16 @@ cloudflare:
 
 imagekit:
   url-endpoint: ${IMAGEKIT_URL_ENDPOINT}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true

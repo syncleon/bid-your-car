@@ -1,5 +1,6 @@
 package com.oblapleon.bidapi.feature.auction.controller
 
+import com.oblapleon.bidapi.common.service.RateLimitingService // ✅ Import Rate Limiter
 import com.oblapleon.bidapi.feature.auction.dto.AuctionDto
 import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
 import com.oblapleon.bidapi.feature.auction.dto.toDto
@@ -29,7 +30,8 @@ import java.util.UUID
 @Tag(name = "Auctions", description = "Bidding and listing management")
 class AuctionController(
     private val auctionService: AuctionService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val rateLimitingService: RateLimitingService
 ) {
 
     // ========================================================================
@@ -75,8 +77,22 @@ class AuctionController(
         @AuthenticationPrincipal username: String,
         @PathVariable id: UUID,
         @Valid @RequestBody request: BidRequest
-    ): ResponseEntity<BidDto> {
+    ): ResponseEntity<Any> { // ✅ Changed to Any to handle both DTO and Error Map
         val user = userService.findByUsername(username)
+
+        // ✅ 1. Check Rate Limit BEFORE touching the database
+        val bucket = rateLimitingService.resolveBucket(user.id!!)
+        val probe = bucket.tryConsumeAndReturnRemaining(1)
+
+        if (!probe.isConsumed) {
+            val waitForSeconds = probe.nanosToWaitForRefill / 1_000_000_000
+            return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("X-Rate-Limit-Retry-After-Seconds", waitForSeconds.toString())
+                .body(mapOf("error" to "You are bidding too fast! Please wait $waitForSeconds seconds."))
+        }
+
+        // ✅ 2. Proceed with actual database transaction
         val bid = auctionService.placeBid(id, user.id!!, request.amount)
         return ResponseEntity.status(HttpStatus.CREATED).body(bid.toDto())
     }

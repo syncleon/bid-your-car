@@ -9,5 +9,6 @@ data class BidNotificationDto(
     val newPrice: BigDecimal,
     val bidCount: Int,
     val bidderUsername: String, // Mask this in production (e.g. "User***")
-    val bidTime: Instant
+    val bidTime: Instant,
+    val newEndTime: Instant
 )

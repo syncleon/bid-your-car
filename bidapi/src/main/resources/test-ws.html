@@ -2,61 +2,230 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Auction WebSocket Tester</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <title>BidAPI - Production Auction Visualizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .log { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; height: 300px; overflow-y: scroll; }
-        .message { padding: 5px; border-bottom: 1px solid #eee; }
-        .highlight { color: green; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; overflow-x: hidden; }
+        .container { max-width: 800px; margin: 0 auto; }
+
+        /* Floating Toasts for 429 Errors */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .rate-limit-toast { background: rgba(255, 85, 85, 0.95); border-left: 6px solid #ff0000; color: #fff; padding: 15px 20px; border-radius: 6px; font-weight: bold; font-family: monospace; box-shadow: 0 4px 15px rgba(255,0,0,0.3); animation: slideIn 0.2s ease-out, fadeOut 0.3s ease-in 2.5s forwards; min-width: 250px;}
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+        .panel { background: #1e1e1e; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 1px solid #333; }
+        input[type="text"] { width: 300px; padding: 10px; border-radius: 4px; border: 1px solid #444; background: #0a0a0a; color: #50fa7b; font-family: monospace; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; background: #bd93f9; color: #000; cursor: pointer; font-weight: bold; font-size: 16px; transition: all 0.2s; }
+        button:hover:not(:disabled) { background: #ff79c6; transform: translateY(-2px); }
+        button:disabled { background: #444; cursor: not-allowed; color: #888; transform: none; }
+
+        .auction-block { text-align: center; background: #1e1e1e; padding: 50px 20px; border-radius: 12px; border: 2px solid #444; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        .global-timer { font-size: 1.8em; color: #f1fa8c; margin-bottom: 10px; font-family: monospace; letter-spacing: 2px; transition: color 0.3s; }
+        .timer-extended { color: #ff79c6 !important; text-shadow: 0 0 15px rgba(255, 121, 198, 0.8); transform: scale(1.1); transition: all 0.2s; }
+
+        .price-wrapper { position: relative; display: inline-block; }
+        .price-display { font-size: 6em; font-weight: 900; color: #50fa7b; margin: 10px 0; transition: transform 0.1s; }
+        .price-pulse { animation: pulseAnim 0.3s ease-out; }
+        @keyframes pulseAnim {
+            0% { transform: scale(1); text-shadow: 0 0 0 rgba(80, 250, 123, 0); }
+            30% { transform: scale(1.15); text-shadow: 0 0 30px rgba(80, 250, 123, 0.8); color: #fff; }
+            100% { transform: scale(1); text-shadow: 0 0 10px rgba(80, 250, 123, 0.3); }
+        }
+
+        .floating-increment { position: absolute; top: 0; right: -50px; font-size: 2em; font-weight: bold; color: #ffb86c; pointer-events: none; opacity: 0; animation: floatUp 1.2s ease-out forwards; }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
+        }
+
+        .winner-display { font-size: 1.5em; color: #8be9fd; margin-bottom: 20px; min-height: 35px; }
+        .bid-badge { background: #ff79c6; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 0.4em; vertical-align: middle; margin-left: 10px; font-weight: bold; }
+
+        .status-sold { color: #ff5555; font-size: 4em; font-weight: 900; text-transform: uppercase; letter-spacing: 5px; animation: stamp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; display: inline-block; }
+        @keyframes stamp { 0% { transform: scale(3) rotate(-15deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+
+        .log { background: #0a0a0a; padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 14px; border: 1px solid #333; box-shadow: inset 0 0 10px #000; }
+        .log-entry { padding: 8px 0; border-bottom: 1px solid #222; }
+        .log-time { color: #6272a4; margin-right: 10px; }
+        .log-highlight { color: #f1fa8c; font-weight: bold; }
+        .log-price { color: #50fa7b; font-weight: bold; }
+        .log-alert { color: #ff5555; font-weight: bold; text-decoration: underline; }
     </style>
 </head>
 <body>
-<h2>🏎️ Auction Real-Time Monitor</h2>
 
-<div>
-    <label>Auction UUID:</label>
-    <input type="text" id="auctionId" placeholder="e.g. 550e8400-e29b-..." style="width: 300px;">
-    <button onclick="connect()">Connect & Subscribe</button>
+<div id="toastContainer" class="toast-container"></div>
+
+<div class="container">
+    <div class="panel">
+        <h2>🚀 Production Auction Visualizer</h2>
+        <input type="text" id="auctionId" placeholder="Paste Auction UUID here...">
+        <button id="connectBtn" onclick="connect()">Connect & Monitor</button>
+        <span id="connStatus" style="margin-left: 15px; color: #ffb86c;">Waiting...</span>
+    </div>
+
+    <div class="auction-block" id="auctionBlock">
+        <div class="global-timer" id="globalTimer">Awaiting Data...</div>
+        <div class="winner-display" id="winnerDisplay">Bot Standby... <span class="bid-badge" id="bidCountBadge">0 Bids</span></div>
+
+        <div class="price-wrapper">
+            <div class="price-display" id="priceDisplay">$0.00</div>
+        </div>
+        <br>
+        <button id="actionBtn" disabled>Awaiting Connection...</button>
+    </div>
+
+    <h3>Live Seeder Log:</h3>
+    <div id="log" class="log"></div>
 </div>
 
-<h3>Live Updates:</h3>
-<div id="log" class="log"></div>
-
 <script>
-    var stompClient = null;
+    let stompClient = null;
+    let globalTimerInterval = null;
+    let targetEndTimeMs = null;
+    let currentPriceValue = 0;
 
-    function log(message) {
-        var logDiv = document.getElementById('log');
-        logDiv.innerHTML = `<div class="message">${message}</div>` + logDiv.innerHTML;
+    const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+    function addLog(message) {
+        const logDiv = document.getElementById('log');
+        const time = new Date().toLocaleTimeString();
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+        logDiv.prepend(entry);
+
+        if (logDiv.children.length > 100) {
+            logDiv.removeChild(logDiv.lastChild);
+        }
+    }
+
+    function showRateLimitToast(username, waitTime) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'rate-limit-toast';
+        toast.innerHTML = `⚠️ <b>HTTP 429: SPAM BLOCKED</b><br/><span style="font-size: 0.9em; font-weight: normal;">User <b>${username}</b> throttled for ${waitTime}s</span>`;
+        container.appendChild(toast);
+
+        // Auto-remove element from DOM after animation completes
+        setTimeout(() => toast.remove(), 2800);
     }
 
     function connect() {
-        var auctionId = document.getElementById('auctionId').value;
-        if (!auctionId) { alert("Please enter an Auction ID"); return; }
+        const auctionId = document.getElementById('auctionId').value.trim();
+        if (!auctionId) { alert("Please enter a valid Auction UUID."); return; }
 
-        // 1. Connect to the Endpoint defined in WebSocketConfig
-        var socket = new SockJS('http://localhost:8080/ws');
+        const socket = new SockJS('http://localhost:8080/ws');
         stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        document.getElementById('connStatus').innerText = "Connecting...";
 
         stompClient.connect({}, function (frame) {
-            log("✅ Connected: " + frame);
+            document.getElementById('connStatus').innerText = "🟢 Monitoring Active";
+            document.getElementById('connStatus').style.color = "#50fa7b";
+            document.getElementById('connectBtn').style.display = "none";
+            document.getElementById('auctionId').disabled = true;
 
-            // 2. Subscribe to the Topic defined in AuctionService
-            var topic = '/topic/auctions/' + auctionId;
-            log("📡 Subscribing to: " + topic);
+            const topic = '/topic/auctions/' + auctionId;
+            addLog(`Subscribed to <span class="log-highlight">${topic}</span>`);
 
-            stompClient.subscribe(topic, function (notification) {
-                var body = JSON.parse(notification.body);
-                log(`<span class="highlight">⚡ NEW BID RECEIVED!</span> <br/>
-                         Bidder: ${body.bidderUsername} <br/>
-                         Price: $${body.newPrice}`);
+            stompClient.subscribe(topic, function (message) {
+                const data = JSON.parse(message.body);
+                handleAuctionMessage(data);
             });
         }, function(error) {
-            log("❌ Connection Error: " + error);
+            document.getElementById('connStatus').innerText = "🔴 Disconnected";
+            document.getElementById('connStatus').style.color = "#ff5555";
+            addLog("Connection error: " + error);
         });
     }
+
+    function handleAuctionMessage(data) {
+        // 🛑 Intercept 429 Rate Limit Events
+        if (data.rateLimitEvent) {
+            addLog(`🛑 <span class="log-alert">HTTP 429: TOO MANY REQUESTS</span> - <span style="color:#ff5555">${data.bidderUsername}</span> blocked.`);
+            showRateLimitToast(data.bidderUsername, data.waitTime);
+            return;
+        }
+
+        if (data.status === "SOLD" || data.status === "UNSOLD") {
+            clearInterval(globalTimerInterval);
+            document.getElementById('globalTimer').innerText = "AUCTION CLOSED";
+            document.getElementById('winnerDisplay').innerHTML = `<div class="status-sold">${data.status}</div>`;
+            document.getElementById('priceDisplay').innerText = formatter.format(data.finalPrice);
+
+            addLog(data.status === "SOLD"
+                ? `🎯 <b>AUCTION ENDED!</b> Winner: <span class="log-highlight">${data.winner}</span>`
+                : `🚫 <b>AUCTION ENDED: UNSOLD</b>`);
+
+        } else if (data.newEndTime) {
+            const newPrice = data.newPrice;
+            const increment = currentPriceValue === 0 ? 0 : newPrice - currentPriceValue;
+            currentPriceValue = newPrice;
+
+            // Price Pulse Animation
+            const priceEl = document.getElementById('priceDisplay');
+            priceEl.innerText = formatter.format(newPrice);
+            priceEl.classList.remove('price-pulse');
+            void priceEl.offsetWidth;
+            priceEl.classList.add('price-pulse');
+
+            if (increment > 0) createFloatingIncrement(increment);
+
+            document.getElementById('winnerDisplay').innerHTML = `Current Leader: <span style="color:#ff79c6">${data.bidderUsername}</span> <span class="bid-badge">${data.bidCount} Bids Total</span>`;
+            addLog(`⚡ <span class="log-highlight">${data.bidderUsername}</span> bid <span class="log-price">${formatter.format(newPrice)}</span>`);
+
+            // Check for Anti-Sniping Soft Close
+            const newTargetMs = new Date(data.newEndTime).getTime();
+            if (targetEndTimeMs && newTargetMs > targetEndTimeMs + 1000) {
+                const timerEl = document.getElementById('globalTimer');
+                timerEl.classList.add('timer-extended');
+                setTimeout(() => timerEl.classList.remove('timer-extended'), 600);
+            }
+
+            targetEndTimeMs = newTargetMs;
+            startGlobalTimer();
+        }
+    }
+
+    function createFloatingIncrement(amount) {
+        const wrapper = document.querySelector('.price-wrapper');
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-increment';
+        floatEl.innerText = `+${formatter.format(amount)}`;
+        wrapper.appendChild(floatEl);
+        setTimeout(() => floatEl.remove(), 1200);
+    }
+
+    function startGlobalTimer() {
+        clearInterval(globalTimerInterval);
+        const timerEl = document.getElementById('globalTimer');
+
+        globalTimerInterval = setInterval(() => {
+            const now = Date.now();
+            const timeLeftMs = targetEndTimeMs - now;
+
+            if (timeLeftMs <= 0) {
+                clearInterval(globalTimerInterval);
+                timerEl.innerText = "Time's up! Verifying...";
+            } else {
+                const days = Math.floor(timeLeftMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeftMs / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((timeLeftMs / 1000 / 60) % 60).toString().padStart(2, '0');
+                const seconds = Math.floor((timeLeftMs / 1000) % 60).toString().padStart(2, '0');
+
+                if (days > 0) {
+                    timerEl.innerText = `Ends in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    timerEl.innerText = `Ends in: ${hours}h ${minutes}m ${seconds}s`;
+                }
+            }
+        }, 1000);
+    }
 </script>
+
 </body>
 </html>

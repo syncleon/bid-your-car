@@ -41,14 +41,21 @@ class DebugController(
         }
     }
 
-    @Operation(summary = "Place random bids on ACTIVE auctions")
+    @Operation(summary = "Place random bids in PARALLEL on ACTIVE auctions")
     @PostMapping("/seed-bids")
-    fun seedBids(@RequestParam(defaultValue = "20") count: Int): ResponseEntity<Any> {
-        try {
-            bidSeederService.seedLiveBids(count)
-            return ResponseEntity.ok(mapOf("message" to "Attempted to place $count bids on active auctions."))
+    fun seedBids(
+        @RequestParam(defaultValue = "100") count: Int,
+        @RequestParam(defaultValue = "10") concurrency: Int // ✅ New parameter
+    ): ResponseEntity<Any> {
+        return try {
+            bidSeederService.seedLiveBidsParallel(count, concurrency)
+            ResponseEntity.ok(mapOf(
+                "message" to "Parallel seeding complete",
+                "totalAttempted" to count,
+                "maxConcurrency" to concurrency
+            ))
         } catch (e: Exception) {
-            return ResponseEntity.badRequest().body(mapOf("error" to e.message))
+            ResponseEntity.badRequest().body(mapOf("error" to e.message))
         }
     }
 }
