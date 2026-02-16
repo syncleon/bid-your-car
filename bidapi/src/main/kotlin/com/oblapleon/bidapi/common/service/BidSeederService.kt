@@ -26,101 +26,69 @@ class BidSeederService(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun seedLiveBidsParallel(totalBids: Int, concurrency: Int) {
-        val targetAuctions = auctionRepository.findAll()
+        // 1. Target ALL ACTIVE auctions
+        val activeAuctions = auctionRepository.findAll()
             .filter { it.status == AuctionStatus.ACTIVE }
-            .shuffled()
-            .take(3)
 
-        if (targetAuctions.isEmpty()) throw IllegalStateException("No ACTIVE auctions found.")
+        if (activeAuctions.isEmpty()) {
+            logger.error("❌ No ACTIVE auctions found to attack.")
+            return
+        }
 
         val users = userRepository.findAll()
-        if (users.size < 2) throw IllegalStateException("Not enough users to simulate bidding.")
+        if (users.size < 5) throw IllegalStateException("Not enough users to simulate a multi-auction war.")
+
+        logger.info("🚀 Starting bidding attack on ${activeAuctions.size} active auctions with $totalBids total bids.")
 
         val successCount = AtomicInteger(0)
         val failCount = AtomicInteger(0)
-        val retryCount = AtomicInteger(0)
 
         runBlocking {
             val semaphore = Semaphore(concurrency)
 
             val jobs = (1..totalBids).map {
                 launch(Dispatchers.IO) {
-                    // 🧍 HUMAN SIMULATION: The Initial Hesitation
-                    // Distribute the start times randomly between 1 and 10 seconds.
-                    // This smears the load so bids trickle in naturally instead of a massive spike.
-                    delay(faker.number().numberBetween(1000L, 10000L))
+                    // Random delay to smear the initial start of the attack
+                    delay(faker.number().numberBetween(100L, 5000L))
 
                     semaphore.withPermit {
-                        val targetAuction = targetAuctions.random()
-                        val validBidders = users.filter { it.id != targetAuction.item.seller.id }
+                        // Pick any active auction from the full list
+                        val targetAuction = activeAuctions.random()
+                        val bidder = users.filter { it.id != targetAuction.item.seller.id }.random()
 
-                        if (validBidders.isNotEmpty()) {
-                            val bidder = validBidders.random()
-                            var attempt = 0
-                            var success = false
-                            val maxRetries = 5 // Lowered retries since the time window is longer
+                        var success = false
+                        var attempt = 0
+                        val maxRetries = 3
 
-                            while (attempt < maxRetries && !success) {
-                                attempt++
+                        while (attempt < maxRetries && !success) {
+                            attempt++
 
-                                // 🛡️ 1. API GATEWAY SIMULATION
-                                val bucket = rateLimitingService.resolveBucket(bidder.id!!)
-                                val probe = bucket.tryConsumeAndReturnRemaining(1)
-
-                                if (!probe.isConsumed) {
-                                    val waitTime = probe.nanosToWaitForRefill / 1_000_000_000
-                                    logger.warn("🛑 [429 RATE LIMIT] ${bidder.username} blocked. Waiting ${waitTime}s.")
-
-                                    try {
-                                        messagingTemplate.convertAndSend("/topic/auctions/${targetAuction.id}", mapOf(
-                                            "rateLimitEvent" to true,
-                                            "bidderUsername" to bidder.username,
-                                            "waitTime" to waitTime
-                                        ))
-                                    } catch (e: Exception) {}
-
-                                    // Wait for bucket refill + human reaction
-                                    delay((waitTime * 1000) + faker.number().numberBetween(500L, 1500L))
-                                    continue
-                                }
-
-                                // 2. Read DB and calculate bid
-                                val currentAuctionState = auctionRepository.findById(targetAuction.id!!).get()
-
-                                // Make the bot bid a bit more realistically (1x to 2.5x the minimum increment)
-                                val multiplier = faker.number().randomDouble(1, 1, 2)
-                                val increment = currentAuctionState.minBidIncrement.multiply(BigDecimal.valueOf(multiplier))
-                                val bidAmount = currentAuctionState.currentPrice.add(increment)
-
-                                try {
-                                    auctionService.placeBid(currentAuctionState.id!!, bidder.id!!, bidAmount)
-                                    success = true
-                                    successCount.incrementAndGet()
-
-                                } catch (e: Exception) {
-                                    val errorMsg = e.message ?: ""
-
-                                    if (errorMsg.contains("too low", ignoreCase = true) ||
-                                        errorMsg.contains("already the highest bidder", ignoreCase = true)) {
-
-                                        logger.warn("🤺 Bidder ${bidder.username} rejected ($errorMsg). Retrying... (Attempt $attempt/$maxRetries)")
-                                        retryCount.incrementAndGet()
-
-                                        // 🧍 HUMAN SIMULATION: Reaction time to being outbid
-                                        // It takes a human 2 to 5 seconds to realize they lost, type a new number, and click again.
-                                        delay(faker.number().numberBetween(2000L, 5000L))
-                                    } else {
-                                        logger.error("❌ Bid failed permanently: $errorMsg")
-                                        break
-                                    }
-                                }
+                            // Rate Limiting Check
+                            val bucket = rateLimitingService.resolveBucket(bidder.id!!)
+                            if (!bucket.tryConsume(1)) {
+                                delay(1000) // Wait for bucket refill
+                                continue
                             }
 
-                            if (!success) {
-                                failCount.incrementAndGet()
-                                logger.info("🏳️ Bidder ${bidder.username} gave up after $maxRetries attempts.")
+                            // Fetch fresh state to avoid stale price rejections
+                            val currentAuction = auctionRepository.findById(targetAuction.id!!).orElse(null) ?: break
+
+                            val increment = currentAuction.minBidIncrement.multiply(
+                                BigDecimal.valueOf(faker.number().randomDouble(1, 1, 2))
+                            )
+                            val bidAmount = currentAuction.currentPrice.add(increment)
+
+                            try {
+                                auctionService.placeBid(currentAuction.id!!, bidder.id!!, bidAmount)
+                                success = true
+                                successCount.incrementAndGet()
+                                logger.debug("⚡ Bid placed: ${bidder.username} -> ${currentAuction.item.make} ($bidAmount)")
+                            } catch (e: Exception) {
+                                // Short delay before retrying a failed bid due to race conditions
+                                delay(faker.number().numberBetween(500L, 1500L))
                             }
                         }
+                        if (!success) failCount.incrementAndGet()
                     }
                 }
             }
@@ -128,10 +96,10 @@ class BidSeederService(
         }
 
         logger.info("""
-            🏁 Realistic Bidding War Complete:
-            ✅ Successful Bids: ${successCount.get()}
-            🔄 Concurrency Retries Triggered: ${retryCount.get()}
-            ❌ Failed/Gave Up: ${failCount.get()}
+            🏁 Global Auction Attack Complete:
+            🎯 Auctions Targeted: ${activeAuctions.size}
+            ✅ Total Successful Bids: ${successCount.get()}
+            ❌ Total Failed Bids: ${failCount.get()}
         """.trimIndent())
     }
 }

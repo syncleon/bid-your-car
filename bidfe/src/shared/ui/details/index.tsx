@@ -24,7 +24,7 @@ interface GalleryProps {
 
 export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) => {
     const images = item.images || [];
-    const mainImage = images[0]?.fullHdUrl || images[0]?.url;
+    const mainImage = images[0]?.url;
 
     // We show max 4 thumbnails below the main image
     const thumbnails = images.slice(1, 5);
@@ -67,7 +67,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
                                 onClick={() => onImageClick?.(realIndex)}
                             >
                                 <img
-                                    src={img.previewUrl || img.url}
+                                    src={img.url}
                                     alt={`View ${realIndex}`}
                                     style={styles.thumbImg}
                                 />

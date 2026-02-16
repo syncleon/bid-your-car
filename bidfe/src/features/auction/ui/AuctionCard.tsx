@@ -55,15 +55,16 @@ const useAuctionTimer = (endTime: string) => {
 };
 
 export const AuctionCard = ({ auction }: Props) => {
-    const { item, currentHighestBid, startPrice, endTime, status } = auction;
+    // FIX: Destructure currentPrice instead of currentHighestBid
+    const { item, currentPrice, endTime, status } = auction;
     const { timeLeft, isEnded } = useAuctionTimer(endTime);
 
-    const price = currentHighestBid ?? startPrice;
+    // FIX: currentPrice already represents the highest bid or the starting price from the backend
+    const price = currentPrice;
 
+    // FIX: Only use valid image URL, fallback to the item's thumbnailUrl
     const firstImage = item.images?.[0];
-    const mainImage = firstImage
-        ? (firstImage.previewUrl || firstImage.url || firstImage.thumbnailUrl)
-        : null;
+    const mainImage = firstImage ? firstImage.url : item.thumbnailUrl;
 
     // --- Улучшенные флаги статусов ---
     const isActive = status === 'ACTIVE';

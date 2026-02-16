@@ -6,34 +6,41 @@ import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo } from "../..
 import { BiddingCard } from "./BiddingCard";
 import { BidHistory } from "./BidHistory";
 import { formatDistanceToNow } from "date-fns";
+
+// ADDED IMPORTS FOR EDITING
+import { EditItemModal } from "../../item/ui/EditItemModal";
+import type { ItemCreateRequest, ItemImageDto } from "../../item/types.ts";
 import "./AuctionDetails.css";
 
-// --- LIGHTBOX COMPONENT (Unchanged) ---
-const Lightbox = ({ images, initialIndex, onClose }: { images: any[], initialIndex: number, onClose: () => void }) => {
+// --- LIGHTBOX COMPONENT ---
+const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
     const [index, setIndex] = useState(initialIndex);
 
     const handleNext = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIndex((prev) => (prev + 1) % images.length);
+        if (images?.length) setIndex((prev) => (prev + 1) % images.length);
     };
 
     const handlePrev = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIndex((prev) => (prev - 1 + images.length) % images.length);
+        if (images?.length) setIndex((prev) => (prev - 1 + images.length) % images.length);
     };
 
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
+            if (!images?.length) return;
             if (e.key === "ArrowRight") setIndex((prev) => (prev + 1) % images.length);
             if (e.key === "ArrowLeft") setIndex((prev) => (prev - 1 + images.length) % images.length);
         };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
-    }, [images.length, onClose]);
+    }, [images?.length, onClose]);
+
+    if (!images || images.length === 0) return null;
 
     const currentImg = images[index];
-    const url = currentImg.fullHdUrl || currentImg.originalUrl || currentImg.url;
+    const url = currentImg?.url;
 
     return (
         <div className="lightbox-overlay" onClick={onClose}>
@@ -55,9 +62,16 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: any[], initialInd
 export const AuctionDetailsPage = observer(() => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { auctionStore, authStore } = useStore();
+
+    // ADDED: itemStore to handle the updates and deletions
+    const { auctionStore, authStore, itemStore } = useStore();
+
     const [actionLoading, setActionLoading] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+    // ADDED: Owner Action states
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -77,31 +91,47 @@ export const AuctionDetailsPage = observer(() => {
     const item = auction.item;
     const user = authStore.user;
     const isOwner = user?.id === item.seller.id;
-    const isAdmin = user?.roles.some(r => r.name === 'ADMIN');
+    const isAdmin = user?.roles.some((r: { name: string }) => r.name === 'ADMIN');
 
     const isActive = auction.status === 'ACTIVE';
     const isPending = auction.status === 'PENDING_APPROVAL';
-    const isRejected = auction.status === 'REJECTED';
-    const isEnded = ['SOLD', 'EXPIRED', 'CANCELLED'].includes(auction.status);
+    const isCancelled = auction.status === 'CANCELLED';
+    const isEnded = ['SOLD', 'UNSOLD', 'CANCELLED'].includes(auction.status);
 
+    // --- Actions ---
     const handleApprove = async () => {
         setActionLoading(true);
         await auctionStore.approveAuction(auction.id);
         setActionLoading(false);
     };
 
-    const handleReject = async () => {
-        if (!window.confirm("Reject?")) return;
-        setActionLoading(true);
-        await auctionStore.rejectAuction(auction.id);
-        navigate("/auctions");
-        setActionLoading(false);
+    // ADDED: Owner Handlers
+    const handleItemUpdate = async (data: ItemCreateRequest, newFiles: File[], deletedImageIds: string[] = []) => {
+        if (!item.id) return;
+        const success = await itemStore.updateListing(item.id, data, newFiles, deletedImageIds);
+        if (success) {
+            setIsEditModalOpen(false);
+            if (id) await auctionStore.loadAuctionDetails(id); // Reload auction to get fresh item info
+        }
+    };
+
+    const handleDeleteItem = async () => {
+        if (!item.id) return;
+        if (window.confirm("Are you sure you want to permanently delete this vehicle? This will also remove the auction. This cannot be undone.")) {
+            setIsDeleting(true);
+            await itemStore.deleteListing(item.id);
+            if (!itemStore.error) {
+                navigate("/auctions");
+            } else {
+                setIsDeleting(false);
+                // Optional: set a local error state here if you want to display it
+            }
+        }
     };
 
     return (
         <DetailPageLayout>
             <div className="compact-container">
-                {/* Header is now more compact */}
                 <DetailHeader onBack={() => navigate("/auctions")} title={`${item.year} ${item.make} ${item.model}`} />
 
                 <div className="details-grid">
@@ -117,10 +147,10 @@ export const AuctionDetailsPage = observer(() => {
                         <VehicleInfo item={item} />
                     </div>
 
-                    {/* RIGHT COLUMN: Actions & Status (Banners moved here for compactness) */}
+                    {/* RIGHT COLUMN: Actions & Status */}
                     <div className="details-right">
 
-                        {/* 1. Alerts/Banners Stacked Here */}
+                        {/* 1. Alerts/Banners */}
                         {auctionStore.error && (
                             <div className="compact-banner banner-error">
                                 <span>{auctionStore.error}</span>
@@ -133,10 +163,10 @@ export const AuctionDetailsPage = observer(() => {
                                 <p>{isOwner ? "Under review." : "Waiting for admin."}</p>
                             </div>
                         )}
-                        {isRejected && (
+                        {isCancelled && (
                             <div className="compact-banner banner-rejected">
-                                <strong>⛔ Rejected</strong>
-                                <p>{isOwner ? "Check email." : "Declined."}</p>
+                                <strong>⛔ Cancelled</strong>
+                                <p>{isOwner ? "This listing was cancelled." : "Administratively removed."}</p>
                             </div>
                         )}
 
@@ -147,36 +177,72 @@ export const AuctionDetailsPage = observer(() => {
                                     <button onClick={handleApprove} disabled={actionLoading} className="btn-approve">
                                         {actionLoading ? "..." : "✓ Approve"}
                                     </button>
-                                    <button onClick={handleReject} disabled={actionLoading} className="btn-reject">
-                                        {actionLoading ? "..." : "✕ Reject"}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. Owner Controls (NEW) */}
+                        {isOwner && !isEnded && (
+                            <div className="owner-panel compact-card" style={{ marginBottom: '16px' }}>
+                                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <button
+                                        onClick={() => setIsEditModalOpen(true)}
+                                        style={{ padding: "10px", background: "#fff", border: "1px solid #d1d5db", borderRadius: "6px", fontWeight: 600, cursor: "pointer" }}
+                                    >
+                                        Edit Vehicle Details
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteItem}
+                                        disabled={isDeleting}
+                                        style={{
+                                            padding: "10px",
+                                            background: "transparent",
+                                            border: "none",
+                                            color: "#dc2626",
+                                            fontWeight: 600,
+                                            cursor: isDeleting ? "not-allowed" : "pointer",
+                                            opacity: isDeleting ? 0.5 : 1
+                                        }}
+                                    >
+                                        {isDeleting ? "Deleting..." : "Delete Listing & Auction"}
                                     </button>
                                 </div>
                             </div>
                         )}
 
-                        {/* 3. Main Bidding Card */}
+                        {/* 4. Main Bidding Card */}
                         {isActive ? (
                             <div className="bidding-wrapper">
                                 <BiddingCard auction={auction} />
                             </div>
                         ) : (
-                            <div className={`status-card compact-card ${isRejected ? 'card-rejected' : 'card-inactive'}`}>
+                            <div className={`status-card compact-card ${isCancelled ? 'card-rejected' : 'card-inactive'}`}>
                                 <h4>
                                     {isPending && "Coming Soon"}
-                                    {isRejected && "Rejected"}
-                                    {isEnded && `Auction ${auction.status}`}
+                                    {isCancelled && "Cancelled"}
+                                    {isEnded && !isCancelled && `Auction ${auction.status}`}
                                 </h4>
                                 {isEnded && <span className="text-small">Ended {formatDistanceToNow(new Date(auction.endTime))} ago</span>}
                             </div>
                         )}
 
-                        {/* 4. Bid History (Scrollable) */}
+                        {/* 5. Bid History */}
                         <div className="history-wrapper">
                             <BidHistory bids={auctionStore.bidHistory} />
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Edit Modal (NEW) */}
+            <EditItemModal
+                item={item}
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSubmit={handleItemUpdate}
+                isLoading={itemStore.isLoading}
+            />
 
             {/* Lightbox */}
             {lightboxIndex !== null && item.images && item.images.length > 0 && (
@@ -195,8 +261,9 @@ const StatusBadge = ({ status }: { status: string }) => {
     switch (status) {
         case 'ACTIVE': className += "badge-active"; break;
         case 'PENDING_APPROVAL': className += "badge-pending"; break;
-        case 'REJECTED': className += "badge-rejected"; break;
+        case 'CANCELLED': className += "badge-rejected"; break;
         case 'SOLD': className += "badge-sold"; break;
+        case 'UNSOLD': className += "badge-ended"; break;
         default: className += "badge-ended"; break;
     }
     return <span className={className}>{status.replace('_', ' ')}</span>;

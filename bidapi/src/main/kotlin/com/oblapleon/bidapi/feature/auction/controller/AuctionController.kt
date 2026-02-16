@@ -4,9 +4,9 @@ import com.oblapleon.bidapi.common.service.RateLimitingService // ✅ Import Rat
 import com.oblapleon.bidapi.feature.auction.dto.AuctionDto
 import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
 import com.oblapleon.bidapi.feature.auction.dto.toDto
+import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.service.AuctionService
-import com.oblapleon.bidapi.feature.bid.dto.BidDto
 import com.oblapleon.bidapi.feature.bid.dto.BidRequest
 import com.oblapleon.bidapi.feature.bid.dto.toDto
 import com.oblapleon.bidapi.feature.user.service.UserService
@@ -38,17 +38,6 @@ class AuctionController(
     //  PUBLIC ENDPOINTS
     // ========================================================================
 
-    @Operation(summary = "Browse Auctions", description = "Public feed of active auctions.")
-    @GetMapping
-    fun getPublicAuctions(
-        @Parameter(description = "Filter type: 'ending_soon', 'just_listed'")
-        @RequestParam(required = false) filter: String?,
-        @PageableDefault(size = 20) pageable: Pageable
-    ): ResponseEntity<Page<AuctionDto>> {
-        val page = auctionService.findPublicAuctions(filter, pageable)
-        return ResponseEntity.ok(page.map { it.toDto() })
-    }
-
     @Operation(summary = "Get Auction Details")
     @GetMapping("/{id}")
     fun getAuctionById(@PathVariable id: UUID): ResponseEntity<AuctionDto> {
@@ -69,6 +58,28 @@ class AuctionController(
         val user = userService.findByUsername(username)
         val auction = auctionService.createAuction(user.id!!, dto)
         return ResponseEntity.status(HttpStatus.CREATED).body(auction.toDto())
+    }
+
+    @Operation(summary = "Recently Sold Auctions", description = "Shows the most recent successful sales.")
+    @GetMapping("/sold")
+    fun getRecentlySold(
+        @PageableDefault(size = 10) pageable: Pageable
+    ): ResponseEntity<Page<AuctionDto>> {
+        val soldAuctions = auctionService.findSoldAuctionsRecentlyAdded(pageable)
+        return ResponseEntity.ok(soldAuctions.map { it.toDto() })
+    }
+
+    @Operation(summary = "Browse Auctions", description = "Public feed of active auctions.")
+    @GetMapping
+    fun getPublicAuctions(
+        @RequestParam(required = false) status: AuctionStatus?,
+        @Parameter(description = "Filter type: 'ending_soon', 'just_listed'")
+        @RequestParam(required = false) filter: String?,
+        @PageableDefault(size = 20) pageable: Pageable
+    ): ResponseEntity<Page<AuctionDto>> {
+        // Updated service call to handle status if provided
+        val page = auctionService.findAuctionsByCriteria(status, filter, pageable)
+        return ResponseEntity.ok(page.map { it.toDto() })
     }
 
     @Operation(summary = "Place Bid", description = "Submit a bid on an active auction.")

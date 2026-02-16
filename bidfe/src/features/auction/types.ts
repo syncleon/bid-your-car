@@ -12,15 +12,15 @@ export interface Page<T> {
     empty: boolean;
 }
 
-// UPDATE: Added 'PENDING_APPROVAL' and 'REJECTED'
 export type AuctionStatus =
-    | 'ACTIVE'
-    | 'SOLD'
-    | 'EXPIRED'
-    | 'CANCELLED'
-    | 'DRAFT'
-    | 'PENDING_APPROVAL'
-    | 'REJECTED';
+    | "DRAFT"
+    | "PENDING_APPROVAL"
+    | "SCHEDULED"
+    | "ACTIVE"
+    | "ENDED_PENDING"
+    | "SOLD"
+    | "UNSOLD"
+    | "CANCELLED";
 
 export interface AuctionDto {
     id: string;
@@ -28,11 +28,18 @@ export interface AuctionDto {
     startTime: string; // ISO Instant
     endTime: string;   // ISO Instant
     status: AuctionStatus;
+
+    // Financials
     startPrice: number;
+    currentPrice: number; // FIX: Renamed from currentHighestBid to match backend
     minBidIncrement: number;
-    currentHighestBid: number | null;
-    bidCount: number;
+    reservePrice: number | null; // FIX: Added missing reservePrice
     isReserveMet: boolean;
+
+    // Stats
+    bidCount: number;
+
+    // Relationships
     winnerId: number | null;
 }
 
@@ -40,7 +47,7 @@ export interface CreateAuctionDto {
     itemId: string;
     startTime: string; // ISO String
     endTime: string;   // ISO String
-    startingBid: number;
+    startPrice: number; // FIX: Renamed from startingBid to match backend
     reservePrice?: number;
     minBidIncrement?: number;
 }

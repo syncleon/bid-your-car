@@ -81,3 +81,8 @@ management:
     metrics:
       export:
         enabled: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.web.access: TRACE

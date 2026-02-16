@@ -1,41 +1,42 @@
-import type { AuctionDto } from "../auction/types"; // Ensure path is correct
+import type { AuctionDto } from "../auction/types";
+import type {UserDto} from "../auth/types.ts";
 
 export interface Page<T> {
     content: T[];
     totalPages: number;
     totalElements: number;
     size: number;
-    number: number; // Current page index (0-based)
+    number: number;
     first: boolean;
     last: boolean;
     empty: boolean;
 }
 
+export type ItemStatus =
+    | "DRAFT"          // Being created by seller
+    | "ACTIVE_AUCTION"  // Currently live in an auction
+    | "SOLD"            // Payment pending/complete
+    | "ARCHIVED"        // Soft deleted or very old;
+
 export type AuctionStatus =
     | "DRAFT"
-    | "ACTIVE"
-    | "SOLD"
-    | "EXPIRED"
-    | "CANCELLED"
     | "PENDING_APPROVAL"
-    | "REJECTED";
+    | "SCHEDULED"
+    | "ACTIVE"
+    | "ENDED_PENDING"
+    | "SOLD"
+    | "UNSOLD"
+    | "CANCELLED";
 
 export interface ItemImageDto {
     id: string;
     url: string;
-    thumbnailUrl: string;
-    previewUrl: string;
-    fullHdUrl: string;
-}
-
-export interface SellerDto {
-    id: number;
-    username: string;
-    email: string;
+    sortOrder: number;
 }
 
 export interface ItemDto {
     id: string;
+    status: ItemStatus;
     year: number;
     make: string;
     model: string;
@@ -43,7 +44,10 @@ export interface ItemDto {
     location: string;
     mileage: number;
     description: string | null;
-    seller: SellerDto;
+    seller: UserDto;
+    thumbnailUrl: string | null;
+
+    // Technical Specs
     engine: string | null;
     drivetrain: string | null;
     transmission: string | null;
@@ -51,13 +55,13 @@ export interface ItemDto {
     exteriorColor: string | null;
     interiorColor: string | null;
     sellerType: string | null;
+
     images: ItemImageDto[];
-    auctionStatus: AuctionStatus | null;
-    activeAuctionId: string | null;
+
+    // Auction Context (Optional depending on join)
+    auctionStatus?: AuctionStatus | null;
+    activeAuctionId?: string | null;
     auction?: AuctionDto | null;
-    active: boolean;
-    available: boolean;
-    sold: boolean;
 }
 
 export interface ItemCreateRequest {
@@ -78,7 +82,6 @@ export interface ItemCreateRequest {
 }
 
 export interface ItemUpdateRequest {
-    vin?: string;
     year?: number;
     make?: string;
     model?: string;

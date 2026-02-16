@@ -41,12 +41,10 @@ export const ImageUploader = ({
             </div>
 
             <div className="gallery-grid" style={{ marginBottom: hasImages ? "24px" : "0" }}>
-                {/* Existing Images (From Server) */}
                 {existingImages.map((img, index) => (
                     <div key={img.id} className="gallery-item">
-                        {/* UPDATE: Use previewUrl (High Res) instead of thumbnail */}
                         <img
-                            src={img.previewUrl || img.url}
+                            src={img.url}
                             alt="Vehicle"
                             className="gallery-img"
                         />

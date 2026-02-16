@@ -11,15 +11,10 @@ export const useUserListings = () => {
         setIsLoading(true);
         setError(null);
         try {
-            // data is now typed as Page<ItemDto>
             const data = await getUserItems();
-
-            // FIX: Extract the array from the 'content' property
-            // We also add a fallback to [] just in case data.content is undefined
             setItems(data.content || []);
-
-        } catch (err: any) {
-            console.error(err);
+        } catch (error: unknown) {
+            console.error(error);
             setError("Could not load your listings.");
             setItems([]);
         } finally {

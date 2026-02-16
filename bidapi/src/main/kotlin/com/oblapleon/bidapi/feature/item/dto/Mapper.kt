@@ -5,6 +5,7 @@ import com.oblapleon.bidapi.feature.item.entity.ItemImage
 import com.oblapleon.bidapi.feature.user.dto.toDto
 import java.util.UUID
 
+
 fun Item.toDto(): ItemDto {
     return ItemDto(
         id = this.id!!,

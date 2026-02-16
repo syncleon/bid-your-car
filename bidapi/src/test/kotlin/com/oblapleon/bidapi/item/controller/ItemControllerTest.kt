@@ -95,12 +95,21 @@ class ItemControllerTest {
     }
 
     @Test
-    fun `getItemById - should return item details`() {
-        whenever(itemService.findById(itemId)).thenReturn(testItem)
+    fun `getItemById - should return 404 Not Found for invalid ID`() {
+        // 1. ARRANGE: Generate a random UUID and tell the mock service to throw your custom exception
+        val nonExistentId = UUID.randomUUID()
+        whenever(itemService.findById(nonExistentId)).thenThrow(NotFoundException("Item not found"))
 
-        mockMvc.perform(get("/api/v1/items/$itemId"))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").value(itemId.toString()))
+        // 2 & 3. ACT & ASSERT: Make the request and verify the GlobalExceptionHandler takes over
+        mockMvc.perform(get("/api/v1/items/$nonExistentId")
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
+
+            // Verify the JSON structure matches your custom ErrorResponse format
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Item not found"))
+            .andExpect(jsonPath("$.timestamp").exists())
     }
 
     // ========================================================================

@@ -17,6 +17,23 @@ class ItemSeederService(
 ) {
     private val faker = Faker()
 
+    // Fixed missing commas and simplified to return all images shuffled
+    private fun generateCarImages(): List<String> {
+        val fallbackImages = listOf(
+            "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80",
+            "https://cdn.pixabay.com/photo/2017/03/05/15/29/aston-martin-2118857_1280.jpg",
+            "https://cdn.pixabay.com/photo/2012/11/02/13/02/car-63930_1280.jpg"
+        )
+
+        return fallbackImages.shuffled()
+    }
+
     @Transactional
     fun seedItems(count: Int) {
         val users = userRepository.findAll()
@@ -26,12 +43,9 @@ class ItemSeederService(
 
         val items = (1..count).map {
             val seller = users.random()
-
-            // Generate valid-looking Vehicle data
             val make = faker.vehicle().make()
             val model = faker.vehicle().model(make)
 
-            // Ensure Unique VIN
             var vin = faker.vehicle().vin()
             if (itemRepository.existsByVin(vin)) {
                 vin = UUID.randomUUID().toString().replace("-", "").take(17).uppercase()
@@ -39,7 +53,7 @@ class ItemSeederService(
 
             val item = Item(
                 seller = seller,
-                status = ItemStatus.AVAILABLE, // Ready for auction
+                status = ItemStatus.DRAFT,
                 year = faker.number().numberBetween(1960, 2024),
                 make = make,
                 model = model,
@@ -56,19 +70,8 @@ class ItemSeederService(
                 sellerType = if (faker.bool().bool()) "Private" else "Dealer"
             )
 
-            // Add Images (addImage helper automatically sets the first one as thumbnail)
-            val imageUrls = listOf(
-                "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1503376763036-066120622c74?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&w=1000&q=80"
-            )
-
-            // Add 3 to 5 random images
-            val selectedImages = imageUrls.shuffled().take(faker.number().numberBetween(3, 5))
-
-            selectedImages.forEachIndexed { index, url ->
+            // Get all images shuffled and attach them to the item
+            generateCarImages().forEachIndexed { index, url ->
                 val image = ItemImage(
                     url = url,
                     item = item,

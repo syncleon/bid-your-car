@@ -18,8 +18,6 @@ class UserInitializer(
     private val roleRepo: RoleRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
-    private val faker = Faker()
-
     @PostConstruct
     @Transactional
     fun initUsers() {
@@ -32,14 +30,11 @@ class UserInitializer(
 
         val commonPassword = passwordEncoder.encode("password")
 
-        // 1. Create 100 Regular Users with realistic data
-        val users = (1..100).map {
-            val firstName = faker.name().firstName().lowercase()
-            val lastName = faker.name().lastName().lowercase()
-
+        // 1. Create Users from user_1 to user_100
+        val users = (1..100).map { i ->
             User(
-                username = "${firstName}_${lastName}${faker.number().digits(2)}",
-                email = faker.internet().emailAddress("${firstName}.${lastName}"),
+                username = "user_$i",
+                email = "user$i@bidapi.com",
                 password = commonPassword,
                 enabled = true,
                 roles = mutableSetOf(userRole)
@@ -47,7 +42,7 @@ class UserInitializer(
         }
         userRepo.saveAll(users)
 
-        // 2. Create the specific Admin User for testing
+        // 2. Create the specific Admin User
         val admin = User(
             username = "admin",
             email = "admin@bidapi.com",
@@ -57,6 +52,6 @@ class UserInitializer(
         )
         userRepo.save(admin)
 
-        println("✅ Successfully initialized 101 users (100 regular, 1 admin).")
+        println("✅ Successfully initialized 101 users (user_1 to user_100 and admin).")
     }
 }

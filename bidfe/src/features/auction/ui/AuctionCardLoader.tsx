@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { AuctionCard } from "./AuctionCard";
-import { getAuctionById } from "../api/auction.api"; // Import from step 1
+import { getAuctionById } from "../api/auction.api";
 import type { AuctionDto } from "../types";
-import {BaseCard} from "../../../widgets/BaseCard/BaseCard.tsx";
-import styles from "../../../widgets/BaseCard/styles.ts";
+import type { ItemDto } from "../../item/types"; // <-- Import the ItemDto type!
+import { BaseCard } from "../../../widgets/BaseCard/BaseCard";
+import styles from "../../../widgets/BaseCard/styles";
 
 interface Props {
     auctionId: string;
-    // Pass the fallback item data so we can show a skeleton/loading state that looks correct
-    fallbackItem: any;
+    // FIX: Replaced 'any' with the strict ItemDto type
+    fallbackItem: ItemDto;
 }
 
 export const AuctionCardLoader = ({ auctionId, fallbackItem }: Props) => {
@@ -34,11 +35,14 @@ export const AuctionCardLoader = ({ auctionId, fallbackItem }: Props) => {
         return <AuctionCard auction={auction} />;
     }
 
+    // FIX: Correctly resolve the image URL based on your backend structure
+    const fallbackImage = fallbackItem.images?.[0]?.url || fallbackItem.thumbnailUrl;
+
     // 2. Loading State: Render a placeholder card
     return (
         <BaseCard
             to={`/auctions/${auctionId}`}
-            imageUrl={fallbackItem.images?.[0]?.thumbnailUrl}
+            imageUrl={fallbackImage}
             title={{ year: fallbackItem.year, make: fallbackItem.make, model: fallbackItem.model }}
             overlays={{
                 topLeft: (

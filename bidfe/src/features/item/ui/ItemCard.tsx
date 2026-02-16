@@ -7,19 +7,22 @@ interface ItemCardProps {
 }
 
 export const ItemCard = ({ item }: ItemCardProps) => {
-    // Priority: Preview (Optimized) -> Thumbnail -> Original
+    // FIX 1: Use the image URL, fallback to the ItemDto's thumbnailUrl
     const mainImage = item.images && item.images.length > 0
-        ? (item.images[0].previewUrl || item.images[0].thumbnailUrl)
-        : null;
+        ? item.images[0].url
+        : item.thumbnailUrl;
 
     const specs = [item.transmission, item.drivetrain]
         .filter(Boolean)
         .join(" • ");
 
     // --- Status Logic ---
-    const isLive = !!item.activeAuctionId; // Has an active auction ID
+    const isLive = !!item.activeAuctionId;
     const isPending = item.auctionStatus === 'PENDING_APPROVAL';
-    const isSold = item.sold || item.auctionStatus === 'SOLD';
+
+    // FIX 2: Check item.status instead of the non-existent item.sold
+    const isSold = item.status === 'SOLD' || item.auctionStatus === 'SOLD';
+
     const isRejected = item.auctionStatus === 'REJECTED';
 
     // --- Render Badge based on status ---

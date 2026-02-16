@@ -8,6 +8,7 @@ import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
 import com.oblapleon.bidapi.feature.bid.dto.BidNotificationDto
 import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
+import com.oblapleon.bidapi.feature.item.entity.ItemStatus // <-- NEW IMPORT
 import com.oblapleon.bidapi.feature.item.repository.ItemRepository
 import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import io.micrometer.core.instrument.MeterRegistry
@@ -37,7 +38,32 @@ class AuctionService(
             .orElseThrow { NotFoundException("Auction not found.") }
     }
 
-    fun findPublicAuctions(filterType: String?, pageable: Pageable): Page<Auction> {
+    fun findAuctionsByCriteria(
+        status: AuctionStatus?,
+        filterType: String?,
+        pageable: Pageable
+    ): Page<Auction> {
+        val now = Instant.now()
+        val targetStatus = status ?: AuctionStatus.ACTIVE
+
+        // If a status other than ACTIVE is requested, just return by status
+        if (targetStatus != AuctionStatus.ACTIVE) {
+            return auctionRepository.findByStatusOrderByEndTimeDesc(targetStatus, pageable)
+        }
+
+        // Apply specialized sorting for ACTIVE auctions
+        return when (filterType?.lowercase()) {
+            "ending_soon" -> auctionRepository.findByStatusAndEndTimeAfterOrderByEndTimeAsc(targetStatus, now, pageable)
+            "just_listed" -> auctionRepository.findByStatusAndStartTimeBeforeOrderByStartTimeDesc(targetStatus, now, pageable)
+            else -> auctionRepository.findByStatusOrderByEndTimeDesc(targetStatus, pageable)
+        }
+    }
+
+    fun findSoldAuctionsRecentlyAdded(pageable: Pageable): Page<Auction> {
+        return auctionRepository.findByStatusOrderByEndTimeDesc(AuctionStatus.SOLD, pageable)
+    }
+
+    fun findActiveAuctions(filterType: String?, pageable: Pageable): Page<Auction> {
         val now = Instant.now()
         return when (filterType?.lowercase()) {
             "ending_soon" -> auctionRepository.findByStatusAndEndTimeAfterOrderByEndTimeAsc(AuctionStatus.ACTIVE, now, pageable)
@@ -105,6 +131,10 @@ class AuctionService(
             auction.status = AuctionStatus.SCHEDULED
         }
 
+        // --- NEW: Sync Item Status on Approval ---
+        auction.item.status = ItemStatus.ACTIVE_AUCTION
+        itemRepository.save(auction.item)
+
         auctionRepository.save(auction)
     }
 
@@ -122,6 +152,10 @@ class AuctionService(
         }
 
         auction.status = AuctionStatus.CANCELLED
+
+        auction.item.status = ItemStatus.DRAFT
+        itemRepository.save(auction.item)
+
         auctionRepository.save(auction)
     }
 
@@ -322,13 +356,24 @@ class AuctionService(
             if (reserve == null || (highestBid != null && highestBid.amount >= reserve)) {
                 auction.status = AuctionStatus.SOLD
                 auction.winnerUser = highestBid?.bidder
+
+                // --- NEW: Sync Item Status on Win ---
+                auction.item.status = ItemStatus.SOLD
             } else {
                 auction.status = AuctionStatus.UNSOLD
+
+                // --- NEW: Sync Item Status on Reserve Not Met ---
+                auction.item.status = ItemStatus.DRAFT
             }
         } else {
             auction.status = AuctionStatus.UNSOLD
+
+            // --- NEW: Sync Item Status on No Bids ---
+            auction.item.status = ItemStatus.DRAFT
         }
 
+        // Save the synchronized item
+        itemRepository.save(auction.item)
         auctionRepository.save(auction)
 
         try {

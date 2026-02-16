@@ -97,4 +97,12 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
     @QueryHints(QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")) // ✅ 3000 ms timeout
     @Query("SELECT a FROM Auction a WHERE a.id = :id")
     fun findByIdWithPessimisticWriteLock(@Param("id") id: UUID): Optional<Auction>
+
+    fun findByStatus(status: AuctionStatus, pageable: Pageable): Page<Auction>
+
+    /**
+     * Finds auctions by status, ordered by End Time descending.
+     * For SOLD auctions, this shows the most recently completed sales first.
+     */
+    fun findByStatusOrderByEndTimeDesc(status: AuctionStatus, pageable: Pageable): Page<Auction>
 }

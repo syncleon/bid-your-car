@@ -43,8 +43,8 @@ class ItemController(
     @Operation(summary = "Get Item Details", description = "Get full details including specs and images.")
     @GetMapping("/{id}")
     fun getItemById(@PathVariable id: UUID): ResponseEntity<ItemDto> {
-        val item = itemService.findById(id)
-        return ResponseEntity.ok(item.toDto())
+        val itemDto = itemService.getCachedItemDto(id)
+        return ResponseEntity.ok(itemDto)
     }
 
     // ========================================================================

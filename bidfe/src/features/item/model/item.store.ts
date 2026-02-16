@@ -1,246 +1,273 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { types, flow, cast, type Instance } from "mobx-state-tree";
 import {
     getAllItems,
+    getMyItems,
     getItemById,
     submitItem,
-    getMyItems,
     deleteItem,
     updateItem,
     uploadItemImage
 } from "../api/item.api";
-import type {ItemDto, ItemCreateRequest, ItemUpdateRequest} from "../types";
+import type {
+    AuctionStatus,
+    ItemCreateRequest,
+    ItemDto,
+    ItemStatus,
+    ItemUpdateRequest
+} from "../types.ts";
+import type { AuctionDto } from "../../auction/types.ts";
+import type { UserDto } from "../../auth/types.ts";
 
-export class ItemStore {
-    items: ItemDto[] = [];
-    myItems: ItemDto[] = [];
-    selectedItem: ItemDto | null = null; // Used for Details View & Navigation
+const ItemImageModel = types.model("ItemImage", {
+    id: types.identifier,
+    url: types.string,
+    sortOrder: types.number,
+});
 
-    // Pagination State
-    totalItems = 0;
-    totalPages = 0;
-    currentPage = 0;
+export const ItemModel = types.model("Item", {
+    id: types.identifier,
+    status: types.enumeration<ItemStatus>([
+        "DRAFT",
+        "SOLD",
+        "ARCHIVED",
+        "ACTIVE_AUCTION"
+    ]),
+    year: types.number,
+    make: types.string,
+    model: types.string,
+    vin: types.string,
+    location: types.string,
+    mileage: types.number,
+    description: types.maybeNull(types.string),
+    thumbnailUrl: types.maybeNull(types.string),
 
-    isLoading = false;
-    error: string | null = null;
-    uploadProgress: string | null = null;
+    seller: types.frozen<UserDto>(),
 
-    constructor() {
-        makeAutoObservable(this);
-    }
+    // Technical Specs
+    engine: types.maybeNull(types.string),
+    drivetrain: types.maybeNull(types.string),
+    transmission: types.maybeNull(types.string),
+    bodyStyle: types.maybeNull(types.string),
+    exteriorColor: types.maybeNull(types.string),
+    interiorColor: types.maybeNull(types.string),
+    sellerType: types.maybeNull(types.string),
 
-    // --- Data Loading ---
+    images: types.array(ItemImageModel),
 
-    loadItems = async (page = 0) => {
-        this.isLoading = true;
-        this.error = null;
-        try {
-            const pageData = await getAllItems(page);
-            runInAction(() => {
-                this.items = pageData.content;
-                this.totalItems = pageData.totalElements;
-                this.totalPages = pageData.totalPages;
-                this.currentPage = pageData.number;
-                this.isLoading = false;
-            });
-        } catch (err: any) {
-            runInAction(() => {
-                this.error = err.message || "Failed to load items";
-                this.isLoading = false;
-            });
+    // Auction Context
+    auctionStatus: types.maybeNull(
+        types.enumeration<AuctionStatus>([
+            "DRAFT",
+            "PENDING_APPROVAL",
+            "SCHEDULED",
+            "ACTIVE",
+            "ENDED_PENDING",
+            "SOLD",
+            "UNSOLD",
+            "CANCELLED"
+        ])
+    ),
+    activeAuctionId: types.maybeNull(types.string),
+    auction: types.maybeNull(types.frozen<AuctionDto>())
+});
+
+// --- Root Store ---
+
+export const ItemStore = types
+    .model("ItemStore", {
+        items: types.array(ItemModel),
+        myItems: types.array(ItemModel),
+        selectedItem: types.maybeNull(types.reference(ItemModel)),
+
+        // Pagination for all items
+        totalItems: 0,
+        totalPages: 0,
+        currentPage: 0,
+
+        // Pagination for my items
+        myTotalItems: 0,
+        myTotalPages: 0,
+        myCurrentPage: 0,
+    })
+    .volatile(() => ({
+        isLoading: false,
+        error: null as string | null,
+        uploadProgress: null as string | null,
+    }))
+
+    .views((self) => ({
+        get hasItems() {
+            return self.items.length > 0;
+        },
+        get hasMyItems() {
+            return self.myItems.length > 0;
+        },
+        getItemById(id: string) {
+            return self.items.find(i => i.id === id) || self.myItems.find(i => i.id === id);
         }
-    };
+    }))
+    .actions((self) => {
+        // Private helper to sync lists
+        const updateLocalCache = (itemData: ItemDto) => {
+            const existingInItems = self.items.findIndex(i => i.id === itemData.id);
+            if (existingInItems !== -1) self.items[existingInItems] = cast(itemData);
 
-    loadMyItems = async (page = 0) => {
-        this.isLoading = true;
-        this.error = null;
-        try {
-            const pageData = await getMyItems(page);
-            runInAction(() => {
-                this.myItems = pageData.content;
-                this.isLoading = false;
-            });
-        } catch (err: any) {
-            runInAction(() => {
-                this.error = err.message || "Failed to load your items";
-                this.isLoading = false;
-            });
-        }
-    };
+            const existingInMyItems = self.myItems.findIndex(i => i.id === itemData.id);
+            if (existingInMyItems !== -1) self.myItems[existingInMyItems] = cast(itemData);
+        };
 
-    loadItemDetails = async (id: string) => {
-        this.isLoading = true;
-        this.error = null;
-        try {
-            const item = await getItemById(id);
-            runInAction(() => {
-                this.selectedItem = item;
-                this.isLoading = false;
-            });
-        } catch (err: any) {
-            runInAction(() => {
-                this.error = err.message || "Failed to load item details";
-                this.isLoading = false;
-            });
-        }
-    };
-
-    clearSelectedItem = () => {
-        this.selectedItem = null;
-    };
-
-    // --- Actions ---
-
-    submitItem = async (data: ItemCreateRequest, files: File[]) => {
-        this.isLoading = true;
-        this.error = null;
-        this.uploadProgress = "Initializing listing...";
-
-        try {
-            // 1. Create the item
-            const newItem = await submitItem(data);
-            const itemId = newItem.id;
-
-            // 2. Upload images if any
-            if (files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    runInAction(() => {
-                        this.uploadProgress = `Uploading photo ${i + 1} of ${files.length}...`;
-                    });
-                    await uploadItemImage(itemId, files[i]);
-                }
+        const loadItems = flow(function* (page = 0) {
+            self.isLoading = true;
+            self.error = null;
+            try {
+                const data = yield getAllItems(page);
+                self.items = cast(data.content);
+                self.totalItems = data.totalElements;
+                self.totalPages = data.totalPages;
+                self.currentPage = data.number;
+            } catch (err) { // <-- Removed any
+                self.error = err instanceof Error ? err.message : "Failed to load items";
+            } finally {
+                self.isLoading = false;
             }
+        });
 
-            // 3. Update State
-            runInAction(() => {
-                this.isLoading = false;
-                this.uploadProgress = null;
+        const loadItemDetails = flow(function* (id: string) {
+            self.isLoading = true;
+            self.error = null;
+            try {
+                // Fetch the fresh item from the API
+                const itemData = yield getItemById(id);
 
-                // Set selectedItem so the Page component can navigate to it
-                this.selectedItem = newItem;
+                // Keep our local lists in sync
+                updateLocalCache(itemData);
 
-                // Add to the beginning of the local list
-                this.myItems.unshift(newItem);
-            });
+                // If the item isn't in our arrays yet, we need to push it so the reference works
+                const exists = self.items.find(i => i.id === id) || self.myItems.find(i => i.id === id);
+                if (!exists) {
+                    self.items.push(cast(itemData));
+                }
 
-            return true;
-        } catch (err: any) {
-            runInAction(() => {
-                this.error = err.message || "Failed to create listing";
-                this.isLoading = false;
-                this.uploadProgress = null;
-            });
-            return false;
-        }
-    };
+                // Set it as the currently selected item
+                self.selectedItem = id as unknown as Instance<typeof ItemModel>;
+            } catch (err) {
+                self.error = err instanceof Error ? err.message : "Failed to load item details";
+            } finally {
+                self.isLoading = false;
+            }
+        });
 
-    updateListing = async (
-        id: string,
-        data: ItemUpdateRequest,
-        newFiles: File[],
-        deletedImageIds: string[] = []
-    ) => {
-        this.isLoading = true;
-        this.error = null;
-        this.uploadProgress = "Saving changes...";
+        const clearSelectedItem = () => {
+            self.selectedItem = null;
+        };
 
-        try {
-            // 1️⃣ Calculate keepImageIds (backend-driven sync)
-            const keepImageIds =
-                this.selectedItem?.images
+        const loadMyItems = flow(function* (page = 0) {
+            self.isLoading = true;
+            self.error = null;
+            try {
+                const data = yield getMyItems(page);
+                self.myItems = cast(data.content);
+                self.myTotalItems = data.totalElements;
+                self.myTotalPages = data.totalPages;
+                self.myCurrentPage = data.number;
+            } catch (err) { // <-- Removed any
+                self.error = err instanceof Error ? err.message : "Failed to load your items";
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        const submitNewItem = flow(function* (data: ItemCreateRequest, files: File[]) {
+            self.isLoading = true;
+            self.uploadProgress = "Creating listing...";
+            try {
+                const newItem: ItemDto = yield submitItem(data);
+
+                if (files.length > 0) {
+                    self.uploadProgress = `Uploading ${files.length} images...`;
+                    yield Promise.all(files.map(file => uploadItemImage(newItem.id, file)));
+
+                    const finalItem: ItemDto = yield getItemById(newItem.id);
+                    self.myItems.unshift(cast(finalItem));
+
+                    // FIX: Replaced `as any` with a double assertion to bypass ESLint complaints
+                    self.selectedItem = finalItem.id as unknown as Instance<typeof ItemModel>;
+                    return finalItem;
+                }
+
+                self.myItems.unshift(cast(newItem));
+
+                // FIX: Replaced `as any`
+                self.selectedItem = newItem.id as unknown as Instance<typeof ItemModel>;
+                return newItem;
+            } catch (err) { // <-- Removed any
+                self.error = err instanceof Error ? err.message : "Submit failed";
+                return null;
+            } finally {
+                self.isLoading = false;
+                self.uploadProgress = null;
+            }
+        });
+
+        const updateListing = flow(function* (
+            id: string,
+            data: ItemUpdateRequest,
+            newFiles: File[],
+            deletedImageIds: string[]
+        ) {
+            self.isLoading = true;
+            self.uploadProgress = "Updating...";
+            try {
+                const keepImageIds = self.selectedItem?.images
                     .filter(img => !deletedImageIds.includes(img.id))
                     .map(img => img.id) || [];
 
-            // 2️⃣ Send update request with keepImageIds
-            const updatedItem = await updateItem(id, {
-                ...data,
-                keepImageIds
-            });
+                yield updateItem(id, { ...data, keepImageIds });
 
-            // 3️⃣ Upload new images (if any)
-            if (newFiles.length > 0) {
-                for (let i = 0; i < newFiles.length; i++) {
-                    runInAction(() => {
-                        this.uploadProgress = `Adding photo ${i + 1} of ${newFiles.length}...`;
-                    });
-
-                    await uploadItemImage(id, newFiles[i]);
+                if (newFiles.length > 0) {
+                    yield Promise.all(newFiles.map(file => uploadItemImage(id, file)));
                 }
+
+                const refreshed: ItemDto = yield getItemById(id);
+                updateLocalCache(refreshed);
+                return true;
+            } catch (err) { // <-- Removed any
+                self.error = err instanceof Error ? err.message : "Update failed";
+                return false;
+            } finally {
+                self.isLoading = false;
+                self.uploadProgress = null;
             }
+        });
 
-            // 4️⃣ Always reload if images changed
-            if (newFiles.length > 0 || deletedImageIds.length > 0) {
-                await this.loadItemDetails(id);
+        const deleteListing = flow(function* (id: string) {
+            try {
+                yield deleteItem(id);
 
-                runInAction(() => {
-                    const updateInList = (list: ItemDto[]) => {
-                        const index = list.findIndex(i => i.id === id);
-                        if (index !== -1 && this.selectedItem) {
-                            list[index] = { ...this.selectedItem };
-                        }
-                    };
+                const itemToRemove = self.items.find(i => i.id === id);
+                if (itemToRemove) self.items.remove(itemToRemove);
 
-                    updateInList(this.myItems);
-                    updateInList(this.items);
-                });
+                const myItemToRemove = self.myItems.find(i => i.id === id);
+                if (myItemToRemove) self.myItems.remove(myItemToRemove);
 
-            } else {
-                // Fast path (text only)
-                runInAction(() => {
-                    const updateInList = (list: ItemDto[]) => {
-                        const index = list.findIndex(i => i.id === id);
-                        if (index !== -1) {
-                            const existingImages = list[index].images;
-                            list[index] = { ...updatedItem, images: existingImages };
-                        }
-                    };
-
-                    updateInList(this.myItems);
-                    updateInList(this.items);
-
-                    if (this.selectedItem?.id === id) {
-                        this.selectedItem = {
-                            ...updatedItem,
-                            images: this.selectedItem.images
-                        };
-                    }
-                });
+                if (self.selectedItem?.id === id) self.selectedItem = null;
+            } catch (err) { // <-- Removed any
+                self.error = err instanceof Error ? err.message : "Delete failed";
             }
+        });
 
-            runInAction(() => {
-                this.isLoading = false;
-                this.uploadProgress = null;
-            });
+        return {
+            loadItems,
+            loadMyItems,
+            loadItemDetails,
+            submitNewItem,
+            updateListing,
+            deleteListing,
+            clearSelectedItem,
+            setSelectedItem: (id: string | null) => {
+                self.selectedItem = id as unknown as Instance<typeof ItemModel> | null;
+            }
+        };
+    });
 
-            return true;
-
-        } catch (err: any) {
-            runInAction(() => {
-                this.error = err.message || "Update failed";
-                this.isLoading = false;
-                this.uploadProgress = null;
-            });
-            return false;
-        }
-    };
-
-
-    deleteListing = async (id: string) => {
-        try {
-            await deleteItem(id);
-            runInAction(() => {
-                this.myItems = this.myItems.filter(item => item.id !== id);
-                this.items = this.items.filter(item => item.id !== id);
-
-                if (this.selectedItem?.id === id) {
-                    this.selectedItem = null;
-                }
-            });
-        } catch (err: any) {
-            runInAction(() => {
-                this.error = err.message || "Failed to delete item";
-            });
-        }
-    };
-}
-
-export const itemStore = new ItemStore();
+export type IItemStore = Instance<typeof ItemStore>;

@@ -1,201 +1,219 @@
-import { makeAutoObservable, runInAction } from "mobx";
-// Add verifyEmail to the imports
-import { login, register, restoreAccount, verifyEmail } from "../api/auth.api";
+import { types, flow, type Instance } from "mobx-state-tree";
+import {
+    login as apiLogin,
+    register as apiRegister,
+    restoreAccount as apiRestoreAccount,
+    verifyEmail as apiVerifyEmail
+} from "../api/auth.api";
 import { tokenStorage } from "../../../shared/lib/token";
-import type { LoginRequestDto, RegisterRequestDto } from "../types";
+import type {
+    LoginRequestDto,
+    RegisterRequestDto,
+    AuthResponseDto,
+    RestoreResponseDto
+} from "../types";
 
-export type ModalView = 'login' | 'register' | null;
-
-export interface AuthUser {
-    id: number;
-    username: string;
-    roles: { name: string }[];
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return String(error);
 }
 
-export class AuthStore {
-    token: string | null = tokenStorage.get();
-    user: AuthUser | null = null;
+export const RoleModel = types.model("Role", {
+    name: types.string,
+});
 
-    // UI State
-    modalView: ModalView = null;
-    isLoading = false;
-    error: string | null = null;
-    successMessage: string | null = null;
-    isDeletedAccount = false;
+export const AuthUserModel = types.model("AuthUser", {
+    id: types.number,
+    username: types.string,
+    roles: types.array(RoleModel),
+});
 
-    constructor() {
-        makeAutoObservable(this);
-        if (this.token) {
-            // Re-validate or decode token on load
-            this.setToken(this.token);
+export const AuthStore = types.model("AuthStore", {
+    token: types.maybeNull(types.string),
+    user: types.maybeNull(AuthUserModel),
+    modalView: types.maybeNull(types.enumeration(["login", "register"])),
+    isLoading: types.optional(types.boolean, false),
+    error: types.maybeNull(types.string),
+    successMessage: types.maybeNull(types.string),
+    isDeletedAccount: types.optional(types.boolean, false),
+})
+    .views((self) => ({
+        get isAuthenticated() {
+            return Boolean(self.token);
         }
-    }
+    }))
+    .actions((self) => {
+        function reset() {
+            self.error = null;
+            self.successMessage = null;
+            self.isLoading = false;
+            self.isDeletedAccount = false;
+        }
 
-    get isAuthenticated() {
-        return Boolean(this.token);
-    }
+        function decodeAndSetUser(token: string) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
 
-    // --- Modal Management ---
-    openLogin = () => {
-        this.reset();
-        this.modalView = 'login';
-    }
+                const payload = JSON.parse(jsonPayload);
 
-    openRegister = () => {
-        this.reset();
-        this.modalView = 'register';
-    }
+                let roles: { name: string }[] = [];
+                if (Array.isArray(payload.roles)) {
+                    roles = payload.roles.map((r: unknown) => {
+                        if (typeof r === 'string') return { name: r };
+                        if (typeof r === 'object' && r !== null) {
+                            const obj = r as Record<string, unknown>;
+                            if (typeof obj.authority === 'string') return { name: obj.authority };
+                            if (typeof obj.name === 'string') return { name: obj.name };
+                        }
+                        return { name: String(r) };
+                    });
+                }
 
-    closeModal = () => {
-        this.reset();
-        this.modalView = null;
-    }
+                self.user = AuthUserModel.create({
+                    id: payload.userId,
+                    username: payload.sub,
+                    roles: roles
+                });
+            } catch {
+                self.user = null;
+            }
+        }
 
-    reset() {
-        this.error = null;
-        this.successMessage = null;
-        this.isLoading = false;
-        this.isDeletedAccount = false;
-    }
+        function setToken(token: string) {
+            self.token = token;
+            tokenStorage.set(token);
+            decodeAndSetUser(token);
+        }
 
-    // --- Helper Methods (Fixes for VerifyPage) ---
+        const openLogin = () => {
+            reset();
+            self.modalView = 'login';
+        };
 
-    clearError() {
-        this.error = null;
-    }
+        const openRegister = () => {
+            reset();
+            self.modalView = 'register';
+        };
 
-    clearSuccessMessage() {
-        this.successMessage = null;
-    }
+        const closeModal = () => {
+            reset();
+            self.modalView = null;
+        };
 
-    // --- Actions ---
+        const clearError = () => {
+            self.error = null;
+        };
 
-    async login(data: LoginRequestDto) {
-        this.isLoading = true;
-        this.error = null;
-        this.isDeletedAccount = false;
+        const clearSuccessMessage = () => {
+            self.successMessage = null;
+        };
 
-        try {
-            const { token } = await login(data);
-            runInAction(() => {
-                this.setToken(token);
-                this.closeModal();
-            });
-        } catch (e: any) {
-            runInAction(() => {
-                const msg = e.message || "An error occurred";
-                this.error = msg;
+        const logout = () => {
+            self.token = null;
+            self.user = null;
+            tokenStorage.clear();
+        };
+
+        const afterCreate = () => {
+            const token = tokenStorage.get();
+            if (token) {
+                setToken(token);
+            }
+        };
+
+        const login = flow(function* (data: LoginRequestDto) {
+            self.isLoading = true;
+            self.error = null;
+            self.isDeletedAccount = false;
+
+            try {
+                const response = (yield apiLogin(data)) as AuthResponseDto;
+                setToken(response.token);
+                closeModal();
+            } catch (error: unknown) {
+                const msg = getErrorMessage(error);
+                self.error = msg;
 
                 if (msg.toLowerCase().includes("account deleted")) {
-                    this.isDeletedAccount = true;
+                    self.isDeletedAccount = true;
                 }
-            });
-            throw e;
-        } finally {
-            runInAction(() => this.isLoading = false);
-        }
-    }
-
-    async register(data: RegisterRequestDto) {
-        this.isLoading = true;
-        this.error = null;
-        this.successMessage = null;
-        try {
-            const message = await register(data);
-            runInAction(() => {
-                this.successMessage = message;
-            });
-        } catch (e: any) {
-            runInAction(() => {
-                this.error = e.message;
-            });
-        } finally {
-            runInAction(() => this.isLoading = false);
-        }
-    }
-
-    // --- NEW: Verify Method ---
-    async verify(token: string) {
-        this.isLoading = true;
-        this.error = null;
-        this.successMessage = null;
-
-        try {
-            // You need to ensure verifyEmail is exported from ../api/auth.api
-            const message = await verifyEmail(token);
-            runInAction(() => {
-                this.successMessage = message;
-            });
-        } catch (e: any) {
-            runInAction(() => {
-                this.error = e.message || "Verification failed";
-            });
-        } finally {
-            runInAction(() => {
-                this.isLoading = false;
-            });
-        }
-    }
-
-    async restore(data: LoginRequestDto) {
-        this.isLoading = true;
-        this.error = null;
-
-        try {
-            const response = await restoreAccount(data);
-            runInAction(() => {
-                this.successMessage = response.message;
-            });
-            await this.login(data);
-        } catch (e: any) {
-            runInAction(() => {
-                this.error = e.message;
-            });
-        } finally {
-            runInAction(() => this.isLoading = false);
-        }
-    }
-
-    logout() {
-        this.token = null;
-        this.user = null;
-        tokenStorage.clear();
-    }
-
-    private setToken(token: string) {
-        this.token = token;
-        tokenStorage.set(token);
-        this.decodeAndSetUser(token);
-    }
-
-    private decodeAndSetUser(token: string) {
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            const payload = JSON.parse(jsonPayload);
-
-            let roles: { name: string }[] = [];
-            if (Array.isArray(payload.roles)) {
-                roles = payload.roles.map((r: any) => {
-                    if (typeof r === 'string') return { name: r };
-                    if (typeof r === 'object' && r.authority) return { name: r.authority };
-                    if (typeof r === 'object' && r.name) return { name: r.name };
-                    return { name: String(r) };
-                });
+                throw error;
+            } finally {
+                self.isLoading = false;
             }
+        });
 
-            this.user = {
-                id: payload.userId,
-                username: payload.sub,
-                roles: roles
-            };
-        } catch (e) {
-            console.error("Failed to decode token", e);
-            this.user = null;
-        }
-    }
-}
+        const register = flow(function* (data: RegisterRequestDto) {
+            self.isLoading = true;
+            self.error = null;
+            self.successMessage = null;
+
+            try {
+                const message = (yield apiRegister(data)) as string;
+                self.successMessage = message;
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error);
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        const verify = flow(function* (token: string) {
+            self.isLoading = true;
+            self.error = null;
+            self.successMessage = null;
+
+            try {
+                const message = (yield apiVerifyEmail(token)) as string;
+                self.successMessage = message;
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error) || "Verification failed";
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        const restore = flow(function* (data: LoginRequestDto) {
+            self.isLoading = true;
+            self.error = null;
+
+            try {
+                const response = (yield apiRestoreAccount(data)) as RestoreResponseDto;
+                self.successMessage = response.message;
+
+                const loginResponse = (yield apiLogin(data)) as AuthResponseDto;
+                setToken(loginResponse.token);
+                closeModal();
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error);
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        return {
+            reset,
+            decodeAndSetUser,
+            setToken,
+            openLogin,
+            openRegister,
+            closeModal,
+            clearError,
+            clearSuccessMessage,
+            logout,
+            afterCreate,
+            login,
+            register,
+            verify,
+            restore
+        };
+    });
+
+export type IAuthUser = Instance<typeof AuthUserModel>;
+export type IAuthStore = Instance<typeof AuthStore>;

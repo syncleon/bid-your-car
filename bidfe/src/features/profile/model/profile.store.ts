@@ -1,102 +1,136 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { types, flow, getRoot, type Instance } from "mobx-state-tree";
 import {
     getProfile,
     deleteUserById,
     updateProfile,
     changePassword,
 } from "../api/profile.api";
-import type { Profile } from "../types";
-import type {AuthStore} from "../../auth/model/auth.store.ts";
+import type {
+    DeleteAccountRequestDto,
+    UpdatePasswordRequestDto,
+    UpdateProfileRequestDto,
+    UserDto
+} from "../../auth/types";
 
-export class ProfileStore {
-    profile: Profile | null = null;
-    isLoading = false;
-    error: string | null = null;
-    successMessage: string | null = null;
-
-    private authStore: AuthStore;
-
-    constructor(authStore: AuthStore) {
-        this.authStore = authStore;
-        makeAutoObservable(this);
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
     }
-
-    async loadProfile() {
-        this.isLoading = true;
-        try {
-            const data = await getProfile();
-            runInAction(() => {
-                this.profile = data;
-            });
-        } catch (e) {
-            // Silently fail if just loading profile (maybe token expired)
-        } finally {
-            runInAction(() => { this.isLoading = false; });
-        }
-    }
-
-    async updateProfileData(data: { username: string; email: string }) {
-        this.isLoading = true;
-        this.clearMessages();
-        try {
-            const updated = await updateProfile(data);
-            runInAction(() => {
-                this.profile = updated;
-                this.successMessage = "Profile updated successfully!";
-            });
-        } catch (e: any) {
-            runInAction(() => {
-                this.error = e.message;
-            });
-            throw e;
-        } finally {
-            runInAction(() => { this.isLoading = false; });
-        }
-    }
-
-    async changeUserPassword(data: { oldPassword: string; newPassword: string }) {
-        this.isLoading = true;
-        this.clearMessages();
-        try {
-            await changePassword(data);
-            runInAction(() => {
-                this.successMessage = "Password changed successfully!";
-            });
-        } catch (e: any) {
-            runInAction(() => {
-                this.error = e.message;
-            });
-            throw e;
-        } finally {
-            runInAction(() => { this.isLoading = false; });
-        }
-    }
-
-    async deleteAccount(password: string) {
-        if (!this.profile?.id) return;
-
-        this.isLoading = true;
-        try {
-            await deleteUserById(this.profile.id, password);
-
-            runInAction(() => {
-                this.profile = null;
-            });
-
-            // IMPORTANT: Clear client-side session
-            this.authStore.logout();
-        } catch (e: any) {
-            runInAction(() => {
-                this.error = e.message;
-            });
-            throw e;
-        } finally {
-            runInAction(() => { this.isLoading = false; });
-        }
-    }
-
-    clearMessages() {
-        this.error = null;
-        this.successMessage = null;
-    }
+    return String(error);
 }
+
+interface IRootStoreShape {
+    authStore?: {
+        logout: () => void;
+    };
+}
+
+export const UserRoleModel = types.model("UserRole", {
+    name: types.string,
+});
+
+export const UserProfileModel = types.model("UserProfile", {
+    id: types.number,
+    username: types.string,
+    email: types.string,
+    roles: types.array(UserRoleModel),
+    createdDate: types.maybeNull(types.string),
+})
+    .views((self) => ({
+        get formattedCreatedDate() {
+            if (!self.createdDate) return "N/A";
+            return new Date(self.createdDate).toLocaleDateString();
+        }
+    }));
+
+export const ProfileStore = types.model("ProfileStore", {
+    profile: types.maybeNull(UserProfileModel),
+    isLoading: types.optional(types.boolean, false),
+    error: types.maybeNull(types.string),
+    successMessage: types.maybeNull(types.string),
+})
+    .actions((self) => {
+        const clearMessages = () => {
+            self.error = null;
+            self.successMessage = null;
+        };
+
+        const loadProfile = flow(function* () {
+            self.isLoading = true;
+            try {
+                const data = (yield getProfile()) as UserDto;
+                self.profile = UserProfileModel.create({
+                    ...data,
+                    createdDate: data.createdDate || null
+                });
+            } catch (error: unknown) {
+                console.debug("Profile load failed (expected if unauthorized):", error);
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        const updateProfileData = flow(function* (data: UpdateProfileRequestDto) {
+            self.isLoading = true;
+            clearMessages();
+            try {
+                const updated = (yield updateProfile(data)) as UserDto;
+                self.profile = UserProfileModel.create({
+                    ...updated,
+                    createdDate: updated.createdDate || null
+                });
+                self.successMessage = "Profile updated successfully!";
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error);
+                throw error; // Re-throw so the form can handle local UI state if needed
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        const changeUserPassword = flow(function* (data: UpdatePasswordRequestDto) {
+            self.isLoading = true;
+            clearMessages();
+            try {
+                yield changePassword(data);
+                self.successMessage = "Password changed successfully!";
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error);
+                throw error;
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        const deleteAccount = flow(function* (data: DeleteAccountRequestDto) {
+            if (!self.profile?.id) return;
+
+            self.isLoading = true;
+            try {
+                yield deleteUserById(self.profile.id, data);
+                self.profile = null;
+
+                // Type-safe access to the root store to trigger logout
+                const root = getRoot<IRootStoreShape>(self);
+                if (root?.authStore?.logout) {
+                    root.authStore.logout();
+                }
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error);
+                throw error;
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        return {
+            clearMessages,
+            loadProfile,
+            updateProfileData,
+            changeUserPassword,
+            deleteAccount
+        };
+    });
+
+export type IUserProfile = Instance<typeof UserProfileModel>;
+export type IProfileStore = Instance<typeof ProfileStore>;

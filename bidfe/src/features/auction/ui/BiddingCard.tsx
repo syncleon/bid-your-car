@@ -16,7 +16,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const isActive = auction.status === 'ACTIVE';
     const isEnded = new Date(auction.endTime).getTime() < Date.now();
     const isOwner = authStore.user?.id === auction.item.seller.id;
-    const currentPrice = auction.currentHighestBid || auction.startPrice;
+    const currentPrice = auction.currentPrice || auction.startPrice;
     const minBid = auction.bidCount === 0 ? auction.startPrice : currentPrice + auction.minBidIncrement;
 
     // Timer: Auction Countdown

@@ -66,7 +66,7 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
 
     const images = item?.images || [];
     const mainImage = images.length > 0 && images[selectedImgIdx]
-        ? (images[selectedImgIdx].previewUrl || images[selectedImgIdx].url || images[selectedImgIdx].thumbnailUrl)
+        ? (images[selectedImgIdx].url)
         : null;
 
     if (!isOpen || !item) return null;
@@ -97,7 +97,7 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
             itemId: item.id,
             startTime: start.toISOString(),
             endTime: end.toISOString(),
-            startingBid: Number(startPrice),
+            startPrice: Number(startPrice),
             reservePrice: hasReserve ? Number(reservePrice) : undefined,
             minBidIncrement: bidIncrement
         };
@@ -157,7 +157,7 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                                                 borderColor: i === selectedImgIdx ? "#2563eb" : "transparent"
                                             }}
                                         >
-                                            <img src={img.thumbnailUrl} style={styles.thumbImg} alt="" />
+                                            <img src={img.url} style={styles.thumbImg} alt="" />
                                         </button>
                                     ))}
                                 </div>

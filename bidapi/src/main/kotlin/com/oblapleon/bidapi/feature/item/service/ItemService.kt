@@ -5,7 +5,9 @@ import com.oblapleon.bidapi.common.exception.ForbiddenException
 import com.oblapleon.bidapi.common.exception.NotFoundException
 import com.oblapleon.bidapi.common.service.StorageService
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
+import com.oblapleon.bidapi.feature.item.dto.ItemDto
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
+import com.oblapleon.bidapi.feature.item.dto.toDto
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.item.entity.ItemImage
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
@@ -36,14 +38,7 @@ class ItemService(
 
     private val logger = LoggerFactory.getLogger(ItemService::class.java)
 
-    /**
-     * Retrieves an item by its UUID.
-     *
-     * @param id The unique identifier of the item.
-     * @return The requested Item entity.
-     * @throws NotFoundException if the item does not exist or if the seller's account has been deleted.
-     */
-    @Cacheable(value = ["items"], key = "#id")
+    @Transactional(readOnly = true)
     fun findById(id: UUID): Item {
         val item = itemRepository.findById(id)
             .orElseThrow { NotFoundException("Item not found") }
@@ -54,6 +49,13 @@ class ItemService(
         return item
     }
 
+    @Cacheable(value = ["items"], key = "#id")
+    @Transactional(readOnly = true)
+    fun getCachedItemDto(id: UUID): ItemDto {
+        val item = findById(id)
+        return item.toDto()
+    }
+
     /**
      * Retrieves a paginated list of items that are approved and available for public viewing.
      *
@@ -61,7 +63,7 @@ class ItemService(
      * @return A page of available items.
      */
     fun findAllAvailable(pageable: Pageable): Page<Item> {
-        return itemRepository.findAllByStatus(ItemStatus.AVAILABLE, pageable)
+        return itemRepository.findAllByStatus(ItemStatus.DRAFT, pageable)
     }
 
     /**
@@ -93,7 +95,7 @@ class ItemService(
 
         val newItem = Item(
             seller = currentUser,
-            status = ItemStatus.PENDING_REVIEW,
+            status = ItemStatus.DRAFT,
             year = request.year,
             make = request.make,
             model = request.model,

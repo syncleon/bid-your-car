@@ -1,8 +1,13 @@
 import React, { useState } from "react";
-import type {ProfileStore} from "../model/profile.store.ts";
+import { observer } from "mobx-react-lite";
+import type { IProfileStore } from "../model/profile.store";
 
-// --- Edit Profile Form ---
-export const EditProfileForm = ({ store, onCancel }: { store: ProfileStore; onCancel: () => void }) => {
+interface FormProps {
+    store: IProfileStore;
+    onCancel: () => void;
+}
+
+export const EditProfileForm = observer(({ store, onCancel }: FormProps) => {
     const [formData, setFormData] = useState({
         username: store.profile?.username || "",
         email: store.profile?.email || ""
@@ -13,37 +18,45 @@ export const EditProfileForm = ({ store, onCancel }: { store: ProfileStore; onCa
         try {
             await store.updateProfileData(formData);
             onCancel();
-        } catch (e) { /* Error is in store.error */ }
+        } catch {
+            // Error state is managed by store.error
+        }
     };
 
     return (
         <form onSubmit={handleSubmit} className="profile-form">
             <div style={{ marginBottom: 15 }}>
-                <label style={{ display:'block', marginBottom: 5 }}>Username</label>
+                <label style={{ display: 'block', marginBottom: 5 }}>Username</label>
                 <input
                     value={formData.username}
-                    onChange={e => setFormData({...formData, username: e.target.value})}
+                    onChange={e => setFormData({ ...formData, username: e.target.value })}
                     style={{ padding: 8, width: '100%' }}
+                    required
                 />
             </div>
             <div style={{ marginBottom: 15 }}>
-                <label style={{ display:'block', marginBottom: 5 }}>Email</label>
+                <label style={{ display: 'block', marginBottom: 5 }}>Email</label>
                 <input
+                    type="email"
                     value={formData.email}
-                    onChange={e => setFormData({...formData, email: e.target.value})}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
                     style={{ padding: 8, width: '100%' }}
+                    required
                 />
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" disabled={store.isLoading}>Save</button>
-                <button type="button" onClick={onCancel}>Cancel</button>
+                <button type="submit" disabled={store.isLoading}>
+                    {store.isLoading ? "Saving..." : "Save"}
+                </button>
+                <button type="button" onClick={onCancel} disabled={store.isLoading}>
+                    Cancel
+                </button>
             </div>
         </form>
     );
-};
+});
 
-// --- Password Form ---
-export const ChangePasswordForm = ({ store, onCancel }: { store: ProfileStore; onCancel: () => void }) => {
+export const ChangePasswordForm = observer(({ store, onCancel }: FormProps) => {
     const [formData, setFormData] = useState({ oldPassword: "", newPassword: "" });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -51,29 +64,40 @@ export const ChangePasswordForm = ({ store, onCancel }: { store: ProfileStore; o
         try {
             await store.changeUserPassword(formData);
             onCancel();
-        } catch (e) { /* Error in store */ }
+        } catch {
+            // Error managed by store
+        }
     };
 
     return (
         <form onSubmit={handleSubmit} className="profile-form">
             <div style={{ marginBottom: 15 }}>
                 <input
-                    type="password" placeholder="Old Password"
+                    type="password"
+                    placeholder="Old Password"
                     value={formData.oldPassword}
-                    onChange={e => setFormData({...formData, oldPassword: e.target.value})}
+                    onChange={e => setFormData({ ...formData, oldPassword: e.target.value })}
                     style={{ padding: 8, width: '100%', marginBottom: 10 }}
+                    required
                 />
                 <input
-                    type="password" placeholder="New Password"
+                    type="password"
+                    placeholder="New Password"
                     value={formData.newPassword}
-                    onChange={e => setFormData({...formData, newPassword: e.target.value})}
+                    onChange={e => setFormData({ ...formData, newPassword: e.target.value })}
                     style={{ padding: 8, width: '100%' }}
+                    required
+                    minLength={6}
                 />
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" disabled={store.isLoading}>Update Password</button>
-                <button type="button" onClick={onCancel}>Cancel</button>
+                <button type="submit" disabled={store.isLoading}>
+                    {store.isLoading ? "Updating..." : "Update Password"}
+                </button>
+                <button type="button" onClick={onCancel} disabled={store.isLoading}>
+                    Cancel
+                </button>
             </div>
         </form>
     );
-};
+});

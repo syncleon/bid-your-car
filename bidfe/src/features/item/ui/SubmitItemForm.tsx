@@ -68,12 +68,18 @@ export const SubmitItemForm = ({
     // --- Handlers ---
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: name === "mileage" || name === "year"
-                ? (value === "" ? "" : Number(value))
-                : name === "vin" ? value.toUpperCase() : value
-        }));
+        setFormData(prev => {
+            let parsedValue: string | number = value;
+
+            if (name === "mileage" || name === "year") {
+                parsedValue = value === "" ? "" : Number(value);
+            } else if (name === "vin") {
+                // Uppercase and strip I, O, Q
+                parsedValue = value.toUpperCase().replace(/[IOQ]/g, '');
+            }
+
+            return { ...prev, [name]: parsedValue };
+        });
     };
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -109,7 +115,6 @@ export const SubmitItemForm = ({
 
     // --- Navigation ---
     const handleNext = (e?: React.MouseEvent | React.KeyboardEvent) => {
-        // Stop any form submission events if they triggered this
         if (e) {
             e.preventDefault();
             e.stopPropagation();
@@ -124,37 +129,35 @@ export const SubmitItemForm = ({
         setCurrentStep(p => Math.max(p - 1, 1));
     };
 
-    // --- Handling "Enter" Key ---
-    // This prevents the form from submitting when Enter is pressed on intermediate steps
     const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
-            e.preventDefault(); // Stop default submit
+            e.preventDefault();
             if (currentStep < STEPS.length) {
                 handleNext(e);
             } else {
-                // Manually trigger submit if on last step
                 requestSubmit();
             }
         }
     };
 
-    // --- Final Submission Logic ---
     const requestSubmit = () => {
-        const { images, ...cleanPayload } = formData;
+        const { images, ...rawPayload } = formData;
+
+        const cleanPayload = Object.fromEntries(
+            Object.entries(rawPayload).map(([k, v]) => [k, v === "" ? undefined : v])
+        );
+
         const keepImageIds = images.filter(img => img.id).map(img => img.id);
         const payload = { ...cleanPayload, keepImageIds };
-        onSubmit(payload as ItemCreateRequest, files, deletedImageIds);
+    onSubmit(payload as unknown as ItemCreateRequest, files, deletedImageIds);
     };
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-
-        // DOUBLE CHECK: If we are not on the last step, DO NOT SUBMIT.
         if (currentStep !== STEPS.length) {
             handleNext();
             return;
         }
-
         requestSubmit();
     };
 
@@ -175,77 +178,85 @@ export const SubmitItemForm = ({
 
                 {currentStep === 1 && (
                     <div style={styles.grid}>
-                        <div style={styles.fullWidth}>
+                        <div>
                             <label style={styles.label}>Year</label>
                             <select name="year" value={formData.year} onChange={handleChange} style={styles.select}>
                                 {YEARS.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
                             </select>
                         </div>
-                        <div>
-                            <label style={styles.label}>Make</label>
-                            <input name="make" value={formData.make} onChange={handleChange} style={styles.input} placeholder="e.g. Porsche" autoFocus />
-                        </div>
-                        <div>
-                            <label style={styles.label}>Model</label>
-                            <input name="model" value={formData.model} onChange={handleChange} style={styles.input} placeholder="e.g. 911 GT3" />
+                        <div style={styles.halfGrid}>
+                            <div>
+                                <label style={styles.label}>Make</label>
+                                <input name="make" value={formData.make} onChange={handleChange} style={styles.input} placeholder="e.g. Porsche" autoFocus />
+                            </div>
+                            <div>
+                                <label style={styles.label}>Model</label>
+                                <input name="model" value={formData.model} onChange={handleChange} style={styles.input} placeholder="e.g. 911 GT3" />
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {currentStep === 2 && (
                     <div style={styles.grid}>
-                        <div style={styles.fullWidth}>
+                        <div>
                             <label style={styles.label}>VIN (17 Characters)</label>
                             <input name="vin" value={formData.vin} onChange={handleChange} maxLength={17} style={styles.input} placeholder="XXXXXXXXXXXXXXXXX" disabled={isEditMode} autoFocus />
                         </div>
-                        <div>
-                            <label style={styles.label}>Mileage</label>
-                            <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} style={styles.input} placeholder="0" />
-                        </div>
-                        <div>
-                            <label style={styles.label}>Location</label>
-                            <input name="location" value={formData.location} onChange={handleChange} style={styles.input} placeholder="City, State" />
+                        <div style={styles.halfGrid}>
+                            <div>
+                                <label style={styles.label}>Mileage</label>
+                                <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} style={styles.input} placeholder="0" />
+                            </div>
+                            <div>
+                                <label style={styles.label}>Location</label>
+                                <input name="location" value={formData.location} onChange={handleChange} style={styles.input} placeholder="City, State" />
+                            </div>
                         </div>
 
-                        <div style={styles.fullWidth}>
+                        <div>
                             <label style={styles.label}>Transmission</label>
                             <select name="transmission" value={formData.transmission} onChange={handleChange} style={styles.select}>
                                 <option value="">Select...</option>
                                 {TRANSMISSIONS.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
                         </div>
-                        <div>
-                            <label style={styles.label}>Body Style</label>
-                            <select name="bodyStyle" value={formData.bodyStyle} onChange={handleChange} style={styles.select}>
-                                <option value="">Select...</option>
-                                {BODY_STYLES.map(b => <option key={b} value={b}>{b}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label style={styles.label}>Drivetrain</label>
-                            <select name="drivetrain" value={formData.drivetrain} onChange={handleChange} style={styles.select}>
-                                <option value="">Select...</option>
-                                {DRIVETRAINS.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
+                        <div style={styles.halfGrid}>
+                            <div>
+                                <label style={styles.label}>Body Style</label>
+                                <select name="bodyStyle" value={formData.bodyStyle} onChange={handleChange} style={styles.select}>
+                                    <option value="">Select...</option>
+                                    {BODY_STYLES.map(b => <option key={b} value={b}>{b}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label style={styles.label}>Drivetrain</label>
+                                <select name="drivetrain" value={formData.drivetrain} onChange={handleChange} style={styles.select}>
+                                    <option value="">Select...</option>
+                                    {DRIVETRAINS.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {currentStep === 3 && (
                     <div style={styles.grid}>
-                        <div>
-                            <label style={styles.label}>Engine</label>
-                            <input name="engine" value={formData.engine} onChange={handleChange} style={styles.input} placeholder="e.g. 4.0L Flat-6" autoFocus />
+                        <div style={styles.halfGrid}>
+                            <div>
+                                <label style={styles.label}>Engine</label>
+                                <input name="engine" value={formData.engine} onChange={handleChange} style={styles.input} placeholder="e.g. 4.0L Flat-6" autoFocus />
+                            </div>
+                            <div>
+                                <label style={styles.label}>Exterior Color</label>
+                                <input name="exteriorColor" value={formData.exteriorColor} onChange={handleChange} style={styles.input} placeholder="e.g. Guards Red" />
+                            </div>
                         </div>
                         <div>
-                            <label style={styles.label}>Exterior Color</label>
-                            <input name="exteriorColor" value={formData.exteriorColor} onChange={handleChange} style={styles.input} placeholder="e.g. Guards Red" />
-                        </div>
-                        <div style={styles.fullWidth}>
                             <label style={styles.label}>Interior Color</label>
                             <input name="interiorColor" value={formData.interiorColor} onChange={handleChange} style={styles.input} placeholder="e.g. Black Leather" />
                         </div>
-                        <div style={styles.fullWidth}>
+                        <div>
                             <label style={styles.label}>Description / Story</label>
                             <textarea name="description" value={formData.description} onChange={handleChange} style={styles.textarea} placeholder="Tell us about the car's history, condition, and any modifications..." />
                         </div>
@@ -277,7 +288,6 @@ export const SubmitItemForm = ({
                 )}
 
                 {currentStep < STEPS.length ? (
-                    // BUTTON TYPE IS STRICTLY "BUTTON"
                     <button
                         type="button"
                         onClick={handleNext}
@@ -287,7 +297,6 @@ export const SubmitItemForm = ({
                         Next Step
                     </button>
                 ) : (
-                    // BUTTON TYPE IS "SUBMIT" ONLY ON LAST STEP
                     <button
                         type="submit"
                         disabled={isLoading}
@@ -303,19 +312,16 @@ export const SubmitItemForm = ({
 
 // --- Styles ---
 const styles = {
-    // Progress
     progressTrack: { height: "4px", background: "#f3f4f6", borderRadius: "2px", overflow: "hidden", marginBottom: "20px" },
     progressBar: { height: "100%", background: "#111", transition: "width 0.3s ease" },
     stepHeader: { marginBottom: "32px" },
     stepCount: { fontSize: "12px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase" as const, letterSpacing: "0.5px" },
     stepTitle: { fontSize: "24px", fontWeight: 700, color: "#111", margin: "4px 0 0 0" },
 
-    // Content Layout
     contentArea: { minHeight: "300px" },
-    grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
-    fullWidth: { gridColumn: "1 / -1" },
+    grid: { display: "grid", gridTemplateColumns: "1fr", gap: "20px" },
+    halfGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
 
-    // Inputs
     label: { display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" },
     input: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", outline: "none", boxSizing: "border-box" as const },
     select: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", outline: "none", background: "#fff", cursor: "pointer", boxSizing: "border-box" as const },
@@ -323,7 +329,6 @@ const styles = {
 
     helperText: { fontSize: "13px", color: "#6b7280", marginTop: "16px", fontStyle: "italic" },
 
-    // Footer
     footer: { display: "flex", justifyContent: "space-between", marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" },
     backBtn: { background: "none", border: "none", color: "#6b7280", fontWeight: 600, cursor: "pointer", fontSize: "14px" },
     primaryBtn: { background: "#111", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px" },
