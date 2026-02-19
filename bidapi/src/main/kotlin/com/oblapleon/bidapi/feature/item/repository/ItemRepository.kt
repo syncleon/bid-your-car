@@ -1,6 +1,7 @@
 package com.oblapleon.bidapi.feature.item.repository
 
 import com.oblapleon.bidapi.common.repository.BaseRepository
+import com.oblapleon.bidapi.feature.item.entity.ConditionGrade
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import org.springframework.data.domain.Page
@@ -15,7 +16,7 @@ interface ItemRepository : BaseRepository<Item, UUID> {
 
     /**
      * Finds items by their lifecycle status.
-     * Usage: Admin dashboard (PENDING_REVIEW), Public listings (AVAILABLE).
+     * Usage: Admin dashboard (PENDING_AUCTION), Public listings (ACTIVE_AUCTION).
      */
     fun findAllByStatus(status: ItemStatus, pageable: Pageable): Page<Item>
 
@@ -35,11 +36,11 @@ interface ItemRepository : BaseRepository<Item, UUID> {
     fun existsByVin(vin: String): Boolean
 
     /**
-     * Finds items that are 'AVAILABLE' (approved by admin) but
-     * haven't been attached to an Auction yet.
-     * Useful for the "Create Auction" wizard.
+     * Finds items that are 'PENDING_AUCTION' (submitted by seller) but
+     * haven't been attached to an active Auction yet.
+     * Useful for the Admin "Create/Approve Auction" wizard.
      */
-    @Query("SELECT i FROM Item i WHERE i.status = 'AVAILABLE' AND i.auctions IS EMPTY")
+    @Query("SELECT i FROM Item i WHERE i.status = 'PENDING_AUCTION' AND i.auctions IS EMPTY")
     fun findReadyForAuction(pageable: Pageable): Page<Item>
 
     /**
@@ -56,4 +57,21 @@ interface ItemRepository : BaseRepository<Item, UUID> {
      * Count used for User Profile stats (e.g. "Sold 50 cars").
      */
     fun countBySellerIdAndStatus(sellerId: Long, status: ItemStatus): Long
+
+    // --- Filtering Methods ---
+
+    /**
+     * Filter by condition (e.g., "Show me only EXCELLENT cars").
+     */
+    fun findAllByConditionAndStatus(condition: ConditionGrade, status: ItemStatus, pageable: Pageable): Page<Item>
+
+    /**
+     * Filter by fuel type (e.g., "Show me Electric cars").
+     */
+    fun findAllByFuelTypeAndStatus(fuelType: String, status: ItemStatus, pageable: Pageable): Page<Item>
+
+    /**
+     * Find exciting "No Reserve" listings that are active or upcoming.
+     */
+    fun findAllByIsNoReserveTrueAndStatusIn(statuses: List<ItemStatus>, pageable: Pageable): Page<Item>
 }

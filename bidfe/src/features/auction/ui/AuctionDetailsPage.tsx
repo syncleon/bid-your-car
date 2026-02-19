@@ -6,11 +6,11 @@ import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo } from "../..
 import { BiddingCard } from "./BiddingCard";
 import { BidHistory } from "./BidHistory";
 import { formatDistanceToNow } from "date-fns";
-
-// ADDED IMPORTS FOR EDITING
 import { EditItemModal } from "../../item/ui/EditItemModal";
-import type { ItemCreateRequest, ItemImageDto } from "../../item/types.ts";
+import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../../item/types";
 import "./AuctionDetails.css";
+import {Client} from "@stomp/stompjs";
+import SockJS from "sockjs-client"
 
 // --- LIGHTBOX COMPONENT ---
 const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
@@ -45,16 +45,18 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
     return (
         <div className="lightbox-overlay" onClick={onClose}>
             <button className="lightbox-close-btn" aria-label="Close">✕</button>
+
+            {images.length > 1 && (
+                <>
+                    <button className="lightbox-nav-btn left" onClick={handlePrev}>‹</button>
+                    <button className="lightbox-nav-btn right" onClick={handleNext}>›</button>
+                    <div className="lightbox-counter">{index + 1} / {images.length}</div>
+                </>
+            )}
+
             <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
                 <img src={url} alt="" className="lightbox-image" />
             </div>
-            {images.length > 1 && (
-                <div className="lightbox-controls" onClick={(e) => e.stopPropagation()}>
-                    <button className="lightbox-nav-btn" onClick={handlePrev}>‹</button>
-                    <div className="lightbox-counter">{index + 1} / {images.length}</div>
-                    <button className="lightbox-nav-btn" onClick={handleNext}>›</button>
-                </div>
-            )}
         </div>
     );
 };
@@ -63,55 +65,90 @@ export const AuctionDetailsPage = observer(() => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    // ADDED: itemStore to handle the updates and deletions
     const { auctionStore, authStore, itemStore } = useStore();
 
     const [actionLoading, setActionLoading] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-    // ADDED: Owner Action states
+    // Owner Action states
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // --- 1. Load Data & Setup WebSockets ---
     useEffect(() => {
-        if (id) {
-            auctionStore.loadAuctionDetails(id);
-        }
+        if (!id) return;
+
+        // Load initial data
+        auctionStore.loadAuctionDetails(id);
+
+        // Configure WebSocket Client for Real-Time Bids
+        const stompClient = new Client({
+            // NOTE: Update this URL to match your backend's actual environment URL
+            webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+            // Removed the debug property here to keep the console clean
+            reconnectDelay: 5000,
+            onConnect: () => {
+                // Subscribe to this specific auction's topic
+                stompClient.subscribe(`/topic/auctions/${id}`, (message) => {
+                    const notification = JSON.parse(message.body);
+                    // You can also remove this console.log if you want absolute silence
+                    console.log("Live update received:", notification);
+
+                    // When a bid comes in, refresh the details to get the latest state
+                    auctionStore.loadAuctionDetails(id);
+                });
+            },
+        });
+
+        stompClient.activate();
+
+        // Cleanup on unmount
         return () => {
+            stompClient.deactivate();
             auctionStore.clearSelectedAuction();
             auctionStore.clearError();
         };
     }, [id, auctionStore]);
 
-    if (auctionStore.isLoading || !auctionStore.selectedAuction) {
-        return <div className="details-loading">Loading...</div>;
+    if (auctionStore.isLoading && !auctionStore.selectedAuction) {
+        return <div className="details-loading">Loading Auction...</div>;
+    }
+
+    if (!auctionStore.selectedAuction) {
+        return <div className="details-loading">Auction not found.</div>;
     }
 
     const auction = auctionStore.selectedAuction;
     const item = auction.item;
     const user = authStore.user;
-    const isOwner = user?.id === item.seller.id;
-    const isAdmin = user?.roles.some((r: { name: string }) => r.name === 'ADMIN');
+
+    // Safely check ownership and roles
+    const isOwner = user?.id?.toString() === item.seller.id.toString();
+    const isAdmin = user?.roles?.some((r: { name: string }) => r.name === 'ADMIN');
 
     const isActive = auction.status === 'ACTIVE';
     const isPending = auction.status === 'PENDING_APPROVAL';
     const isCancelled = auction.status === 'CANCELLED';
     const isEnded = ['SOLD', 'UNSOLD', 'CANCELLED'].includes(auction.status);
 
-    // --- Actions ---
+    // --- Admin Actions ---
     const handleApprove = async () => {
         setActionLoading(true);
         await auctionStore.approveAuction(auction.id);
         setActionLoading(false);
     };
 
-    // ADDED: Owner Handlers
-    const handleItemUpdate = async (data: ItemCreateRequest, newFiles: File[], deletedImageIds: string[] = []) => {
+    // --- Owner Handlers ---
+    const handleItemUpdate = async (
+        data: ItemUpdateRequest,
+        newFilesWithCategories: { file: File, category: ImageCategory }[],
+        deletedImageIds: string[] = []
+    ) => {
         if (!item.id) return;
-        const success = await itemStore.updateListing(item.id, data, newFiles, deletedImageIds);
+        const success = await itemStore.updateListing(item.id, data, newFilesWithCategories, deletedImageIds);
         if (success) {
             setIsEditModalOpen(false);
-            if (id) await auctionStore.loadAuctionDetails(id); // Reload auction to get fresh item info
+            if (id) await auctionStore.loadAuctionDetails(id);
         }
     };
 
@@ -124,7 +161,6 @@ export const AuctionDetailsPage = observer(() => {
                 navigate("/auctions");
             } else {
                 setIsDeleting(false);
-                // Optional: set a local error state here if you want to display it
             }
         }
     };
@@ -140,7 +176,7 @@ export const AuctionDetailsPage = observer(() => {
                         <div className="gallery-wrapper">
                             <ImageGallery
                                 item={item}
-                                statusLabel={<StatusBadge status={auction.status} />}
+                                statusLabel={<StatusBadge status={auction.status} isNoReserve={auction.isNoReserve} />}
                                 onImageClick={(index) => setLightboxIndex(index)}
                             />
                         </div>
@@ -181,7 +217,7 @@ export const AuctionDetailsPage = observer(() => {
                             </div>
                         )}
 
-                        {/* 3. Owner Controls (NEW) */}
+                        {/* 3. Owner Controls */}
                         {isOwner && !isEnded && (
                             <div className="owner-panel compact-card" style={{ marginBottom: '16px' }}>
                                 <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
@@ -235,7 +271,7 @@ export const AuctionDetailsPage = observer(() => {
                 </div>
             </div>
 
-            {/* Edit Modal (NEW) */}
+            {/* Edit Modal */}
             <EditItemModal
                 item={item}
                 isOpen={isEditModalOpen}
@@ -256,7 +292,8 @@ export const AuctionDetailsPage = observer(() => {
     );
 });
 
-const StatusBadge = ({ status }: { status: string }) => {
+// --- STATUS BADGE COMPONENT ---
+const StatusBadge = ({ status, isNoReserve }: { status: string, isNoReserve: boolean }) => {
     let className = "badge-base ";
     switch (status) {
         case 'ACTIVE': className += "badge-active"; break;
@@ -266,5 +303,15 @@ const StatusBadge = ({ status }: { status: string }) => {
         case 'UNSOLD': className += "badge-ended"; break;
         default: className += "badge-ended"; break;
     }
-    return <span className={className}>{status.replace('_', ' ')}</span>;
+
+    return (
+        <div style={{ display: 'flex', gap: '8px' }}>
+            <span className={className}>{status.replace('_', ' ')}</span>
+            {isNoReserve && (
+                <span className="badge-base" style={{ background: '#16a34a', color: '#fff' }}>
+                    NO RESERVE
+                </span>
+            )}
+        </div>
+    );
 };

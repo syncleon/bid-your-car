@@ -1,109 +1,79 @@
 import { http } from "../../../shared/api/HttpClient";
-import type { AuctionDto, CreateAuctionDto, PlaceBidReq, Page, BidDto } from "../types";
+import type { AuctionDto, BidDto, CreateAuctionDto, Page } from "../types";
 
-/**
- * Helper to build common query params
- */
-const getPagerParams = (page: number, size: number) =>
-    new URLSearchParams({ page: page.toString(), size: size.toString() });
+// ============================================================================
+//  PUBLIC BROWSING
+// ============================================================================
 
-// ========================================================================
-//  PUBLIC ENDPOINTS
-// ========================================================================
+export const getPublicAuctions = async (status?: string, filter?: string, page = 0, size = 20) => {
+    const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
+    if (status) params.append("status", status);
+    if (filter) params.append("filter", filter);
 
-export const getAllAuctions = (filter?: string, status?: string, page = 0, size = 20) => {
-    const query = getPagerParams(page, size);
-    if (filter) query.append("filter", filter);
-    if (status) query.append("status", status); // ✅ Now supports status filtering
-
-    return http<Page<AuctionDto>>(`/auctions?${query.toString()}`, {
-        method: "GET",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
+    return http<Page<AuctionDto>>(`/auctions?${params.toString()}`, { method: "GET" });
 };
 
-// NEW: Matches the recently added backend endpoint
-export const getRecentlySold = (page = 0, size = 10) => {
-    const query = getPagerParams(page, size);
-    return http<Page<AuctionDto>>(`/auctions/sold?${query.toString()}`, {
-        method: "GET",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
+export const getRecentlySold = async (page = 0, size = 10) => {
+    return http<Page<AuctionDto>>(`/auctions/sold?page=${page}&size=${size}`, { method: "GET" });
 };
 
-export const getAuctionById = (id: string) =>
-    http<AuctionDto>(`/auctions/${id}`, {
-        method: "GET",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
+export const getAuctionById = async (id: string) => {
+    return http<AuctionDto>(`/auctions/${id}`, { method: "GET" });
+};
 
-export const getEndingSoon = (page = 0, size = 10) =>
-    getAllAuctions("ending_soon", undefined, page, size);
+export const getAuctionBidHistory = async (id: string, page = 0, size = 50) => {
+    // Make sure this matches your actual BidController endpoint!
+    return http<Page<BidDto>>(`/bids/auction/${id}?page=${page}&size=${size}`, { method: "GET" });
+};
 
-// ========================================================================
-//  USER / SELLER ENDPOINTS
-// ========================================================================
+// ============================================================================
+//  PROTECTED OPERATIONS (SELLERS)
+// ============================================================================
 
-export const createAuction = (data: CreateAuctionDto) =>
-    http<AuctionDto>("/auctions", {
+export const createAuction = async (data: CreateAuctionDto) => {
+    return http<AuctionDto>("/auctions", {
         method: "POST",
         body: JSON.stringify(data),
-        headers: { "Bypass-Tunnel-Reminder": "true" }
     });
+};
 
-export const placeBid = (req: PlaceBidReq) =>
-    http<BidDto>(`/auctions/${req.auctionId}/bids`, {
+export const cancelAuction = async (id: string) => {
+    return http<Record<string, string>>(`/auctions/${id}`, { method: "DELETE" });
+};
+
+export const getMyListings = async (page = 0, size = 20) => {
+    return http<Page<AuctionDto>>(`/auctions/me/listings?page=${page}&size=${size}`, { method: "GET" });
+};
+
+export const getMyWins = async (page = 0, size = 20) => {
+    return http<Page<AuctionDto>>(`/auctions/me/wins?page=${page}&size=${size}`, { method: "GET" });
+};
+
+// ============================================================================
+//  BIDDING
+// ============================================================================
+
+export const placeBid = async (auctionId: string, amount: number) => {
+    return http<BidDto>(`/auctions/${auctionId}/bids`, {
         method: "POST",
-        body: JSON.stringify({ amount: req.amount }),
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
-
-export const getMyWins = (page = 0, size = 20) => {
-    const query = getPagerParams(page, size);
-    return http<Page<AuctionDto>>(`/auctions/me/wins?${query.toString()}`, {
-        method: "GET",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
+        body: JSON.stringify({ amount }),
     });
 };
 
-export const getMyListings = (page = 0, size = 20) => {
-    const query = getPagerParams(page, size);
-    return http<Page<AuctionDto>>(`/auctions/me/listings?${query.toString()}`, {
-        method: "GET",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
+export const placeQuickBid = async (auctionId: string) => {
+    return http<BidDto>(`/auctions/${auctionId}/bids/quick`, {
+        method: "POST"
     });
 };
 
-export const cancelAuction = (id: string) =>
-    http<Record<string, string>>(`/auctions/${id}`, {
-        method: "DELETE",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
+// ============================================================================
+//  ADMIN OPERATIONS
+// ============================================================================
 
-// ========================================================================
-//  ADMIN ENDPOINTS
-// ========================================================================
+export const approveAuction = async (id: string) => {
+    return http<Record<string, string>>(`/auctions/${id}/approve`, { method: "PATCH" });
+};
 
-export const approveAuction = (id: string) =>
-    http<Record<string, string>>(`/auctions/${id}/approve`, {
-        method: "PATCH",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
-
-export const adminCancelAuction = (id: string) =>
-    http<Record<string, string>>(`/auctions/admin/${id}/cancel`, {
-        method: "DELETE",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
-
-// ========================================================================
-//  BID HISTORY
-// ========================================================================
-
-export const getAuctionBidHistory = (auctionId: string, page = 0, size = 10000) => {
-    const query = getPagerParams(page, size);
-    return http<Page<BidDto>>(`/bids/auction/${auctionId}?${query.toString()}`, {
-        method: "GET",
-        headers: { "Bypass-Tunnel-Reminder": "true" }
-    });
+export const adminCancelAuction = async (id: string) => {
+    return http<Record<string, string>>(`/auctions/admin/${id}/cancel`, { method: "DELETE" });
 };

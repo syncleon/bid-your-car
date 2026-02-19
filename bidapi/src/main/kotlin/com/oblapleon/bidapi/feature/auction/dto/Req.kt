@@ -7,10 +7,6 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
-// ============================================================================
-//  Requests
-// ============================================================================
-
 data class CreateAuctionDto(
     @field:NotNull(message = "Item ID is required")
     val itemId: UUID,
@@ -26,9 +22,6 @@ data class CreateAuctionDto(
     @field:NotNull(message = "Starting bid is required")
     @field:DecimalMin(value = "0.0", inclusive = true)
     val startPrice: BigDecimal,
-
-    @field:DecimalMin(value = "0.0", inclusive = true)
-    val reservePrice: BigDecimal? = null,
 
     @field:DecimalMin(value = "1.0", inclusive = true)
     val minBidIncrement: BigDecimal = BigDecimal("10.00")

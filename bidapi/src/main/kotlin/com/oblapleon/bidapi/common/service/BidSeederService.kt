@@ -79,7 +79,7 @@ class BidSeederService(
                             val bidAmount = currentAuction.currentPrice.add(increment)
 
                             try {
-                                auctionService.placeBid(currentAuction.id!!, bidder.id!!, bidAmount)
+                                auctionService.placeBidAsUser(currentAuction.id!!, bidder.id!!, bidAmount)
                                 success = true
                                 successCount.incrementAndGet()
                                 logger.debug("⚡ Bid placed: ${bidder.username} -> ${currentAuction.item.make} ($bidAmount)")

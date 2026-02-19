@@ -7,25 +7,24 @@ interface ItemCardProps {
 }
 
 export const ItemCard = ({ item }: ItemCardProps) => {
-    // FIX 1: Use the image URL, fallback to the ItemDto's thumbnailUrl
-    const mainImage = item.images && item.images.length > 0
-        ? item.images[0].url
-        : item.thumbnailUrl;
+    // 1. Image Logic: Prioritize the backend-managed thumbnail, fallback to the MAIN category image, then any image.
+    const mainImage = item.thumbnailUrl ||
+        item.images?.find(img => img.category === "MAIN")?.url ||
+        item.images?.[0]?.url;
 
-    const specs = [item.transmission, item.drivetrain]
+    const specs = [item.transmission, item.drivetrain, item.fuelType]
         .filter(Boolean)
         .join(" • ");
 
-    // --- Status Logic ---
-    const isLive = !!item.activeAuctionId;
-    const isPending = item.auctionStatus === 'PENDING_APPROVAL';
+    // 2. Exact Status Logic based on the updated ItemStatus enum
+    const isLive = item.status === 'ACTIVE_AUCTION';
+    const isSold = item.status === 'SOLD';
+    const isPending = item.status === 'PENDING_AUCTION';
+    const isScheduled = item.status === 'LISTED_AUCTION';
+    const isUnsold = item.status === 'UNSOLD';
+    const isDraft = item.status === 'DRAFT';
 
-    // FIX 2: Check item.status instead of the non-existent item.sold
-    const isSold = item.status === 'SOLD' || item.auctionStatus === 'SOLD';
-
-    const isRejected = item.auctionStatus === 'REJECTED';
-
-    // --- Render Badge based on status ---
+    // 3. Render Badge based on status
     let statusBadge = null;
 
     if (isSold) {
@@ -40,16 +39,28 @@ export const ItemCard = ({ item }: ItemCardProps) => {
                 <span style={styles.dot} /> LIVE AUCTION
             </div>
         );
+    } else if (isScheduled) {
+        statusBadge = (
+            <div style={{ ...styles.badge, backgroundColor: '#2563eb', color: '#fff' }}>
+                SCHEDULED
+            </div>
+        );
     } else if (isPending) {
         statusBadge = (
             <div style={{ ...styles.badge, backgroundColor: '#f59e0b', color: '#fff' }}>
-                PENDING
+                IN REVIEW
             </div>
         );
-    } else if (isRejected) {
+    } else if (isUnsold) {
         statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: '#7f1d1d', color: '#fff' }}>
-                REJECTED
+            <div style={{ ...styles.badge, backgroundColor: '#475569', color: '#fff' }}>
+                UNSOLD
+            </div>
+        );
+    } else if (isDraft) {
+        statusBadge = (
+            <div style={{ ...styles.badge, backgroundColor: '#94a3b8', color: '#fff' }}>
+                DRAFT
             </div>
         );
     }
@@ -63,7 +74,14 @@ export const ItemCard = ({ item }: ItemCardProps) => {
                 // 1. Status Badge (Top Left)
                 topLeft: statusBadge,
 
-                // 2. Mileage Badge (Bottom Left)
+                // 2. Pricing Badge (Top Right)
+                topRight: item.isNoReserve ? (
+                    <div style={{ ...styles.badgeDark, backgroundColor: '#16a34a' }}>
+                        NO RESERVE
+                    </div>
+                ) : null,
+
+                // 3. Mileage Badge (Bottom Left)
                 bottomLeft: (
                     <div style={styles.badgeDark}>
                         {item.mileage.toLocaleString()} mi
@@ -72,8 +90,10 @@ export const ItemCard = ({ item }: ItemCardProps) => {
             }}
         >
             <div style={styles.metaRow}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                    {/* Placeholder for Price if added later */}
+                <div style={{ display: "flex", flexDirection: "column", gap: '4px' }}>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                        Condition: <span style={{ color: '#111' }}>{item.condition.replace('_', ' ')}</span>
+                    </div>
                 </div>
                 <div style={styles.locationText}>{item.location}</div>
             </div>

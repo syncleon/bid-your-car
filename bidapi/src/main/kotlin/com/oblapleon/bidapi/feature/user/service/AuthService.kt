@@ -71,7 +71,7 @@ class AuthService(
         val safeUsername = payload.username ?: throw BadRequestException("Username required")
         val safePassword = payload.password ?: throw BadRequestException("Password required")
 
-        val user = userRepository.findByUsername(safeUsername)
+        val user = userRepository.findAnyByUsername(safeUsername)
 
         // 1. Timing Attack Protection
         if (user == null) {

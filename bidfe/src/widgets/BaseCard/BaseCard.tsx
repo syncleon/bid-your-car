@@ -13,6 +13,7 @@ interface BaseCardProps {
     // Slots for overlays on top of the image
     overlays?: {
         topLeft?: ReactNode;
+        topRight?: ReactNode; // <-- Added topRight slot
         bottomLeft?: ReactNode;
         bottomRight?: ReactNode;
     };
@@ -41,6 +42,11 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children }: BaseCardPr
                     {/* Render Overlays if they exist */}
                     {overlays?.topLeft && (
                         <div style={styles.overlayTopLeft}>{overlays.topLeft}</div>
+                    )}
+
+                    {/* --- Render New Top Right Overlay --- */}
+                    {overlays?.topRight && (
+                        <div style={styles.overlayTopRight}>{overlays.topRight}</div>
                     )}
 
                     {/* We wrap bottom overlays in a container to handle positioning */}

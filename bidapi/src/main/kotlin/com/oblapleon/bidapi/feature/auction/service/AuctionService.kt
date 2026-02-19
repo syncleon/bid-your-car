@@ -1,6 +1,7 @@
 package com.oblapleon.bidapi.feature.auction.service
 
 import com.oblapleon.bidapi.common.exception.*
+import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
@@ -8,8 +9,9 @@ import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
 import com.oblapleon.bidapi.feature.bid.dto.BidNotificationDto
 import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
-import com.oblapleon.bidapi.feature.item.entity.ItemStatus // <-- NEW IMPORT
+import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.item.repository.ItemRepository
+import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.data.domain.Page
@@ -30,7 +32,8 @@ class AuctionService(
     private val userRepository: UserRepository,
     private val bidRepository: BidRepository,
     private val messagingTemplate: SimpMessagingTemplate,
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
+    private val authorizationHelper: AuthorizationHelper // <-- Injected Helper
 ) {
 
     fun findById(id: UUID): Auction {
@@ -46,12 +49,10 @@ class AuctionService(
         val now = Instant.now()
         val targetStatus = status ?: AuctionStatus.ACTIVE
 
-        // If a status other than ACTIVE is requested, just return by status
         if (targetStatus != AuctionStatus.ACTIVE) {
             return auctionRepository.findByStatusOrderByEndTimeDesc(targetStatus, pageable)
         }
 
-        // Apply specialized sorting for ACTIVE auctions
         return when (filterType?.lowercase()) {
             "ending_soon" -> auctionRepository.findByStatusAndEndTimeAfterOrderByEndTimeAsc(targetStatus, now, pageable)
             "just_listed" -> auctionRepository.findByStatusAndStartTimeBeforeOrderByStartTimeDesc(targetStatus, now, pageable)
@@ -73,20 +74,25 @@ class AuctionService(
     }
 
     fun findBySeller(sellerId: Long, pageable: Pageable): Page<Auction> {
+        authorizationHelper.checkOwnerOrAdmin(sellerId) // <-- Enforce ownership/admin access
         return auctionRepository.findAllBySellerId(sellerId, pageable)
     }
 
     fun findWonByUser(userId: Long, pageable: Pageable): Page<Auction> {
+        authorizationHelper.checkOwnerOrAdmin(userId) // <-- Enforce ownership/admin access
         return auctionRepository.findAllWonByUserId(userId, pageable)
     }
 
     @Transactional
-    fun createAuction(sellerId: Long, request: CreateAuctionDto): Auction {
+    fun createAuction(request: CreateAuctionDto): Auction {
         val item = itemRepository.findById(request.itemId)
             .orElseThrow { NotFoundException("Item not found") }
 
-        if (item.seller.id != sellerId) {
-            throw ForbiddenException("You do not own this item.")
+        // Ensures only the item's owner (or an Admin) can put it up for auction
+        authorizationHelper.checkOwnerOrAdmin(item.seller.id!!)
+
+        if (item.status != ItemStatus.DRAFT && item.status != ItemStatus.UNSOLD) {
+            throw ConflictException("Item is not available for a new auction.")
         }
 
         val activeStatuses = listOf(AuctionStatus.ACTIVE, AuctionStatus.PENDING_APPROVAL, AuctionStatus.SCHEDULED)
@@ -102,18 +108,29 @@ class AuctionService(
             item = item,
             startPrice = request.startPrice,
             currentPrice = request.startPrice,
-            reservePrice = request.reservePrice,
+            reservePrice = item.reservePrice,
+            isNoReserve = item.isNoReserve,
             minBidIncrement = request.minBidIncrement,
             startTime = request.startTime,
             endTime = request.endTime,
             status = AuctionStatus.PENDING_APPROVAL
         )
 
+        item.status = ItemStatus.PENDING_AUCTION
+        itemRepository.save(item)
+
         return auctionRepository.save(auction)
     }
 
     @Transactional
     fun approveAuction(auctionId: UUID) {
+        val currentUser = authorizationHelper.getCurrentUser()
+        val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
+
+        if (!isAdmin) {
+            throw ForbiddenException("Only administrators can approve auctions.")
+        }
+
         val auction = findById(auctionId)
 
         if (auction.status != AuctionStatus.PENDING_APPROVAL) {
@@ -127,25 +144,24 @@ class AuctionService(
             auction.startTime = now
             auction.endTime = now.plus(originalDuration, ChronoUnit.SECONDS)
             auction.status = AuctionStatus.ACTIVE
+
+            auction.item.status = ItemStatus.ACTIVE_AUCTION
         } else {
             auction.status = AuctionStatus.SCHEDULED
+            auction.item.status = ItemStatus.LISTED_AUCTION
         }
 
-        // --- NEW: Sync Item Status on Approval ---
-        auction.item.status = ItemStatus.ACTIVE_AUCTION
         itemRepository.save(auction.item)
-
         auctionRepository.save(auction)
     }
 
     @Transactional
-    fun cancelAuction(id: UUID, initiatorId: Long, isAdmin: Boolean) {
+    fun cancelAuction(id: UUID) {
         val auction = findById(id)
-        val isOwner = auction.item.seller.id == initiatorId
 
-        if (!isOwner && !isAdmin) {
-            throw ForbiddenException("You do not have permission to cancel this auction.")
-        }
+        // This validates that the requester is the item owner or an admin
+        val currentUser = authorizationHelper.checkOwnerOrAdmin(auction.item.seller.id!!)
+        val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
 
         if (auction.bidCount > 0 && !isAdmin) {
             throw ConflictException("Cannot cancel auction with existing bids. Contact support.")
@@ -160,49 +176,35 @@ class AuctionService(
     }
 
     @Transactional
-    fun placeBid(auctionId: UUID, bidderId: Long, amount: BigDecimal): Bid {
+    fun placeBid(auctionId: UUID, amount: BigDecimal): Bid {
+        val currentUser = authorizationHelper.getCurrentUser()
+        return placeBidAsUser(auctionId, currentUser.id!!, amount)
+    }
+
+    /**
+     * Internal method used by Seeders or Admin operations where
+     * there is no active HTTP Security Context.
+     */
+    @Transactional
+    fun placeBidAsUser(auctionId: UUID, bidderId: Long, amount: BigDecimal): Bid {
         val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
             .orElseThrow { NotFoundException("Auction not found.") }
         val now = Instant.now()
 
-        // 1. Basic Validation
-        if (auction.status != AuctionStatus.ACTIVE) {
-            throw BadRequestException("Auction is not active.")
-        }
-        if (now.isAfter(auction.endTime)) {
-            throw BadRequestException("Auction has ended.")
-        }
-        if (now.isBefore(auction.startTime)) {
-            throw BadRequestException("Auction has not started yet.")
-        }
-        if (auction.item.seller.id == bidderId) {
-            throw ForbiddenException("You cannot bid on your own item.")
-        }
-
-        // 2. Self-Bid Prevention
-        if (auction.winningBid?.bidder?.id == bidderId) {
-            throw BadRequestException("You are already the highest bidder.")
-        }
+        if (auction.status != AuctionStatus.ACTIVE) throw BadRequestException("Auction is not active.")
+        if (now.isAfter(auction.endTime)) throw BadRequestException("Auction has ended.")
+        if (now.isBefore(auction.startTime)) throw BadRequestException("Auction has not started yet.")
+        if (auction.item.seller.id == bidderId) throw ForbiddenException("You cannot bid on your own item.")
+        if (auction.winningBid?.bidder?.id == bidderId) throw BadRequestException("You are already the highest bidder.")
 
         val bidder = userRepository.findById(bidderId)
             .orElseThrow { NotFoundException("User account not found.") }
 
-        // 3. Price Validation
-        val minRequired = if (auction.bidCount == 0) {
-            auction.startPrice
-        } else {
-            auction.currentPrice.add(auction.minBidIncrement)
-        }
+        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(auction.minBidIncrement)
+        if (amount < minRequired) throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
 
-        if (amount < minRequired) {
-            throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
-        }
-
-        // 4. Anti-Sniping (Soft Close)
         val secondsRemaining = ChronoUnit.SECONDS.between(now, auction.endTime)
-        if (secondsRemaining < 120) {
-            auction.endTime = now.plus(120, ChronoUnit.SECONDS)
-        }
+        if (secondsRemaining < 120) auction.endTime = now.plus(120, ChronoUnit.SECONDS)
 
         val bid = Bid(
             auction = auction,
@@ -218,43 +220,21 @@ class AuctionService(
         auction.winningBid = savedBid
 
         auctionRepository.save(auction)
-
         meterRegistry.counter("auction.bids.placed", "status", "success").increment()
 
-        try {
-            val notification = BidNotificationDto(
-                auctionId = auction.id!!,
-                newPrice = auction.currentPrice,
-                bidCount = auction.bidCount,
-                bidderUsername = bidder.username,
-                bidTime = savedBid.bidTime,
-                newEndTime = auction.endTime
-            )
-            messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", notification)
-
-            val globalFeedItem = mapOf(
-                "auctionId" to auction.id.toString(),
-                "carName" to "${auction.item.year} ${auction.item.make} ${auction.item.model}",
-                "newPrice" to auction.currentPrice,
-                "bidder" to bidder.username,
-                "timestamp" to savedBid.bidTime.toString()
-            )
-            messagingTemplate.convertAndSend("/topic/admin/bids/live", globalFeedItem)
-
-        } catch (e: Exception) {
-            System.err.println("Failed to send WebSocket notification: ${e.message}")
-        }
+        dispatchBidNotifications(auction, savedBid, bidder.username)
 
         return savedBid
     }
 
     @Transactional
-    fun placeNextMinimumBid(auctionId: UUID, bidderId: Long): Bid {
+    fun placeNextMinimumBid(auctionId: UUID): Bid {
+        val currentUser = authorizationHelper.getCurrentUser()
+
         val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
             .orElseThrow { NotFoundException("Auction not found.") }
         val now = Instant.now()
 
-        // 1. Basic Validation
         if (auction.status != AuctionStatus.ACTIVE) {
             throw BadRequestException("Auction is not active.")
         }
@@ -264,26 +244,22 @@ class AuctionService(
         if (now.isBefore(auction.startTime)) {
             throw BadRequestException("Auction has not started yet.")
         }
-        if (auction.item.seller.id == bidderId) {
+        if (auction.item.seller.id == currentUser.id) {
             throw ForbiddenException("You cannot bid on your own item.")
         }
-
-        // 2. Self-Bid Prevention
-        if (auction.winningBid?.bidder?.id == bidderId) {
+        if (auction.winningBid?.bidder?.id == currentUser.id) {
             throw BadRequestException("You are already the highest bidder.")
         }
 
-        val bidder = userRepository.findById(bidderId)
+        val bidder = userRepository.findById(currentUser.id!!)
             .orElseThrow { NotFoundException("User account not found.") }
 
-        // 3. Price Calculation
         val exactAmountToBid = if (auction.bidCount == 0) {
             auction.startPrice
         } else {
             auction.currentPrice.add(auction.minBidIncrement)
         }
 
-        // 4. Anti-Sniping (Soft Close)
         val secondsRemaining = ChronoUnit.SECONDS.between(now, auction.endTime)
         if (secondsRemaining < 120) {
             auction.endTime = now.plus(120, ChronoUnit.SECONDS)
@@ -303,32 +279,9 @@ class AuctionService(
         auction.winningBid = savedBid
 
         auctionRepository.save(auction)
-
         meterRegistry.counter("auction.bids.placed", "status", "success").increment()
 
-        try {
-            val notification = BidNotificationDto(
-                auctionId = auction.id!!,
-                newPrice = auction.currentPrice,
-                bidCount = auction.bidCount,
-                bidderUsername = bidder.username,
-                bidTime = savedBid.bidTime,
-                newEndTime = auction.endTime
-            )
-            messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", notification)
-
-            val globalFeedItem = mapOf(
-                "auctionId" to auction.id.toString(),
-                "carName" to "${auction.item.year} ${auction.item.make} ${auction.item.model}",
-                "newPrice" to auction.currentPrice,
-                "bidder" to bidder.username,
-                "timestamp" to savedBid.bidTime.toString()
-            )
-            messagingTemplate.convertAndSend("/topic/admin/bids/live", globalFeedItem)
-
-        } catch (e: Exception) {
-            System.err.println("Failed to send WebSocket notification: ${e.message}")
-        }
+        dispatchBidNotifications(auction, savedBid, bidder.username)
 
         return savedBid
     }
@@ -351,28 +304,20 @@ class AuctionService(
     private fun finalizeAuction(auction: Auction) {
         if (auction.bidCount > 0) {
             val highestBid = auction.winningBid ?: bidRepository.findTopByAuctionOrderByAmountDesc(auction)
-            val reserve = auction.reservePrice
 
-            if (reserve == null || (highestBid != null && highestBid.amount >= reserve)) {
+            if (auction.isReserveMet) {
                 auction.status = AuctionStatus.SOLD
                 auction.winnerUser = highestBid?.bidder
-
-                // --- NEW: Sync Item Status on Win ---
                 auction.item.status = ItemStatus.SOLD
             } else {
                 auction.status = AuctionStatus.UNSOLD
-
-                // --- NEW: Sync Item Status on Reserve Not Met ---
-                auction.item.status = ItemStatus.DRAFT
+                auction.item.status = ItemStatus.UNSOLD
             }
         } else {
             auction.status = AuctionStatus.UNSOLD
-
-            // --- NEW: Sync Item Status on No Bids ---
-            auction.item.status = ItemStatus.DRAFT
+            auction.item.status = ItemStatus.UNSOLD
         }
 
-        // Save the synchronized item
         itemRepository.save(auction.item)
         auctionRepository.save(auction)
 
@@ -386,6 +331,32 @@ class AuctionService(
             messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", finalNotification)
         } catch (e: Exception) {
             System.err.println("Failed to send auction closed notification: ${e.message}")
+        }
+    }
+
+    // Refactored repetitive notification logic into a private helper
+    private fun dispatchBidNotifications(auction: Auction, savedBid: Bid, bidderUsername: String) {
+        try {
+            val notification = BidNotificationDto(
+                auctionId = auction.id!!,
+                newPrice = auction.currentPrice,
+                bidCount = auction.bidCount,
+                bidderUsername = bidderUsername,
+                bidTime = savedBid.bidTime,
+                newEndTime = auction.endTime
+            )
+            messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", notification)
+
+            val globalFeedItem = mapOf(
+                "auctionId" to auction.id.toString(),
+                "carName" to "${auction.item.year} ${auction.item.make} ${auction.item.model}",
+                "newPrice" to auction.currentPrice,
+                "bidder" to bidderUsername,
+                "timestamp" to savedBid.bidTime.toString()
+            )
+            messagingTemplate.convertAndSend("/topic/admin/bids/live", globalFeedItem)
+        } catch (e: Exception) {
+            System.err.println("Failed to send WebSocket notification: ${e.message}")
         }
     }
 }

@@ -1,9 +1,12 @@
 package com.oblapleon.bidapi.feature.item.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.oblapleon.bidapi.feature.item.entity.ConditionGrade
+import com.oblapleon.bidapi.feature.item.entity.ImageCategory
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.user.dto.UserDto
 import java.io.Serializable
+import java.math.BigDecimal
 import java.util.*
 
 data class ItemDto(
@@ -18,9 +21,15 @@ data class ItemDto(
     val description: String?,
     @JsonIgnoreProperties("items")
     val seller: UserDto,
-    val thumbnailUrl: String?, // <--- Added for performance (List views)
-
-    // Grouped specs for cleaner frontend handling
+    val thumbnailUrl: String?,
+    val fuelType: String?,
+    val horsepower: Int?,
+    val condition: ConditionGrade,
+    val titleStatus: String?,
+    val isModified: Boolean,
+    val hasServiceHistory: Boolean,
+    val reservePrice: BigDecimal?,
+    val isNoReserve: Boolean,
     val engine: String?,
     val drivetrain: String?,
     val transmission: String?,
@@ -28,12 +37,12 @@ data class ItemDto(
     val exteriorColor: String?,
     val interiorColor: String?,
     val sellerType: String?,
-
     val images: List<ItemImageDto> = emptyList()
-) : Serializable // <-- Added here
+) : Serializable
 
 data class ItemImageDto(
     val id: UUID,
     val url: String,
+    val category: ImageCategory,
     val sortOrder: Int
-) : Serializable // <-- Added here
+) : Serializable

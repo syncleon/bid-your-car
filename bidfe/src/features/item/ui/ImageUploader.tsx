@@ -20,12 +20,15 @@ export const ImageUploader = ({
     const totalImages = existingImages.length + newPreviews.length;
     const hasImages = totalImages > 0;
 
+    // Check if a MAIN image already exists in the saved images
+    const hasMainInExisting = existingImages.some(img => img.category === "MAIN");
+
     return (
         <div className="image-uploader-wrapper">
             <style>{`
                 .upload-zone { border: 2px dashed #e2e8f0; background: #f8fafc; transition: all 0.2s ease; }
                 .upload-zone:hover { border-color: #3b82f6; background: #eff6ff; }
-                .gallery-grid { display: flex; flex-direction: column; gap: 24px; width: 100%; }
+                .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 24px; width: 100%; }
                 .gallery-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s; background: #e2e8f0; width: 100%; aspect-ratio: 16/9; }
                 .gallery-img { width: 100%; height: 100%; object-fit: cover; }
                 .delete-btn { opacity: 1; transition: all 0.2s ease; }
@@ -41,14 +44,19 @@ export const ImageUploader = ({
             </div>
 
             <div className="gallery-grid" style={{ marginBottom: hasImages ? "24px" : "0" }}>
-                {existingImages.map((img, index) => (
+                {/* Existing Saved Images */}
+                {existingImages.map((img) => (
                     <div key={img.id} className="gallery-item">
                         <img
                             src={img.url}
-                            alt="Vehicle"
+                            alt={`Vehicle ${img.category}`}
                             className="gallery-img"
                         />
-                        {index === 0 && <div style={styles.mainBadge}><StarIcon /> Main Cover</div>}
+                        {img.category === "MAIN" ? (
+                            <div style={styles.mainBadge}><StarIcon /> Main Cover</div>
+                        ) : (
+                            <div style={styles.categoryBadge}>{img.category}</div>
+                        )}
                         <button type="button" onClick={() => onRemoveExisting(img.id)} className="delete-btn" style={styles.deleteBtn} title="Remove photo">
                             <TrashIcon />
                         </button>
@@ -57,11 +65,18 @@ export const ImageUploader = ({
 
                 {/* New Uploads (Local Previews) */}
                 {newPreviews.map((url, index) => {
-                    const globalIndex = existingImages.length + index;
+                    // Based on our SubmitItemForm logic: if there is no MAIN image saved, the first new upload becomes MAIN
+                    const isNewMain = !hasMainInExisting && index === 0;
+                    const predictedCategory = isNewMain ? "MAIN" : "EXTERIOR";
+
                     return (
                         <div key={url} className="gallery-item">
                             <img src={url} alt="New Upload" className="gallery-img" />
-                            {globalIndex === 0 && <div style={styles.mainBadge}><StarIcon /> Main Cover</div>}
+                            {isNewMain ? (
+                                <div style={styles.mainBadge}><StarIcon /> Main Cover (Unsaved)</div>
+                            ) : (
+                                <div style={styles.categoryBadge}>{predictedCategory} (Unsaved)</div>
+                            )}
                             <button type="button" onClick={() => onRemoveNew(index)} className="delete-btn" style={styles.deleteBtn}>
                                 <TrashIcon />
                             </button>
@@ -90,7 +105,7 @@ export const ImageUploader = ({
     );
 };
 
-// ... (Icons and Styles remain the same)
+// --- Styles & Icons ---
 const styles = {
     header: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "16px" },
     title: { fontSize: "16px", fontWeight: 700, color: "#1e293b", marginRight: "12px" },
@@ -99,7 +114,13 @@ const styles = {
     iconCircle: { width: "56px", height: "56px", borderRadius: "50%", backgroundColor: "#fff", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b82f6" },
     uploadTitle: { display: "block", fontSize: "16px", fontWeight: 600, color: "#1e293b", marginBottom: "4px" },
     uploadSubtitle: { fontSize: "14px", color: "#64748b" },
-    mainBadge: { position: "absolute" as const, top: "16px", left: "16px", backgroundColor: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(4px)", color: "#fff", fontSize: "12px", fontWeight: 700, padding: "8px 12px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none" as const, border: "1px solid rgba(255,255,255,0.2)" },
+
+    // Highlighted badge for the MAIN image
+    mainBadge: { position: "absolute" as const, top: "16px", left: "16px", backgroundColor: "rgba(0, 0, 0, 0.75)", backdropFilter: "blur(4px)", color: "#fbbf24", fontSize: "12px", fontWeight: 700, padding: "8px 12px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none" as const, border: "1px solid rgba(251,191,36,0.3)" },
+
+    // Standard badge for all other categories
+    categoryBadge: { position: "absolute" as const, top: "16px", left: "16px", backgroundColor: "rgba(255, 255, 255, 0.9)", color: "#334155", fontSize: "11px", fontWeight: 700, letterSpacing: "0.5px", padding: "6px 10px", borderRadius: "20px", pointerEvents: "none" as const, boxShadow: "0 2px 4px rgba(0,0,0,0.1)" },
+
     deleteBtn: { position: "absolute" as const, top: "16px", right: "16px", width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "white", color: "#ef4444", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }
 };
 

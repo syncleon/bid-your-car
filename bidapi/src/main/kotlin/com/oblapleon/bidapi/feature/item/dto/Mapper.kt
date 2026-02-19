@@ -3,8 +3,6 @@ package com.oblapleon.bidapi.feature.item.dto
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.item.entity.ItemImage
 import com.oblapleon.bidapi.feature.user.dto.toDto
-import java.util.UUID
-
 
 fun Item.toDto(): ItemDto {
     return ItemDto(
@@ -19,6 +17,14 @@ fun Item.toDto(): ItemDto {
         description = this.description,
         thumbnailUrl = this.thumbnailUrl,
         seller = this.seller.toDto(),
+        fuelType = this.fuelType,
+        horsepower = this.horsepower,
+        condition = this.condition,
+        titleStatus = this.titleStatus,
+        isModified = this.isModified,
+        hasServiceHistory = this.hasServiceHistory,
+        reservePrice = this.reservePrice,
+        isNoReserve = this.isNoReserve,
         engine = this.engine,
         drivetrain = this.drivetrain,
         transmission = this.transmission,
@@ -26,6 +32,7 @@ fun Item.toDto(): ItemDto {
         exteriorColor = this.exteriorColor,
         interiorColor = this.interiorColor,
         sellerType = this.sellerType,
+
         images = this.images.map { it.toDto() }.sortedBy { it.sortOrder }
     )
 }
@@ -34,6 +41,7 @@ fun ItemImage.toDto(): ItemImageDto {
     return ItemImageDto(
         id = this.id!!,
         url = this.url,
+        category = this.category,
         sortOrder = this.sortOrder
     )
 }

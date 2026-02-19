@@ -1,5 +1,5 @@
 import type { AuctionDto } from "../auction/types";
-import type {UserDto} from "../auth/types.ts";
+import type { UserDto } from "../auth/types";
 
 export interface Page<T> {
     content: T[];
@@ -12,27 +12,51 @@ export interface Page<T> {
     empty: boolean;
 }
 
+// --- Enums / Literal Types ---
+
+export type ConditionGrade =
+    | "EXCELLENT"
+    | "VERY_GOOD"
+    | "GOOD"
+    | "FAIR"
+    | "POOR"
+    | "PARTS_ONLY";
+
+export type ImageCategory =
+    | "MAIN"
+    | "EXTERIOR"
+    | "INTERIOR"
+    | "ENGINE"
+    | "SERVICE"
+    | "OTHER";
+
 export type ItemStatus =
-    | "DRAFT"          // Being created by seller
+    | "DRAFT"           // Being created by seller
+    | "PENDING_AUCTION" // Submitted, waiting for admin approval
+    | "LISTED_AUCTION"  // Approved, waiting for start_time
     | "ACTIVE_AUCTION"  // Currently live in an auction
-    | "SOLD"            // Payment pending/complete
-    | "ARCHIVED"        // Soft deleted or very old;
+    | "SOLD"            // Auction ended, reserve met
+    | "UNSOLD"          // Auction ended, reserve not met / no bids
+    | "ARCHIVED";       // Soft deleted or very old
 
 export type AuctionStatus =
-    | "DRAFT"
-    | "PENDING_APPROVAL"
-    | "SCHEDULED"
-    | "ACTIVE"
-    | "ENDED_PENDING"
-    | "SOLD"
-    | "UNSOLD"
-    | "CANCELLED";
+    | "PENDING_APPROVAL" // Waiting for admin to approve listing
+    | "SCHEDULED"        // Approved, but start_time is in the future
+    | "ACTIVE"           // Live bidding is open
+    | "SOLD"             // Winner declared and reserve met
+    | "UNSOLD"           // Time up, no bids or reserve not met
+    | "CANCELLED";       // Administratively removed
+
+// --- Image DTO ---
 
 export interface ItemImageDto {
     id: string;
     url: string;
+    category: ImageCategory; // Added category
     sortOrder: number;
 }
+
+// --- Main Item DTO ---
 
 export interface ItemDto {
     id: string;
@@ -47,7 +71,19 @@ export interface ItemDto {
     seller: UserDto;
     thumbnailUrl: string | null;
 
-    // Technical Specs
+    // --- New Mechanical & Condition Fields ---
+    fuelType: string | null;
+    horsepower: number | null;
+    condition: ConditionGrade;
+    titleStatus: string | null;
+    isModified: boolean;
+    hasServiceHistory: boolean;
+
+    // --- New Pricing Logic ---
+    reservePrice: number | null;
+    isNoReserve: boolean;
+
+    // --- Existing Technical Specs ---
     engine: string | null;
     drivetrain: string | null;
     transmission: string | null;
@@ -64,6 +100,8 @@ export interface ItemDto {
     auction?: AuctionDto | null;
 }
 
+// --- Requests ---
+
 export interface ItemCreateRequest {
     year: number;
     make: string;
@@ -72,6 +110,18 @@ export interface ItemCreateRequest {
     location: string;
     mileage: number;
     description?: string;
+
+    // --- New Fields ---
+    fuelType?: string;
+    horsepower?: number;
+    condition: ConditionGrade; // Required
+    titleStatus?: string;
+    isModified: boolean;
+    hasServiceHistory: boolean;
+    reservePrice?: number;
+    isNoReserve: boolean;
+
+    // --- Existing Specs ---
     engine?: string;
     drivetrain?: string;
     transmission?: string;
@@ -88,6 +138,18 @@ export interface ItemUpdateRequest {
     location?: string;
     mileage?: number;
     description?: string;
+
+    // --- New Fields ---
+    fuelType?: string;
+    horsepower?: number;
+    condition?: ConditionGrade;
+    titleStatus?: string;
+    isModified?: boolean;
+    hasServiceHistory?: boolean;
+    reservePrice?: number;
+    isNoReserve?: boolean;
+
+    // --- Existing Specs ---
     engine?: string;
     drivetrain?: string;
     transmission?: string;
@@ -95,5 +157,6 @@ export interface ItemUpdateRequest {
     exteriorColor?: string;
     interiorColor?: string;
     sellerType?: string;
+
     keepImageIds?: string[];
 }

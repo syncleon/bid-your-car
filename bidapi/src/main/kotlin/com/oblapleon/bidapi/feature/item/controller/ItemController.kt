@@ -1,8 +1,9 @@
 package com.oblapleon.bidapi.feature.item.controller
 
+import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.feature.item.dto.*
+import com.oblapleon.bidapi.feature.item.entity.ImageCategory
 import com.oblapleon.bidapi.feature.item.service.ItemService
-import com.oblapleon.bidapi.feature.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -14,87 +15,61 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/items")
-@Tag(name = "Items", description = "Vehicle inventory management")
+@Tag(name = "Items (Inventory)", description = "Private vehicle inventory management for sellers")
 class ItemController(
     private val itemService: ItemService,
-    private val userService: UserService
+    private val authorizationHelper: AuthorizationHelper
 ) {
 
-    // ========================================================================
-    //  PUBLIC ENDPOINTS
-    // ========================================================================
-
-    @Operation(summary = "Browse Items", description = "Get paginated list of available items.")
-    @GetMapping
-    fun getAllItems(
-        @PageableDefault(size = 20, sort = ["createdDate"], direction = Sort.Direction.DESC) pageable: Pageable
-    ): ResponseEntity<Page<ItemDto>> {
-        val items = itemService.findAllAvailable(pageable)
-        return ResponseEntity.ok(items.map { it.toDto() })
-    }
-
-    @Operation(summary = "Get Item Details", description = "Get full details including specs and images.")
-    @GetMapping("/{id}")
-    fun getItemById(@PathVariable id: UUID): ResponseEntity<ItemDto> {
-        val itemDto = itemService.getCachedItemDto(id)
-        return ResponseEntity.ok(itemDto)
-    }
-
-    // ========================================================================
-    //  PROTECTED ENDPOINTS
-    // ========================================================================
-
-    @Operation(summary = "Get My Listings", description = "Get all items listed by the current user.")
+    @Operation(summary = "Get My Inventory", description = "Get all items listed by the current authenticated user.")
     @GetMapping("/me")
     fun getMyItems(
-        @AuthenticationPrincipal username: String,
         @PageableDefault(size = 20, sort = ["createdDate"], direction = Sort.Direction.DESC) pageable: Pageable
     ): ResponseEntity<Page<ItemDto>> {
-        val user = userService.findByUsername(username)
-        val items = itemService.findAllBySellerId(user.id!!, pageable)
+        // We only need the helper here to get the seller ID for the query
+        val currentUser = authorizationHelper.getCurrentUser()
+        val items = itemService.findAllBySellerId(currentUser.id!!, pageable)
         return ResponseEntity.ok(items.map { it.toDto() })
     }
 
-    @Operation(summary = "List a New Car", description = "Create a new vehicle listing.")
+    @Operation(summary = "Get Item Details", description = "Get details of a specific item. You must be the owner or an Admin.")
+    @GetMapping("/{id}")
+    fun getItemById(@PathVariable id: UUID): ResponseEntity<ItemDto> {
+        val item = itemService.findById(id)
+        return ResponseEntity.ok(item.toDto())
+    }
+
+    @Operation(summary = "Add to Inventory", description = "Create a new vehicle listing draft.")
     @PostMapping
     fun createItem(
-        @AuthenticationPrincipal username: String,
         @Valid @RequestBody request: ItemCreateRequest
     ): ResponseEntity<ItemDto> {
-        val user = userService.findByUsername(username)
-        val item = itemService.create(user, request)
+        val item = itemService.create(request)
         return ResponseEntity.status(HttpStatus.CREATED).body(item.toDto())
     }
 
-    @Operation(summary = "Update Listing", description = "Update details of an existing listing.")
+    @Operation(summary = "Update Inventory Item", description = "Update details of an existing listing.")
     @PutMapping("/{id}")
     fun updateItem(
-        @AuthenticationPrincipal username: String,
         @PathVariable id: UUID,
         @Valid @RequestBody request: ItemUpdateRequest
     ): ResponseEntity<ItemDto> {
-        val user = userService.findByUsername(username)
-        // Service handles ownership check
-        val updatedItem = itemService.update(id, user, request)
+        val updatedItem = itemService.update(id, request)
         return ResponseEntity.ok(updatedItem.toDto())
     }
 
-    @Operation(summary = "Delete Listing", description = "Permanently remove listing and images.")
+    @Operation(summary = "Delete Item", description = "Permanently remove an item and its images from inventory.")
     @DeleteMapping("/{id}")
     fun deleteItem(
-        @AuthenticationPrincipal username: String,
         @PathVariable id: UUID
     ): ResponseEntity<Map<String, String>> {
-        val user = userService.findByUsername(username)
-        // Service handles ownership check
-        itemService.delete(id, user)
+        itemService.delete(id)
         return ResponseEntity.ok(mapOf("message" to "Item deleted successfully"))
     }
 
@@ -102,18 +77,18 @@ class ItemController(
     //  IMAGE MANAGEMENT
     // ========================================================================
 
-    @Operation(summary = "Upload Image", description = "Upload a photo for a car.")
+    @Operation(summary = "Upload Image", description = "Upload a categorized photo for a vehicle.")
     @PostMapping(
         value = ["/{id}/images"],
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE]
     )
     fun uploadItemImage(
-        @AuthenticationPrincipal username: String,
         @PathVariable id: UUID,
-        @Parameter(description = "Image file (JPG/PNG)") @RequestParam("file") file: MultipartFile
+        @Parameter(description = "Image file (JPG/PNG)") @RequestParam("file") file: MultipartFile,
+        @Parameter(description = "Image Category (MAIN, EXTERIOR, INTERIOR, ENGINE, SERVICE, OTHER)")
+        @RequestParam(defaultValue = "OTHER") category: ImageCategory
     ): ResponseEntity<ItemImageDto> {
-        val user = userService.findByUsername(username)
-        val image = itemService.uploadImage(id, user, file)
+        val image = itemService.uploadImage(id, file, category)
         return ResponseEntity.status(HttpStatus.CREATED).body(image.toDto())
     }
 }

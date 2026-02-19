@@ -7,8 +7,10 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.Instant
+import java.util.Optional
 
 @Repository
 interface UserRepository : BaseRepository<User, Long> {
@@ -18,7 +20,10 @@ interface UserRepository : BaseRepository<User, Long> {
      * @EntityGraph ensures 'roles' are joined in the same SELECT statement.
      */
     @EntityGraph(attributePaths = ["roles"])
-    fun findByUsername(username: String): User?
+    fun findByUsername(username: String): Optional<User>
+
+    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
+    fun findAnyByUsername(@Param("username") username: String): User?
 
     @EntityGraph(attributePaths = ["roles"])
     fun findByEmail(email: String): User?

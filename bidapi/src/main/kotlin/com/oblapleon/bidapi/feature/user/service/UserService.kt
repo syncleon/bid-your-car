@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.util.Optional
 
 @Service
 class UserService(
@@ -26,7 +27,7 @@ class UserService(
 
     // ... Read Operations (Same as before) ...
     fun findById(id: Long): User = userRepository.findById(id).orElseThrow { NotFoundException("User not found") }
-    fun findByUsername(username: String): User = userRepository.findByUsername(username) ?: throw NotFoundException("User not found")
+    fun findByUsername(username: String): Optional<User> = userRepository.findByUsername(username)
     fun findAll(pageable: Pageable): Page<User> = userRepository.findAll(pageable)
     fun searchByUsername(query: String, pageable: Pageable) = userRepository.findByUsernameContainingIgnoreCase(query, pageable)
     fun searchByEmail(query: String, pageable: Pageable) = userRepository.findByEmailContainingIgnoreCase(query, pageable)
@@ -94,32 +95,24 @@ class UserService(
 
     @Transactional
     fun restoreUser(payload: LoginReqDto) {
-        val safeUsername = payload.username ?: throw BadRequestException("Username required")
-        val safePassword = payload.password ?: throw BadRequestException("Password required")
+        val safeUsername = payload.username
+        val safePassword = payload.password
 
-        // CRITICAL: We try to find the user.
-        // If they are soft-deleted, findByUsername returns NULL (due to @SQLRestriction).
-        // Therefore, if we get NULL, we must try a native query to find the deleted user.
-        // For now, to keep it simple, we assume you added 'findAnyByUsername' to Repo.
-        // If not, this is where you'd use a raw query.
-
-        // Simulating finding the user (you should add `findAnyByUsername` to Repo)
-        val user = userRepository.findByUsername(safeUsername)
+        // 1. Use the native query to find the user even if they are soft-deleted
+        val user = userRepository.findAnyByUsername(safeUsername)
             ?: throw UnauthorizedException("User not found or credentials invalid.")
 
-        // NOTE: If user was found above, they are NOT deleted (due to filter).
-        // You strictly need a repo method like:
-        // @Query(value="SELECT * FROM users WHERE username = :u", nativeQuery=true)
-        // fun findAnyByUsername(u: String): User?
-
+        // 2. Verify password
         if (!passwordEncoder.matches(safePassword, user.password)) {
             throw UnauthorizedException("Invalid credentials.")
         }
 
+        // 3. Ensure they are actually deleted
         if (user.deletedAt == null) {
             throw BadRequestException("Account is already active.")
         }
 
+        // 4. Restore them
         user.deletedAt = null
         userRepository.save(user)
     }

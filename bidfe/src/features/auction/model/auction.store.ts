@@ -1,20 +1,20 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import {
-    getAllAuctions,
+    getPublicAuctions,
     getAuctionById,
     createAuction,
     placeBid,
-    getEndingSoon,
+    placeQuickBid,
     getMyWins,
-    getMyListings, // <-- NEW
+    getMyListings, // <--- Make sure this has an "s" at the end!
     cancelAuction as apiCancelAuction,
-    adminCancelAuction as apiAdminCancelAuction, // <-- NEW
+    adminCancelAuction as apiAdminCancelAuction,
     getAuctionBidHistory,
-    approveAuction, getRecentlySold
-    // rejectAuction removed!
+    approveAuction,
+    getRecentlySold
 } from "../api/auction.api";
-import type { AuctionDto, CreateAuctionDto, BidDto, PlaceBidReq } from "../types";
-import type {RootStore} from "../../../app/stores/RootStore.ts";
+import type { AuctionDto, CreateAuctionDto, BidDto } from "../types";
+import type { RootStore } from "../../../app/stores/RootStore";
 
 export class AuctionStore {
     auctions: AuctionDto[] = [];
@@ -45,7 +45,9 @@ export class AuctionStore {
         return this.root.authStore.user;
     }
 
-    private getErrorMessage(error: unknown, defaultMessage: string): string {
+    // Improved to catch Axios/Fetch JSON error payloads (like our Rate Limit message)
+    private getErrorMessage(error: any, defaultMessage: string): string {
+        if (error?.response?.data?.error) return error.response.data.error;
         if (error instanceof Error) return error.message;
         if (typeof error === "string") return error;
         return defaultMessage;
@@ -56,7 +58,7 @@ export class AuctionStore {
         this.error = null;
 
         try {
-            const pageData = await getAllAuctions(filter, status, page, size);
+            const pageData = await getPublicAuctions(status, filter, page, size);
 
             runInAction(() => {
                 this.auctions = pageData.content;
@@ -111,7 +113,8 @@ export class AuctionStore {
 
     loadEndingSoon = async () => {
         try {
-            const pageData = await getEndingSoon();
+            // Using the updated generic endpoint with the filter
+            const pageData = await getPublicAuctions("ACTIVE", "ending_soon", 0, 10);
             runInAction(() => {
                 this.endingSoon = pageData.content;
             });
@@ -137,7 +140,6 @@ export class AuctionStore {
         }
     };
 
-    // --- NEW: Load My Listings ---
     loadMyListings = async (page = 0, size = 20) => {
         this.isLoading = true;
         this.error = null;
@@ -176,41 +178,60 @@ export class AuctionStore {
         }
     };
 
-    submitBid = async (req: PlaceBidReq) => {
+    // --- Bidding Actions ---
+
+    submitBid = async (auctionId: string, amount: number) => {
         this.isBidding = true;
         this.error = null;
         try {
-            const newBid = await placeBid(req);
-            const updatedAuction = await getAuctionById(req.auctionId);
-
-            runInAction(() => {
-                this.bidHistory.unshift(newBid);
-                this.selectedAuction = updatedAuction;
-
-                // Sync the main list if it's currently showing active auctions
-                const index = this.auctions.findIndex(a => a.id === req.auctionId);
-                if (index !== -1) {
-                    this.auctions[index] = updatedAuction;
-                }
-
-                // If it was in "Ending Soon", update it there too
-                const soonIndex = this.endingSoon.findIndex(a => a.id === req.auctionId);
-                if (soonIndex !== -1) {
-                    this.endingSoon[soonIndex] = updatedAuction;
-                }
-
-                this.isBidding = false;
-            });
+            const newBid = await placeBid(auctionId, amount);
+            await this.refreshAuctionStateLocally(auctionId, newBid);
             return true;
         } catch (error: unknown) {
             runInAction(() => {
-                // The Rate Limiter error from the backend will be caught here
                 this.error = this.getErrorMessage(error, "Failed to place bid");
                 this.isBidding = false;
             });
             return false;
         }
     };
+
+    submitQuickBid = async (auctionId: string) => {
+        this.isBidding = true;
+        this.error = null;
+        try {
+            const newBid = await placeQuickBid(auctionId);
+            await this.refreshAuctionStateLocally(auctionId, newBid);
+            return true;
+        } catch (error: unknown) {
+            runInAction(() => {
+                this.error = this.getErrorMessage(error, "Failed to place quick bid");
+                this.isBidding = false;
+            });
+            return false;
+        }
+    };
+
+    // Private helper to avoid duplicating the UI sync logic
+    private refreshAuctionStateLocally = async (auctionId: string, newBid: BidDto) => {
+        try {
+            const updatedAuction = await getAuctionById(auctionId);
+            runInAction(() => {
+                this.bidHistory.unshift(newBid);
+                this.selectedAuction = updatedAuction;
+
+                const index = this.auctions.findIndex(a => a.id === auctionId);
+                if (index !== -1) this.auctions[index] = updatedAuction;
+
+                const soonIndex = this.endingSoon.findIndex(a => a.id === auctionId);
+                if (soonIndex !== -1) this.endingSoon[soonIndex] = updatedAuction;
+
+                this.isBidding = false;
+            });
+        } catch (error) {
+            runInAction(() => { this.isBidding = false; });
+        }
+    }
 
     // --- Approval Workflow Actions ---
 
@@ -221,13 +242,11 @@ export class AuctionStore {
         try {
             await approveAuction(id);
             runInAction(() => {
-                if (this.selectedAuction && this.selectedAuction.id === id) {
-                    this.selectedAuction.status = 'ACTIVE';
-                }
+                if (this.selectedAuction?.id === id) this.selectedAuction.status = 'ACTIVE';
+
                 const index = this.auctions.findIndex(a => a.id === id);
-                if (index !== -1) {
-                    this.auctions[index].status = 'ACTIVE';
-                }
+                if (index !== -1) this.auctions[index].status = 'ACTIVE';
+
                 this.isLoading = false;
             });
             return true;
@@ -246,9 +265,7 @@ export class AuctionStore {
             await apiCancelAuction(id);
             runInAction(() => {
                 this.auctions = this.auctions.filter(a => a.id !== id);
-                if (this.selectedAuction?.id === id) {
-                    this.selectedAuction.status = 'CANCELLED';
-                }
+                if (this.selectedAuction?.id === id) this.selectedAuction.status = 'CANCELLED';
             });
             return true;
         } catch (error: unknown) {
@@ -259,16 +276,13 @@ export class AuctionStore {
         }
     };
 
-    // --- NEW: Admin Cancel ---
     adminCancelAuction = async (id: string) => {
         this.error = null;
         try {
             await apiAdminCancelAuction(id);
             runInAction(() => {
                 this.auctions = this.auctions.filter(a => a.id !== id);
-                if (this.selectedAuction?.id === id) {
-                    this.selectedAuction.status = 'CANCELLED';
-                }
+                if (this.selectedAuction?.id === id) this.selectedAuction.status = 'CANCELLED';
             });
             return true;
         } catch (error: unknown) {

@@ -6,16 +6,20 @@ import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo, ResponsiveGr
 import { CreateAuctionModal } from "../../auction/ui/CreateAuctionModal";
 import { EditItemModal } from "../ui/EditItemModal";
 import type { CreateAuctionDto } from "../../auction/types";
-import type { ItemCreateRequest, ItemImageDto } from "../types";
+import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../types";
 
 // --- STYLES ---
 const badges = {
     live: { background: "#16a34a", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
-    sold: { background: "#dc2626", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 }
+    sold: { background: "#dc2626", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
+    pending: { background: "#f59e0b", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
+    scheduled: { background: "#2563eb", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 }
 };
 
 const pageStyles = {
     statusBox: { background: "#f9fafb", padding: 16, borderRadius: 6, textAlign: "center" as const, color: "#666", fontWeight: 500 },
+    pricingBox: { marginTop: 16, padding: 12, background: "#f8fafc", borderRadius: 6, border: "1px solid #e2e8f0" },
+    pricingLabel: { fontSize: 12, color: "#64748b", fontWeight: 600, textTransform: "uppercase" as const, marginBottom: 4 },
     btnPrimary: { width: "100%", padding: "12px", background: "#111", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer" },
     btnSecondary: { width: "100%", padding: "12px", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, fontWeight: 600, cursor: "pointer" },
     btnTextDestructive: { width: "100%", padding: "8px", background: "transparent", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 13 },
@@ -23,76 +27,23 @@ const pageStyles = {
     errorBox: { padding: "12px", backgroundColor: "#fee2e2", color: "#991b1b", borderRadius: "6px", marginBottom: "16px", fontSize: "14px", textAlign: "center" as const, fontWeight: 500 }
 };
 
+// ... (Lightbox Component & Styles remain exactly the same)
+
 const lightboxStyles = {
-    overlay: {
-        position: "fixed" as const, top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.95)", zIndex: 9999,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        animation: "fadeIn 0.2s"
-    },
-    content: {
-        position: "relative" as const, maxWidth: "90vw", maxHeight: "90vh",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        outline: "none"
-    },
-    image: {
-        maxWidth: "100%",
-        maxHeight: "90vh",
-        borderRadius: "4px",
-        boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-        userSelect: "none" as const
-    },
-    closeBtn: {
-        position: "fixed" as const, top: "24px", right: "24px",
-        background: "rgba(255, 255, 255, 0.1)",
-        border: "none", color: "#fff", fontSize: "24px",
-        cursor: "pointer", zIndex: 1000,
-        width: "48px", height: "48px", borderRadius: "50%",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        backdropFilter: "blur(4px)",
-        transition: "background 0.2s"
-    },
-    prevBtn: {
-        position: "fixed" as const, left: "24px", top: "50%", transform: "translateY(-50%)",
-        background: "rgba(255, 255, 255, 0.1)",
-        border: "none", color: "#fff", fontSize: "32px",
-        cursor: "pointer", padding: "0",
-        width: "56px", height: "56px", borderRadius: "50%",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 1000, backdropFilter: "blur(4px)",
-        transition: "background 0.2s"
-    },
-    nextBtn: {
-        position: "fixed" as const, right: "24px", top: "50%", transform: "translateY(-50%)",
-        background: "rgba(255, 255, 255, 0.1)",
-        border: "none", color: "#fff", fontSize: "32px",
-        cursor: "pointer", padding: "0",
-        width: "56px", height: "56px", borderRadius: "50%",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 1000, backdropFilter: "blur(4px)",
-        transition: "background 0.2s"
-    },
-    counter: {
-        position: "fixed" as const, bottom: "24px", left: "50%", transform: "translateX(-50%)",
-        color: "rgba(255, 255, 255, 0.8)", fontSize: "14px", fontWeight: 500,
-        background: "rgba(0, 0, 0, 0.5)", padding: "4px 12px", borderRadius: "20px",
-        backdropFilter: "blur(4px)"
-    }
+    overlay: { position: "fixed" as const, top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.95)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.2s" },
+    content: { position: "relative" as const, maxWidth: "90vw", maxHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", outline: "none" },
+    image: { maxWidth: "100%", maxHeight: "90vh", borderRadius: "4px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)", userSelect: "none" as const },
+    closeBtn: { position: "fixed" as const, top: "24px", right: "24px", background: "rgba(255, 255, 255, 0.1)", border: "none", color: "#fff", fontSize: "24px", cursor: "pointer", zIndex: 1000, width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)", transition: "background 0.2s" },
+    prevBtn: { position: "fixed" as const, left: "24px", top: "50%", transform: "translateY(-50%)", background: "rgba(255, 255, 255, 0.1)", border: "none", color: "#fff", fontSize: "32px", cursor: "pointer", padding: "0", width: "56px", height: "56px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)", transition: "background 0.2s" },
+    nextBtn: { position: "fixed" as const, right: "24px", top: "50%", transform: "translateY(-50%)", background: "rgba(255, 255, 255, 0.1)", border: "none", color: "#fff", fontSize: "32px", cursor: "pointer", padding: "0", width: "56px", height: "56px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)", transition: "background 0.2s" },
+    counter: { position: "fixed" as const, bottom: "24px", left: "50%", transform: "translateX(-50%)", color: "rgba(255, 255, 255, 0.8)", fontSize: "14px", fontWeight: 500, background: "rgba(0, 0, 0, 0.5)", padding: "4px 12px", borderRadius: "20px", backdropFilter: "blur(4px)" }
 };
 
-// --- LIGHTBOX COMPONENT ---
 const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
     const [index, setIndex] = useState(initialIndex || 0);
 
-    const handleNext = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (images?.length) setIndex((prev) => (prev + 1) % images.length);
-    };
-
-    const handlePrev = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (images?.length) setIndex((prev) => (prev - 1 + images.length) % images.length);
-    };
+    const handleNext = (e: React.MouseEvent) => { e.stopPropagation(); if (images?.length) setIndex((prev) => (prev + 1) % images.length); };
+    const handlePrev = (e: React.MouseEvent) => { e.stopPropagation(); if (images?.length) setIndex((prev) => (prev - 1 + images.length) % images.length); };
 
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -106,14 +57,9 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
     }, [images?.length, onClose]);
 
     if (!images || images.length === 0) return null;
-
-    const currentImg = images[index];
-    const url = currentImg?.url;
-
     return (
         <div style={lightboxStyles.overlay} onClick={onClose}>
             <button style={lightboxStyles.closeBtn}>✕</button>
-
             {images.length > 1 && (
                 <>
                     <button style={lightboxStyles.prevBtn} onClick={handlePrev}>‹</button>
@@ -121,9 +67,8 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
                     <div style={lightboxStyles.counter}>{index + 1} / {images.length}</div>
                 </>
             )}
-
             <div style={lightboxStyles.content} onClick={(e) => e.stopPropagation()}>
-                {url && <img src={url} alt="Vehicle" style={lightboxStyles.image} />}
+                {images[index]?.url && <img src={images[index].url} alt="Vehicle" style={lightboxStyles.image} />}
             </div>
         </div>
     );
@@ -158,9 +103,13 @@ export const ItemDetailsPage = observer(() => {
         }
     };
 
-    const handleItemUpdate = async (data: ItemCreateRequest, newFiles: File[], deletedImageIds: string[] = []) => {
+    const handleItemUpdate = async (
+        data: ItemUpdateRequest,
+        newFilesWithCategories: { file: File, category: ImageCategory }[],
+        deletedImageIds: string[] = []
+    ) => {
         if (!id) return;
-        const success = await itemStore.updateListing(id, data, newFiles, deletedImageIds);
+        const success = await itemStore.updateListing(id, data, newFilesWithCategories, deletedImageIds);
         if (success) {
             setIsEditModalOpen(false);
             await itemStore.loadItemDetails(id);
@@ -196,33 +145,35 @@ export const ItemDetailsPage = observer(() => {
     }
 
     const item = itemStore.selectedItem;
-
-    // FIX: Loosen the strict equality check to handle string/number mismatches
-    // by comparing them both as strings.
     const isOwner = authStore.user?.id?.toString() === item.seller?.id?.toString();
-    // --- Simplified Status Derived Logic ---
+
     const isDraft = item.status === 'DRAFT';
+    const isUnsold = item.status === 'UNSOLD';
+    const canList = isDraft || isUnsold;
+    const isPending = item.status === 'PENDING_AUCTION';
+    const isScheduled = item.status === 'LISTED_AUCTION';
     const isActiveAuction = item.status === 'ACTIVE_AUCTION';
     const isSold = item.status === 'SOLD';
 
-    // Fetch the final price if the item is sold
     const soldPrice = item.auction?.currentPrice;
 
-    // Badges
     let statusBadge = null;
     if (isActiveAuction) statusBadge = <span style={badges.live}>LIVE AUCTION</span>;
+    else if (isScheduled) statusBadge = <span style={badges.scheduled}>SCHEDULED</span>;
+    else if (isPending) statusBadge = <span style={badges.pending}>IN REVIEW</span>;
     else if (isSold) statusBadge = <span style={badges.sold}>SOLD</span>;
 
-    // Status Text
     const getStatusText = () => {
         if (isActiveAuction) return "Active Auction";
-        if (isDraft) return "Draft / Unlisted";
-        return "Inventory";
+        if (isScheduled) return "Scheduled for Auction";
+        if (isPending) return "Pending Admin Approval";
+        if (isUnsold) return "Unsold / Returned to Garage";
+        return "Garage Inventory (Draft)";
     };
 
     return (
         <DetailPageLayout>
-            <DetailHeader onBack={() => navigate(-1)} title="Back" />
+            <DetailHeader onBack={() => navigate(-1)} title="Back to Garage" />
 
             <ResponsiveGrid>
                 <div>
@@ -234,14 +185,13 @@ export const ItemDetailsPage = observer(() => {
                 </div>
 
                 <div>
-                    <SidebarCard title="Status">
+                    <SidebarCard title="Inventory Status">
                         {itemStore.error && <div style={pageStyles.errorBox}>{itemStore.error}</div>}
 
                         <div style={pageStyles.statusBox}>
-                            {/* 1. SCENARIO: SOLD */}
                             {isSold ? (
                                 <div>
-                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626' }}>Item Sold</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626' }}>Vehicle Sold</div>
                                     {soldPrice !== undefined && (
                                         <div style={{ fontSize: '15px', marginTop: '4px', fontWeight: 600 }}>
                                             ${soldPrice.toLocaleString()}
@@ -253,29 +203,36 @@ export const ItemDetailsPage = observer(() => {
                             )}
                         </div>
 
-                        <div style={{ marginTop: 20 }}>
-                            {/* 2. SCENARIO: ACTIVE AUCTION */}
-                            {isActiveAuction && (
+                        {/* --- NEW PRICING STRATEGY DISPLAY --- */}
+                        <div style={pageStyles.pricingBox}>
+                            <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
+                            {item.isNoReserve ? (
+                                <div style={{ color: '#16a34a', fontWeight: 700 }}>No Reserve</div>
+                            ) : (
+                                <div style={{ color: '#111', fontWeight: 600 }}>
+                                    Reserve: {item.reservePrice ? `$${item.reservePrice.toLocaleString()}` : "Not set"}
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ marginTop: 24 }}>
+                            {(isActiveAuction || isScheduled || isPending) && (
                                 <button
                                     onClick={() => navigate(`/auctions/${item.activeAuctionId || item.auction?.id}`)}
                                     style={{ ...pageStyles.btnPrimary, marginBottom: '12px' }}
                                 >
-                                    {isOwner ? "View Live Auction" : "Follow Auction"}
+                                    {isPending ? "View Submitted Auction" : "View Live Auction"}
                                 </button>
                             )}
 
-                            {/* 3. SCENARIO: DRAFT / OWNER CONTROLS */}
-                            {isOwner && isDraft && (
+                            {isOwner && canList && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
                                     <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>
                                         List for Auction
                                     </button>
-
                                     <button onClick={() => setIsEditModalOpen(true)} style={pageStyles.btnSecondary}>
-                                        Edit Details
+                                        Edit Details & Specs
                                     </button>
-
                                     <button
                                         onClick={handleDeleteItem}
                                         disabled={isDeleting}

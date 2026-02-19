@@ -13,16 +13,13 @@ data class AuctionDto(
     val startTime: Instant,
     val endTime: Instant,
 
-    // Financials
     val startPrice: BigDecimal,
-    val currentPrice: BigDecimal, // Highest bid or start price
+    val currentPrice: BigDecimal,
     val minBidIncrement: BigDecimal,
-    val reservePrice: BigDecimal?,
+
+    val isNoReserve: Boolean,
     val isReserveMet: Boolean,
 
-    // Stats
     val bidCount: Int,
-
-    // Relationships
     val winnerId: Long?
 )

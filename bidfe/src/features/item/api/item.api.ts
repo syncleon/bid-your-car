@@ -3,7 +3,9 @@ import type {
     ItemDto,
     ItemImageDto,
     ItemUpdateRequest,
-    Page
+    Page,
+    // Make sure to export/import your new ImageCategory enum in your types file!
+    ImageCategory
 } from "../types";
 import { http } from "../../../shared/api/HttpClient";
 
@@ -13,11 +15,19 @@ export const submitItem = (data: ItemCreateRequest) =>
         body: JSON.stringify(data),
     });
 
-export const uploadItemImage = (itemId: string, file: File) => {
+/**
+ * Uploads an image for an item with a specific category.
+ * The backend handles automatically demoting the old MAIN image if a new one is uploaded.
+ */
+export const uploadItemImage = (
+    itemId: string,
+    file: File,
+    category: ImageCategory | string = "OTHER"
+) => {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("category", category);
 
-    // FIX: Removed the headers object completely.
     // The browser will automatically set 'Content-Type: multipart/form-data; boundary=...'
     return http<ItemImageDto>(`/items/${itemId}/images`, {
         method: "POST",
@@ -25,10 +35,8 @@ export const uploadItemImage = (itemId: string, file: File) => {
     });
 };
 
-export const getAllItems = (page = 0, size = 20) =>
-    http<Page<ItemDto>>(`/items?page=${page}&size=${size}&sort=createdDate,desc`, {
-        method: "GET"
-    });
+// NOTE: getAllItems was removed!
+// Public browsing should now be done via AuctionApi.getPublicAuctions()
 
 export const getMyItems = (page = 0, size = 20) =>
     http<Page<ItemDto>>(`/items/me?page=${page}&size=${size}&sort=createdDate,desc`, {

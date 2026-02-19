@@ -77,6 +77,7 @@ const styles = {
 
     // Overlays / Badges Containers
     overlayTopLeft: { position: "absolute", top: "10px", left: "10px", zIndex: 2 } as CSSProperties,
+    overlayTopRight: { position: "absolute", top: "10px", right: "10px", zIndex: 2 } as CSSProperties, // <-- ADDED HERE
     overlayBottomContainer: {
         position: "absolute",
         bottom: "10px",

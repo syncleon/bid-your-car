@@ -10,25 +10,21 @@ export const register = (dto: RegisterRequestDto) =>
     http<string>("auth/register", {
         method: "POST",
         body: JSON.stringify(dto),
-        auth: false,
     });
 
 export const login = (dto: LoginRequestDto) =>
     http<AuthResponseDto>("auth/login", {
         method: "POST",
         body: JSON.stringify(dto),
-        auth: false,
     });
 
 export const verifyEmail = (token: string) =>
     http<string>(`auth/verify?token=${token}`, {
-        method: "GET",
-        auth: false,
+        method: "GET"
     });
 
 export const restoreAccount = (data: LoginRequestDto) =>
     http<RestoreResponseDto>("auth/restore", {
         method: "POST",
-        body: JSON.stringify(data),
-        auth: false,
+        body: JSON.stringify(data)
     });

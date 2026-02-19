@@ -1,6 +1,8 @@
 package com.oblapleon.bidapi.feature.item.dto
 
+import com.oblapleon.bidapi.feature.item.entity.ConditionGrade
 import jakarta.validation.constraints.*
+import java.math.BigDecimal
 import java.util.UUID
 
 data class ItemCreateRequest(
@@ -23,10 +25,27 @@ data class ItemCreateRequest(
 
     @field:NotNull(message = "Mileage is required")
     @field:Min(value = 0, message = "Mileage cannot be negative")
-    val mileage: Int,
+    var mileage: Int,
 
     @field:Size(max = 5000, message = "Description is too long")
     val description: String? = null,
+
+    val fuelType: String? = null,
+
+    @field:Min(value = 0, message = "Horsepower cannot be negative")
+    val horsepower: Int? = null,
+
+    @field:NotNull(message = "Condition grade is required")
+    val condition: ConditionGrade,
+
+    val titleStatus: String? = null,
+    val isModified: Boolean = false,
+    val hasServiceHistory: Boolean = false,
+
+    @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
+    val reservePrice: BigDecimal? = null,
+
+    val isNoReserve: Boolean = false,
 
     val engine: String? = null,
     val drivetrain: String? = null,
@@ -43,17 +62,23 @@ data class ItemCreateRequest(
 data class ItemUpdateRequest(
     @field:Min(value = 1900, message = "Year must be valid")
     val year: Int? = null,
-
     val make: String? = null,
     val model: String? = null,
     val location: String? = null,
-
     @field:Min(value = 0, message = "Mileage cannot be negative")
     val mileage: Int? = null,
-
     @field:Size(max = 5000, message = "Description is too long")
     val description: String? = null,
-
+    val fuelType: String? = null,
+    @field:Min(value = 0, message = "Horsepower cannot be negative")
+    val horsepower: Int? = null,
+    val condition: ConditionGrade? = null,
+    val titleStatus: String? = null,
+    val isModified: Boolean? = null,
+    val hasServiceHistory: Boolean? = null,
+    @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
+    val reservePrice: BigDecimal? = null,
+    val isNoReserve: Boolean? = null,
     val engine: String? = null,
     val drivetrain: String? = null,
     val transmission: String? = null,
@@ -61,7 +86,5 @@ data class ItemUpdateRequest(
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
     val sellerType: String? = null,
-
-    // IDs of images to keep. Anything NOT in this list is deleted.
     val keepImageIds: List<UUID>? = null
 )

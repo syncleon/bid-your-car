@@ -1,23 +1,19 @@
 package com.oblapleon.bidapi.feature.item.service
 
 import com.oblapleon.bidapi.common.exception.AlreadyExistsException
-import com.oblapleon.bidapi.common.exception.ForbiddenException
 import com.oblapleon.bidapi.common.exception.NotFoundException
+import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.common.service.StorageService
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
-import com.oblapleon.bidapi.feature.item.dto.ItemDto
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
-import com.oblapleon.bidapi.feature.item.dto.toDto
+import com.oblapleon.bidapi.feature.item.entity.ImageCategory
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.item.entity.ItemImage
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.item.repository.ItemImageRepository
 import com.oblapleon.bidapi.feature.item.repository.ItemRepository
 import com.oblapleon.bidapi.feature.user.entity.ERole
-import com.oblapleon.bidapi.feature.user.entity.User
 import org.slf4j.LoggerFactory
-import org.springframework.cache.annotation.CacheEvict
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -26,69 +22,87 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 /**
- * Service responsible for managing the lifecycle of vehicle inventory items.
- * Handles creation, updates, deletion, image management, and ownership validation.
+ * Service responsible for managing user INVENTORY (Items).
+ * * Access to items in this service is strictly restricted to their owners (Sellers)
+ * and Administrators. This acts as a private "garage" management tool.
+ * Public access to live vehicle listings should be handled exclusively through the AuctionService.
  */
 @Service
 class ItemService(
     private val itemRepository: ItemRepository,
     private val itemImageRepository: ItemImageRepository,
-    private val storageService: StorageService
+    private val storageService: StorageService,
+    private val authorizationHelper: AuthorizationHelper
 ) {
 
     private val logger = LoggerFactory.getLogger(ItemService::class.java)
 
+    /**
+     * Universal retrieval method with strict authorization boundary.
+     * * If the requesting user is neither the owner of the item nor an admin,
+     * a 404 NotFoundException is intentionally thrown instead of a 403.
+     * This prevents unauthorized users from discovering the existence of private drafts via UUID enumeration.
+     *
+     * @param id The UUID of the requested item.
+     * @return The securely retrieved Item entity.
+     * @throws NotFoundException if the item does not exist, the seller is deleted, or the user lacks permission.
+     */
     @Transactional(readOnly = true)
     fun findById(id: UUID): Item {
         val item = itemRepository.findById(id)
             .orElseThrow { NotFoundException("Item not found") }
 
         if (item.seller.deletedAt != null) {
-            throw NotFoundException("Item listing is no longer available.")
+            throw NotFoundException("Item not found")
         }
+
+        val currentUser = authorizationHelper.getCurrentUser()
+        val isOwner = item.seller.id == currentUser.id
+        val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
+
+        if (!isOwner && !isAdmin) {
+            throw NotFoundException("Item not found")
+        }
+
         return item
     }
 
-    @Cacheable(value = ["items"], key = "#id")
-    @Transactional(readOnly = true)
-    fun getCachedItemDto(id: UUID): ItemDto {
-        val item = findById(id)
-        return item.toDto()
-    }
-
     /**
-     * Retrieves a paginated list of items that are approved and available for public viewing.
-     *
-     * @param pageable Pagination information.
-     * @return A page of available items.
-     */
-    fun findAllAvailable(pageable: Pageable): Page<Item> {
-        return itemRepository.findAllByStatus(ItemStatus.DRAFT, pageable)
-    }
-
-    /**
-     * Retrieves all items associated with a specific seller, regardless of status.
-     * Used primarily for seller dashboards.
+     * Retrieves the private inventory (garage) of a specific seller.
+     * Protected by authorization checks to ensure users can only view their own inventory (or admins).
      *
      * @param sellerId The ID of the seller.
-     * @param pageable Pagination information.
-     * @return A page of the seller's items.
+     * @param pageable Pagination configuration.
+     * @return A paginated list of the seller's items.
      */
     fun findAllBySellerId(sellerId: Long, pageable: Pageable): Page<Item> {
+        authorizationHelper.checkOwnerOrAdmin(sellerId)
         return itemRepository.findAllBySellerId(sellerId, pageable)
     }
 
     /**
-     * Creates a new item listing.
-     * The item is initialized with a PENDING_REVIEW status.
+     * Finds items that have been submitted and are ready to be attached to an auction.
+     * This is strictly an administrative tool used in the control panel.
      *
-     * @param currentUser The user attempting to create the listing.
-     * @param request The data transfer object containing item details.
-     * @return The persisted Item entity.
-     * @throws AlreadyExistsException if a vehicle with the same VIN is already listed.
+     * @param pageable Pagination configuration.
+     * @return A paginated list of items pending auction creation.
+     */
+    fun findReadyForAuction(pageable: Pageable): Page<Item> {
+        return itemRepository.findReadyForAuction(pageable)
+    }
+
+    /**
+     * Creates a new vehicle listing in the user's private inventory.
+     * The item is automatically initialized with a DRAFT status.
+     *
+     * @param request The data transfer object containing vehicle details.
+     * @return The newly persisted Item entity.
+     * @throws AlreadyExistsException if a vehicle with the provided VIN already exists in the system.
      */
     @Transactional
-    fun create(currentUser: User, request: ItemCreateRequest): Item {
+    fun create(request: ItemCreateRequest): Item {
+        val currentUser = authorizationHelper.getCurrentUser()
+
         if (itemRepository.existsByVin(request.vin)) {
             throw AlreadyExistsException("Vehicle with VIN ${request.vin} is already listed.")
         }
@@ -103,6 +117,14 @@ class ItemService(
             location = request.location,
             mileage = request.mileage,
             description = request.description,
+            fuelType = request.fuelType,
+            horsepower = request.horsepower,
+            condition = request.condition,
+            titleStatus = request.titleStatus,
+            isModified = request.isModified,
+            hasServiceHistory = request.hasServiceHistory,
+            reservePrice = request.reservePrice,
+            isNoReserve = request.isNoReserve,
             engine = request.engine,
             drivetrain = request.drivetrain,
             transmission = request.transmission,
@@ -116,21 +138,19 @@ class ItemService(
     }
 
     /**
-     * Updates an existing item listing.
-     * Handles updating vehicle specifications and synchronizing the image gallery.
+     * Updates an existing item and synchronizes its image gallery.
+     * * Image Synchronization: Any existing image ID not present in [ItemUpdateRequest.keepImageIds]
+     * will be permanently deleted from both the database and cloud storage. If the main thumbnail
+     * is deleted, a new thumbnail is automatically elected.
      *
      * @param id The UUID of the item to update.
-     * @param currentUser The user attempting the update (must be owner or admin).
-     * @param request The update payload containing modified fields and image retention logic.
+     * @param request The payload containing updated fields and image retention logic.
      * @return The updated Item entity.
-     * @throws ForbiddenException if the current user is not the owner or an admin.
      */
-    @CacheEvict(value = ["items"], key = "#id")
     @Transactional
-    fun update(id: UUID, currentUser: User, request: ItemUpdateRequest): Item {
+    fun update(id: UUID, request: ItemUpdateRequest): Item {
+        // findById enforces ownership/admin authorization internally
         val item = findById(id)
-
-        validateOwnership(item, currentUser)
 
         request.year?.let { item.year = it }
         request.make?.let { item.make = it }
@@ -138,7 +158,14 @@ class ItemService(
         request.mileage?.let { item.mileage = it }
         request.location?.let { item.location = it }
         request.description?.let { item.description = it }
-
+        request.fuelType?.let { item.fuelType = it }
+        request.horsepower?.let { item.horsepower = it }
+        request.condition?.let { item.condition = it }
+        request.titleStatus?.let { item.titleStatus = it }
+        request.isModified?.let { item.isModified = it }
+        request.hasServiceHistory?.let { item.hasServiceHistory = it }
+        request.reservePrice?.let { item.reservePrice = it }
+        request.isNoReserve?.let { item.isNoReserve = it }
         request.engine?.let { item.engine = it }
         request.drivetrain?.let { item.drivetrain = it }
         request.transmission?.let { item.transmission = it }
@@ -149,17 +176,12 @@ class ItemService(
 
         request.keepImageIds?.let { keepIds ->
             val imagesToRemove = item.images.filter { it.id !in keepIds }
-
-            item.images.removeAll(imagesToRemove)
-
-            imagesToRemove.forEach { image ->
-                safelyDeleteFile(image.url)
-            }
-
+            item.images.removeAll(imagesToRemove.toSet())
+            imagesToRemove.forEach { safelyDeleteFile(it.url) }
             itemImageRepository.deleteAll(imagesToRemove)
 
             if (imagesToRemove.any { it.url == item.thumbnailUrl }) {
-                item.thumbnailUrl = item.images.sortedBy { it.sortOrder }.firstOrNull()?.url
+                item.thumbnailUrl = item.getMainImage()?.url ?: item.images.sortedBy { it.sortOrder }.firstOrNull()?.url
             }
         }
 
@@ -167,68 +189,55 @@ class ItemService(
     }
 
     /**
-     * Permanently deletes an item and its associated images from storage.
+     * Permanently deletes an item and purges all associated images from cloud storage.
      *
      * @param id The UUID of the item to delete.
-     * @param currentUser The user attempting the deletion.
-     * @throws ForbiddenException if the current user is not the owner or an admin.
      */
     @Transactional
-    @CacheEvict(value = ["items"], key = "#id")
-    fun delete(id: UUID, currentUser: User) {
-        val item = itemRepository.findById(id).orElseThrow { NotFoundException("Item not found") }
-
-        validateOwnership(item, currentUser)
-
+    fun delete(id: UUID) {
+        val item = findById(id)
         item.images.forEach { safelyDeleteFile(it.url) }
-
         itemRepository.delete(item)
     }
 
     /**
-     * Uploads an image to cloud storage and associates it with the item.
-     * If the item has no thumbnail, the uploaded image becomes the default thumbnail.
+     * Uploads a single image to cloud storage and categorizes it.
+     * * Logic constraints enforce that an item can only have one [ImageCategory.MAIN] image.
+     * If a new MAIN image is uploaded, the existing one is gracefully demoted to an EXTERIOR image.
      *
-     * @param itemId The UUID of the item.
-     * @param currentUser The user uploading the image.
-     * @param file The multipart file to upload.
-     * @return The created ItemImage entity.
+     * @param itemId The UUID of the target item.
+     * @param file The multipart file payload.
+     * @param category The classification category for the image (defaults to OTHER).
+     * @return The persisted ItemImage entity.
      */
     @Transactional
-    fun uploadImage(itemId: UUID, currentUser: User, file: MultipartFile): ItemImage {
+    fun uploadImage(
+        itemId: UUID,
+        file: MultipartFile,
+        category: ImageCategory = ImageCategory.OTHER
+    ): ItemImage {
         val item = findById(itemId)
-        validateOwnership(item, currentUser)
+
+        if (category == ImageCategory.MAIN) {
+            val oldMainImage = itemImageRepository.findFirstByItemIdAndCategory(itemId, ImageCategory.MAIN)
+            if (oldMainImage != null) {
+                oldMainImage.category = ImageCategory.EXTERIOR
+                itemImageRepository.save(oldMainImage)
+            }
+        }
 
         val imageUrl = storageService.uploadFile(file)
-
-        val image = ItemImage(
-            url = imageUrl,
-            item = item,
-            sortOrder = item.images.size
-        )
-
+        val image = ItemImage(url = imageUrl, item = item, category = category, sortOrder = item.images.size)
         item.addImage(image)
 
         return itemImageRepository.save(image)
     }
 
     /**
-     * Validates that the current user has permission to modify the item.
-     * Only the original seller or an administrator can modify items.
-     */
-    private fun validateOwnership(item: Item, user: User) {
-        val isOwner = item.seller.id == user.id
-        val isAdmin = user.roles.any { it.name == ERole.ADMIN }
-
-        if (!isOwner && !isAdmin) {
-            throw ForbiddenException("You are not authorized to modify this item.")
-        }
-    }
-
-    /**
      * Attempts to delete a file from cloud storage safely.
-     * Errors are logged but swallowed to prevent rolling back database transactions
-     * during cleanup operations.
+     * Any underlying storage exceptions are logged but swallowed to prevent
+     * rolling back the active database transaction during cleanup operations.
+     * * @param url The storage URL of the file to delete.
      */
     private fun safelyDeleteFile(url: String) {
         try {

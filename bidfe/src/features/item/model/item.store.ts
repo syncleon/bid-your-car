@@ -1,6 +1,5 @@
 import { types, flow, cast, type Instance } from "mobx-state-tree";
 import {
-    getAllItems,
     getMyItems,
     getItemById,
     submitItem,
@@ -10,28 +9,65 @@ import {
 } from "../api/item.api";
 import type {
     AuctionStatus,
+    ConditionGrade,
+    ImageCategory,
     ItemCreateRequest,
     ItemDto,
     ItemStatus,
     ItemUpdateRequest
-} from "../types.ts";
-import type { AuctionDto } from "../../auction/types.ts";
-import type { UserDto } from "../../auth/types.ts";
+} from "../types";
+import type { AuctionDto } from "../../auction/types";
+import type { UserDto } from "../../auth/types";
 
+// --- Enums for MST ---
+const ItemStatusEnum = types.enumeration<ItemStatus>("ItemStatus", [
+    "DRAFT",
+    "PENDING_AUCTION",
+    "LISTED_AUCTION",
+    "ACTIVE_AUCTION",
+    "SOLD",
+    "UNSOLD",
+    "ARCHIVED"
+]);
+
+const AuctionStatusEnum = types.enumeration<AuctionStatus>("AuctionStatus", [
+    "PENDING_APPROVAL",
+    "SCHEDULED",
+    "ACTIVE",
+    "SOLD",
+    "UNSOLD",
+    "CANCELLED"
+]);
+
+const ConditionGradeEnum = types.enumeration<ConditionGrade>("ConditionGrade", [
+    "EXCELLENT",
+    "VERY_GOOD",
+    "GOOD",
+    "FAIR",
+    "POOR",
+    "PARTS_ONLY"
+]);
+
+const ImageCategoryEnum = types.enumeration<ImageCategory>("ImageCategory", [
+    "MAIN",
+    "EXTERIOR",
+    "INTERIOR",
+    "ENGINE",
+    "SERVICE",
+    "OTHER"
+]);
+
+// --- Models ---
 const ItemImageModel = types.model("ItemImage", {
     id: types.identifier,
     url: types.string,
+    category: ImageCategoryEnum,
     sortOrder: types.number,
 });
 
 export const ItemModel = types.model("Item", {
     id: types.identifier,
-    status: types.enumeration<ItemStatus>([
-        "DRAFT",
-        "SOLD",
-        "ARCHIVED",
-        "ACTIVE_AUCTION"
-    ]),
+    status: ItemStatusEnum,
     year: types.number,
     make: types.string,
     model: types.string,
@@ -43,7 +79,19 @@ export const ItemModel = types.model("Item", {
 
     seller: types.frozen<UserDto>(),
 
-    // Technical Specs
+    // --- New Mechanical & Condition Fields ---
+    fuelType: types.maybeNull(types.string),
+    horsepower: types.maybeNull(types.number),
+    condition: ConditionGradeEnum,
+    titleStatus: types.maybeNull(types.string),
+    isModified: types.boolean,
+    hasServiceHistory: types.boolean,
+
+    // --- New Pricing Logic ---
+    reservePrice: types.maybeNull(types.number),
+    isNoReserve: types.boolean,
+
+    // --- Existing Technical Specs ---
     engine: types.maybeNull(types.string),
     drivetrain: types.maybeNull(types.string),
     transmission: types.maybeNull(types.string),
@@ -54,19 +102,8 @@ export const ItemModel = types.model("Item", {
 
     images: types.array(ItemImageModel),
 
-    // Auction Context
-    auctionStatus: types.maybeNull(
-        types.enumeration<AuctionStatus>([
-            "DRAFT",
-            "PENDING_APPROVAL",
-            "SCHEDULED",
-            "ACTIVE",
-            "ENDED_PENDING",
-            "SOLD",
-            "UNSOLD",
-            "CANCELLED"
-        ])
-    ),
+    // --- Auction Context ---
+    auctionStatus: types.maybeNull(AuctionStatusEnum),
     activeAuctionId: types.maybeNull(types.string),
     auction: types.maybeNull(types.frozen<AuctionDto>())
 });
@@ -75,14 +112,9 @@ export const ItemModel = types.model("Item", {
 
 export const ItemStore = types
     .model("ItemStore", {
-        items: types.array(ItemModel),
+        // NOTE: 'items' (public list) is removed. The Item store now only manages the user's private garage.
         myItems: types.array(ItemModel),
         selectedItem: types.maybeNull(types.reference(ItemModel)),
-
-        // Pagination for all items
-        totalItems: 0,
-        totalPages: 0,
-        currentPage: 0,
 
         // Pagination for my items
         myTotalItems: 0,
@@ -94,61 +126,34 @@ export const ItemStore = types
         error: null as string | null,
         uploadProgress: null as string | null,
     }))
-
     .views((self) => ({
-        get hasItems() {
-            return self.items.length > 0;
-        },
         get hasMyItems() {
             return self.myItems.length > 0;
         },
         getItemById(id: string) {
-            return self.items.find(i => i.id === id) || self.myItems.find(i => i.id === id);
+            return self.myItems.find(i => i.id === id);
         }
     }))
     .actions((self) => {
         // Private helper to sync lists
         const updateLocalCache = (itemData: ItemDto) => {
-            const existingInItems = self.items.findIndex(i => i.id === itemData.id);
-            if (existingInItems !== -1) self.items[existingInItems] = cast(itemData);
-
             const existingInMyItems = self.myItems.findIndex(i => i.id === itemData.id);
             if (existingInMyItems !== -1) self.myItems[existingInMyItems] = cast(itemData);
         };
-
-        const loadItems = flow(function* (page = 0) {
-            self.isLoading = true;
-            self.error = null;
-            try {
-                const data = yield getAllItems(page);
-                self.items = cast(data.content);
-                self.totalItems = data.totalElements;
-                self.totalPages = data.totalPages;
-                self.currentPage = data.number;
-            } catch (err) { // <-- Removed any
-                self.error = err instanceof Error ? err.message : "Failed to load items";
-            } finally {
-                self.isLoading = false;
-            }
-        });
 
         const loadItemDetails = flow(function* (id: string) {
             self.isLoading = true;
             self.error = null;
             try {
-                // Fetch the fresh item from the API
-                const itemData = yield getItemById(id);
-
-                // Keep our local lists in sync
+                const itemData: ItemDto = yield getItemById(id);
                 updateLocalCache(itemData);
 
-                // If the item isn't in our arrays yet, we need to push it so the reference works
-                const exists = self.items.find(i => i.id === id) || self.myItems.find(i => i.id === id);
+                // If the item isn't in our array yet, we need to push it so the reference works
+                const exists = self.myItems.find(i => i.id === id);
                 if (!exists) {
-                    self.items.push(cast(itemData));
+                    self.myItems.push(cast(itemData));
                 }
 
-                // Set it as the currently selected item
                 self.selectedItem = id as unknown as Instance<typeof ItemModel>;
             } catch (err) {
                 self.error = err instanceof Error ? err.message : "Failed to load item details";
@@ -170,37 +175,43 @@ export const ItemStore = types
                 self.myTotalItems = data.totalElements;
                 self.myTotalPages = data.totalPages;
                 self.myCurrentPage = data.number;
-            } catch (err) { // <-- Removed any
+            } catch (err) {
                 self.error = err instanceof Error ? err.message : "Failed to load your items";
             } finally {
                 self.isLoading = false;
             }
         });
 
-        const submitNewItem = flow(function* (data: ItemCreateRequest, files: File[]) {
+        // Updated to accept categories alongside files
+        const submitNewItem = flow(function* (
+            data: ItemCreateRequest,
+            filesWithCategories: { file: File, category: ImageCategory }[]
+        ) {
             self.isLoading = true;
             self.uploadProgress = "Creating listing...";
             try {
                 const newItem: ItemDto = yield submitItem(data);
 
-                if (files.length > 0) {
-                    self.uploadProgress = `Uploading ${files.length} images...`;
-                    yield Promise.all(files.map(file => uploadItemImage(newItem.id, file)));
+                if (filesWithCategories.length > 0) {
+                    // SEQUENTIAL UPLOAD FIX:
+                    for (let i = 0; i < filesWithCategories.length; i++) {
+                        const item = filesWithCategories[i];
+                        self.uploadProgress = `Uploading image ${i + 1} of ${filesWithCategories.length}...`;
+
+                        // We yield each call individually so the backend
+                        // can finish one transaction before the next starts
+                        yield uploadItemImage(newItem.id, item.file, item.category);
+                    }
 
                     const finalItem: ItemDto = yield getItemById(newItem.id);
                     self.myItems.unshift(cast(finalItem));
-
-                    // FIX: Replaced `as any` with a double assertion to bypass ESLint complaints
-                    self.selectedItem = finalItem.id as unknown as Instance<typeof ItemModel>;
+                    self.selectedItem = finalItem.id as any;
                     return finalItem;
                 }
-
                 self.myItems.unshift(cast(newItem));
-
-                // FIX: Replaced `as any`
                 self.selectedItem = newItem.id as unknown as Instance<typeof ItemModel>;
                 return newItem;
-            } catch (err) { // <-- Removed any
+            } catch (err) {
                 self.error = err instanceof Error ? err.message : "Submit failed";
                 return null;
             } finally {
@@ -212,7 +223,7 @@ export const ItemStore = types
         const updateListing = flow(function* (
             id: string,
             data: ItemUpdateRequest,
-            newFiles: File[],
+            newFilesWithCategories: { file: File, category: ImageCategory }[], // <-- New Signature
             deletedImageIds: string[]
         ) {
             self.isLoading = true;
@@ -224,14 +235,17 @@ export const ItemStore = types
 
                 yield updateItem(id, { ...data, keepImageIds });
 
-                if (newFiles.length > 0) {
-                    yield Promise.all(newFiles.map(file => uploadItemImage(id, file)));
+                if (newFilesWithCategories.length > 0) {
+                    // SEQUENTIAL UPLOAD FIX:
+                    for (const item of newFilesWithCategories) {
+                        yield uploadItemImage(id, item.file, item.category);
+                    }
                 }
 
                 const refreshed: ItemDto = yield getItemById(id);
                 updateLocalCache(refreshed);
                 return true;
-            } catch (err) { // <-- Removed any
+            } catch (err) {
                 self.error = err instanceof Error ? err.message : "Update failed";
                 return false;
             } finally {
@@ -244,20 +258,16 @@ export const ItemStore = types
             try {
                 yield deleteItem(id);
 
-                const itemToRemove = self.items.find(i => i.id === id);
-                if (itemToRemove) self.items.remove(itemToRemove);
-
                 const myItemToRemove = self.myItems.find(i => i.id === id);
                 if (myItemToRemove) self.myItems.remove(myItemToRemove);
 
                 if (self.selectedItem?.id === id) self.selectedItem = null;
-            } catch (err) { // <-- Removed any
+            } catch (err) {
                 self.error = err instanceof Error ? err.message : "Delete failed";
             }
         });
 
         return {
-            loadItems,
             loadMyItems,
             loadItemDetails,
             submitNewItem,

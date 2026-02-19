@@ -43,25 +43,16 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    // 1. Websockets & System Endpoints
                     .requestMatchers(antMatcher("/ws/**")).permitAll()
                     .requestMatchers(antMatcher("/actuator/**")).permitAll()
-
-                    // 2. Auth & Docs
                     .requestMatchers(antMatcher("/api/v1/auth/**")).permitAll()
                     .requestMatchers(antMatcher("/v3/api-docs/**")).permitAll()
                     .requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
                     .requestMatchers(antMatcher("/swagger-ui.html")).permitAll()
                     .requestMatchers(antMatcher("/error")).permitAll()
-
-                    // 3. Explicit GET matchers using antMatcher (The bulletproof fix!)
-                    .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/items/**")).permitAll()
-                    .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/items")).permitAll()
                     .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/auctions/**")).permitAll()
                     .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/bids/auction/**")).permitAll()
                     .requestMatchers(antMatcher("/favicon.ico")).permitAll()
-
-                    // 4. Everything else requires a valid JWT
                     .anyRequest().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->

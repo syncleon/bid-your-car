@@ -1,6 +1,6 @@
 import { Modal } from "../../../shared/ui/Modal";
 import { SubmitItemForm } from "./SubmitItemForm";
-import type { ItemDto, ItemCreateRequest, ItemImageDto } from "../types"; // <-- Added ItemImageDto
+import type { ItemDto, ItemCreateRequest, ItemImageDto, ImageCategory } from "../types";
 
 interface Props {
     item: ItemDto | null;
@@ -8,7 +8,7 @@ interface Props {
     onClose: () => void;
     onSubmit: (
         data: ItemCreateRequest,
-        files: File[],
+        filesWithCategories: { file: File; category: ImageCategory }[],
         deletedImageIds: string[]
     ) => Promise<void>;
     isLoading: boolean;
@@ -22,6 +22,8 @@ export const EditItemModal = ({
                                   isLoading
                               }: Props) => {
     if (!isOpen || !item) return null;
+
+    // Map the ItemDto fields to the Form's initial state
     const initialData: Partial<ItemCreateRequest> & { images: ItemImageDto[] } = {
         year: item.year,
         make: item.make,
@@ -30,6 +32,8 @@ export const EditItemModal = ({
         location: item.location,
         mileage: item.mileage,
         description: item.description || "",
+
+        // --- Mechanical Specs ---
         engine: item.engine || "",
         transmission: item.transmission || "",
         drivetrain: item.drivetrain || "",
@@ -37,6 +41,19 @@ export const EditItemModal = ({
         exteriorColor: item.exteriorColor || "",
         interiorColor: item.interiorColor || "",
         sellerType: item.sellerType || "",
+        fuelType: item.fuelType || "",
+        horsepower: item.horsepower ?? ("" as unknown as number),
+
+        // --- Condition & Documentation ---
+        condition: item.condition,
+        titleStatus: item.titleStatus || "Clean",
+        isModified: item.isModified,
+        hasServiceHistory: item.hasServiceHistory,
+
+        // --- Pricing Logic ---
+        reservePrice: item.reservePrice ?? ("" as unknown as number),
+        isNoReserve: item.isNoReserve,
+
         images: item.images
     };
 

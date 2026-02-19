@@ -1,5 +1,4 @@
-// Standard Spring Data Page Interface
-import type { ItemDto } from "../item/types.ts";
+import type { ItemDto } from "../../features/item/types";
 
 export interface Page<T> {
     content: T[];
@@ -12,12 +11,11 @@ export interface Page<T> {
     empty: boolean;
 }
 
+// MATCHED EXACTLY TO BACKEND
 export type AuctionStatus =
-    | "DRAFT"
     | "PENDING_APPROVAL"
     | "SCHEDULED"
     | "ACTIVE"
-    | "ENDED_PENDING"
     | "SOLD"
     | "UNSOLD"
     | "CANCELLED";
@@ -31,9 +29,10 @@ export interface AuctionDto {
 
     // Financials
     startPrice: number;
-    currentPrice: number; // FIX: Renamed from currentHighestBid to match backend
+    currentPrice: number;
     minBidIncrement: number;
-    reservePrice: number | null; // FIX: Added missing reservePrice
+    reservePrice: number | null;
+    isNoReserve: boolean; // <-- NEW: Inherited from Item
     isReserveMet: boolean;
 
     // Stats
@@ -47,14 +46,14 @@ export interface CreateAuctionDto {
     itemId: string;
     startTime: string; // ISO String
     endTime: string;   // ISO String
-    startPrice: number; // FIX: Renamed from startingBid to match backend
-    reservePrice?: number;
+    startPrice: number;
     minBidIncrement?: number;
+    // NOTE: reservePrice is intentionally omitted. It is pulled from the Item automatically.
 }
 
 export interface PlaceBidReq {
-    auctionId: string;
     amount: number;
+    // NOTE: auctionId is passed in the URL, not the body
 }
 
 export interface BidDto {

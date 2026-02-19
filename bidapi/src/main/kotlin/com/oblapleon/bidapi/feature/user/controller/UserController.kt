@@ -1,6 +1,7 @@
 package com.oblapleon.bidapi.feature.user.controller
 
 import com.oblapleon.bidapi.common.exception.BadRequestException
+import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.feature.item.dto.ItemDto
 import com.oblapleon.bidapi.feature.item.dto.toDto
 import com.oblapleon.bidapi.feature.item.service.ItemService
@@ -16,16 +17,16 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1/users")
 @Tag(name = "Users", description = "User profile and administration")
-@SecurityRequirement(name = "bearerAuth") // Swagger: Require JWT for all endpoints here
+@SecurityRequirement(name = "bearerAuth")
 class UserController(
     private val userService: UserService,
-    private val itemService: ItemService
+    private val itemService: ItemService,
+    private val authorizationHelper: AuthorizationHelper // <-- ADDED: Our custom helper
 ) {
 
     // ========================================================================
@@ -34,21 +35,19 @@ class UserController(
 
     @Operation(summary = "Get My Profile", description = "Returns the profile of the currently logged-in user.")
     @GetMapping("/me")
-    fun getCurrentUser(@AuthenticationPrincipal username: String): ResponseEntity<UserDto> {
-        // We fetch fresh data from DB to ensure roles/email are up to date
-        val user = userService.findByUsername(username)
+    fun getCurrentUser(): ResponseEntity<UserDto> {
+        // Automatically extracts the JWT, parses the ID, and fetches the DB entity
+        val user = authorizationHelper.getCurrentUser()
         return ResponseEntity.ok(user.toDto())
     }
 
     @Operation(summary = "Update My Profile", description = "Update email or username.")
     @PatchMapping("/me")
     fun updateCurrentUser(
-        @AuthenticationPrincipal username: String,
         @Valid @RequestBody request: UpdateProfileReqDto
     ): ResponseEntity<UserDto> {
-        val user = userService.findByUsername(username)
+        val user = authorizationHelper.getCurrentUser()
 
-        // Convert Profile DTO to Update DTO for the service
         val serviceRequest = UpdateUserReqDto(
             username = request.username,
             email = request.email
@@ -61,10 +60,9 @@ class UserController(
     @Operation(summary = "Change Password", description = "Update login password.")
     @PutMapping("/me/password")
     fun changePassword(
-        @AuthenticationPrincipal username: String,
         @Valid @RequestBody request: UpdatePasswordReqDto
     ): ResponseEntity<Map<String, String>> {
-        val user = userService.findByUsername(username)
+        val user = authorizationHelper.getCurrentUser()
         userService.changePassword(user.id!!, request)
         return ResponseEntity.ok(mapOf("message" to "Password updated successfully"))
     }
@@ -72,10 +70,9 @@ class UserController(
     @Operation(summary = "My Items", description = "Get items listed by the current user.")
     @GetMapping("/me/items")
     fun getCurrentUserItems(
-        @AuthenticationPrincipal username: String,
         @PageableDefault(size = 20) pageable: Pageable
     ): ResponseEntity<Page<ItemDto>> {
-        val user = userService.findByUsername(username)
+        val user = authorizationHelper.getCurrentUser()
         // Assuming ItemService has findAllBySellerId
         val items = itemService.findAllBySellerId(user.id!!, pageable)
         return ResponseEntity.ok(items.map { it.toDto() })
@@ -84,10 +81,9 @@ class UserController(
     @Operation(summary = "Delete My Account", description = "Soft-delete account. Requires password confirmation.")
     @DeleteMapping("/me")
     fun deleteMyAccount(
-        @AuthenticationPrincipal username: String,
         @Valid @RequestBody request: DeleteAccountReqDto
     ): ResponseEntity<Map<String, String>> {
-        val user = userService.findByUsername(username)
+        val user = authorizationHelper.getCurrentUser()
         userService.deleteMyAccount(user.id!!, request.password)
         return ResponseEntity.ok(mapOf("message" to "Account deleted successfully"))
     }
@@ -139,9 +135,6 @@ class UserController(
         @PageableDefault(size = 20) pageable: Pageable
     ): ResponseEntity<Page<UserDto>> {
         if (query.isBlank()) throw BadRequestException("Query cannot be empty")
-
-        // Simple search strategy: Try username first, then email
-        // Or strictly check parameter if you prefer specific params like ?username=...
         val results = userService.searchByUsername(query, pageable)
         return ResponseEntity.ok(results.map { it.toDto() })
     }
