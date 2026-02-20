@@ -198,17 +198,15 @@ export class AuctionStore {
 
     submitQuickBid = async (auctionId: string) => {
         this.isBidding = true;
-        this.error = null;
+        // Do NOT set this.error = null anymore
         try {
             const newBid = await placeQuickBid(auctionId);
             await this.refreshAuctionStateLocally(auctionId, newBid);
-            return true;
+            return { success: true };
         } catch (error: unknown) {
-            runInAction(() => {
-                this.error = this.getErrorMessage(error, "Failed to place quick bid");
-                this.isBidding = false;
-            });
-            return false;
+            runInAction(() => { this.isBidding = false; });
+            // Return the error locally instead of saving to global state!
+            return { success: false, error: this.getErrorMessage(error, "Failed to place quick bid") };
         }
     };
 

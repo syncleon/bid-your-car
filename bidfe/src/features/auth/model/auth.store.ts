@@ -63,24 +63,21 @@ export const AuthStore = types.model("AuthStore", {
                 const payload = JSON.parse(jsonPayload);
 
                 let roles: { name: string }[] = [];
-                if (Array.isArray(payload.roles)) {
-                    roles = payload.roles.map((r: unknown) => {
-                        if (typeof r === 'string') return { name: r };
-                        if (typeof r === 'object' && r !== null) {
-                            const obj = r as Record<string, unknown>;
-                            if (typeof obj.authority === 'string') return { name: obj.authority };
-                            if (typeof obj.name === 'string') return { name: obj.name };
-                        }
-                        return { name: String(r) };
-                    });
+                if (typeof payload.scp === 'string') {
+                    roles = payload.scp.split(' ').map((r: string) => ({ name: r }));
+                } else if (Array.isArray(payload.scp)) {
+                    roles = payload.scp.map((r: string) => ({ name: r }));
+                } else if (Array.isArray(payload.roles)) {
+                    roles = payload.roles.map((r: any) => ({ name: String(r.authority || r.name || r) }));
                 }
 
                 self.user = AuthUserModel.create({
-                    id: payload.userId,
+                    id: payload.uid, // <--- CHANGED FROM userId TO uid
                     username: payload.sub,
                     roles: roles
                 });
-            } catch {
+            } catch (error) {
+                console.error("Failed to decode token:", error);
                 self.user = null;
             }
         }

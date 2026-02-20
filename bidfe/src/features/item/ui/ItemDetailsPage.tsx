@@ -27,8 +27,6 @@ const pageStyles = {
     errorBox: { padding: "12px", backgroundColor: "#fee2e2", color: "#991b1b", borderRadius: "6px", marginBottom: "16px", fontSize: "14px", textAlign: "center" as const, fontWeight: 500 }
 };
 
-// ... (Lightbox Component & Styles remain exactly the same)
-
 const lightboxStyles = {
     overlay: { position: "fixed" as const, top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.95)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.2s" },
     content: { position: "relative" as const, maxWidth: "90vw", maxHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", outline: "none" },
@@ -146,7 +144,9 @@ export const ItemDetailsPage = observer(() => {
 
     const item = itemStore.selectedItem;
     const isOwner = authStore.user?.id?.toString() === item.seller?.id?.toString();
-
+    console.log("My Auth ID:", authStore.user?.id);
+    console.log("Item Seller ID:", item.seller?.id);
+    console.log("Entire Item Object:", item);
     const isDraft = item.status === 'DRAFT';
     const isUnsold = item.status === 'UNSOLD';
     const canList = isDraft || isUnsold;
@@ -224,7 +224,6 @@ export const ItemDetailsPage = observer(() => {
                                     {isPending ? "View Submitted Auction" : "View Live Auction"}
                                 </button>
                             )}
-
                             {isOwner && canList && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                     <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>

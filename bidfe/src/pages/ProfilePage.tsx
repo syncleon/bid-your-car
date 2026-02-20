@@ -4,6 +4,7 @@ import { useStoreContext } from "../app/providers/useStoreContext";
 import { useUserListings } from "../features/profile/hooks/useUserListings";
 import { ChangePasswordForm, EditProfileForm } from "../features/profile/ui/ProfileActions";
 import { ListingCardAdapter } from "../features/profile/ui/ListingCardsAdapter";
+import {Link} from "react-router-dom";
 
 export const ProfilePage = observer(() => {
     const { profileStore } = useStoreContext();
@@ -95,7 +96,17 @@ export const ProfilePage = observer(() => {
 
                 {!itemsLoading && !itemsError && items.length === 0 && (
                     <div style={styles.emptyState}>
-                        <p>Your garage is empty. Start selling to see your listings here.</p>
+                        <p style={{ marginBottom: 12, fontWeight: 600 }}>
+                            Your garage is empty.
+                        </p>
+
+                        <p style={{ marginBottom: 20 }}>
+                            Add your first item to garage clicking "Sell a car" button
+                        </p>
+
+                        <Link to="/sell-car" style={styles.sellBtn}>
+                            Sell Your First Car
+                        </Link>
                     </div>
                 )}
 
@@ -201,7 +212,19 @@ const styles = {
         fontWeight: 600,
         fontSize: "13px",
         color: "#ef4444"
-    }
+    },
+    sellBtn: {
+        display: "inline-block",
+        padding: "12px 20px",
+        background: "#111",
+        color: "#fff",
+        borderRadius: "10px",
+        fontWeight: 700,
+        fontSize: "14px",
+        textDecoration: "none",
+        transition: "all 0.2s",
+        cursor: "pointer"
+    },
 };
 
 export default ProfilePage;

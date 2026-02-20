@@ -1,9 +1,11 @@
 package com.oblapleon.bidapi.feature.item.service
 
 import com.oblapleon.bidapi.common.exception.AlreadyExistsException
+import com.oblapleon.bidapi.common.exception.ConflictException
 import com.oblapleon.bidapi.common.exception.NotFoundException
 import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.common.service.StorageService
+import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
 import com.oblapleon.bidapi.feature.item.dto.ItemCreateRequest
 import com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest
 import com.oblapleon.bidapi.feature.item.entity.ImageCategory
@@ -30,6 +32,7 @@ import java.util.UUID
 @Service
 class ItemService(
     private val itemRepository: ItemRepository,
+    private val auctionRepository: AuctionRepository,
     private val itemImageRepository: ItemImageRepository,
     private val storageService: StorageService,
     private val authorizationHelper: AuthorizationHelper
@@ -195,8 +198,27 @@ class ItemService(
      */
     @Transactional
     fun delete(id: UUID) {
+        // findById already checks that the user is the owner or an admin
         val item = findById(id)
+
+        val currentUser = authorizationHelper.getCurrentUser()
+        val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
+
+        // 1. Security Check: Prevent deletion if there are bids
+        val hasActiveBids = item.auctions.any { it.bidCount > 0 }
+        if (hasActiveBids && !isAdmin) {
+            throw ConflictException("Cannot delete a vehicle that has an active auction with bids.")
+        }
+
+        // 2. Foreign Key Fix: Delete the associated auctions FIRST
+        if (item.auctions.isNotEmpty()) {
+            auctionRepository.deleteAll(item.auctions)
+        }
+
+        // 3. Clean up cloud images
         item.images.forEach { safelyDeleteFile(it.url) }
+
+        // 4. Safely delete the item
         itemRepository.delete(item)
     }
 

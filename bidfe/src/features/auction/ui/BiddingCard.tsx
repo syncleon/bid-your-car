@@ -8,7 +8,11 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const [bidAmount, setBidAmount] = useState<string>("");
     const [timeLeft, setTimeLeft] = useState("");
 
-    // ✅ CHANGED: Track seconds instead of just boolean
+    // --- NEW: Better Error Handling State ---
+    const [localError, setLocalError] = useState<string | null>(null);
+    const displayError = localError || auctionStore.error;
+
+    // Track seconds for cooldown
     const [cooldown, setCooldown] = useState(0);
     const isCoolingDown = cooldown > 0;
 
@@ -40,44 +44,65 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
         return () => clearInterval(interval);
     }, [auction.endTime]);
 
-    // ✅ NEW: Timer: Cooldown Countdown
+    // Timer: Cooldown Countdown
     useEffect(() => {
         if (!isCoolingDown) return;
-
-        const interval = setInterval(() => {
-            setCooldown((prev) => prev - 1);
-        }, 1000);
-
+        const interval = setInterval(() => setCooldown((prev) => prev - 1), 1000);
         return () => clearInterval(interval);
     }, [isCoolingDown]);
 
+    // --- NEW: Auto-Clear Errors after 4 seconds ---
+    useEffect(() => {
+        if (displayError) {
+            const timer = setTimeout(() => {
+                setLocalError(null);
+                auctionStore.clearError();
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [displayError, auctionStore]);
+
     // Handlers
     const submitBid = async (amount: number) => {
-        if (isCoolingDown) return;
-        if (!authStore.isAuthenticated) return alert("Please log in to bid.");
-        if (isOwner) return;
-        if (amount < minBid) return alert(`Bid must be at least $${minBid.toLocaleString()}`);
+        setLocalError(null);
+        auctionStore.clearError();
 
-        const success = await auctionStore.submitBid({ auctionId: auction.id, amount });
+        if (isCoolingDown) return;
+        if (!authStore.isAuthenticated) return setLocalError("Please log in to place a bid.");
+        if (isOwner) return;
+        if (amount < minBid) return setLocalError(`Bid must be at least $${minBid.toLocaleString()}`);
+
+        const success = await auctionStore.submitBid(auction.id, amount);
         if (success) {
             setBidAmount("");
-            // ✅ Start 5 second cooldown
             setCooldown(5);
         }
     };
+
+    const handleOneClickQuickBid = async () => {
+        setLocalError(null);
+        if (isCoolingDown) return;
+        if (!authStore.isAuthenticated) return setLocalError("Please log in to bid.");
+        if (isOwner) return;
+
+        const result = await auctionStore.submitQuickBid(auction.id);
+        if (result?.success) {
+            setBidAmount("");
+            setCooldown(5);
+        } else if (result?.error) {
+            setLocalError(result.error);
+        }
+    }
 
     const handleManualBid = (e: React.FormEvent) => {
         e.preventDefault();
         submitBid(Number(bidAmount));
     };
 
-    const handleQuickBid = () => {
-        setBidAmount(minBid.toString());
-    };
-
     // UI State
     const isValidBid = bidAmount !== "" && Number(bidAmount) >= minBid;
-    const isDisabled = auctionStore.isBidding || isCoolingDown || !isValidBid;
+    const isManualBtnDisabled = auctionStore.isBidding || isCoolingDown || !isValidBid;
+    const isQuickBtnDisabled = auctionStore.isBidding || isCoolingDown;
     const isUrgent = isActive && !isEnded && (new Date(auction.endTime).getTime() - Date.now() < 3600000);
 
     return (
@@ -87,6 +112,10 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
                 input[type=number] { -moz-appearance: textfield; }
                 .bid-focus:focus-within { border-color: #000; box-shadow: 0 0 0 1px #000; }
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
             `}</style>
 
             {/* Header / Timer Bar */}
@@ -114,7 +143,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
             <div style={styles.heroSection}>
                 <div style={styles.currentBidLabel}>
                     CURRENT BID
-                    <span style={styles.reserveBadge}>• No Reserve</span>
+                    {auction.item.isNoReserve && <span style={styles.reserveBadge}>• No Reserve</span>}
                 </div>
                 <div style={styles.priceHero}>
                     ${currentPrice.toLocaleString()}
@@ -132,50 +161,78 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                         YOU ARE THE SELLER
                     </div>
                 ) : (
-                    <form onSubmit={handleManualBid}>
-                        <div style={styles.inputContainer} className="bid-focus">
-                            <span style={styles.currencySymbol}>$</span>
-                            <input
-                                type="number"
-                                value={bidAmount}
-                                onChange={(e) => setBidAmount(e.target.value)}
-                                placeholder={minBid.toString()}
-                                style={styles.input}
-                            />
-                            {!bidAmount && (
-                                <button
-                                    type="button"
-                                    onClick={handleQuickBid}
-                                    style={styles.quickFillBtn}
-                                >
-                                    Bid Min
-                                </button>
-                            )}
-                        </div>
+                    <>
+                        {/* --- NEW: Beautiful Error Banner --- */}
+                        {displayError && (
+                            <div style={styles.errorBanner}>
+                                ⚠️ {displayError}
+                            </div>
+                        )}
 
                         <button
-                            type="submit"
-                            disabled={isDisabled}
+                            type="button"
+                            onClick={handleOneClickQuickBid}
+                            disabled={isQuickBtnDisabled}
                             style={{
-                                ...styles.primaryBtn,
-                                opacity: isDisabled ? 0.4 : 1,
-                                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                                backgroundColor: isCoolingDown ? "#4b5563" : "#111" // Visual feedback
+                                ...styles.quickBidMasterBtn,
+                                opacity: isQuickBtnDisabled ? 0.5 : 1,
+                                cursor: isQuickBtnDisabled ? 'not-allowed' : 'pointer',
+                                backgroundColor: isCoolingDown ? "#d1d5db" : "#2563eb",
+                                color: isCoolingDown ? "#4b5563" : "#fff"
                             }}
                         >
-                            {auctionStore.isBidding
-                                ? "Processing..."
-                                : isCoolingDown
-                                    // ✅ Display countdown here
-                                    ? `Wait ${cooldown}s`
-                                    : `Place Bid`
-                            }
+                            <span style={{ fontSize: '18px', display: 'block' }}>
+                                {auctionStore.isBidding
+                                    ? "Processing..."
+                                    : isCoolingDown
+                                        ? `Wait ${cooldown}s`
+                                        : `Quick Bid $${minBid.toLocaleString()}`
+                                }
+                            </span>
                         </button>
 
-                        <div style={styles.finePrint}>
-                            Minimum bid: <strong>${minBid.toLocaleString()}</strong>
+                        <div style={styles.orDivider}>
+                            <div style={styles.orLine} />
+                            <span style={styles.orText}>OR PLACE CUSTOM BID</span>
+                            <div style={styles.orLine} />
                         </div>
-                    </form>
+
+                        <form onSubmit={handleManualBid}>
+                            <div style={styles.inputContainer} className="bid-focus">
+                                <span style={styles.currencySymbol}>$</span>
+                                <input
+                                    type="number"
+                                    value={bidAmount}
+                                    onChange={(e) => setBidAmount(e.target.value)}
+                                    placeholder={minBid.toString()}
+                                    style={styles.input}
+                                    min={minBid}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isManualBtnDisabled}
+                                style={{
+                                    ...styles.primaryBtn,
+                                    opacity: isManualBtnDisabled ? 0.4 : 1,
+                                    cursor: isManualBtnDisabled ? 'not-allowed' : 'pointer',
+                                    backgroundColor: isCoolingDown ? "#4b5563" : "#111"
+                                }}
+                            >
+                                {auctionStore.isBidding
+                                    ? "Processing..."
+                                    : isCoolingDown
+                                        ? `Wait ${cooldown}s`
+                                        : `Place Bid`
+                                }
+                            </button>
+
+                            <div style={styles.finePrint}>
+                                Minimum increment: <strong>${auction.minBidIncrement.toLocaleString()}</strong>
+                            </div>
+                        </form>
+                    </>
                 )}
             </div>
         </div>
@@ -183,165 +240,42 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
 });
 
 const styles = {
-    card: {
-        backgroundColor: "#fff",
-        border: "1px solid #e5e7eb",
-        borderRadius: "12px",
-        overflow: "hidden",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-        marginBottom: "24px"
-    },
+    card: { backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", marginBottom: "24px" },
+    header: { display: "flex", backgroundColor: "#f9fafb", padding: "16px 24px", alignItems: "center" },
+    headerItem: { display: "flex", flexDirection: "column" as const, gap: "4px" },
+    label: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase" as const, color: "#6b7280", letterSpacing: "0.5px" },
+    value: { fontSize: "15px", fontWeight: 700, color: "#111", fontVariantNumeric: "tabular-nums" },
+    headerDivider: { width: "1px", height: "24px", backgroundColor: "#e5e7eb", margin: "0 24px" },
+    divider: { height: "1px", backgroundColor: "#e5e7eb", width: "100%" },
+    heroSection: { padding: "32px 24px 24px", textAlign: "center" as const },
+    currentBidLabel: { fontSize: "13px", fontWeight: 700, color: "#6b7280", letterSpacing: "1px", marginBottom: "8px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" },
+    reserveBadge: { color: "#10b981", fontSize: "11px", fontWeight: 600, backgroundColor: "#ecfdf5", padding: "2px 6px", borderRadius: "4px" },
+    priceHero: { fontSize: "56px", fontWeight: 800, color: "#111", lineHeight: 1, letterSpacing: "-2px" },
+    actionZone: { padding: "0 24px 32px" },
 
-    // --- Data Grid Header ---
-    header: {
-        display: "flex",
-        backgroundColor: "#f9fafb",
-        padding: "16px 24px",
-        alignItems: "center"
-    },
-    headerItem: {
-        display: "flex",
-        flexDirection: "column" as const,
-        gap: "4px"
-    },
-    label: {
-        fontSize: "11px",
-        fontWeight: 600,
-        textTransform: "uppercase" as const,
-        color: "#6b7280",
-        letterSpacing: "0.5px"
-    },
-    value: {
-        fontSize: "15px",
-        fontWeight: 700,
-        color: "#111",
-        fontVariantNumeric: "tabular-nums"
-    },
-    headerDivider: {
-        width: "1px",
-        height: "24px",
-        backgroundColor: "#e5e7eb",
-        margin: "0 24px"
-    },
-    divider: {
-        height: "1px",
-        backgroundColor: "#e5e7eb",
-        width: "100%"
-    },
-
-    // --- Hero Price Section ---
-    heroSection: {
-        padding: "32px 24px 24px",
-        textAlign: "center" as const
-    },
-    currentBidLabel: {
-        fontSize: "13px",
-        fontWeight: 700,
-        color: "#6b7280",
-        letterSpacing: "1px",
-        marginBottom: "8px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "6px"
-    },
-    reserveBadge: {
-        color: "#10b981",
-        fontSize: "11px",
-        fontWeight: 600,
-        backgroundColor: "#ecfdf5",
-        padding: "2px 6px",
-        borderRadius: "4px"
-    },
-    priceHero: {
-        fontSize: "56px",
-        fontWeight: 800,
-        color: "#111",
-        lineHeight: 1,
-        letterSpacing: "-2px"
-    },
-
-    // --- Action Zone ---
-    actionZone: {
-        padding: "0 24px 32px"
-    },
-    inputContainer: {
-        display: "flex",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        border: "1px solid #d1d5db",
-        borderRadius: "8px",
-        padding: "4px 12px",
-        marginBottom: "12px",
-        transition: "border 0.2s, box-shadow 0.2s",
-        height: "56px"
-    },
-    currencySymbol: {
-        fontSize: "20px",
-        fontWeight: 500,
-        color: "#9ca3af",
-        marginRight: "4px"
-    },
-    input: {
-        flex: 1,
-        border: "none",
-        fontSize: "24px",
-        fontWeight: 700,
-        color: "#111",
-        outline: "none",
-        width: "100%",
-        padding: 0
-    },
-    quickFillBtn: {
-        fontSize: "12px",
-        fontWeight: 600,
-        color: "#2563eb",
-        backgroundColor: "#eff6ff",
-        border: "none",
-        padding: "6px 12px",
-        borderRadius: "20px",
-        cursor: "pointer"
-    },
-    primaryBtn: {
-        width: "100%",
-        height: "56px",
-        backgroundColor: "#111",
-        color: "#fff",
-        border: "none",
-        borderRadius: "8px",
-        fontSize: "16px",
-        fontWeight: 700,
-        textTransform: "uppercase" as const,
-        letterSpacing: "0.5px",
-        cursor: "pointer",
-        transition: "all 0.2s"
-    },
-    finePrint: {
-        marginTop: "12px",
-        fontSize: "13px",
-        color: "#6b7280",
-        textAlign: "center" as const
-    },
-
-    // Status Banners
-    statusBanner: {
-        backgroundColor: "#f3f4f6",
-        color: "#4b5563",
-        fontWeight: 700,
-        textAlign: "center" as const,
-        padding: "16px",
+    // --- NEW: Error Banner Style ---
+    errorBanner: {
+        backgroundColor: "#fef2f2",
+        color: "#991b1b",
+        border: "1px solid #f87171",
+        padding: "12px 16px",
         borderRadius: "8px",
         fontSize: "14px",
-        letterSpacing: "0.5px"
-    },
-    statusBannerOwned: {
-        backgroundColor: "#eff6ff",
-        color: "#1d4ed8",
-        fontWeight: 700,
+        fontWeight: 600,
+        marginBottom: "16px",
         textAlign: "center" as const,
-        padding: "16px",
-        borderRadius: "8px",
-        fontSize: "14px",
-        letterSpacing: "0.5px"
-    }
+        animation: "slideDown 0.3s ease-out"
+    },
+
+    quickBidMasterBtn: { width: "100%", height: "64px", border: "none", borderRadius: "8px", fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.5px", transition: "all 0.2s", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" },
+    orDivider: { display: "flex", alignItems: "center", margin: "24px 0", gap: "12px" },
+    orLine: { flex: 1, height: "1px", backgroundColor: "#e5e7eb" },
+    orText: { fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "1px" },
+    inputContainer: { display: "flex", alignItems: "center", backgroundColor: "#fff", border: "1px solid #d1d5db", borderRadius: "8px", padding: "4px 12px", marginBottom: "12px", transition: "border 0.2s", height: "56px" },
+    currencySymbol: { fontSize: "20px", fontWeight: 500, color: "#9ca3af", marginRight: "4px" },
+    input: { flex: 1, border: "none", fontSize: "24px", fontWeight: 700, color: "#111", outline: "none", width: "100%", padding: 0 },
+    primaryBtn: { width: "100%", height: "56px", backgroundColor: "#111", color: "#fff", border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.5px", cursor: "pointer", transition: "all 0.2s" },
+    finePrint: { marginTop: "12px", fontSize: "13px", color: "#6b7280", textAlign: "center" as const },
+    statusBanner: { backgroundColor: "#f3f4f6", color: "#4b5563", fontWeight: 700, textAlign: "center" as const, padding: "16px", borderRadius: "8px", fontSize: "14px", letterSpacing: "0.5px" },
+    statusBannerOwned: { backgroundColor: "#eff6ff", color: "#1d4ed8", fontWeight: 700, textAlign: "center" as const, padding: "16px", borderRadius: "8px", fontSize: "14px", letterSpacing: "0.5px" }
 };

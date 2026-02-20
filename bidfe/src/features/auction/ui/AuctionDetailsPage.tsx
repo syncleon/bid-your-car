@@ -14,8 +14,7 @@ import SockJS from "sockjs-client"
 
 // --- LIGHTBOX COMPONENT ---
 const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
-    const [index, setIndex] = useState(initialIndex);
-
+    const [index, setIndex] = useState(initialIndex)
     const handleNext = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (images?.length) setIndex((prev) => (prev + 1) % images.length);
@@ -66,13 +65,13 @@ export const AuctionDetailsPage = observer(() => {
     const navigate = useNavigate();
 
     const { auctionStore, authStore, itemStore } = useStore();
-
     const [actionLoading, setActionLoading] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-    // Owner Action states
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isCanceling, setIsCanceling] = useState(false);
+    const [showCancelTooltip, setShowCancelTooltip] = useState(false);
+    const [showEditTooltip, setShowEditTooltip] = useState(false); // <-- ADD THIS
+
 
     // --- 1. Load Data & Setup WebSockets ---
     useEffect(() => {
@@ -85,13 +84,11 @@ export const AuctionDetailsPage = observer(() => {
         const stompClient = new Client({
             // NOTE: Update this URL to match your backend's actual environment URL
             webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
-            // Removed the debug property here to keep the console clean
             reconnectDelay: 5000,
             onConnect: () => {
                 // Subscribe to this specific auction's topic
                 stompClient.subscribe(`/topic/auctions/${id}`, (message) => {
                     const notification = JSON.parse(message.body);
-                    // You can also remove this console.log if you want absolute silence
                     console.log("Live update received:", notification);
 
                     // When a bid comes in, refresh the details to get the latest state
@@ -152,16 +149,13 @@ export const AuctionDetailsPage = observer(() => {
         }
     };
 
-    const handleDeleteItem = async () => {
-        if (!item.id) return;
-        if (window.confirm("Are you sure you want to permanently delete this vehicle? This will also remove the auction. This cannot be undone.")) {
-            setIsDeleting(true);
-            await itemStore.deleteListing(item.id);
-            if (!itemStore.error) {
-                navigate("/auctions");
-            } else {
-                setIsDeleting(false);
-            }
+    // --- UPDATED: Replaced handleDeleteItem with handleCancelAuction ---
+    const handleCancelAuction = async () => {
+        if (window.confirm("Are you sure you want to cancel this auction? The vehicle will be returned to your garage as a draft.")) {
+            setIsCanceling(true);
+            await auctionStore.cancelAuction(auction.id);
+            // Notice we don't navigate away here! We just let the UI update to show the "Cancelled" banner.
+            setIsCanceling(false);
         }
     };
 
@@ -187,12 +181,6 @@ export const AuctionDetailsPage = observer(() => {
                     <div className="details-right">
 
                         {/* 1. Alerts/Banners */}
-                        {auctionStore.error && (
-                            <div className="compact-banner banner-error">
-                                <span>{auctionStore.error}</span>
-                                <button onClick={() => auctionStore.clearError()}>✕</button>
-                            </div>
-                        )}
                         {isPending && (
                             <div className="compact-banner banner-pending">
                                 <strong>⚠️ Pending Approval</strong>
@@ -218,31 +206,127 @@ export const AuctionDetailsPage = observer(() => {
                         )}
 
                         {/* 3. Owner Controls */}
+                        {/* 3. Owner Controls */}
                         {isOwner && !isEnded && (
                             <div className="owner-panel compact-card" style={{ marginBottom: '16px' }}>
                                 <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <button
-                                        onClick={() => setIsEditModalOpen(true)}
-                                        style={{ padding: "10px", background: "#fff", border: "1px solid #d1d5db", borderRadius: "6px", fontWeight: 600, cursor: "pointer" }}
+
+                                    {/* --- NEW: Locked Edit Wrapper & Tooltip --- */}
+                                    <div
+                                        style={{ position: "relative", width: "100%" }}
+                                        onMouseEnter={() => { if (isActive) setShowEditTooltip(true); }}
+                                        onMouseLeave={() => setShowEditTooltip(false)}
                                     >
-                                        Edit Vehicle Details
-                                    </button>
-                                    <button
-                                        onClick={handleDeleteItem}
-                                        disabled={isDeleting}
-                                        style={{
-                                            padding: "10px",
-                                            background: "transparent",
-                                            border: "none",
-                                            color: "#dc2626",
+                                        <div style={{
+                                            position: "absolute",
+                                            bottom: "100%",
+                                            left: "50%",
+                                            transform: "translateX(-50%)",
+                                            marginBottom: "8px",
+                                            backgroundColor: "#ef4444",
+                                            color: "white",
+                                            padding: "8px 12px",
+                                            borderRadius: "6px",
+                                            fontSize: "12px",
                                             fontWeight: 600,
-                                            cursor: isDeleting ? "not-allowed" : "pointer",
-                                            opacity: isDeleting ? 0.5 : 1
-                                        }}
+                                            whiteSpace: "nowrap",
+                                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                            zIndex: 10,
+                                            pointerEvents: "none",
+                                            opacity: showEditTooltip ? 1 : 0,
+                                            visibility: showEditTooltip ? "visible" : "hidden",
+                                            transition: "opacity 0.2s ease-in-out, visibility 0.2s"
+                                        }}>
+                                            ⚠️ Cannot edit details of an active auction.
+
+                                            <div style={{
+                                                position: "absolute",
+                                                top: "100%",
+                                                left: "50%",
+                                                transform: "translateX(-50%)",
+                                                borderWidth: "5px",
+                                                borderStyle: "solid",
+                                                borderColor: "#ef4444 transparent transparent transparent"
+                                            }} />
+                                        </div>
+
+                                        <button
+                                            onClick={() => setIsEditModalOpen(true)}
+                                            disabled={isActive}
+                                            style={{
+                                                width: "100%",
+                                                padding: "10px",
+                                                background: isActive ? "#f3f4f6" : "#fff",
+                                                border: "1px solid #d1d5db",
+                                                borderRadius: "6px",
+                                                fontWeight: 600,
+                                                color: isActive ? "#9ca3af" : "#111",
+                                                cursor: isActive ? "not-allowed" : "pointer",
+                                                pointerEvents: isActive ? "none" : "auto"
+                                            }}
+                                        >
+                                            Edit Vehicle Details
+                                        </button>
+                                    </div>
+
+                                    {/* --- Cancel Auction Wrapper & Tooltip --- */}
+                                    <div
+                                        style={{ position: "relative", width: "100%" }}
+                                        onMouseEnter={() => { if (auction.bidCount > 0) setShowCancelTooltip(true); }}
+                                        onMouseLeave={() => setShowCancelTooltip(false)}
                                     >
-                                        {isDeleting ? "Deleting..." : "Delete Listing & Auction"}
-                                    </button>
+                                        <div style={{
+                                            position: "absolute",
+                                            bottom: "100%",
+                                            left: "50%",
+                                            transform: "translateX(-50%)",
+                                            marginBottom: "8px",
+                                            backgroundColor: "#ef4444",
+                                            color: "white",
+                                            padding: "8px 12px",
+                                            borderRadius: "6px",
+                                            fontSize: "12px",
+                                            fontWeight: 600,
+                                            whiteSpace: "nowrap",
+                                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                            zIndex: 10,
+                                            pointerEvents: "none",
+                                            opacity: showCancelTooltip ? 1 : 0,
+                                            visibility: showCancelTooltip ? "visible" : "hidden",
+                                            transition: "opacity 0.2s ease-in-out, visibility 0.2s"
+                                        }}>
+                                            ⚠️ Cannot cancel an auction with active bids. Contact Support.
+
+                                            <div style={{
+                                                position: "absolute",
+                                                top: "100%",
+                                                left: "50%",
+                                                transform: "translateX(-50%)",
+                                                borderWidth: "5px",
+                                                borderStyle: "solid",
+                                                borderColor: "#ef4444 transparent transparent transparent"
+                                            }} />
+                                        </div>
+
+                                        <button
+                                            onClick={handleCancelAuction}
+                                            disabled={isCanceling || auction.bidCount > 0}
+                                            style={{
+                                                width: "100%",
+                                                padding: "10px",
+                                                background: "transparent",
+                                                border: "none",
+                                                color: "#dc2626",
+                                                fontWeight: 600,
+                                                cursor: (isCanceling || auction.bidCount > 0) ? "not-allowed" : "pointer",
+                                                opacity: (isCanceling || auction.bidCount > 0) ? 0.5 : 1,
+                                                pointerEvents: (isCanceling || auction.bidCount > 0) ? "none" : "auto"
+                                            }}
+                                        >
+                                            {isCanceling ? "Canceling..." : "Cancel Auction"}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
