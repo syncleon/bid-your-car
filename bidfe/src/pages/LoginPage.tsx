@@ -25,13 +25,13 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         left: 0,
         width: "100%",
         height: "100%",
-        backgroundColor: "var(--bg-overlay)", // Updated
+        backgroundColor: "var(--bg-overlay)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         zIndex: 1000,
         backdropFilter: "blur(4px)",
-        transition: "background-color 0.3s ease", // Added
+        transition: "background-color 0.3s ease",
     };
 
     const pageContainerStyle: React.CSSProperties = {
@@ -39,8 +39,8 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        backgroundColor: "var(--bg-base)", // Updated
-        transition: "background-color 0.3s ease", // Added
+        backgroundColor: "var(--bg-base)",
+        transition: "background-color 0.3s ease",
     };
 
     const contentBoxStyle: React.CSSProperties = {
@@ -48,12 +48,12 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         width: "100%",
         maxWidth: "440px",
         padding: "40px",
-        backgroundColor: "var(--bg-card)", // Updated
+        backgroundColor: "var(--bg-card)",
         borderRadius: "16px",
         boxShadow: isModal ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" : "none",
-        border: isModal ? "1px solid var(--border-color)" : "1px solid var(--border-color)", // Added border to modal for dark mode contrast
+        border: isModal ? "1px solid var(--border-color)" : "1px solid var(--border-color)",
         animation: isModal ? "fadeIn 0.2s ease-out" : "none",
-        transition: "background-color 0.3s ease, border-color 0.3s ease", // Added
+        transition: "background-color 0.3s ease, border-color 0.3s ease",
     };
 
     const closeButtonStyle: React.CSSProperties = {
@@ -64,7 +64,7 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         border: "none",
         fontSize: "24px",
         cursor: "pointer",
-        color: "var(--text-muted)", // Updated
+        color: "var(--text-muted)",
         transition: "color 0.2s"
     };
 

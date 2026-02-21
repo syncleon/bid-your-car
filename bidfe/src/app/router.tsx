@@ -13,11 +13,6 @@ import {ProfilePage} from "../pages/ProfilePage.tsx";
 
 export const AppRouter = () => {
     const location = useLocation();
-
-    // 1. Detect if we have a "background" state.
-    // If state.backgroundLocation is present, it means the user clicked a link
-    // that set it (e.g., from a Navbar), so we should render that background
-    // page underneath the modal.
     const state = location.state as { backgroundLocation?: Location };
     const background = state?.backgroundLocation;
 

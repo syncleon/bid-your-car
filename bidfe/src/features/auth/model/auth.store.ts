@@ -30,17 +30,15 @@ export const AuthUserModel = types.model("AuthUser", {
 });
 
 export const AuthStore = types.model("AuthStore", {
-    // ПОЛЕ token УДАЛЕНО: мы его больше не храним
     user: types.maybeNull(AuthUserModel),
     modalView: types.maybeNull(types.enumeration(["login", "register"])),
     isLoading: types.optional(types.boolean, false),
-    isInitializing: types.optional(types.boolean, true), // Флаг загрузки при первом входе на сайт
+    isInitializing: types.optional(types.boolean, true),
     error: types.maybeNull(types.string),
     successMessage: types.maybeNull(types.string),
     isDeletedAccount: types.optional(types.boolean, false),
 })
     .views((self) => ({
-        // Теперь мы считаемся авторизованными, если есть объект пользователя
         get isAuthenticated() {
             return Boolean(self.user);
         }
@@ -58,21 +56,17 @@ export const AuthStore = types.model("AuthStore", {
         const closeModal = () => { reset(); self.modalView = null; };
         const clearError = () => { self.error = null; };
         const clearSuccessMessage = () => { self.successMessage = null; };
-
-        // НОВЫЙ МЕТОД: Получение данных профиля по HttpOnly куке
         const checkAuth = flow(function* () {
             try {
                 const userData = yield apiFetchMe();
                 self.user = AuthUserModel.create(userData);
             } catch (error) {
-                // Если запрос /me упал (например 401), значит мы не авторизованы
                 self.user = null;
             } finally {
                 self.isInitializing = false;
             }
         });
 
-        // ПРИ ЗАПУСКЕ ПРИЛОЖЕНИЯ: Запрашиваем профиль
         const afterCreate = () => {
             checkAuth();
         };
@@ -83,10 +77,7 @@ export const AuthStore = types.model("AuthStore", {
             self.isDeletedAccount = false;
 
             try {
-                // 1. Делаем логин (сервер ставит HttpOnly куку)
                 yield apiLogin(data);
-
-                // 2. Сразу запрашиваем свой профиль (браузер сам шлет эту куку)
                 yield checkAuth();
 
                 closeModal();
@@ -105,12 +96,10 @@ export const AuthStore = types.model("AuthStore", {
 
         const logout = flow(function* () {
             try {
-                // Говорим бэкенду затереть куку
                 yield apiLogout();
             } catch(e) {
                 console.error("Logout failed on server", e);
             } finally {
-                // Удаляем пользователя из локального стейта
                 self.user = null;
             }
         });
@@ -152,8 +141,6 @@ export const AuthStore = types.model("AuthStore", {
             try {
                 const response = yield apiRestoreAccount(data);
                 self.successMessage = response.message || "Account restored";
-
-                // Сразу логинимся после восстановления
                 yield login(data);
             } catch (error: unknown) {
                 self.error = getErrorMessage(error);

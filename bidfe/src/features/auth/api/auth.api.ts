@@ -17,15 +17,13 @@ export const login = (dto: LoginRequestDto) =>
         body: JSON.stringify(dto),
     });
 
-// НОВЫЙ МЕТОД: Логаут (затирает HttpOnly куку на сервере)
 export const logoutUser = () =>
     http<{ message: string }>("auth/logout", {
         method: "POST",
     });
 
-// НОВЫЙ МЕТОД: Получение данных текущего пользователя по куке
 export const fetchMe = () =>
-    http<any>("auth/me", {
+    http<unknown>("auth/me", {
         method: "GET",
     });
 

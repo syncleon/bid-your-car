@@ -9,7 +9,6 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import net.datafaker.Faker
 import org.slf4j.LoggerFactory
-import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicInteger
@@ -19,26 +18,24 @@ class BidSeederService(
     private val auctionRepository: AuctionRepository,
     private val userRepository: UserRepository,
     private val auctionService: AuctionService,
-    private val rateLimitingService: RateLimitingService,
-    private val messagingTemplate: SimpMessagingTemplate
+    private val rateLimitingService: RateLimitingService
 ) {
     private val faker = Faker()
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun seedLiveBidsParallel(totalBids: Int, concurrency: Int) {
-        // 1. Target ALL ACTIVE auctions
         val activeAuctions = auctionRepository.findAll()
             .filter { it.status == AuctionStatus.ACTIVE }
 
         if (activeAuctions.isEmpty()) {
-            logger.error("❌ No ACTIVE auctions found to attack.")
+            logger.error("No active auctions found")
             return
         }
 
         val users = userRepository.findAll()
         if (users.size < 5) throw IllegalStateException("Not enough users to simulate a multi-auction war.")
 
-        logger.info("🚀 Starting bidding attack on ${activeAuctions.size} active auctions with $totalBids total bids.")
+        logger.info("Starting bidding attack on ${activeAuctions.size} active auctions with $totalBids total bids.")
 
         val successCount = AtomicInteger(0)
         val failCount = AtomicInteger(0)
@@ -48,11 +45,9 @@ class BidSeederService(
 
             val jobs = (1..totalBids).map {
                 launch(Dispatchers.IO) {
-                    // Random delay to smear the initial start of the attack
                     delay(faker.number().numberBetween(100L, 5000L))
 
                     semaphore.withPermit {
-                        // Pick any active auction from the full list
                         val targetAuction = activeAuctions.random()
                         val bidder = users.filter { it.id != targetAuction.item.seller.id }.random()
 
@@ -63,14 +58,11 @@ class BidSeederService(
                         while (attempt < maxRetries && !success) {
                             attempt++
 
-                            // Rate Limiting Check
                             val bucket = rateLimitingService.resolveBucket(bidder.id!!)
                             if (!bucket.tryConsume(1)) {
-                                delay(1000) // Wait for bucket refill
+                                delay(1000)
                                 continue
                             }
-
-                            // Fetch fresh state to avoid stale price rejections
                             val currentAuction = auctionRepository.findById(targetAuction.id!!).orElse(null) ?: break
 
                             val increment = currentAuction.minBidIncrement.multiply(
@@ -82,9 +74,13 @@ class BidSeederService(
                                 auctionService.placeBidAsUser(currentAuction.id!!, bidder.id!!, bidAmount)
                                 success = true
                                 successCount.incrementAndGet()
-                                logger.debug("⚡ Bid placed: ${bidder.username} -> ${currentAuction.item.make} ($bidAmount)")
+                                logger.debug(
+                                    "Bid placed: {} -> {} ({})",
+                                    bidder.username,
+                                    currentAuction.item.make,
+                                    bidAmount
+                                )
                             } catch (e: Exception) {
-                                // Short delay before retrying a failed bid due to race conditions
                                 delay(faker.number().numberBetween(500L, 1500L))
                             }
                         }
@@ -96,10 +92,10 @@ class BidSeederService(
         }
 
         logger.info("""
-            🏁 Global Auction Attack Complete:
-            🎯 Auctions Targeted: ${activeAuctions.size}
-            ✅ Total Successful Bids: ${successCount.get()}
-            ❌ Total Failed Bids: ${failCount.get()}
+            Global Auction Attack Complete:
+            Auctions Targeted: ${activeAuctions.size}
+            Total Successful Bids: ${successCount.get()}
+            Total Failed Bids: ${failCount.get()}
         """.trimIndent())
     }
 }

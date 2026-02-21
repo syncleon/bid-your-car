@@ -1,18 +1,17 @@
 import type { CSSProperties } from "react";
 
 const styles = {
-    // Layout & Container
+
     link: { textDecoration: "none", color: "inherit", display: "block" } as CSSProperties,
     container: {
         background: "var(--bg-card)",
-        border: "1px solid var(--border-light)", // Added to help distinguish cards in dark mode
+        border: "1px solid var(--border-light)",
         borderRadius: "8px",
         overflow: "hidden",
         cursor: "pointer",
         transition: "transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease",
     } as CSSProperties,
 
-    // Image Section
     imageWrapper: {
         aspectRatio: "16/10",
         width: "100%",
@@ -39,7 +38,6 @@ const styles = {
         transition: "color 0.3s ease",
     } as CSSProperties,
 
-    // Typography
     content: { padding: "12px 0 0 0" } as CSSProperties,
     title: {
         margin: "0 0 8px 0",
@@ -96,7 +94,6 @@ const styles = {
         transition: "color 0.3s ease, border-color 0.3s ease",
     } as CSSProperties,
 
-    // Overlays / Badges Containers
     overlayTopLeft: { position: "absolute", top: "10px", left: "10px", zIndex: 2 } as CSSProperties,
     overlayTopRight: { position: "absolute", top: "10px", right: "10px", zIndex: 2 } as CSSProperties,
     overlayBottomContainer: {
@@ -110,9 +107,6 @@ const styles = {
         zIndex: 2
     } as CSSProperties,
 
-    // --- BADGE STYLES ---
-
-    // 1. Generic Badge (Used for PENDING)
     badge: {
         padding: "4px 8px",
         borderRadius: "4px",
@@ -126,7 +120,6 @@ const styles = {
         transition: "background-color 0.3s ease, color 0.3s ease",
     } as CSSProperties,
 
-    // 2. Ended Badge (Used for ENDED)
     badgeEnded: {
         background: "var(--text-muted)",
         color: "var(--bg-base)",
@@ -138,7 +131,6 @@ const styles = {
         transition: "background-color 0.3s ease, color 0.3s ease",
     } as CSSProperties,
 
-    // 3. Dark Overlay Badges (Left with rgba so they stand out against images in BOTH themes)
     badgeDark: {
         background: "rgba(0, 0, 0, 0.7)",
         color: "white",

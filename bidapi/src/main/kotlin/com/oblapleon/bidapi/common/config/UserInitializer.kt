@@ -30,7 +30,6 @@ class UserInitializer(
 
         val commonPassword = passwordEncoder.encode("password")
 
-        // 1. Create Users from user_1 to user_100
         val users = (1..100).map { i ->
             User(
                 username = "user_$i",
@@ -42,7 +41,6 @@ class UserInitializer(
         }
         userRepo.saveAll(users)
 
-        // 2. Create the specific Admin User
         val admin = User(
             username = "admin",
             email = "admin@bidapi.com",

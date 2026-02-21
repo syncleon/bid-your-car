@@ -13,14 +13,14 @@ export const formStyles = {
         color: "var(--text-primary)",
         margin: "0 0 8px 0",
         letterSpacing: "-0.5px",
-        transition: "color 0.3s ease" // Added
+        transition: "color 0.3s ease"
     } as React.CSSProperties,
 
     subHeader: {
         fontSize: "14px",
         color: "var(--text-secondary)",
         margin: "0 0 32px 0",
-        transition: "color 0.3s ease" // Added
+        transition: "color 0.3s ease"
     } as React.CSSProperties,
 
     inputGroup: {
@@ -33,7 +33,7 @@ export const formStyles = {
         fontWeight: "500",
         color: "var(--text-secondary)",
         marginBottom: "6px",
-        transition: "color 0.3s ease" // Added
+        transition: "color 0.3s ease"
     } as React.CSSProperties,
 
     input: {
@@ -45,7 +45,7 @@ export const formStyles = {
         border: "1px solid var(--border-color)",
         borderRadius: "8px",
         outline: "none",
-        transition: "border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease", // Smoothed
+        transition: "border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease",
         boxSizing: "border-box"
     } as React.CSSProperties,
 
@@ -60,7 +60,7 @@ export const formStyles = {
         borderRadius: "8px",
         cursor: "pointer",
         marginTop: "8px",
-        transition: "opacity 0.2s, background-color 0.3s ease, color 0.3s ease", // Smoothed
+        transition: "opacity 0.2s, background-color 0.3s ease, color 0.3s ease",
         textDecoration: "none",
         display: "inline-block",
         boxSizing: "border-box",
@@ -72,12 +72,12 @@ export const formStyles = {
         padding: "10px",
         fontSize: "13px",
         fontWeight: "600",
-        color: "var(--bg-base)", // Updated for better contrast against the warning background
+        color: "var(--bg-base)",
         backgroundColor: "var(--color-warning-text)",
         border: "none",
         borderRadius: "6px",
         cursor: "pointer",
-        transition: "background-color 0.3s ease, color 0.3s ease" // Added
+        transition: "background-color 0.3s ease, color 0.3s ease"
     } as React.CSSProperties,
 
     linkBtn: {
@@ -90,7 +90,7 @@ export const formStyles = {
         cursor: "pointer",
         textDecoration: "underline",
         textUnderlineOffset: "2px",
-        transition: "color 0.3s ease" // Added
+        transition: "color 0.3s ease"
     } as React.CSSProperties,
 
     footer: {
@@ -98,7 +98,7 @@ export const formStyles = {
         textAlign: "center",
         fontSize: "14px",
         color: "var(--text-secondary)",
-        transition: "color 0.3s ease" // Added
+        transition: "color 0.3s ease"
     } as React.CSSProperties,
 
     errorBanner: {
@@ -109,7 +109,7 @@ export const formStyles = {
         fontSize: "13px",
         marginBottom: "24px",
         border: "1px solid var(--color-danger-border)",
-        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease" // Added
+        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease"
     } as React.CSSProperties,
 
     successBanner: {
@@ -120,7 +120,7 @@ export const formStyles = {
         fontSize: "13px",
         marginBottom: "24px",
         border: "1px solid var(--color-success-border)",
-        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease" // Added
+        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease"
     } as React.CSSProperties,
 
     warningBox: {
@@ -130,7 +130,7 @@ export const formStyles = {
         borderRadius: "8px",
         marginBottom: "24px",
         color: "var(--color-warning-text)",
-        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease" // Added
+        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease"
     } as React.CSSProperties,
 
     modalOverlay: {
@@ -145,7 +145,7 @@ export const formStyles = {
         alignItems: "center",
         zIndex: 1000,
         backdropFilter: "blur(4px)",
-        transition: "background-color 0.3s ease" // Added
+        transition: "background-color 0.3s ease"
     } as React.CSSProperties,
 
     pageContainer: {
@@ -186,7 +186,7 @@ export const formStyles = {
         fontSize: "24px",
         cursor: "pointer",
         color: "var(--text-muted)",
-        transition: "color 0.3s ease", // Smoothed
+        transition: "color 0.3s ease",
     } as React.CSSProperties,
 
     successContainer: {
@@ -198,6 +198,6 @@ export const formStyles = {
         fontSize: "48px",
         margin: "0 0 16px 0",
         color: "var(--color-success-text)",
-        transition: "color 0.3s ease" // Added
+        transition: "color 0.3s ease"
     } as React.CSSProperties
 };

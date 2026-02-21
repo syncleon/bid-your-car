@@ -12,7 +12,6 @@ import "./AuctionDetails.css";
 import {Client} from "@stomp/stompjs";
 import SockJS from "sockjs-client"
 
-// --- LIGHTBOX COMPONENT ---
 const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
     const [index, setIndex] = useState(initialIndex)
     const handleNext = (e: React.MouseEvent) => {
@@ -71,35 +70,24 @@ export const AuctionDetailsPage = observer(() => {
     const [isCanceling, setIsCanceling] = useState(false);
     const [showCancelTooltip, setShowCancelTooltip] = useState(false);
     const [showEditTooltip, setShowEditTooltip] = useState(false); // <-- ADD THIS
-
-
-    // --- 1. Load Data & Setup WebSockets ---
     useEffect(() => {
         if (!id) return;
 
-        // Load initial data
         auctionStore.loadAuctionDetails(id);
 
-        // Configure WebSocket Client for Real-Time Bids
         const stompClient = new Client({
-            // NOTE: Update this URL to match your backend's actual environment URL
             webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
             reconnectDelay: 5000,
             onConnect: () => {
-                // Subscribe to this specific auction's topic
                 stompClient.subscribe(`/topic/auctions/${id}`, (message) => {
                     const notification = JSON.parse(message.body);
                     console.log("Live update received:", notification);
-
-                    // When a bid comes in, refresh the details to get the latest state
                     auctionStore.loadAuctionDetails(id);
                 });
             },
         });
 
         stompClient.activate();
-
-        // Cleanup on unmount
         return () => {
             stompClient.deactivate();
             auctionStore.clearSelectedAuction();
@@ -119,7 +107,6 @@ export const AuctionDetailsPage = observer(() => {
     const item = auction.item;
     const user = authStore.user;
 
-    // Safely check ownership and roles
     const isOwner = user?.id?.toString() === item.seller.id.toString();
     const isAdmin = user?.roles?.some((r: { name: string }) => r.name === 'ADMIN');
 
@@ -128,14 +115,12 @@ export const AuctionDetailsPage = observer(() => {
     const isCancelled = auction.status === 'CANCELLED';
     const isEnded = ['SOLD', 'UNSOLD', 'CANCELLED'].includes(auction.status);
 
-    // --- Admin Actions ---
     const handleApprove = async () => {
         setActionLoading(true);
         await auctionStore.approveAuction(auction.id);
         setActionLoading(false);
     };
 
-    // --- Owner Handlers ---
     const handleItemUpdate = async (
         data: ItemUpdateRequest,
         newFilesWithCategories: { file: File, category: ImageCategory }[],
@@ -149,12 +134,10 @@ export const AuctionDetailsPage = observer(() => {
         }
     };
 
-    // --- UPDATED: Replaced handleDeleteItem with handleCancelAuction ---
     const handleCancelAuction = async () => {
         if (window.confirm("Are you sure you want to cancel this auction? The vehicle will be returned to your garage as a draft.")) {
             setIsCanceling(true);
             await auctionStore.cancelAuction(auction.id);
-            // Notice we don't navigate away here! We just let the UI update to show the "Cancelled" banner.
             setIsCanceling(false);
         }
     };
@@ -165,7 +148,6 @@ export const AuctionDetailsPage = observer(() => {
                 <DetailHeader onBack={() => navigate("/auctions")} title={`${item.year} ${item.make} ${item.model}`} />
 
                 <div className="details-grid">
-                    {/* LEFT COLUMN: Visuals & Specs */}
                     <div className="details-left">
                         <div className="gallery-wrapper">
                             <ImageGallery
@@ -177,24 +159,21 @@ export const AuctionDetailsPage = observer(() => {
                         <VehicleInfo item={item} />
                     </div>
 
-                    {/* RIGHT COLUMN: Actions & Status */}
                     <div className="details-right">
 
-                        {/* 1. Alerts/Banners */}
                         {isPending && (
                             <div className="compact-banner banner-pending">
-                                <strong>⚠️ Pending Approval</strong>
+                                <strong>Pending Approval</strong>
                                 <p>{isOwner ? "Under review." : "Waiting for admin."}</p>
                             </div>
                         )}
                         {isCancelled && (
                             <div className="compact-banner banner-rejected">
-                                <strong>⛔ Cancelled</strong>
+                                <strong>Cancelled</strong>
                                 <p>{isOwner ? "This listing was cancelled." : "Administratively removed."}</p>
                             </div>
                         )}
 
-                        {/* 2. Admin Controls */}
                         {isAdmin && isPending && (
                             <div className="admin-panel compact-card">
                                 <div className="admin-btn-group">
@@ -205,14 +184,11 @@ export const AuctionDetailsPage = observer(() => {
                             </div>
                         )}
 
-                        {/* 3. Owner Controls */}
-                        {/* 3. Owner Controls */}
                         {isOwner && !isEnded && (
                             <div className="owner-panel compact-card" style={{ marginBottom: '16px' }}>
                                 <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-                                    {/* --- NEW: Locked Edit Wrapper & Tooltip --- */}
                                     <div
                                         style={{ position: "relative", width: "100%" }}
                                         onMouseEnter={() => { if (isActive) setShowEditTooltip(true); }}
@@ -238,7 +214,7 @@ export const AuctionDetailsPage = observer(() => {
                                             visibility: showEditTooltip ? "visible" : "hidden",
                                             transition: "opacity 0.2s ease-in-out, visibility 0.2s"
                                         }}>
-                                            ⚠️ Cannot edit details of an active auction.
+                                            Cannot edit details of an active auction.
 
                                             <div style={{
                                                 position: "absolute",
@@ -270,7 +246,6 @@ export const AuctionDetailsPage = observer(() => {
                                         </button>
                                     </div>
 
-                                    {/* --- Cancel Auction Wrapper & Tooltip --- */}
                                     <div
                                         style={{ position: "relative", width: "100%" }}
                                         onMouseEnter={() => { if (auction.bidCount > 0) setShowCancelTooltip(true); }}
@@ -296,8 +271,7 @@ export const AuctionDetailsPage = observer(() => {
                                             visibility: showCancelTooltip ? "visible" : "hidden",
                                             transition: "opacity 0.2s ease-in-out, visibility 0.2s"
                                         }}>
-                                            ⚠️ Cannot cancel an auction with active bids. Contact Support.
-
+                                            Cannot cancel an auction with active bids. Contact Support.
                                             <div style={{
                                                 position: "absolute",
                                                 top: "100%",
@@ -331,7 +305,6 @@ export const AuctionDetailsPage = observer(() => {
                             </div>
                         )}
 
-                        {/* 4. Main Bidding Card */}
                         {isActive ? (
                             <div className="bidding-wrapper">
                                 <BiddingCard auction={auction} />
@@ -347,7 +320,6 @@ export const AuctionDetailsPage = observer(() => {
                             </div>
                         )}
 
-                        {/* 5. Bid History */}
                         <div className="history-wrapper">
                             <BidHistory bids={auctionStore.bidHistory} />
                         </div>
@@ -355,7 +327,6 @@ export const AuctionDetailsPage = observer(() => {
                 </div>
             </div>
 
-            {/* Edit Modal */}
             <EditItemModal
                 item={item}
                 isOpen={isEditModalOpen}
@@ -364,7 +335,6 @@ export const AuctionDetailsPage = observer(() => {
                 isLoading={itemStore.isLoading}
             />
 
-            {/* Lightbox */}
             {lightboxIndex !== null && item.images && item.images.length > 0 && (
                 <Lightbox
                     images={item.images}
@@ -376,7 +346,6 @@ export const AuctionDetailsPage = observer(() => {
     );
 });
 
-// --- STATUS BADGE COMPONENT ---
 const StatusBadge = ({ status, isNoReserve }: { status: string, isNoReserve: boolean }) => {
     let className = "badge-base ";
     switch (status) {

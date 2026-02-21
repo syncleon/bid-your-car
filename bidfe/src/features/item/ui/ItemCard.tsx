@@ -7,7 +7,6 @@ interface ItemCardProps {
 }
 
 export const ItemCard = ({ item }: ItemCardProps) => {
-    // 1. Image Logic: Prioritize the backend-managed thumbnail, fallback to the MAIN category image, then any image.
     const mainImage = item.thumbnailUrl ||
         item.images?.find(img => img.category === "MAIN")?.url ||
         item.images?.[0]?.url;
@@ -16,15 +15,12 @@ export const ItemCard = ({ item }: ItemCardProps) => {
         .filter(Boolean)
         .join(" • ");
 
-    // 2. Exact Status Logic based on the updated ItemStatus enum
     const isLive = item.status === 'ACTIVE_AUCTION';
     const isSold = item.status === 'SOLD';
     const isPending = item.status === 'PENDING_AUCTION';
     const isScheduled = item.status === 'LISTED_AUCTION';
     const isUnsold = item.status === 'UNSOLD';
     const isDraft = item.status === 'DRAFT';
-
-    // 3. Render Badge based on status
     let statusBadge = null;
 
     if (isSold) {
@@ -71,17 +67,13 @@ export const ItemCard = ({ item }: ItemCardProps) => {
             imageUrl={mainImage}
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
-                // 1. Status Badge (Top Left)
                 topLeft: statusBadge,
-
-                // 2. Pricing Badge (Top Right)
                 topRight: item.isNoReserve ? (
                     <div style={{ ...styles.badgeDark, backgroundColor: '#16a34a' }}>
                         NO RESERVE
                     </div>
                 ) : null,
 
-                // 3. Mileage Badge (Bottom Left)
                 bottomLeft: (
                     <div style={styles.badgeDark}>
                         {item.mileage.toLocaleString()} mi

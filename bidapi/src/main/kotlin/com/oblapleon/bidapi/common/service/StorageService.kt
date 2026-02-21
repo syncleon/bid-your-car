@@ -18,7 +18,6 @@ class StorageService(
     @Value("\${cloudflare.r2.bucket}")
     lateinit var bucketName: String
 
-    // Берем URL ImageKit вместо R2 public URL
     @Value("\${imagekit.url-endpoint}")
     lateinit var imageKitUrl: String
 
@@ -29,7 +28,6 @@ class StorageService(
 
         val fileName = "${UUID.randomUUID()}.$extension"
 
-        // 1. Загружаем оригинал в Cloudflare R2
         val request = PutObjectRequest.builder()
             .bucket(bucketName)
             .key(fileName)
@@ -40,27 +38,17 @@ class StorageService(
             request,
             RequestBody.fromInputStream(file.inputStream, file.size)
         )
-
-        // 2. Возвращаем ссылку на ImageKit
-        // ImageKit сам сходит в R2 за файлом, когда кто-то откроет эту ссылку
         return constructImageKitUrl(fileName)
     }
 
     fun deleteFile(fileUrl: String) {
-        // Извлекаем имя файла из ссылки ImageKit
         val key = extractKeyFromUrl(fileUrl)
-
-        // Удаляем оригинал из R2
         val deleteRequest = DeleteObjectRequest.builder()
             .bucket(bucketName)
             .key(key)
             .build()
 
         s3Client.deleteObject(deleteRequest)
-
-        // Примечание: Файл может оставаться в кэше ImageKit некоторое время.
-        // Для мгновенного удаления из CDN нужно использовать ImageKit API (purge cache),
-        // но обычно для MVP достаточно удаления источника.
     }
 
     private fun constructImageKitUrl(fileName: String): String {
@@ -70,10 +58,6 @@ class StorageService(
 
     private fun extractKeyFromUrl(fileUrl: String): String {
         val uri = URI(fileUrl)
-        // ImageKit URL: https://ik.imagekit.io/id/filename.jpg
-        // path: /id/filename.jpg -> нам нужно только filename.jpg, если Origin настроен на корень бакета
-        // ВАЖНО: Если в ImageKit Origin настроен с префиксом, логика может отличаться.
-        // Обычно достаточно взять последнюю часть пути:
         return uri.path.substringAfterLast("/")
     }
 }

@@ -21,23 +21,14 @@ class BidService(
         }
     }
 
-    /**
-     * Returns the bid history for a specific auction (Highest value first).
-     */
     fun findHistoryByAuctionId(auctionId: UUID, pageable: Pageable): Page<Bid> {
         return bidRepository.findAllByAuctionIdOrderByAmountDesc(auctionId, pageable)
     }
 
-    /**
-     * Returns the bid history for a specific user (Most recent first).
-     */
     fun findHistoryByUserId(userId: Long, pageable: Pageable): Page<Bid> {
         return bidRepository.findAllByBidderIdOrderByBidTimeDesc(userId, pageable)
     }
 
-    /**
-     * Returns statistics for a user profile.
-     */
     fun countAuctionsParticipated(userId: Long): Long {
         return bidRepository.countDistinctAuctionsByBidderId(userId)
     }

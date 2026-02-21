@@ -15,10 +15,6 @@ import java.util.Optional
 @Repository
 interface UserRepository : BaseRepository<User, Long> {
 
-    /**
-     * Used for Authentication.
-     * @EntityGraph ensures 'roles' are joined in the same SELECT statement.
-     */
     @EntityGraph(attributePaths = ["roles"])
     fun findByUsername(username: String): Optional<User>
 
@@ -28,37 +24,17 @@ interface UserRepository : BaseRepository<User, Long> {
     @EntityGraph(attributePaths = ["roles"])
     fun findByEmail(email: String): User?
 
-    /**
-     * Standard exists checks are highly optimized by Spring Data
-     * (SELECT 1 FROM ... LIMIT 1).
-     */
     fun existsByUsername(username: String): Boolean
     fun existsByEmail(email: String): Boolean
-
-    // -------------------------------------------------------------------------
-    // Search / Pagination
-    // -------------------------------------------------------------------------
-
     fun findByUsernameContainingIgnoreCase(query: String, pageable: Pageable): Page<User>
     fun findByEmailContainingIgnoreCase(query: String, pageable: Pageable): Page<User>
 
-    // -------------------------------------------------------------------------
-    // Cleanup / Maintenance (GDPR)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Finds users who "soft deleted" their account before a certain date.
-     * MUST be nativeQuery to bypass the @SQLRestriction("deleted_at IS NULL") on the Entity.
-     */
     @Query(
         value = "SELECT * FROM users WHERE deleted_at IS NOT NULL AND deleted_at < :cutoffDate",
         nativeQuery = true
     )
     fun findSoftDeletedUsersOlderThan(cutoffDate: Instant): List<User>
 
-    /**
-     * Hard delete method for the cleanup job.
-     */
     @Modifying
     @Query(value = "DELETE FROM users WHERE id = :id", nativeQuery = true)
     fun hardDeleteUser(id: Long)

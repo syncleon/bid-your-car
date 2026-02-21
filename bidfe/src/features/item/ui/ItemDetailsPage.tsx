@@ -8,7 +8,6 @@ import { EditItemModal } from "../ui/EditItemModal";
 import type { CreateAuctionDto } from "../../auction/types";
 import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../types";
 
-// --- STYLES ---
 const badges = {
     live: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
     sold: { background: "var(--color-danger-bg)", color: "var(--color-danger-text)", border: "1px solid var(--color-danger-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },

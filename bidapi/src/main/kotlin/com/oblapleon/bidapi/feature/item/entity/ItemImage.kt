@@ -8,7 +8,6 @@ import java.util.UUID
 @Table(
     name = "item_images",
     indexes = [
-        // Индекс для быстрого поиска картинок по лоту и категории
         Index(name = "idx_item_image_item_category", columnList = "item_id, category")
     ]
 )
@@ -22,7 +21,7 @@ class ItemImage(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    var category: ImageCategory = ImageCategory.OTHER, // По умолчанию OTHER
+    var category: ImageCategory = ImageCategory.OTHER,
 
     @Column(name = "sort_order", nullable = false)
     var sortOrder: Int = 0,
@@ -34,10 +33,10 @@ class ItemImage(
 ) : BaseEntity<UUID>()
 
 enum class ImageCategory {
-    MAIN,       // Главное фото (одно)
-    EXTERIOR,   // Внешний вид
-    INTERIOR,   // Салон
-    ENGINE,     // Подкапотное пространство
-    SERVICE,    // Документы, сервисная книжка
-    OTHER       // Прочее (например, дефекты крупным планом)
+    MAIN,
+    EXTERIOR,
+    INTERIOR,
+    ENGINE,
+    SERVICE,
+    OTHER
 }

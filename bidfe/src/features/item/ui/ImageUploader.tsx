@@ -19,8 +19,6 @@ export const ImageUploader = ({
 
     const totalImages = existingImages.length + newPreviews.length;
     const hasImages = totalImages > 0;
-
-    // Check if a MAIN image already exists in the saved images
     const hasMainInExisting = existingImages.some(img => img.category === "MAIN");
 
     return (
@@ -44,7 +42,6 @@ export const ImageUploader = ({
             </div>
 
             <div className="gallery-grid" style={{ marginBottom: hasImages ? "24px" : "0" }}>
-                {/* Existing Saved Images */}
                 {existingImages.map((img) => (
                     <div key={img.id} className="gallery-item">
                         <img
@@ -63,9 +60,7 @@ export const ImageUploader = ({
                     </div>
                 ))}
 
-                {/* New Uploads (Local Previews) */}
                 {newPreviews.map((url, index) => {
-                    // Based on our SubmitItemForm logic: if there is no MAIN image saved, the first new upload becomes MAIN
                     const isNewMain = !hasMainInExisting && index === 0;
                     const predictedCategory = isNewMain ? "MAIN" : "EXTERIOR";
 
@@ -105,7 +100,6 @@ export const ImageUploader = ({
     );
 };
 
-// --- Styles & Icons ---
 const styles = {
     header: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "16px" },
     title: { fontSize: "16px", fontWeight: 700, color: "#1e293b", marginRight: "12px" },
@@ -114,13 +108,8 @@ const styles = {
     iconCircle: { width: "56px", height: "56px", borderRadius: "50%", backgroundColor: "#fff", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b82f6" },
     uploadTitle: { display: "block", fontSize: "16px", fontWeight: 600, color: "#1e293b", marginBottom: "4px" },
     uploadSubtitle: { fontSize: "14px", color: "#64748b" },
-
-    // Highlighted badge for the MAIN image
     mainBadge: { position: "absolute" as const, top: "16px", left: "16px", backgroundColor: "rgba(0, 0, 0, 0.75)", backdropFilter: "blur(4px)", color: "#fbbf24", fontSize: "12px", fontWeight: 700, padding: "8px 12px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none" as const, border: "1px solid rgba(251,191,36,0.3)" },
-
-    // Standard badge for all other categories
     categoryBadge: { position: "absolute" as const, top: "16px", left: "16px", backgroundColor: "rgba(255, 255, 255, 0.9)", color: "#334155", fontSize: "11px", fontWeight: 700, letterSpacing: "0.5px", padding: "6px 10px", borderRadius: "20px", pointerEvents: "none" as const, boxShadow: "0 2px 4px rgba(0,0,0,0.1)" },
-
     deleteBtn: { position: "absolute" as const, top: "16px", right: "16px", width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "white", color: "#ef4444", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }
 };
 

@@ -12,7 +12,6 @@ export const SubmitItemPage = observer(() => {
         data: ItemCreateRequest,
         filesWithCategories: { file: File; category: ImageCategory }[]
     ) => {
-        // Pass the filesWithCategories directly to the store
         const newItem = await itemStore.submitNewItem(data, filesWithCategories);
 
         if (newItem) {

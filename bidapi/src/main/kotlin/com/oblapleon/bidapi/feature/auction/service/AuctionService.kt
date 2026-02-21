@@ -65,15 +65,6 @@ class AuctionService(
         return auctionRepository.findByStatusOrderByEndTimeDesc(AuctionStatus.SOLD, pageable)
     }
 
-    fun findActiveAuctions(filterType: String?, pageable: Pageable): Page<Auction> {
-        val now = Instant.now()
-        return when (filterType?.lowercase()) {
-            "ending_soon" -> auctionRepository.findByStatusAndEndTimeAfterOrderByEndTimeAsc(AuctionStatus.ACTIVE, now, pageable)
-            "just_listed" -> auctionRepository.findByStatusAndStartTimeBeforeOrderByStartTimeDesc(AuctionStatus.ACTIVE, now, pageable)
-            else -> auctionRepository.findByStatusAndEndTimeAfterOrderByEndTimeAsc(AuctionStatus.ACTIVE, now, pageable)
-        }
-    }
-
     fun findBySeller(sellerId: Long, pageable: Pageable): Page<Auction> {
         authorizationHelper.checkOwnerOrAdmin(sellerId) // <-- Enforce ownership/admin access
         return auctionRepository.findAllBySellerId(sellerId, pageable)
@@ -89,7 +80,6 @@ class AuctionService(
         val item = itemRepository.findById(request.itemId)
             .orElseThrow { NotFoundException("Item not found") }
 
-        // Ensures only the item's owner (or an Admin) can put it up for auction
         authorizationHelper.checkOwnerOrAdmin(item.seller.id!!)
 
         if (item.status != ItemStatus.DRAFT && item.status != ItemStatus.UNSOLD) {
@@ -182,10 +172,6 @@ class AuctionService(
         return placeBidAsUser(auctionId, currentUser.id!!, amount)
     }
 
-    /**
-     * Internal method used by Seeders or Admin operations where
-     * there is no active HTTP Security Context.
-     */
     @Transactional
     fun placeBidAsUser(auctionId: UUID, bidderId: Long, amount: BigDecimal): Bid {
         val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
@@ -298,16 +284,13 @@ class AuctionService(
 
         expiredAuctions.forEach { auction ->
             try {
-                // Передаем ID, чтобы достать свежую сущность внутри REQUIRES_NEW
                 auctionFinalizationService.finalizeAuction(auction.id!!)
             } catch (e: Exception) {
-                // Если один аукцион падает, логируем ошибку и продолжаем обрабатывать остальные
                 System.err.println("Failed to finalize auction ${auction.id}: ${e.message}")
             }
         }
     }
 
-    // Refactored repetitive notification logic into a private helper
     private fun dispatchBidNotifications(auction: Auction, savedBid: Bid, bidderUsername: String) {
         try {
             val notification = BidNotificationDto(

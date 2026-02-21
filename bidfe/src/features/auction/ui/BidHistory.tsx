@@ -5,17 +5,13 @@ import { useMemo } from "react";
 export const BidHistory = ({ bids }: { bids: BidDto[] }) => {
     const processedBids = useMemo(() => {
         if (bids.length === 0) return [];
-
-        // 1. Identify the single highest bid amount
         const maxAmount = Math.max(...bids.map(b => b.amount));
-
-        // 2. Process last 1000, sorting by time (newest first)
         return bids
             .slice(-1000)
             .sort((a, b) => new Date(b.bidTime).getTime() - new Date(a.bidTime).getTime())
             .map(bid => ({
                 ...bid,
-                isWinner: bid.amount === maxAmount // Mark the highest as winner
+                isWinner: bid.amount === maxAmount
             }));
     }, [bids]);
 
@@ -142,13 +138,13 @@ const styles = {
     info: { display: "flex", flexDirection: "column" as const, gap: "2px" },
     nameRow: { display: "flex", alignItems: "center", gap: "6px" },
     name: { fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" },
-    nameWinner: { fontSize: "14px", fontWeight: 700, color: "var(--color-warning-text)" }, // Yellow text
+    nameWinner: { fontSize: "14px", fontWeight: 700, color: "var(--color-warning-text)" },
 
     winnerBadge: {
         fontSize: "9px",
         letterSpacing: "0.5px",
-        color: "var(--bg-base)", // Inverted text
-        background: "var(--color-warning-text)", // Yellow badge
+        color: "var(--bg-base)",
+        background: "var(--color-warning-text)",
         padding: "2px 6px",
         borderRadius: "4px",
         fontWeight: 900,

@@ -19,7 +19,6 @@ import type {
 import type { AuctionDto } from "../../auction/types";
 import type { UserDto } from "../../auth/types";
 
-// --- Enums for MST ---
 const ItemStatusEnum = types.enumeration<ItemStatus>("ItemStatus", [
     "DRAFT",
     "PENDING_AUCTION",
@@ -108,15 +107,10 @@ export const ItemModel = types.model("Item", {
     auction: types.maybeNull(types.frozen<AuctionDto>())
 });
 
-// --- Root Store ---
-
 export const ItemStore = types
     .model("ItemStore", {
-        // NOTE: 'items' (public list) is removed. The Item store now only manages the user's private garage.
         myItems: types.array(ItemModel),
         selectedItem: types.maybeNull(types.reference(ItemModel)),
-
-        // Pagination for my items
         myTotalItems: 0,
         myTotalPages: 0,
         myCurrentPage: 0,
@@ -148,7 +142,6 @@ export const ItemStore = types
                 const itemData: ItemDto = yield getItemById(id);
                 updateLocalCache(itemData);
 
-                // If the item isn't in our array yet, we need to push it so the reference works
                 const exists = self.myItems.find(i => i.id === id);
                 if (!exists) {
                     self.myItems.push(cast(itemData));
@@ -182,7 +175,6 @@ export const ItemStore = types
             }
         });
 
-        // Updated to accept categories alongside files
         const submitNewItem = flow(function* (
             data: ItemCreateRequest,
             filesWithCategories: { file: File, category: ImageCategory }[]
@@ -193,13 +185,9 @@ export const ItemStore = types
                 const newItem: ItemDto = yield submitItem(data);
 
                 if (filesWithCategories.length > 0) {
-                    // SEQUENTIAL UPLOAD FIX:
                     for (let i = 0; i < filesWithCategories.length; i++) {
                         const item = filesWithCategories[i];
                         self.uploadProgress = `Uploading image ${i + 1} of ${filesWithCategories.length}...`;
-
-                        // We yield each call individually so the backend
-                        // can finish one transaction before the next starts
                         yield uploadItemImage(newItem.id, item.file, item.category);
                     }
 
@@ -236,7 +224,6 @@ export const ItemStore = types
                 yield updateItem(id, { ...data, keepImageIds });
 
                 if (newFilesWithCategories.length > 0) {
-                    // SEQUENTIAL UPLOAD FIX:
                     for (const item of newFilesWithCategories) {
                         yield uploadItemImage(id, item.file, item.category);
                     }

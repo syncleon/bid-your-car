@@ -107,11 +107,8 @@ export const ProfileStore = types.model("ProfileStore", {
 
             self.isLoading = true;
             try {
-                // ИСПРАВЛЕНО: Вызываем deleteMyAccount и передаем только data (пароль)
                 yield deleteMyAccount(data);
                 self.profile = null;
-
-                // Type-safe access to the root store to trigger logout
                 const root = getRoot<IRootStoreShape>(self);
                 if (root?.authStore?.logout) {
                     root.authStore.logout();

@@ -122,11 +122,9 @@ class Item(
         images.add(image)
         image.item = this
 
-        // Если это главное фото, сразу обновляем thumbnail лота
         if (image.category == ImageCategory.MAIN) {
             thumbnailUrl = image.url
         } else if (thumbnailUrl == null) {
-            // Фолбэк: если главного фото еще нет, ставим хотя бы что-то
             thumbnailUrl = image.url
         }
     }

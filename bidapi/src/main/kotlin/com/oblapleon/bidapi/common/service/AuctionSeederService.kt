@@ -28,11 +28,8 @@ class AuctionSeederService(
 
     @Transactional
     fun seedAuctions(count: Int) {
-        // 1. Fetch items that are ready for auction (AVAILABLE and no existing auctions)
-        // Note: Assuming findReadyForAuction exists in ItemRepository as defined previously
         val page = itemRepository.findReadyForAuction(PageRequest.of(0, count))
         val items = page.content
-
         if (items.isEmpty()) {
             throw IllegalStateException("No available items found to create auctions. Please seed items first.")
         }
@@ -48,20 +45,13 @@ class AuctionSeederService(
     }
 
     private fun createRandomAuction(item: Item, allUsers: List<User>) {
-        // 1. Determine Status
         val status = faker.options().option(AuctionStatus::class.java)
-
-        // 2. Pricing
         val startPrice = BigDecimal(faker.number().numberBetween(5000, 50000))
         val hasReserve = faker.bool().bool()
         val reservePrice = if (hasReserve) startPrice.multiply(BigDecimal("1.2")) else null
-
-        // 3. Timing (Base)
         val now = Instant.now()
         var startTime = now
         var endTime = now.plus(7, ChronoUnit.DAYS)
-
-        // Adjust timing based on status
         when (status) {
             AuctionStatus.ACTIVE -> {
                 startTime = now.minus(faker.number().numberBetween(1L, 3L), ChronoUnit.DAYS)
@@ -75,14 +65,13 @@ class AuctionSeederService(
                 startTime = now.plus(2, ChronoUnit.DAYS)
                 endTime = now.plus(9, ChronoUnit.DAYS)
             }
-            else -> { /* PENDING, DRAFT, etc. keep default */ }
+            else -> {}
         }
 
-        // 4. Create Auction Entity
         val auction = Auction(
             item = item,
             startPrice = startPrice,
-            currentPrice = startPrice, // Initially equals start price
+            currentPrice = startPrice,
             minBidIncrement = BigDecimal("100.00"),
             reservePrice = reservePrice,
             startTime = startTime,
@@ -90,11 +79,7 @@ class AuctionSeederService(
             status = status,
             bidCount = 0
         )
-
-        // Save first to get an ID
         auctionRepository.save(auction)
-
-        // 5. Generate Bids (only for relevant statuses)
         if (status == AuctionStatus.ACTIVE || status == AuctionStatus.SOLD || status == AuctionStatus.UNSOLD) {
             val shouldHaveBids = if (status == AuctionStatus.UNSOLD) faker.bool().bool() else true
 
@@ -102,24 +87,17 @@ class AuctionSeederService(
                 simulateBiddingWar(auction, allUsers)
             }
         }
-
-        // 6. Final Status Check (Ensure SOLD has winner)
         if (status == AuctionStatus.SOLD && auction.winnerUser == null) {
-            // Force a winner if random logic didn't produce one (e.g. reserve not met)
             auction.status = AuctionStatus.UNSOLD
             auctionRepository.save(auction)
         }
     }
 
     private fun simulateBiddingWar(auction: Auction, allUsers: List<User>) {
-        // Filter out the seller so they don't bid on their own item
         val eligibleBidders = allUsers.filter { it.id != auction.item.seller.id }
         if (eligibleBidders.isEmpty()) return
-
         val bidCount = faker.number().numberBetween(3, 15)
         var currentPrice = auction.startPrice
-
-        // Spread bids out over the auction duration
         val durationSeconds = ChronoUnit.SECONDS.between(auction.startTime,
             if(auction.endTime.isBefore(Instant.now())) auction.endTime else Instant.now()
         )
@@ -129,13 +107,9 @@ class AuctionSeederService(
 
         for (i in 1..bidCount) {
             val bidder = eligibleBidders.random()
-
-            // Increment
             val increment = BigDecimal(faker.number().numberBetween(100, 500))
             currentPrice = currentPrice.add(increment)
-
             val bidTime = auction.startTime.plusSeconds(timeStep * i)
-
             val bid = Bid(
                 auction = auction,
                 bidder = bidder,
@@ -146,17 +120,12 @@ class AuctionSeederService(
         }
 
         if (bids.isNotEmpty()) {
-            // Bulk save bids
             val savedBids = bidRepository.saveAll(bids)
-
-            // Update Auction with results of the war
-            val winningBid = savedBids.last() // Last one is highest in this loop
+            val winningBid = savedBids.last()
 
             auction.currentPrice = winningBid.amount
             auction.bidCount = savedBids.size
             auction.winningBid = winningBid
-
-            // Check if sold (Reserve met?)
             val reserve = auction.reservePrice
             if (reserve == null || winningBid.amount >= reserve) {
                 if (auction.status != AuctionStatus.ACTIVE) {

@@ -26,17 +26,12 @@ import org.springframework.web.bind.annotation.*
 class UserController(
     private val userService: UserService,
     private val itemService: ItemService,
-    private val authorizationHelper: AuthorizationHelper // <-- ADDED: Our custom helper
+    private val authorizationHelper: AuthorizationHelper
 ) {
-
-    // ========================================================================
-    //  Current User Profile (/me)
-    // ========================================================================
 
     @Operation(summary = "Get My Profile", description = "Returns the profile of the currently logged-in user.")
     @GetMapping("/me")
     fun getCurrentUser(): ResponseEntity<UserDto> {
-        // Automatically extracts the JWT, parses the ID, and fetches the DB entity
         val user = authorizationHelper.getCurrentUser()
         return ResponseEntity.ok(user.toDto())
     }
@@ -73,7 +68,6 @@ class UserController(
         @PageableDefault(size = 20) pageable: Pageable
     ): ResponseEntity<Page<ItemDto>> {
         val user = authorizationHelper.getCurrentUser()
-        // Assuming ItemService has findAllBySellerId
         val items = itemService.findAllBySellerId(user.id!!, pageable)
         return ResponseEntity.ok(items.map { it.toDto() })
     }
@@ -87,10 +81,6 @@ class UserController(
         userService.deleteMyAccount(user.id!!, request.password)
         return ResponseEntity.ok(mapOf("message" to "Account deleted successfully"))
     }
-
-    // ========================================================================
-    //  Admin Operations
-    // ========================================================================
 
     @Operation(summary = "List All Users", description = "Admin only. Returns paginated list of users.")
     @PreAuthorize("hasRole('ADMIN')")

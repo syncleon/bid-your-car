@@ -1,9 +1,6 @@
 import { http } from "../../../shared/api/HttpClient";
 import type { AuctionDto, BidDto, CreateAuctionDto, Page } from "../types";
 
-// ============================================================================
-//  PUBLIC BROWSING
-// ============================================================================
 
 export const getPublicAuctions = async (status?: string, filter?: string, page = 0, size = 20) => {
     const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
@@ -22,13 +19,8 @@ export const getAuctionById = async (id: string) => {
 };
 
 export const getAuctionBidHistory = async (id: string, page = 0, size = 50) => {
-    // Make sure this matches your actual BidController endpoint!
     return http<Page<BidDto>>(`/bids/auction/${id}?page=${page}&size=${size}`, { method: "GET" });
 };
-
-// ============================================================================
-//  PROTECTED OPERATIONS (SELLERS)
-// ============================================================================
 
 export const createAuction = async (data: CreateAuctionDto) => {
     return http<AuctionDto>("/auctions", {
@@ -49,10 +41,6 @@ export const getMyWins = async (page = 0, size = 20) => {
     return http<Page<AuctionDto>>(`/auctions/me/wins?page=${page}&size=${size}`, { method: "GET" });
 };
 
-// ============================================================================
-//  BIDDING
-// ============================================================================
-
 export const placeBid = async (auctionId: string, amount: number) => {
     return http<BidDto>(`/auctions/${auctionId}/bids`, {
         method: "POST",
@@ -65,10 +53,6 @@ export const placeQuickBid = async (auctionId: string) => {
         method: "POST"
     });
 };
-
-// ============================================================================
-//  ADMIN OPERATIONS
-// ============================================================================
 
 export const approveAuction = async (id: string) => {
     return http<Record<string, string>>(`/auctions/${id}/approve`, { method: "PATCH" });

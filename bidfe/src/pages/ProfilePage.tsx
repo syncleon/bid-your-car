@@ -126,39 +126,39 @@ const styles = {
         margin: "0 auto",
         padding: "40px 20px",
         fontFamily: "'Inter', system-ui, sans-serif",
-        color: "var(--text-primary)" // Updated
+        color: "var(--text-primary)" 
     },
-    loader: { padding: "100px 20px", textAlign: "center" as const, color: "var(--text-muted)" }, // Updated
+    loader: { padding: "100px 20px", textAlign: "center" as const, color: "var(--text-muted)" }, 
     header: { marginBottom: 60 },
     title: { fontSize: "32px", fontWeight: 800, marginBottom: "32px", letterSpacing: "-0.5px" },
     subtitle: { fontSize: "20px", fontWeight: 700, marginBottom: "24px" },
     infoBlock: {
-        background: "var(--bg-card)", // Updated
+        background: "var(--bg-card)", 
         padding: "32px",
         borderRadius: "16px",
-        border: "1px solid var(--border-color)", // Updated
+        border: "1px solid var(--border-color)", 
         boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-        transition: "background-color 0.3s ease, border-color 0.3s ease" // Added transition
+        transition: "background-color 0.3s ease, border-color 0.3s ease" 
     },
     details: { marginBottom: 32 },
     detailRow: {
         display: "flex",
         justifyContent: "space-between",
         padding: "12px 0",
-        borderBottom: "1px solid var(--border-light)", // Updated
+        borderBottom: "1px solid var(--border-light)", 
         fontSize: "14px",
-        transition: "border-color 0.3s ease" // Added transition
+        transition: "border-color 0.3s ease" 
     },
-    label: { color: "var(--text-secondary)", fontWeight: 500 }, // Updated
-    value: { color: "var(--text-primary)", fontWeight: 600 }, // Updated
+    label: { color: "var(--text-secondary)", fontWeight: 500 }, 
+    value: { color: "var(--text-primary)", fontWeight: 600 }, 
     actions: { display: "flex", gap: 12, flexWrap: "wrap" as const },
     formWrapper: {
         maxWidth: 440,
         padding: "32px",
-        background: "var(--bg-card)", // Updated
+        background: "var(--bg-card)", 
         borderRadius: "16px",
-        border: "1px solid var(--border-color)", // Updated
-        transition: "background-color 0.3s ease, border-color 0.3s ease" // Added transition
+        border: "1px solid var(--border-color)", 
+        transition: "background-color 0.3s ease, border-color 0.3s ease" 
     },
     formTitle: { fontSize: "18px", fontWeight: 700, marginBottom: 20 },
     listingsSection: { marginTop: 40 },
@@ -170,38 +170,38 @@ const styles = {
     emptyState: {
         padding: "60px 20px",
         textAlign: "center" as const,
-        background: "var(--bg-input)", // Updated
+        background: "var(--bg-input)", 
         borderRadius: "16px",
-        color: "var(--text-muted)", // Updated
+        color: "var(--text-muted)", 
         fontSize: "14px",
-        transition: "background-color 0.3s ease, color 0.3s ease" // Added transition
+        transition: "background-color 0.3s ease, color 0.3s ease" 
     },
-    statusText: { fontSize: "14px", color: "var(--text-secondary)", marginBottom: 20 }, // Updated
+    statusText: { fontSize: "14px", color: "var(--text-secondary)", marginBottom: 20 }, 
     alertError: {
         padding: "14px 20px",
         marginBottom: 24,
-        background: "var(--color-danger-bg)", // Updated
-        color: "var(--color-danger-text)", // Updated
+        background: "var(--color-danger-bg)", 
+        color: "var(--color-danger-text)", 
         borderRadius: "12px",
         fontSize: "14px",
-        border: "1px solid var(--color-danger-border)", // Updated
+        border: "1px solid var(--color-danger-border)", 
         fontWeight: 500
     },
     alertSuccess: {
         padding: "14px 20px",
         marginBottom: 24,
-        background: "var(--color-success-bg)", // Updated
-        color: "var(--color-success-text)", // Updated
+        background: "var(--color-success-bg)", 
+        color: "var(--color-success-text)", 
         borderRadius: "12px",
         fontSize: "14px",
-        border: "1px solid var(--color-success-border)", // Updated
+        border: "1px solid var(--color-success-border)", 
         fontWeight: 500
     },
     btnSecondary: {
         padding: "10px 18px",
-        background: "var(--btn-secondary-bg)", // Updated
-        color: "var(--btn-secondary-text)", // Updated
-        border: "1px solid var(--border-color)", // Updated
+        background: "var(--btn-secondary-bg)", 
+        color: "var(--btn-secondary-text)", 
+        border: "1px solid var(--border-color)", 
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: 600,
@@ -210,20 +210,20 @@ const styles = {
     },
     btnDanger: {
         padding: "10px 18px",
-        background: "var(--bg-base)", // Updated
-        border: "1px solid var(--color-danger-border)", // Updated
+        background: "var(--bg-base)", 
+        border: "1px solid var(--color-danger-border)", 
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: 600,
         fontSize: "13px",
-        color: "var(--color-danger-text)", // Updated
-        transition: "all 0.2s" // Added transition
+        color: "var(--color-danger-text)",
+        transition: "all 0.2s"
     },
     sellBtn: {
         display: "inline-block",
         padding: "12px 20px",
-        background: "var(--btn-primary-bg)", // Updated
-        color: "var(--btn-primary-text)", // Updated
+        background: "var(--btn-primary-bg)",
+        color: "var(--btn-primary-text)",
         borderRadius: "10px",
         fontWeight: 700,
         fontSize: "14px",

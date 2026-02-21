@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface RoleRepository : BaseRepository<Role, Long> {
     
-    // Returns nullable because DB might not be seeded yet
     fun findByName(name: ERole): Role?
-    
     fun existsByName(name: ERole): Boolean
 }

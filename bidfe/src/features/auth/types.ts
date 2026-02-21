@@ -35,11 +35,11 @@ export interface UserBatchRequestDto {
 
 export interface AuthResponseDto {
     token: string;
-    type: string; // Usually "Bearer"
+    type: string;
 }
 
 export interface RoleDto {
-    name: string; // Matches the RoleModel in AuthStore
+    name: string;
 }
 
 export interface UserDto {
@@ -47,18 +47,14 @@ export interface UserDto {
     username: string;
     email: string;
     roles: RoleDto[];
-    createdDate?: string; // ISO Instant string
+    createdDate?: string;
 }
 
-/**
- * Standardized Error Response
- * Matches the GlobalExceptionHandler in your Spring Boot backend
- */
 export interface ApiErrorResponse {
-    message?: string; // Often used by Spring Default
+    message?: string;
     error: string;
     timestamp: number;
-    details?: Record<string, string>; // For validation errors (e.g., "email": "invalid format")
+    details?: Record<string, string>;
 }
 
 export interface RestoreResponseDto {

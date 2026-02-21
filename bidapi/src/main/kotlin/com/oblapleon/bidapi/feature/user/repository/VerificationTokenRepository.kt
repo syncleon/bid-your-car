@@ -11,13 +11,8 @@ import java.time.Instant
 interface VerificationTokenRepository : BaseRepository<VerificationToken, Long> {
 
     fun findByToken(token: String): VerificationToken?
-
     fun findByUser(user: User): VerificationToken?
 
-    /**
-     * Cleanup job: Delete all tokens that expired before [now].
-     * Useful to run on a @Scheduled cron every night to keep DB clean.
-     */
     @Modifying
     fun deleteAllByExpiryDateBefore(now: Instant)
 }

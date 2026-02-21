@@ -8,9 +8,7 @@ import java.time.Instant
 
 @Entity
 @Table(name = "users")
-// Soft delete strategy: Updates the column instead of deleting the row
 @SQLDelete(sql = "UPDATE users SET deleted_at = NOW() WHERE id = ?")
-// Automatically filters out soft-deleted users in all Repository queries
 @SQLRestriction("deleted_at IS NULL")
 class User(
 
@@ -33,10 +31,6 @@ class User(
     @Column(name = "deleted_at")
     var deletedAt: Instant? = null,
 
-    /**
-     * Unidirectional Many-to-Many is preferred for simple role association.
-     * Using Set to prevent duplicates.
-     */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
@@ -45,19 +39,12 @@ class User(
     )
     var roles: MutableSet<Role> = mutableSetOf()
 
-    // PERFORMANCE NOTE:
-    // Removed @OneToMany for `items`, `wonAuctions`, and `bids`.
-    // fetching a User should not risk loading thousands of history records.
-    // Query these via their respective Repositories.
-
 ) : BaseEntity<Long>() {
 
-    // Explicit toString prevents circular recursion and leaks of sensitive data (password)
     override fun toString(): String {
         return "User(id=$id, username='$username', email='$email', enabled=$enabled)"
     }
 
-    // Helper method to add roles cleanly
     fun addRole(role: Role) {
         roles.add(role)
     }
@@ -76,7 +63,6 @@ class Role(
 
 ) : BaseEntity<Long>() {
 
-    // No-arg constructor for JPA (if not using kotlin-jpa plugin, explicit is safer)
     constructor() : this(null, ERole.USER)
 
     override fun toString(): String = "Role(name=$name)"

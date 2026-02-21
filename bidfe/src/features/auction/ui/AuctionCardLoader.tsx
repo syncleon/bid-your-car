@@ -8,7 +8,6 @@ import styles from "../../../widgets/BaseCard/styles";
 
 interface Props {
     auctionId: string;
-    // FIX: Replaced 'any' with the strict ItemDto type
     fallbackItem: ItemDto;
 }
 
@@ -30,15 +29,10 @@ export const AuctionCardLoader = ({ auctionId, fallbackItem }: Props) => {
         return () => { mounted = false; };
     }, [auctionId]);
 
-    // 1. Success: Render the real card
     if (auction) {
         return <AuctionCard auction={auction} />;
     }
-
-    // FIX: Correctly resolve the image URL based on your backend structure
     const fallbackImage = fallbackItem.images?.[0]?.url || fallbackItem.thumbnailUrl;
-
-    // 2. Loading State: Render a placeholder card
     return (
         <BaseCard
             to={`/auctions/${auctionId}`}

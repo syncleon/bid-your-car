@@ -3,8 +3,6 @@ import { Modal } from "../../../shared/ui/Modal";
 import type { CreateAuctionDto } from "../types";
 import type { ItemDto } from "../../item/types";
 
-// --- Constants ---
-// Values are in MINUTES
 const DURATION_OPTIONS = [
     { label: "1 Hour", value: 60, desc: "Flash sale" },
     { label: "1 Day", value: 1440, desc: "Urgent" },
@@ -31,18 +29,11 @@ interface Props {
 }
 
 export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading, error }: Props) => {
-    // State initialization
     const [currentStep, setCurrentStep] = useState(1);
-
-    // Form State
     const [startPrice, setStartPrice] = useState<string>("");
     const [bidIncrement, setBidIncrement] = useState<number>(50);
     const [durationMinutes, setDurationMinutes] = useState<number>(10080); // Default 1 Week
-
-    // UI State
     const [selectedImgIdx, setSelectedImgIdx] = useState(0);
-
-    // --- Computed Values ---
     const durationLabel = DURATION_OPTIONS.find(o => o.value === durationMinutes)?.label || "Custom";
 
     const projectedEndDate = useMemo(() => {
@@ -62,7 +53,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
 
     if (!isOpen || !item) return null;
 
-    // --- Validation ---
     const isStep1Valid = true;
     const isStep2Valid = Number(startPrice) > 0 && bidIncrement > 0 && durationMinutes > 0;
 
@@ -74,7 +64,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
         }
     };
 
-    // --- Handlers ---
     const handleNext = () => { if (currentStep < STEPS.length) setCurrentStep(c => c + 1); };
     const handleBack = () => { if (currentStep > 1) setCurrentStep(c => c - 1); };
 
@@ -96,7 +85,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
         <Modal isOpen={isOpen} onClose={onClose} title="List Vehicle for Auction">
             <div style={styles.container}>
 
-                {/* Progress Bar */}
                 <div style={styles.progressContainer}>
                     <div style={{...styles.progressBar, width: `${(currentStep / STEPS.length) * 100}%`}} />
                 </div>
@@ -105,14 +93,12 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                     <h2 style={styles.stepHeading}>{STEPS[currentStep - 1].title}</h2>
                 </div>
 
-                {/* Error Banner */}
                 {error && (
                     <div style={styles.errorBanner}>
                         ⚠️ {error}
                     </div>
                 )}
 
-                {/* Slider Window */}
                 <div style={styles.sliderWindow}>
                     <div style={{
                         ...styles.sliderTrack,
@@ -120,7 +106,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                         transform: `translateX(-${(currentStep - 1) * (100 / STEPS.length)}%)`
                     }}>
 
-                        {/* STEP 1: VEHICLE */}
                         <div style={{ ...styles.slide, width: `${100 / STEPS.length}%` }}>
                             <div style={styles.heroImageContainer}>
                                 {mainImage ? (
@@ -134,7 +119,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                                 </div>
                             </div>
 
-                            {/* Thumbnails */}
                             {images.length > 1 && (
                                 <div style={styles.thumbStrip}>
                                     {images.slice(0, 5).map((img, i) => (
@@ -156,7 +140,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                             </p>
                         </div>
 
-                        {/* STEP 2: BIDDING RULES & DURATION */}
                         <div style={{ ...styles.slide, width: `${100 / STEPS.length}%` }}>
 
                             <div style={styles.inputGroup}>
@@ -211,7 +194,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                             </div>
                         </div>
 
-                        {/* STEP 3: REVIEW */}
                         <div style={{ ...styles.slide, width: `${100 / STEPS.length}%` }}>
                             <div style={styles.summaryCard}>
                                 <SummaryRow label="Vehicle" value={`${item.year} ${item.make} ${item.model}`} />
@@ -234,7 +216,6 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div style={styles.footer}>
                     {currentStep > 1 ? (
                         <button onClick={handleBack} style={styles.backBtn}>Back</button>

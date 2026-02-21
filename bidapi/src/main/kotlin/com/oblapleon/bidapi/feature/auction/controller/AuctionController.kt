@@ -29,12 +29,8 @@ import java.util.UUID
 class AuctionController(
     private val auctionService: AuctionService,
     private val rateLimitingService: RateLimitingService,
-    private val authorizationHelper: AuthorizationHelper // <-- Replaced UserService
+    private val authorizationHelper: AuthorizationHelper
 ) {
-
-    // ========================================================================
-    //  PUBLIC ENDPOINTS (Open to everyone)
-    // ========================================================================
 
     @Operation(summary = "Browse Auctions", description = "Public feed of active auctions.")
     @GetMapping
@@ -64,16 +60,11 @@ class AuctionController(
         return ResponseEntity.ok(auction.toDto())
     }
 
-    // ========================================================================
-    //  PROTECTED ENDPOINTS (Sellers & Bidders)
-    // ========================================================================
-
     @Operation(summary = "Create Auction", description = "List an item for auction (Pending Approval).")
     @PostMapping
     fun createAuction(
         @Valid @RequestBody dto: CreateAuctionDto
     ): ResponseEntity<AuctionDto> {
-        // Service handles ownership verification internally
         val auction = auctionService.createAuction(dto)
         return ResponseEntity.status(HttpStatus.CREATED).body(auction.toDto())
     }
@@ -86,7 +77,6 @@ class AuctionController(
     ): ResponseEntity<Any> {
         val currentUser = authorizationHelper.getCurrentUser()
 
-        // 1. Check Rate Limit BEFORE touching the database
         val bucket = rateLimitingService.resolveBucket(currentUser.id!!)
         val probe = bucket.tryConsumeAndReturnRemaining(1)
 
@@ -97,8 +87,6 @@ class AuctionController(
                 .header("X-Rate-Limit-Retry-After-Seconds", waitForSeconds.toString())
                 .body(mapOf("error" to "You are bidding too fast! Please wait $waitForSeconds seconds."))
         }
-
-        // 2. Proceed with actual database transaction
         val bid = auctionService.placeBid(id, request.amount)
         return ResponseEntity.status(HttpStatus.CREATED).body(bid.toDto())
     }
@@ -109,8 +97,6 @@ class AuctionController(
         @PathVariable id: UUID
     ): ResponseEntity<Any> {
         val currentUser = authorizationHelper.getCurrentUser()
-
-        // 1. Rate Limiting Check
         val bucket = rateLimitingService.resolveBucket(currentUser.id!!)
         val probe = bucket.tryConsumeAndReturnRemaining(1)
 
@@ -122,7 +108,6 @@ class AuctionController(
                 .body(mapOf("error" to "You are bidding too fast! Please wait $waitForSeconds seconds."))
         }
 
-        // 2. Place exact next minimum bid
         val bid = auctionService.placeNextMinimumBid(id)
         return ResponseEntity.status(HttpStatus.CREATED).body(bid.toDto())
     }
@@ -157,15 +142,10 @@ class AuctionController(
         return ResponseEntity.ok(page.map { it.toDto() })
     }
 
-    // ========================================================================
-    //  ADMIN ENDPOINTS
-    // ========================================================================
-
     @Operation(summary = "Approve Auction", description = "Admin: Activate a pending auction.")
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/approve")
     fun approveAuction(@PathVariable id: UUID): ResponseEntity<Map<String, String>> {
-        // Service handles the internal validation
         auctionService.approveAuction(id)
         return ResponseEntity.ok(mapOf("message" to "Auction approved successfully."))
     }
@@ -176,7 +156,6 @@ class AuctionController(
     fun adminCancelAuction(
         @PathVariable id: UUID
     ): ResponseEntity<Map<String, String>> {
-        // Routing to the same service method since it automatically checks the Admin role
         auctionService.cancelAuction(id)
         return ResponseEntity.ok(mapOf("message" to "Auction cancelled by admin."))
     }

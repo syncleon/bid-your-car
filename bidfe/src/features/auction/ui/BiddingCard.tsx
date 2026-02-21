@@ -7,23 +7,16 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const { auctionStore, authStore } = useStore();
     const [bidAmount, setBidAmount] = useState<string>("");
     const [timeLeft, setTimeLeft] = useState("");
-
-    // --- NEW: Better Error Handling State ---
     const [localError, setLocalError] = useState<string | null>(null);
     const displayError = localError || auctionStore.error;
-
-    // Track seconds for cooldown
     const [cooldown, setCooldown] = useState(0);
     const isCoolingDown = cooldown > 0;
-
-    // Derived State
     const isActive = auction.status === 'ACTIVE';
     const isEnded = new Date(auction.endTime).getTime() < Date.now();
     const isOwner = authStore.user?.id === auction.item.seller.id;
     const currentPrice = auction.currentPrice || auction.startPrice;
     const minBid = auction.bidCount === 0 ? auction.startPrice : currentPrice + auction.minBidIncrement;
 
-    // Timer: Auction Countdown
     useEffect(() => {
         const tick = () => {
             const now = Date.now();
@@ -44,14 +37,12 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
         return () => clearInterval(interval);
     }, [auction.endTime]);
 
-    // Timer: Cooldown Countdown
     useEffect(() => {
         if (!isCoolingDown) return;
         const interval = setInterval(() => setCooldown((prev) => prev - 1), 1000);
         return () => clearInterval(interval);
     }, [isCoolingDown]);
 
-    // --- NEW: Auto-Clear Errors after 4 seconds ---
     useEffect(() => {
         if (displayError) {
             const timer = setTimeout(() => {
@@ -62,7 +53,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
         }
     }, [displayError, auctionStore]);
 
-    // Handlers
     const submitBid = async (amount: number) => {
         setLocalError(null);
         auctionStore.clearError();
@@ -99,7 +89,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
         submitBid(Number(bidAmount));
     };
 
-    // UI State
     const isValidBid = bidAmount !== "" && Number(bidAmount) >= minBid;
     const isManualBtnDisabled = auctionStore.isBidding || isCoolingDown || !isValidBid;
     const isQuickBtnDisabled = auctionStore.isBidding || isCoolingDown;
@@ -118,7 +107,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                 }
             `}</style>
 
-            {/* Header / Timer Bar */}
             <div style={styles.header}>
                 <div style={styles.headerItem}>
                     <span style={styles.label}>Time Left</span>
@@ -139,7 +127,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
 
             <div style={styles.divider} />
 
-            {/* Main Price Area */}
             <div style={styles.heroSection}>
                 <div style={styles.currentBidLabel}>
                     CURRENT BID
@@ -150,7 +137,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                 </div>
             </div>
 
-            {/* Action Zone */}
             <div style={styles.actionZone}>
                 {!isActive || isEnded ? (
                     <div style={styles.statusBanner}>
@@ -162,7 +148,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                     </div>
                 ) : (
                     <>
-                        {/* --- NEW: Beautiful Error Banner --- */}
                         {displayError && (
                             <div style={styles.errorBanner}>
                                 ⚠️ {displayError}

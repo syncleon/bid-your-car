@@ -7,7 +7,6 @@ interface Props {
     auction: AuctionDto;
 }
 
-// Reusable Hook for Countdown Logic
 const useAuctionTimer = (endTime: string) => {
     const [timeLeft, setTimeLeft] = useState<string | null>(null);
     const [isEnded, setIsEnded] = useState(false);
@@ -55,23 +54,17 @@ const useAuctionTimer = (endTime: string) => {
 };
 
 export const AuctionCard = ({ auction }: Props) => {
-    // FIX: Destructure currentPrice instead of currentHighestBid
     const { item, currentPrice, endTime, status } = auction;
     const { timeLeft, isEnded } = useAuctionTimer(endTime);
-
-    // FIX: currentPrice already represents the highest bid or the starting price from the backend
     const price = currentPrice;
 
-    // FIX: Only use valid image URL, fallback to the item's thumbnailUrl
     const firstImage = item.images?.[0];
     const mainImage = firstImage ? firstImage.url : item.thumbnailUrl;
 
-    // --- Улучшенные флаги статусов ---
     const isActive = status === 'ACTIVE';
     const isPending = status === 'PENDING_APPROVAL';
-    const isSold = status === 'SOLD'; // Новый статус для проданных авто
+    const isSold = status === 'SOLD';
 
-    // --- Dynamic Styles ---
     const timerStyle = {
         ...styles.badgeTimer,
         backgroundColor: "rgba(17, 17, 17, 0.7)",
@@ -98,7 +91,6 @@ export const AuctionCard = ({ auction }: Props) => {
             imageUrl={mainImage}
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
-                // 1. Status Badge (Верхний левый угол)
                 topLeft: (
                     <>
                         {isPending && (
@@ -111,17 +103,14 @@ export const AuctionCard = ({ auction }: Props) => {
                                 SOLD
                             </div>
                         )}
-                        {/* Показываем ENDED только если статус не SOLD и не PENDING */}
                         {!isSold && !isPending && isEnded && (
                             <div style={styles.badgeEnded}>ENDED</div>
                         )}
                     </>
                 ),
 
-                // 2. Info Badge (Нижний левый угол)
                 bottomLeft: (
                     <>
-                        {/* Активный аукцион: Таймер + Ставка */}
                         {isActive && !isEnded && timeLeft && (
                             <div style={timerStyle}>
                                 <ClockIcon />
@@ -130,8 +119,6 @@ export const AuctionCard = ({ auction }: Props) => {
                                 <span>Bid ${price.toLocaleString()}</span>
                             </div>
                         )}
-
-                        {/* Проданный автомобиль: Финальная цена */}
                         {isSold && (
                             <div style={soldPriceStyle}>
                                 <span style={{fontSize: '10px', opacity: 0.8}}>Sold for</span>
@@ -158,7 +145,6 @@ export const AuctionCard = ({ auction }: Props) => {
     );
 };
 
-// Simple SVG Icon
 const ClockIcon = () => (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 2, opacity: 0.8 }}>
         <circle cx="12" cy="12" r="10"></circle>

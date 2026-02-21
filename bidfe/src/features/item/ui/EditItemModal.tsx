@@ -23,7 +23,6 @@ export const EditItemModal = ({
                               }: Props) => {
     if (!isOpen || !item) return null;
 
-    // Map the ItemDto fields to the Form's initial state
     const initialData: Partial<ItemCreateRequest> & { images: ItemImageDto[] } = {
         year: item.year,
         make: item.make,
@@ -32,8 +31,6 @@ export const EditItemModal = ({
         location: item.location,
         mileage: item.mileage,
         description: item.description || "",
-
-        // --- Mechanical Specs ---
         engine: item.engine || "",
         transmission: item.transmission || "",
         drivetrain: item.drivetrain || "",
@@ -43,17 +40,12 @@ export const EditItemModal = ({
         sellerType: item.sellerType || "",
         fuelType: item.fuelType || "",
         horsepower: item.horsepower ?? ("" as unknown as number),
-
-        // --- Condition & Documentation ---
         condition: item.condition,
         titleStatus: item.titleStatus || "Clean",
         isModified: item.isModified,
         hasServiceHistory: item.hasServiceHistory,
-
-        // --- Pricing Logic ---
         reservePrice: item.reservePrice ?? ("" as unknown as number),
         isNoReserve: item.isNoReserve,
-
         images: item.images
     };
 

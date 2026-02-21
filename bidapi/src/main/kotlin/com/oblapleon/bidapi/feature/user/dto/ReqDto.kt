@@ -6,10 +6,6 @@ import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
-// ============================================================================
-//  Authentication Requests
-// ============================================================================
-
 data class LoginReqDto(
     @field:NotBlank(message = "Username is required")
     val username: String,
@@ -37,10 +33,6 @@ data class DeleteAccountReqDto(
     @field:NotBlank(message = "Password is required to confirm deletion")
     val password: String
 )
-
-// ============================================================================
-//  User Management Requests
-// ============================================================================
 
 data class UpdateUserReqDto(
     @field:Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")

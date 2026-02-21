@@ -1,4 +1,4 @@
-import type { ItemDto } from "../../features/item/types";
+import type { ItemDto } from "../item/types.ts";
 
 export interface Page<T> {
     content: T[];
@@ -23,37 +23,29 @@ export type AuctionStatus =
 export interface AuctionDto {
     id: string;
     item: ItemDto;
-    startTime: string; // ISO Instant
-    endTime: string;   // ISO Instant
+    startTime: string;
+    endTime: string;
     status: AuctionStatus;
-
-    // Financials
     startPrice: number;
     currentPrice: number;
     minBidIncrement: number;
     reservePrice: number | null;
-    isNoReserve: boolean; // <-- NEW: Inherited from Item
+    isNoReserve: boolean;
     isReserveMet: boolean;
-
-    // Stats
     bidCount: number;
-
-    // Relationships
     winnerId: number | null;
 }
 
 export interface CreateAuctionDto {
     itemId: string;
-    startTime: string; // ISO String
-    endTime: string;   // ISO String
+    startTime: string;
+    endTime: string;
     startPrice: number;
     minBidIncrement?: number;
-    // NOTE: reservePrice is intentionally omitted. It is pulled from the Item automatically.
 }
 
 export interface PlaceBidReq {
     amount: number;
-    // NOTE: auctionId is passed in the URL, not the body
 }
 
 export interface BidDto {

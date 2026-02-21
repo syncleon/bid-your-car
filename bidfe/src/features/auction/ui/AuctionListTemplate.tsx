@@ -4,10 +4,7 @@ import { useStore } from "../../../shared/hooks/useStore";
 import { AuctionCard } from "./AuctionCard";
 import "./AuctionList.css";
 
-// --- Configuration ---
 const ITEMS_PER_BATCH = 20;
-
-// --- Helper Component ---
 interface FilterOption {
     label: string | number;
     value: string | number;
@@ -16,7 +13,6 @@ interface FilterOption {
 interface FilterSelectProps {
     label: string;
     value: string | number;
-    // FIX 2: Relaxed the type slightly to handle the 'All' string + mapped values
     options: (string | number | FilterOption)[];
     onChange: (val: string) => void;
 }
@@ -60,12 +56,10 @@ export const AuctionListTemplate = observer(({
     const observerRef = useRef<IntersectionObserver | null>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
-    // 1. ✅ Data Source Selection
     const auctionsFromStore = status === 'SOLD'
         ? auctionStore.soldAuctions
         : auctionStore.auctions;
 
-    // 2. ✅ Missing Memos: Extracting unique values for filters
     const makes = useMemo(() => {
         const unique = new Set(auctionsFromStore.map(a => a.item.make));
         return ["All", ...Array.from(unique).sort()];
@@ -76,7 +70,6 @@ export const AuctionListTemplate = observer(({
         return ["All", ...Array.from(unique).sort((a, b) => b - a)];
     }, [auctionsFromStore]);
 
-    // 3. ✅ Consolidated Fetching Logic
     useEffect(() => {
         setFilterMake("All");
         setFilterYear("All");
@@ -90,7 +83,6 @@ export const AuctionListTemplate = observer(({
         }
     }, [status, pageSize, defaultSort, auctionStore]);
 
-    // 4. ✅ Dynamic Sort Options
     const sortOptions = useMemo(() => {
         const options = [
             { label: "Price: Low to High", value: "price_low" },
@@ -106,7 +98,6 @@ export const AuctionListTemplate = observer(({
         return options;
     }, [status]);
 
-    // 5. ✅ Filtering & Sorting Logic
     const filteredAuctions = useMemo(() => {
         let result = [...auctionsFromStore];
 
@@ -138,7 +129,6 @@ export const AuctionListTemplate = observer(({
 
     const hasMore = visibleCount < filteredAuctions.length;
 
-    // --- Intersection Observer Logic ---
     useEffect(() => {
         if (observerRef.current) observerRef.current.disconnect();
 
@@ -157,7 +147,6 @@ export const AuctionListTemplate = observer(({
         return () => observerRef.current?.disconnect();
     }, [hasMore, filteredAuctions.length]);
 
-    // ✅ FIX: Check isLoading against the correct data source
     if (auctionStore.isLoading && auctionsFromStore.length === 0) {
         return <div className="loading-state">Loading vehicles...</div>;
     }

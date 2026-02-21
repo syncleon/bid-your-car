@@ -32,7 +32,6 @@ class ItemController(
     fun getMyItems(
         @PageableDefault(size = 20, sort = ["createdDate"], direction = Sort.Direction.DESC) pageable: Pageable
     ): ResponseEntity<Page<ItemDto>> {
-        // We only need the helper here to get the seller ID for the query
         val currentUser = authorizationHelper.getCurrentUser()
         val items = itemService.findAllBySellerId(currentUser.id!!, pageable)
         return ResponseEntity.ok(items.map { it.toDto() })
@@ -72,10 +71,6 @@ class ItemController(
         itemService.delete(id)
         return ResponseEntity.ok(mapOf("message" to "Item deleted successfully"))
     }
-
-    // ========================================================================
-    //  IMAGE MANAGEMENT
-    // ========================================================================
 
     @Operation(summary = "Upload Image", description = "Upload a categorized photo for a vehicle.")
     @PostMapping(

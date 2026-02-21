@@ -29,20 +29,15 @@ class AuthService(
     private val userService: UserService // Injected to delegate restore logic
 ) {
     companion object {
-        // Валидный BCrypt-хэш (соответствует формату: $2a$10$ + 53 символа).
-        // Это реальный хэш строки "dummy", который предотвратит IllegalArgumentException
-        // и заставит алгоритм отработать полный цикл, уравнивая время ответа сервера.
         private const val DUMMY_BCRYPT_HASH = "\$2a\$10\$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HCGFGL91Q1PdTzRjXWfJW"
     }
 
     @Transactional
     fun register(payload: RegisterReqDto): String {
-        // FIX: Handle potential nullable fields from DTO safely
         val safeUsername = payload.username ?: throw BadRequestException("Username is required")
         val safeEmail = payload.email ?: throw BadRequestException("Email is required")
         val safePassword = payload.password ?: throw BadRequestException("Password is required")
 
-        // 1. Validation
         if (userRepository.existsByUsername(safeUsername)) {
             throw AlreadyExistsException("Username '$safeUsername' is already taken.")
         }
@@ -50,11 +45,9 @@ class AuthService(
             throw AlreadyExistsException("Email '$safeEmail' is already in use.")
         }
 
-        // 2. Fetch Role
         val userRole = roleRepository.findByName(ERole.USER)
             ?: throw IllegalStateException("System Error: Default role USER not initialized in DB.")
 
-        // 3. Create User
         val user = User(
             username = safeUsername,
             password = passwordEncoder.encode(safePassword), // Now guaranteed non-null
@@ -65,7 +58,6 @@ class AuthService(
 
         val savedUser = userRepository.save(user)
 
-        // 4. Generate & Send Token
         val token = VerificationToken(user = savedUser)
         verificationTokenRepository.save(token)
         emailService.sendVerificationEmail(savedUser.email, token.token)
@@ -79,19 +71,15 @@ class AuthService(
 
         val user = userRepository.findAnyByUsername(safeUsername)
 
-        // 1. Timing Attack Protection
         if (user == null) {
-            // Теперь передаем валидную пустышку
             passwordEncoder.matches(safePassword, DUMMY_BCRYPT_HASH)
             throw UnauthorizedException("Invalid credentials.")
         }
 
-        // 2. Password Check
         if (!passwordEncoder.matches(safePassword, user.password)) {
             throw UnauthorizedException("Invalid credentials.")
         }
 
-        // 3. Status Checks
         if (user.deletedAt != null) {
             throw UnauthorizedException("Account deleted. You can restore it by clicking 'Restore Account'.")
         }
@@ -100,7 +88,6 @@ class AuthService(
             throw UnauthorizedException("Account not verified. Please verify via the email sent to you.")
         }
 
-        // 4. Issue Token
         return AuthRespDto(token = jwtTokenProvider.createToken(user))
     }
 
@@ -126,7 +113,6 @@ class AuthService(
 
     @Transactional
     fun restoreAccount(payload: LoginReqDto): String {
-        // Delegate to UserService to handle the logic of finding and restoring
         userService.restoreUser(payload)
         return "Account restored successfully."
     }

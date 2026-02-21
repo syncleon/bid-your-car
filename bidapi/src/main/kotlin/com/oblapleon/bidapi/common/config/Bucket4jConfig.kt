@@ -20,7 +20,6 @@ class Bucket4jConfig(
 
     @Bean
     fun proxyManager(redisClient: RedisClient): ProxyManager<ByteArray> {
-        // This tells Bucket4j to store the rate limit tokens in Redis
         return LettuceBasedProxyManager.builderFor(redisClient).build()
     }
 }

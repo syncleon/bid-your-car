@@ -55,7 +55,6 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception::class)
     fun handleGenericException(ex: Exception): ResponseEntity<Map<String, Any>> {
-        // This will print the exact line of code causing the crash to your terminal
         logger.error("Unhandled exception caught by GlobalExceptionHandler:", ex)
 
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.")

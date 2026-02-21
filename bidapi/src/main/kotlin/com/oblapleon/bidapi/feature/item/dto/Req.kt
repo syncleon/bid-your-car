@@ -56,9 +56,6 @@ data class ItemCreateRequest(
     val sellerType: String? = null
 )
 
-/**
- * DTO for updating existing listings.
- */
 data class ItemUpdateRequest(
     @field:Min(value = 1900, message = "Year must be valid")
     val year: Int? = null,

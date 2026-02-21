@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/debug")
 @Tag(name = "Debug Tools", description = "Endpoints for testing and seeding data")
-// ✅ Authorization Rule: Lock this entire controller to Admins only
 @PreAuthorize("hasRole('ADMIN')")
 class DebugController(
     private val itemSeederService: ItemSeederService,

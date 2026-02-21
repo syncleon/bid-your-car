@@ -6,7 +6,7 @@ import {
     placeBid,
     placeQuickBid,
     getMyWins,
-    getMyListings, // <--- Make sure this has an "s" at the end!
+    getMyListings,
     cancelAuction as apiCancelAuction,
     adminCancelAuction as apiAdminCancelAuction,
     getAuctionBidHistory,
@@ -25,7 +25,6 @@ export class AuctionStore {
     selectedAuction: AuctionDto | null = null;
     bidHistory: BidDto[] = [];
 
-    // PAGINATION
     currentPage = 0;
     totalPages = 0;
     isLoading = false;
@@ -45,7 +44,6 @@ export class AuctionStore {
         return this.root.authStore.user;
     }
 
-    // Improved to catch Axios/Fetch JSON error payloads (like our Rate Limit message)
     private getErrorMessage(error: any, defaultMessage: string): string {
         if (error?.response?.data?.error) return error.response.data.error;
         if (error instanceof Error) return error.message;
@@ -113,7 +111,6 @@ export class AuctionStore {
 
     loadEndingSoon = async () => {
         try {
-            // Using the updated generic endpoint with the filter
             const pageData = await getPublicAuctions("ACTIVE", "ending_soon", 0, 10);
             runInAction(() => {
                 this.endingSoon = pageData.content;
@@ -205,12 +202,10 @@ export class AuctionStore {
             return { success: true };
         } catch (error: unknown) {
             runInAction(() => { this.isBidding = false; });
-            // Return the error locally instead of saving to global state!
             return { success: false, error: this.getErrorMessage(error, "Failed to place quick bid") };
         }
     };
 
-    // Private helper to avoid duplicating the UI sync logic
     private refreshAuctionStateLocally = async (auctionId: string, newBid: BidDto) => {
         try {
             const updatedAuction = await getAuctionById(auctionId);
@@ -230,8 +225,6 @@ export class AuctionStore {
             runInAction(() => { this.isBidding = false; });
         }
     }
-
-    // --- Approval Workflow Actions ---
 
     approveAuction = async (id: string) => {
         this.isLoading = true;

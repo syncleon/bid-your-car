@@ -20,41 +20,23 @@ import java.util.UUID
 @Repository
 interface AuctionRepository : BaseRepository<Auction, UUID> {
 
-    // -------------------------------------------------------------------------
-    // Public Widgets
-    // -------------------------------------------------------------------------
-
-    /**
-     * "Ending Soon": Active auctions ordered by end time (ASC).
-     */
     fun findByStatusAndEndTimeAfterOrderByEndTimeAsc(
         status: AuctionStatus,
         now: Instant,
         pageable: Pageable
     ): Page<Auction>
 
-    /**
-     * "Just Listed": Active auctions ordered by start time (DESC).
-     */
     fun findByStatusAndStartTimeBeforeOrderByStartTimeDesc(
         status: AuctionStatus,
         now: Instant,
         pageable: Pageable
     ): Page<Auction>
 
-    // -------------------------------------------------------------------------
-    // Dashboards
-    // -------------------------------------------------------------------------
-
     @Query("SELECT a FROM Auction a WHERE a.item.seller.id = :sellerId")
     fun findAllBySellerId(@Param("sellerId") sellerId: Long, pageable: Pageable): Page<Auction>
 
     @Query("SELECT a FROM Auction a WHERE a.winnerUser.id = :userId")
     fun findAllWonByUserId(@Param("userId") userId: Long, pageable: Pageable): Page<Auction>
-
-    // -------------------------------------------------------------------------
-    // Validation
-    // -------------------------------------------------------------------------
 
     @Query("SELECT COUNT(a) > 0 FROM Auction a WHERE a.item.id = :itemId AND a.status IN :statuses")
     fun existsByItemIdAndStatusIn(
@@ -73,17 +55,7 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
     )
     fun existsBySellerIdAndStatusAndBidsIsNotEmpty(@Param("sellerId") sellerId: Long): Boolean
 
-    // -------------------------------------------------------------------------
-    // Batch Jobs & Admin
-    // -------------------------------------------------------------------------
-
     fun findAllByStatusAndEndTimeBefore(
-        status: AuctionStatus,
-        now: Instant,
-        pageable: Pageable
-    ): List<Auction>
-
-    fun findAllByStatusAndStartTimeBefore(
         status: AuctionStatus,
         now: Instant,
         pageable: Pageable
@@ -94,23 +66,13 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
     fun cancelAllActiveAuctionsBySellerId(@Param("sellerId") sellerId: Long)
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @QueryHints(QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")) // ✅ 3000 ms timeout
+    @QueryHints(QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000"))
     @Query("SELECT a FROM Auction a WHERE a.id = :id")
     fun findByIdWithPessimisticWriteLock(@Param("id") id: UUID): Optional<Auction>
 
     fun findByStatus(status: AuctionStatus, pageable: Pageable): Page<Auction>
-
-    /**
-     * Finds auctions by status, ordered by End Time descending.
-     * For SOLD auctions, this shows the most recently completed sales first.
-     */
     fun findByStatusOrderByEndTimeDesc(status: AuctionStatus, pageable: Pageable): Page<Auction>
 
-    // -------------------------------------------------------------------------
-    // Validation
-    // -------------------------------------------------------------------------
-
-    // ---> ДОБАВИТЬ ЭТОТ МЕТОД:
     @Query("SELECT COUNT(a) > 0 FROM Auction a WHERE a.item.seller.id = :sellerId AND a.status = 'ACTIVE'")
     fun existsActiveAuctionsBySellerId(@Param("sellerId") sellerId: Long): Boolean
 }

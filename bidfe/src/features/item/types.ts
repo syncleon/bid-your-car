@@ -12,8 +12,6 @@ export interface Page<T> {
     empty: boolean;
 }
 
-// --- Enums / Literal Types ---
-
 export type ConditionGrade =
     | "EXCELLENT"
     | "VERY_GOOD"
@@ -47,16 +45,12 @@ export type AuctionStatus =
     | "UNSOLD"           // Time up, no bids or reserve not met
     | "CANCELLED";       // Administratively removed
 
-// --- Image DTO ---
-
 export interface ItemImageDto {
     id: string;
     url: string;
     category: ImageCategory; // Added category
     sortOrder: number;
 }
-
-// --- Main Item DTO ---
 
 export interface ItemDto {
     id: string;
@@ -70,20 +64,14 @@ export interface ItemDto {
     description: string | null;
     seller: UserDto;
     thumbnailUrl: string | null;
-
-    // --- New Mechanical & Condition Fields ---
     fuelType: string | null;
     horsepower: number | null;
     condition: ConditionGrade;
     titleStatus: string | null;
     isModified: boolean;
     hasServiceHistory: boolean;
-
-    // --- New Pricing Logic ---
     reservePrice: number | null;
     isNoReserve: boolean;
-
-    // --- Existing Technical Specs ---
     engine: string | null;
     drivetrain: string | null;
     transmission: string | null;
@@ -91,16 +79,11 @@ export interface ItemDto {
     exteriorColor: string | null;
     interiorColor: string | null;
     sellerType: string | null;
-
     images: ItemImageDto[];
-
-    // Auction Context (Optional depending on join)
     auctionStatus?: AuctionStatus | null;
     activeAuctionId?: string | null;
     auction?: AuctionDto | null;
 }
-
-// --- Requests ---
 
 export interface ItemCreateRequest {
     year: number;
@@ -110,18 +93,14 @@ export interface ItemCreateRequest {
     location: string;
     mileage: number;
     description?: string;
-
-    // --- New Fields ---
     fuelType?: string;
     horsepower?: number;
-    condition: ConditionGrade; // Required
+    condition: ConditionGrade;
     titleStatus?: string;
     isModified: boolean;
     hasServiceHistory: boolean;
     reservePrice?: number;
     isNoReserve: boolean;
-
-    // --- Existing Specs ---
     engine?: string;
     drivetrain?: string;
     transmission?: string;
@@ -138,8 +117,6 @@ export interface ItemUpdateRequest {
     location?: string;
     mileage?: number;
     description?: string;
-
-    // --- New Fields ---
     fuelType?: string;
     horsepower?: number;
     condition?: ConditionGrade;
@@ -148,8 +125,6 @@ export interface ItemUpdateRequest {
     hasServiceHistory?: boolean;
     reservePrice?: number;
     isNoReserve?: boolean;
-
-    // --- Existing Specs ---
     engine?: string;
     drivetrain?: string;
     transmission?: string;
@@ -157,6 +132,5 @@ export interface ItemUpdateRequest {
     exteriorColor?: string;
     interiorColor?: string;
     sellerType?: string;
-
     keepImageIds?: string[];
 }

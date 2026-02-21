@@ -50,7 +50,6 @@
 .banner-pending { background: var(--color-warning-bg); color: var(--color-warning-text); border: 1px solid var(--color-warning-border); }
 .banner-rejected { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
 
-/* --- Cards & Panels --- */
 .compact-card {
     padding: 16px;
     border-radius: 8px;
@@ -68,7 +67,6 @@
 .card-inactive { background: var(--bg-input); color: var(--text-muted); }
 .card-rejected { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
 
-/* --- Admin Panel --- */
 .admin-panel {
     background: var(--bg-input);
     border: 1px solid var(--border-color);
@@ -91,8 +89,6 @@
 }
 .btn-approve { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border); }
 .btn-reject { background: var(--bg-card); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
-
-/* --- History Scroll --- */
 .history-wrapper {
     max-height: 320px;
     overflow-y: auto;
@@ -100,14 +96,89 @@
     border-radius: 8px;
     background: var(--bg-card);
 }
-
 .history-wrapper::-webkit-scrollbar { width: 6px; }
 .history-wrapper::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-
-/* --- Badges --- */
 .badge-base { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 .badge-active { background: var(--text-primary); color: var(--bg-base); }
 .badge-pending { background: var(--color-warning-text); color: var(--bg-base); }
 .badge-rejected { background: var(--color-danger-text); color: var(--bg-base); }
 .badge-sold { background: var(--color-success-text); color: var(--bg-base); }
 .badge-ended { background: var(--text-muted); color: var(--bg-base); }
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    cursor: pointer;
+}
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: default;
+}
+.lightbox-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.lightbox-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 10000;
+    transition: transform 0.2s;
+}
+.lightbox-close-btn:hover {
+    transform: scale(1.2);
+}
+.lightbox-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 3rem;
+    padding: 10px 20px;
+    cursor: pointer;
+    z-index: 10000;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.lightbox-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+.lightbox-nav-btn.left {
+    left: 20px;
+}
+.lightbox-nav-btn.right {
+    right: 20px;
+}
+.lightbox-counter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+}

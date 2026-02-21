@@ -33,7 +33,6 @@ const STEPS = [
 
 interface Props {
     initialData?: Partial<ItemCreateRequest> & { images?: ItemImageDto[] };
-    // Updated signature to match the Store's requirement for Image Categories
     onSubmit: (data: ItemCreateRequest, filesWithCategories: { file: File, category: ImageCategory }[], deletedImageIds: string[]) => void;
     onCancel?: () => void;
     isLoading: boolean;

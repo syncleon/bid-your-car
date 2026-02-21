@@ -9,8 +9,6 @@ fun Bid.toDto(): BidDto {
         bidderId = this.bidder.id!!,
         bidderName = this.bidder.username,
         amount = this.amount,
-        // Entity returns Instant (UTC), DTO passes it through.
-        // Frontend converts to local time.
         bidTime = this.bidTime
     )
 }

@@ -1,6 +1,5 @@
 package com.oblapleon.bidapi.feature.user.controller
 
-import com.oblapleon.bidapi.feature.user.dto.AuthRespDto
 import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
 import com.oblapleon.bidapi.feature.user.dto.RegisterReqDto
 import com.oblapleon.bidapi.feature.user.service.AuthService
@@ -39,13 +38,12 @@ class AuthController(
     fun login(@Valid @RequestBody payload: LoginReqDto): ResponseEntity<Map<String, String>> {
         val response = authService.login(payload)
 
-        // Создаем HttpOnly Cookie
         val jwtCookie = ResponseCookie.from("jwt", response.token)
             .httpOnly(true)
-            .secure(false) // ВНИМАНИЕ: Для localhost ставим false. На проде обязательно true (HTTPS)
+            .secure(false)
             .path("/")
-            .maxAge(30 * 24 * 60 * 60) // 30 дней в секундах
-            .sameSite("Lax") // Защита от CSRF
+            .maxAge(30 * 24 * 60 * 60)
+            .sameSite("Lax")
             .build()
 
         return ResponseEntity.ok()
@@ -56,10 +54,7 @@ class AuthController(
     @Operation(summary = "Get Current User Profile", description = "Returns profile data based on HttpOnly JWT cookie.")
     @GetMapping("/me")
     fun me(authentication: Authentication): ResponseEntity<Map<String, Any>> {
-        // Извлекаем роли
         val roles = authentication.authorities.map { it.authority.replace("ROLE_", "") }
-
-        // Теперь principal стабильно содержит объект Jwt
         val jwt = authentication.principal as Jwt
         val userId = jwt.claims["uid"] ?: 0
 
@@ -75,9 +70,9 @@ class AuthController(
     fun logout(): ResponseEntity<Map<String, String>> {
         val clearCookie = ResponseCookie.from("jwt", "")
             .httpOnly(true)
-            .secure(false) // Должно совпадать с login
+            .secure(false)
             .path("/")
-            .maxAge(0) // Удаляем куку
+            .maxAge(0)
             .sameSite("Lax")
             .build()
 

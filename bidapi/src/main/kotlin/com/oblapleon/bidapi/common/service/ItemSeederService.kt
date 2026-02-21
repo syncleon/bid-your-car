@@ -17,7 +17,6 @@ class ItemSeederService(
 ) {
     private val faker = Faker()
 
-    // Fixed missing commas and simplified to return all images shuffled
     private fun generateCarImages(): List<String> {
         val fallbackImages = listOf(
             "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
@@ -70,7 +69,6 @@ class ItemSeederService(
                 sellerType = if (faker.bool().bool()) "Private" else "Dealer"
             )
 
-            // Get all images shuffled and attach them to the item
             generateCarImages().forEachIndexed { index, url ->
                 val image = ItemImage(
                     url = url,

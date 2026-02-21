@@ -12,9 +12,7 @@ import java.util.*
 @Table(
     name = "bids",
     indexes = [
-        // Critical for "What is the highest bid on this auction right now?"
         Index(name = "idx_bid_auction_amount", columnList = "auction_id, amount DESC"),
-        // Useful for "Show my bid history" (User Profile)
         Index(name = "idx_bid_bidder_time", columnList = "bidder_id, bid_time DESC")
     ]
 )
@@ -33,17 +31,9 @@ class Bid(
     @JoinColumn(name = "bidder_id", nullable = false, updatable = false)
     var bidder: User,
 
-    /**
-     * The actual value of the bid.
-     * Immutable: A bid cannot be changed once placed.
-     */
     @Column(nullable = false, precision = 19, scale = 2, updatable = false)
     var amount: BigDecimal,
 
-    /**
-     * PROXY BIDDING: The user's secret maximum bid.
-     * Defaults to 'amount' if simple bidding is used.
-     */
     @Column(name = "max_amount", nullable = false, precision = 19, scale = 2, updatable = false)
     var maxAmount: BigDecimal = amount,
 

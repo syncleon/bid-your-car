@@ -26,7 +26,6 @@ class R2Config {
     fun s3Client(): S3Client {
         val credentials = AwsBasicCredentials.create(accessKey, secretKey)
 
-        // R2 требует path-style access
         val serviceConfiguration = S3Configuration.builder()
             .pathStyleAccessEnabled(true)
             .build()

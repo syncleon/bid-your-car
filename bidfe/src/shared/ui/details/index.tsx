@@ -1,12 +1,10 @@
 import React from "react";
 import type { ItemDto } from "../../../features/item/types";
 
-// --- Layout Container ---
 export const DetailPageLayout = ({ children }: { children: React.ReactNode }) => (
     <div style={styles.container}>{children}</div>
 );
 
-// --- Header ---
 export const DetailHeader = ({ onBack, title }: { onBack: () => void, title?: string }) => (
     <div style={styles.headerRow}>
         <button onClick={onBack} style={minStyles.textBtn}>
@@ -15,7 +13,6 @@ export const DetailHeader = ({ onBack, title }: { onBack: () => void, title?: st
     </div>
 );
 
-// --- Image Gallery ---
 interface GalleryProps {
     item: ItemDto;
     statusLabel?: React.ReactNode;
@@ -24,11 +21,7 @@ interface GalleryProps {
 
 export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) => {
     const images = item.images || [];
-
-    // Prioritize the MAIN category image, fallback to the first array item
     const mainImage = images.find(img => img.category === "MAIN")?.url || images[0]?.url;
-
-    // We show max 4 thumbnails below the main image, excluding the main image from the thumbnail list
     const thumbnails = images.filter(img => img.url !== mainImage).slice(0, 4);
     const remainingCount = Math.max(0, images.length - 5);
 
@@ -73,13 +66,11 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
     );
 };
 
-// --- Vehicle Specs & Description (UPDATED) ---
 export const VehicleInfo = ({ item }: { item: ItemDto }) => (
     <div>
         <h1 style={styles.title}>{item.year} {item.make} {item.model}</h1>
         <p style={styles.subtitle}>{item.mileage.toLocaleString()} miles • {item.location}</p>
 
-        {/* --- Highlight Tags --- */}
         {(item.hasServiceHistory || item.isModified) && (
             <div style={styles.tagsContainer}>
                 {item.hasServiceHistory && <span style={styles.tag}>Service History</span>}
@@ -114,7 +105,6 @@ const SpecItem = ({ label, value }: { label: string, value?: string | null }) =>
     </div>
 );
 
-// --- Sidebar Card Helper ---
 export const SidebarCard = ({ children, title }: { children: React.ReactNode, title?: string }) => (
     <div style={styles.card}>
         {title && <div style={styles.cardTitle}>{title}</div>}
@@ -122,7 +112,6 @@ export const SidebarCard = ({ children, title }: { children: React.ReactNode, ti
     </div>
 );
 
-// --- Responsive Grid Helper ---
 export const ResponsiveGrid = ({ children }: { children: React.ReactNode }) => {
     const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 900);
 
@@ -143,7 +132,6 @@ export const ResponsiveGrid = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
-// --- Shared Styles ---
 const minStyles = {
     textBtn: { background: "none", border: "none", padding: 0, cursor: "pointer", color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px", fontFamily: "inherit", transition: "color 0.3s ease" } as React.CSSProperties,
 };
@@ -163,11 +151,8 @@ const styles = {
     thumbImg: { width: "100%", height: "100%", objectFit: "cover" as const, },
     moreOverlay: { position: "absolute" as const, inset: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 600, backdropFilter: "blur(2px)" },
     placeholder: { width: "100%", height: "300px", backgroundColor: "var(--bg-input)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "14px", transition: "background-color 0.3s ease, color 0.3s ease" },
-
     title: { fontSize: "32px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 8px 0", letterSpacing: "-0.5px", transition: "color 0.3s ease" },
     subtitle: { fontSize: "18px", color: "var(--text-secondary)", margin: 0, transition: "color 0.3s ease" },
-
-    // --- New Tag Styles ---
     tagsContainer: { display: "flex", gap: "8px", marginTop: "16px" },
     tag: { padding: "4px 10px", backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-color)", borderRadius: "16px", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
 

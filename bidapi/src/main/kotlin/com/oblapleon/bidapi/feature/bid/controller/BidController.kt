@@ -19,7 +19,7 @@ import java.util.UUID
 @Tag(name = "Bids", description = "Bid history and user activity")
 class BidController(
     private val bidService: BidService,
-    private val authorizationHelper: AuthorizationHelper // <-- ADDED: Our secure helper
+    private val authorizationHelper: AuthorizationHelper
 ) {
 
     @Operation(summary = "Get Auction History", description = "List all bids for a specific auction.")
@@ -37,9 +37,7 @@ class BidController(
     fun getMyBidHistory(
         @PageableDefault(size = 20, sort = ["bidTime"], direction = Sort.Direction.DESC) pageable: Pageable
     ): ResponseEntity<Page<BidDto>> {
-        // Automatically unpacks the JWT and safely fetches the DB entity
         val user = authorizationHelper.getCurrentUser()
-
         val page = bidService.findHistoryByUserId(user.id!!, pageable)
         return ResponseEntity.ok(page.map { it.toDto() })
     }

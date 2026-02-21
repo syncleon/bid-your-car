@@ -22,9 +22,7 @@ class OpenApiConfig {
                     .version("1.0")
                     .description("API documentation for BidAPI")
             )
-            // 1. Apply the security requirement globally to all endpoints
             .addSecurityItem(SecurityRequirement().addList(securitySchemeName))
-            // 2. Define the Security Scheme (JWT Bearer Token)
             .components(
                 Components()
                     .addSecuritySchemes(

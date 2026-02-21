@@ -23,7 +23,6 @@ class AuctionFinalizationService(
     fun finalizeAuction(auctionId: UUID) {
         val auction = auctionRepository.findById(auctionId).orElse(null) ?: return
 
-        // Защита от двойной обработки, если аукцион уже был закрыт другой транзакцией
         if (auction.status != AuctionStatus.ACTIVE) return
 
         if (auction.bidCount > 0) {
