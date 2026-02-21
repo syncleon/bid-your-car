@@ -25,12 +25,13 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         left: 0,
         width: "100%",
         height: "100%",
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        backgroundColor: "var(--bg-overlay)", // Updated
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         zIndex: 1000,
         backdropFilter: "blur(4px)",
+        transition: "background-color 0.3s ease", // Added
     };
 
     const pageContainerStyle: React.CSSProperties = {
@@ -38,7 +39,8 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        backgroundColor: "#f9fafb",
+        backgroundColor: "var(--bg-base)", // Updated
+        transition: "background-color 0.3s ease", // Added
     };
 
     const contentBoxStyle: React.CSSProperties = {
@@ -46,11 +48,12 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         width: "100%",
         maxWidth: "440px",
         padding: "40px",
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--bg-card)", // Updated
         borderRadius: "16px",
         boxShadow: isModal ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" : "none",
-        border: isModal ? "none" : "1px solid #f3f4f6",
-        animation: isModal ? "fadeIn 0.2s ease-out" : "none"
+        border: isModal ? "1px solid var(--border-color)" : "1px solid var(--border-color)", // Added border to modal for dark mode contrast
+        animation: isModal ? "fadeIn 0.2s ease-out" : "none",
+        transition: "background-color 0.3s ease, border-color 0.3s ease", // Added
     };
 
     const closeButtonStyle: React.CSSProperties = {
@@ -61,7 +64,7 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         border: "none",
         fontSize: "24px",
         cursor: "pointer",
-        color: "#9ca3af",
+        color: "var(--text-muted)", // Updated
         transition: "color 0.2s"
     };
 
@@ -78,8 +81,8 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
                         onClick={handleClose}
                         style={closeButtonStyle}
                         aria-label="Close"
-                        onMouseEnter={(e) => e.currentTarget.style.color = "#111"}
-                        onMouseLeave={(e) => e.currentTarget.style.color = "#9ca3af"}
+                        onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} // Updated
+                        onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-muted)"} // Updated
                     >
                         &times;
                     </button>

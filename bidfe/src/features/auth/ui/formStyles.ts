@@ -10,15 +10,17 @@ export const formStyles = {
     header: {
         fontSize: "24px",
         fontWeight: "700",
-        color: "var(--text-primary)", // Updated
+        color: "var(--text-primary)",
         margin: "0 0 8px 0",
-        letterSpacing: "-0.5px"
+        letterSpacing: "-0.5px",
+        transition: "color 0.3s ease" // Added
     } as React.CSSProperties,
 
     subHeader: {
         fontSize: "14px",
-        color: "var(--text-secondary)", // Updated
-        margin: "0 0 32px 0"
+        color: "var(--text-secondary)",
+        margin: "0 0 32px 0",
+        transition: "color 0.3s ease" // Added
     } as React.CSSProperties,
 
     inputGroup: {
@@ -29,20 +31,21 @@ export const formStyles = {
         display: "block",
         fontSize: "13px",
         fontWeight: "500",
-        color: "var(--text-secondary)", // Updated
-        marginBottom: "6px"
+        color: "var(--text-secondary)",
+        marginBottom: "6px",
+        transition: "color 0.3s ease" // Added
     } as React.CSSProperties,
 
     input: {
         width: "100%",
         padding: "12px 16px",
         fontSize: "14px",
-        color: "var(--text-primary)", // Updated
-        backgroundColor: "var(--bg-input)", // Updated
-        border: "1px solid var(--border-color)", // Updated
+        color: "var(--text-primary)",
+        backgroundColor: "var(--bg-input)",
+        border: "1px solid var(--border-color)",
         borderRadius: "8px",
         outline: "none",
-        transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.3s, color 0.3s",
+        transition: "border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease", // Smoothed
         boxSizing: "border-box"
     } as React.CSSProperties,
 
@@ -51,13 +54,13 @@ export const formStyles = {
         padding: "12px",
         fontSize: "14px",
         fontWeight: "600",
-        color: "var(--btn-primary-text)", // Updated
-        backgroundColor: "var(--btn-primary-bg)", // Updated
+        color: "var(--btn-primary-text)",
+        backgroundColor: "var(--btn-primary-bg)",
         border: "none",
         borderRadius: "8px",
         cursor: "pointer",
         marginTop: "8px",
-        transition: "opacity 0.2s, background-color 0.3s, color 0.3s",
+        transition: "opacity 0.2s, background-color 0.3s ease, color 0.3s ease", // Smoothed
         textDecoration: "none",
         display: "inline-block",
         boxSizing: "border-box",
@@ -69,59 +72,65 @@ export const formStyles = {
         padding: "10px",
         fontSize: "13px",
         fontWeight: "600",
-        color: "var(--btn-primary-text)",
-        backgroundColor: "var(--color-warning-text)", // Using warning color for the restore button
+        color: "var(--bg-base)", // Updated for better contrast against the warning background
+        backgroundColor: "var(--color-warning-text)",
         border: "none",
         borderRadius: "6px",
         cursor: "pointer",
+        transition: "background-color 0.3s ease, color 0.3s ease" // Added
     } as React.CSSProperties,
 
     linkBtn: {
         background: "none",
         border: "none",
         padding: 0,
-        color: "var(--text-primary)", // Updated
+        color: "var(--text-primary)",
         fontWeight: "600",
         fontSize: "14px",
         cursor: "pointer",
         textDecoration: "underline",
-        textUnderlineOffset: "2px"
+        textUnderlineOffset: "2px",
+        transition: "color 0.3s ease" // Added
     } as React.CSSProperties,
 
     footer: {
         marginTop: "24px",
         textAlign: "center",
         fontSize: "14px",
-        color: "var(--text-secondary)" // Added
+        color: "var(--text-secondary)",
+        transition: "color 0.3s ease" // Added
     } as React.CSSProperties,
 
     errorBanner: {
-        backgroundColor: "var(--color-danger-bg)", // Updated
-        color: "var(--color-danger-text)", // Updated
+        backgroundColor: "var(--color-danger-bg)",
+        color: "var(--color-danger-text)",
         padding: "12px",
         borderRadius: "8px",
         fontSize: "13px",
         marginBottom: "24px",
-        border: "1px solid var(--color-danger-border)" // Updated
+        border: "1px solid var(--color-danger-border)",
+        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease" // Added
     } as React.CSSProperties,
 
     successBanner: {
-        backgroundColor: "var(--color-success-bg)", // Updated
-        color: "var(--color-success-text)", // Updated
+        backgroundColor: "var(--color-success-bg)",
+        color: "var(--color-success-text)",
         padding: "12px",
         borderRadius: "8px",
         fontSize: "13px",
         marginBottom: "24px",
-        border: "1px solid var(--color-success-border)" // Updated
+        border: "1px solid var(--color-success-border)",
+        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease" // Added
     } as React.CSSProperties,
 
     warningBox: {
-        backgroundColor: "var(--color-warning-bg)", // Updated
-        border: "1px solid var(--color-warning-border)", // Updated
+        backgroundColor: "var(--color-warning-bg)",
+        border: "1px solid var(--color-warning-border)",
         padding: "16px",
         borderRadius: "8px",
         marginBottom: "24px",
-        color: "var(--color-warning-text)" // Added
+        color: "var(--color-warning-text)",
+        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease" // Added
     } as React.CSSProperties,
 
     modalOverlay: {
@@ -130,12 +139,13 @@ export const formStyles = {
         left: 0,
         width: "100%",
         height: "100%",
-        backgroundColor: "var(--bg-overlay)", // Updated
+        backgroundColor: "var(--bg-overlay)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         zIndex: 1000,
         backdropFilter: "blur(4px)",
+        transition: "background-color 0.3s ease" // Added
     } as React.CSSProperties,
 
     pageContainer: {
@@ -143,7 +153,7 @@ export const formStyles = {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        backgroundColor: "var(--bg-base)", // Updated
+        backgroundColor: "var(--bg-base)",
         transition: "background-color 0.3s ease"
     } as React.CSSProperties,
 
@@ -152,10 +162,10 @@ export const formStyles = {
         width: "100%",
         maxWidth: "440px",
         padding: "40px",
-        backgroundColor: "var(--bg-card)", // Updated
+        backgroundColor: "var(--bg-card)",
         borderRadius: "16px",
         boxSizing: "border-box",
-        border: "1px solid var(--border-color)", // Added border for dark mode contrast
+        border: "1px solid var(--border-color)",
         transition: "background-color 0.3s ease, border-color 0.3s ease"
     } as React.CSSProperties,
 
@@ -175,8 +185,8 @@ export const formStyles = {
         border: "none",
         fontSize: "24px",
         cursor: "pointer",
-        color: "var(--text-muted)", // Updated
-        transition: "color 0.2s",
+        color: "var(--text-muted)",
+        transition: "color 0.3s ease", // Smoothed
     } as React.CSSProperties,
 
     successContainer: {
@@ -187,6 +197,7 @@ export const formStyles = {
     successIcon: {
         fontSize: "48px",
         margin: "0 0 16px 0",
-        color: "var(--color-success-text)" // Added
+        color: "var(--color-success-text)",
+        transition: "color 0.3s ease" // Added
     } as React.CSSProperties
 };
