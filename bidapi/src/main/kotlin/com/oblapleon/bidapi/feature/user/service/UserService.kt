@@ -5,6 +5,7 @@ import com.oblapleon.bidapi.common.exception.ConflictException
 import com.oblapleon.bidapi.common.exception.NotFoundException
 import com.oblapleon.bidapi.common.exception.UnauthorizedException
 import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
+import com.oblapleon.bidapi.feature.bid.repository.BidRepository // <-- Добавлен импорт
 import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
 import com.oblapleon.bidapi.feature.user.dto.UpdatePasswordReqDto
 import com.oblapleon.bidapi.feature.user.dto.UpdateUserReqDto
@@ -22,10 +23,10 @@ import java.util.Optional
 class UserService(
     private val userRepository: UserRepository,
     private val auctionRepository: AuctionRepository,
+    private val bidRepository: BidRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
 
-    // ... Read Operations (Same as before) ...
     fun findById(id: Long): User = userRepository.findById(id).orElseThrow { NotFoundException("User not found") }
     fun findByUsername(username: String): Optional<User> = userRepository.findByUsername(username)
     fun findAll(pageable: Pageable): Page<User> = userRepository.findAll(pageable)
@@ -37,6 +38,22 @@ class UserService(
     @Transactional
     fun updateUser(id: Long, request: UpdateUserReqDto, isSelfUpdate: Boolean): User {
         val user = findById(id)
+
+        // Проверяем, пытается ли пользователь изменить свои идентификационные данные
+        val changingUsername = request.username != null && request.username != user.username
+        val changingEmail = request.email != null && request.email != user.email
+
+        if (changingUsername || changingEmail) {
+            // 1. Блокируем изменение, если пользователь сделал ставку на активном аукционе
+            if (bidRepository.countActiveBidsByBidderId(id) > 0) {
+                throw ConflictException("Cannot update profile: You have active bids on ongoing auctions.")
+            }
+
+            // 2. Блокируем изменение, если у пользователя есть собственные активные аукционы
+            if (auctionRepository.existsActiveAuctionsBySellerId(id)) {
+                throw ConflictException("Cannot update profile: You have active auction listings.")
+            }
+        }
 
         request.username?.let { newName ->
             if (newName != user.username) {
@@ -85,9 +102,17 @@ class UserService(
 
     private fun performSoftDelete(user: User) {
         val userId = user.id!!
+
+        // 1. Не даем удалить, если пользователь является ПРОДАВЦОМ на активном аукционе со ставками
         if (auctionRepository.existsBySellerIdAndStatusAndBidsIsNotEmpty(userId)) {
             throw ConflictException("Cannot delete account: You have active auctions with bids.")
         }
+
+        // 2. Не даем удалить, если пользователь является ПОКУПАТЕЛЕМ (сделал ставку) на активном аукционе
+        if (bidRepository.countActiveBidsByBidderId(userId) > 0) {
+            throw ConflictException("Cannot delete account: You have active bids on ongoing auctions. Please wait until they finish.")
+        }
+
         auctionRepository.cancelAllActiveAuctionsBySellerId(userId)
         user.deletedAt = Instant.now()
         userRepository.save(user)

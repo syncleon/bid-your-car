@@ -105,4 +105,12 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
      * For SOLD auctions, this shows the most recently completed sales first.
      */
     fun findByStatusOrderByEndTimeDesc(status: AuctionStatus, pageable: Pageable): Page<Auction>
+
+    // -------------------------------------------------------------------------
+    // Validation
+    // -------------------------------------------------------------------------
+
+    // ---> ДОБАВИТЬ ЭТОТ МЕТОД:
+    @Query("SELECT COUNT(a) > 0 FROM Auction a WHERE a.item.seller.id = :sellerId AND a.status = 'ACTIVE'")
+    fun existsActiveAuctionsBySellerId(@Param("sellerId") sellerId: Long): Boolean
 }

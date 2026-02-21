@@ -1,7 +1,7 @@
 import { types, flow, getRoot, type Instance } from "mobx-state-tree";
 import {
     getProfile,
-    deleteUserById,
+    deleteMyAccount, // <-- ИСПРАВЛЕНО: импортируем новый метод
     updateProfile,
     changePassword,
 } from "../api/profile.api";
@@ -107,7 +107,8 @@ export const ProfileStore = types.model("ProfileStore", {
 
             self.isLoading = true;
             try {
-                yield deleteUserById(self.profile.id, data);
+                // ИСПРАВЛЕНО: Вызываем deleteMyAccount и передаем только data (пароль)
+                yield deleteMyAccount(data);
                 self.profile = null;
 
                 // Type-safe access to the root store to trigger logout

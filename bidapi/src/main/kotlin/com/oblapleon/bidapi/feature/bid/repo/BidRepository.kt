@@ -34,4 +34,7 @@ interface BidRepository : BaseRepository<Bid, UUID> {
      */
     @Query("SELECT COUNT(DISTINCT b.auction.id) FROM Bid b WHERE b.bidder.id = :bidderId")
     fun countDistinctAuctionsByBidderId(@Param("bidderId") bidderId: Long): Long
+
+    @Query("SELECT COUNT(b) FROM Bid b WHERE b.bidder.id = :bidderId AND b.auction.status = 'ACTIVE'")
+    fun countActiveBidsByBidderId(@Param("bidderId") bidderId: Long): Long
 }
