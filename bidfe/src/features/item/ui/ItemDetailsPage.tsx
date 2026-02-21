@@ -10,21 +10,21 @@ import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../types";
 
 // --- STYLES ---
 const badges = {
-    live: { background: "#16a34a", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
-    sold: { background: "#dc2626", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
-    pending: { background: "#f59e0b", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
-    scheduled: { background: "#2563eb", color: "white", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 }
+    live: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
+    sold: { background: "var(--color-danger-bg)", color: "var(--color-danger-text)", border: "1px solid var(--color-danger-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
+    pending: { background: "var(--color-warning-bg)", color: "var(--color-warning-text)", border: "1px solid var(--color-warning-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
+    scheduled: { background: "var(--bg-input)", color: "var(--accent-color)", border: "1px solid var(--border-color)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 }
 };
 
 const pageStyles = {
-    statusBox: { background: "#f9fafb", padding: 16, borderRadius: 6, textAlign: "center" as const, color: "#666", fontWeight: 500 },
-    pricingBox: { marginTop: 16, padding: 12, background: "#f8fafc", borderRadius: 6, border: "1px solid #e2e8f0" },
-    pricingLabel: { fontSize: 12, color: "#64748b", fontWeight: 600, textTransform: "uppercase" as const, marginBottom: 4 },
-    btnPrimary: { width: "100%", padding: "12px", background: "#111", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer" },
-    btnSecondary: { width: "100%", padding: "12px", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, fontWeight: 600, cursor: "pointer" },
-    btnTextDestructive: { width: "100%", padding: "8px", background: "transparent", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 13 },
-    zoomHint: { textAlign: "center" as const, fontSize: "12px", color: "#9ca3af", marginTop: "8px", cursor: "pointer" },
-    errorBox: { padding: "12px", backgroundColor: "#fee2e2", color: "#991b1b", borderRadius: "6px", marginBottom: "16px", fontSize: "14px", textAlign: "center" as const, fontWeight: 500 }
+    statusBox: { background: "var(--bg-input)", padding: 16, borderRadius: 6, textAlign: "center" as const, color: "var(--text-secondary)", fontWeight: 500, transition: "background-color 0.3s ease, color 0.3s ease" },
+    pricingBox: { marginTop: 16, padding: 12, background: "var(--bg-card)", borderRadius: 6, border: "1px solid var(--border-color)", transition: "background-color 0.3s ease, border-color 0.3s ease" },
+    pricingLabel: { fontSize: 12, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" as const, marginBottom: 4, transition: "color 0.3s ease" },
+    btnPrimary: { width: "100%", padding: "12px", background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
+    btnSecondary: { width: "100%", padding: "12px", background: "var(--btn-secondary-bg)", color: "var(--btn-secondary-text)", border: "1px solid var(--border-color)", borderRadius: 6, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
+    btnTextDestructive: { width: "100%", padding: "8px", background: "transparent", border: "none", color: "var(--color-danger-text)", cursor: "pointer", fontSize: 13, transition: "color 0.3s ease" },
+    zoomHint: { textAlign: "center" as const, fontSize: "12px", color: "var(--text-muted)", marginTop: "8px", cursor: "pointer", transition: "color 0.3s ease" },
+    errorBox: { padding: "12px", backgroundColor: "var(--color-danger-bg)", color: "var(--color-danger-text)", border: "1px solid var(--color-danger-border)", borderRadius: "6px", marginBottom: "16px", fontSize: "14px", textAlign: "center" as const, fontWeight: 500 }
 };
 
 const lightboxStyles = {
@@ -128,12 +128,12 @@ export const ItemDetailsPage = observer(() => {
     };
 
     if (itemStore.isLoading && !isDeleting) {
-        return <div style={{ padding: 80, textAlign: 'center' }}>Loading item details...</div>;
+        return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-primary)' }}>Loading item details...</div>;
     }
 
     if (!itemStore.selectedItem) {
         return (
-            <div style={{ padding: 80, textAlign: 'center' }}>
+            <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-primary)' }}>
                 <h3>Item not found.</h3>
                 <button onClick={() => navigate(-1)} style={{ ...pageStyles.btnSecondary, width: 'auto', marginTop: '1rem' }}>
                     Go Back
@@ -191,7 +191,7 @@ export const ItemDetailsPage = observer(() => {
                         <div style={pageStyles.statusBox}>
                             {isSold ? (
                                 <div>
-                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626' }}>Vehicle Sold</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-danger-text)' }}>Vehicle Sold</div>
                                     {soldPrice !== undefined && (
                                         <div style={{ fontSize: '15px', marginTop: '4px', fontWeight: 600 }}>
                                             ${soldPrice.toLocaleString()}
@@ -203,13 +203,13 @@ export const ItemDetailsPage = observer(() => {
                             )}
                         </div>
 
-                        {/* --- NEW PRICING STRATEGY DISPLAY --- */}
+                        {/* --- PRICING STRATEGY DISPLAY --- */}
                         <div style={pageStyles.pricingBox}>
                             <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
                             {item.isNoReserve ? (
-                                <div style={{ color: '#16a34a', fontWeight: 700 }}>No Reserve</div>
+                                <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
                             ) : (
-                                <div style={{ color: '#111', fontWeight: 600 }}>
+                                <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
                                     Reserve: {item.reservePrice ? `$${item.reservePrice.toLocaleString()}` : "Not set"}
                                 </div>
                             )}

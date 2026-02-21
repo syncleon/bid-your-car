@@ -262,64 +262,57 @@ export const CreateAuctionModal = ({ item, isOpen, onClose, onSubmit, isLoading,
 
 const SummaryRow = ({label, value, highlight}: {label:string, value:string, highlight?: boolean}) => (
     <div style={{display:'flex', justifyContent:'space-between', marginBottom: 8}}>
-        <span style={{color: '#6b7280', fontSize: 14}}>{label}</span>
-        <span style={{color: highlight ? '#16a34a' : '#111', fontWeight: highlight ? 700 : 600, fontSize: 14}}>{value}</span>
+        <span style={{color: 'var(--text-secondary)', fontSize: 14}}>{label}</span>
+        <span style={{color: highlight ? 'var(--color-success-text)' : 'var(--text-primary)', fontWeight: highlight ? 700 : 600, fontSize: 14}}>{value}</span>
     </div>
 );
 
 const styles = {
-    container: { fontFamily: "'Inter', sans-serif", color: "#1f2937", padding: "0 4px" },
+    container: { fontFamily: "'Inter', sans-serif", color: "var(--text-primary)", padding: "0 4px" },
 
-    // Header
-    progressContainer: { height: "4px", background: "#f3f4f6", borderRadius: "2px", overflow: "hidden", marginBottom: "16px" },
-    progressBar: { height: "100%", background: "#111", transition: "width 0.3s ease" },
+    progressContainer: { height: "4px", background: "var(--bg-input)", borderRadius: "2px", overflow: "hidden", marginBottom: "16px" },
+    progressBar: { height: "100%", background: "var(--accent-color)", transition: "width 0.3s ease" },
     stepTitleContainer: { marginBottom: "24px" },
-    stepCount: { fontSize: "12px", color: "#6b7280", textTransform: "uppercase" as const, fontWeight: 600, letterSpacing: "0.5px" },
-    stepHeading: { fontSize: "24px", fontWeight: 700, margin: "4px 0 0 0", color: "#111" },
+    stepCount: { fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase" as const, fontWeight: 600, letterSpacing: "0.5px" },
+    stepHeading: { fontSize: "24px", fontWeight: 700, margin: "4px 0 0 0", color: "var(--text-primary)" },
 
-    // Slider
     sliderWindow: { overflow: "hidden", width: "100%" },
     sliderTrack: { display: "flex", transition: "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)" },
     slide: { boxSizing: "border-box" as const, padding: "2px" },
 
-    // Step 1: Vehicle
-    heroImageContainer: { position: "relative" as const, borderRadius: "12px", overflow: "hidden", aspectRatio: "16/9", background: "#000" },
+    heroImageContainer: { position: "relative" as const, borderRadius: "12px", overflow: "hidden", aspectRatio: "16/9", background: "var(--bg-input)" },
     heroImg: { width: "100%", height: "100%", objectFit: "cover" as const, opacity: 0.9 },
-    heroOverlay: { position: "absolute" as const, bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.8))", padding: "20px", color: "#fff" },
+    heroOverlay: { position: "absolute" as const, bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.9))", padding: "20px", color: "#fff" }, // Keep white for image overlay
     heroTitle: { margin: 0, fontSize: "20px", fontWeight: 700 },
     heroSubtitle: { fontSize: "13px", opacity: 0.9, marginTop: "4px" },
-    placeholderHero: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" },
+    placeholderHero: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" },
     thumbStrip: { display: "flex", gap: "8px", marginTop: "12px", alignItems: "center" },
     thumbBtn: { border: "2px solid transparent", padding: 0, borderRadius: "6px", cursor: "pointer", background: "none", transition: "all 0.2s" },
     thumbImg: { width: "48px", height: "36px", objectFit: "cover" as const, borderRadius: "4px" },
-    helperText: { fontSize: "13px", color: "#6b7280", marginTop: "20px", lineHeight: 1.5 },
+    helperText: { fontSize: "13px", color: "var(--text-secondary)", marginTop: "20px", lineHeight: 1.5 },
 
-    // Step 2: Bidding Rules
     inputGroup: { marginBottom: "16px" },
-    label: { display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "8px" },
-    subtext: { fontSize: "12px", color: "#6b7280", marginTop: "6px", fontStyle: "italic" },
-    moneyInputWrapper: { display: "flex", alignItems: "center", border: "1px solid #d1d5db", borderRadius: "8px", padding: "0 12px", height: "48px", background: "#fff" },
-    currency: { fontSize: "18px", color: "#9ca3af", fontWeight: 500 },
-    moneyInput: { border: "none", fontSize: "18px", fontWeight: 600, width: "100%", outline: "none", marginLeft: "8px", color: "#111" },
+    label: { display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px" },
+    subtext: { fontSize: "12px", color: "var(--text-secondary)", marginTop: "6px", fontStyle: "italic" },
+    moneyInputWrapper: { display: "flex", alignItems: "center", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "0 12px", height: "48px", background: "var(--bg-input)" },
+    currency: { fontSize: "18px", color: "var(--text-muted)", fontWeight: 500 },
+    moneyInput: { border: "none", fontSize: "18px", fontWeight: 600, width: "100%", outline: "none", marginLeft: "8px", color: "var(--text-primary)", background: "transparent" },
 
-    // Duration Pills
     pillContainer: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "10px" },
-    pill: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "12px 4px", cursor: "pointer", textAlign: "center" as const, minHeight: "60px", display:"flex", flexDirection:"column" as const, justifyContent:"center", alignItems:"center", transition: "all 0.2s ease" },
-    pillActive: { background: "#fff", border: "2px solid #111", borderRadius: "8px", padding: "11px 3px", cursor: "pointer", textAlign: "center" as const, minHeight: "60px", display:"flex", flexDirection:"column" as const, justifyContent:"center", alignItems:"center", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" },
-    pillTitle: { display: "block", fontSize: "13px", fontWeight: 600, color: "#111" },
-    pillDesc: { display: "block", fontSize: "10px", opacity: 0.8, marginTop: "2px", color: "#6b7280" },
-    infoBox: { marginTop: "24px", background: "#f0f9ff", border: "1px solid #bae6fd", padding: "12px", borderRadius: "8px", fontSize: "13px", color: "#0369a1", lineHeight: 1.5 },
+    pill: { background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "12px 4px", cursor: "pointer", textAlign: "center" as const, minHeight: "60px", display:"flex", flexDirection:"column" as const, justifyContent:"center", alignItems:"center", transition: "all 0.2s ease" },
+    pillActive: { background: "var(--bg-hover)", border: "2px solid var(--accent-color)", borderRadius: "8px", padding: "11px 3px", cursor: "pointer", textAlign: "center" as const, minHeight: "60px", display:"flex", flexDirection:"column" as const, justifyContent:"center", alignItems:"center", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" },
+    pillTitle: { display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" },
+    pillDesc: { display: "block", fontSize: "10px", opacity: 0.8, marginTop: "2px", color: "var(--text-secondary)" },
+    infoBox: { marginTop: "24px", background: "var(--bg-input)", border: "1px solid var(--border-color)", padding: "12px", borderRadius: "8px", fontSize: "13px", color: "var(--text-primary)", lineHeight: 1.5 },
 
-    // Step 3: Review
-    summaryCard: { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "20px" },
-    divider: { height: "1px", background: "#e5e7eb", margin: "12px 0" },
-    disclaimer: { fontSize: "12px", color: "#9ca3af", textAlign: "center" as const, marginTop: "20px", lineHeight: 1.4 },
+    summaryCard: { background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "20px" },
+    divider: { height: "1px", background: "var(--border-color)", margin: "12px 0" },
+    disclaimer: { fontSize: "12px", color: "var(--text-muted)", textAlign: "center" as const, marginTop: "20px", lineHeight: 1.4 },
 
-    // Footer
-    footer: { display: "flex", justifyContent: "space-between", marginTop: "32px", paddingTop: "20px", borderTop: "1px solid #f0f0f0" },
-    backBtn: { background: "none", border: "none", color: "#6b7280", fontWeight: 600, fontSize: "14px", cursor: "pointer" },
-    nextBtn: { background: "#111", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, fontSize: "14px", cursor: "pointer" },
-    disabledBtn: { background: "#e5e7eb", color: "#9ca3af", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, fontSize: "14px", cursor: "not-allowed" },
-    submitBtn: { background: "#16a34a", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, fontSize: "14px", cursor: "pointer", boxShadow: "0 4px 6px -1px rgba(22, 163, 74, 0.2)" },
-    errorBanner: { background: "#fef2f2", color: "#991b1b", padding: "10px", borderRadius: "6px", marginBottom: "16px", fontSize: "13px" }
+    footer: { display: "flex", justifyContent: "space-between", marginTop: "32px", paddingTop: "20px", borderTop: "1px solid var(--border-color)" },
+    backBtn: { background: "none", border: "none", color: "var(--text-secondary)", fontWeight: 600, fontSize: "14px", cursor: "pointer" },
+    nextBtn: { background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, fontSize: "14px", cursor: "pointer" },
+    disabledBtn: { background: "var(--bg-input)", color: "var(--text-muted)", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, fontSize: "14px", cursor: "not-allowed" },
+    submitBtn: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, fontSize: "14px", cursor: "pointer" },
+    errorBanner: { background: "var(--color-danger-bg)", color: "var(--color-danger-text)", border: "1px solid var(--color-danger-border)", padding: "10px", borderRadius: "6px", marginBottom: "16px", fontSize: "13px" }
 };

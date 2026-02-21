@@ -1,23 +1,21 @@
-/* --- Compact Layout Container --- */
 .compact-container {
     max-width: 1280px;
     margin: 0 auto;
     padding: 0 16px 20px 16px;
+    color: var(--text-primary);
 }
 
 .details-loading {
     padding: 40px;
     text-align: center;
-    color: #9ca3af;
+    color: var(--text-muted);
     font-size: 14px;
 }
 
-/* --- Tighter Grid --- */
 .details-grid {
     display: grid;
-    /* Fixed width sidebar, slightly narrower for compactness */
     grid-template-columns: 1fr 340px;
-    gap: 20px; /* Reduced from 32px */
+    gap: 20px;
     align-items: start;
     margin-top: 12px;
 }
@@ -25,19 +23,19 @@
 .details-left {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Reduced from 32px */
+    gap: 20px;
     min-width: 0;
 }
 
 .details-right {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Reduced from 24px */
+    gap: 12px;
     position: sticky;
-    top: 20px; /* Sticky sidebar for long scrolls */
+    top: 20px;
 }
 
-/* --- Compact Banners (Now in sidebar) --- */
+/* --- Compact Banners --- */
 .compact-banner {
     padding: 12px;
     border-radius: 6px;
@@ -48,37 +46,34 @@
     gap: 4px;
 }
 
-.banner-error { background: #fef2f2; color: #b91c1c; flex-direction: row; justify-content: space-between; }
-.banner-pending { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
-.banner-rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+.banner-error { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); flex-direction: row; justify-content: space-between; }
+.banner-pending { background: var(--color-warning-bg); color: var(--color-warning-text); border: 1px solid var(--color-warning-border); }
+.banner-rejected { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
 
 /* --- Cards & Panels --- */
 .compact-card {
-    padding: 16px; /* Reduced from 24px */
+    padding: 16px;
     border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-/* Specific wrappers to ensure child components fit tightness */
-.bidding-wrapper {
-    /* Assuming BiddingCard has its own styles, we might need to override slightly via global or context if it's too padded,
-       but standardizing the wrapper helps */
 }
 
 .status-card {
     text-align: center;
 }
-.status-card h4 { margin: 0 0 4px 0; font-size: 16px; }
-.text-small { font-size: 12px; color: #666; }
+.status-card h4 { margin: 0 0 4px 0; font-size: 16px; color: var(--text-primary); }
+.text-small { font-size: 12px; color: var(--text-secondary); }
 
-.card-inactive { background: #f3f4f6; color: #6b7280; }
-.card-rejected { background: #fee2e2; color: #991b1b; }
+.card-inactive { background: var(--bg-input); color: var(--text-muted); }
+.card-rejected { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
 
 /* --- Admin Panel --- */
 .admin-panel {
-    background: #f0f9ff;
-    border: 1px solid #bae6fd;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
     padding: 12px;
+    border-radius: 8px;
 }
 
 .admin-btn-group {
@@ -94,70 +89,25 @@
     font-weight: 600;
     cursor: pointer;
 }
-.btn-approve { background: #16a34a; color: #fff; border: none; }
-.btn-reject { background: #fff; color: #dc2626; border: 1px solid #fecaca; }
+.btn-approve { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border); }
+.btn-reject { background: var(--bg-card); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
 
-/* --- History Scroll (Critical for compactness) --- */
+/* --- History Scroll --- */
 .history-wrapper {
-    max-height: 320px; /* Fixed height */
-    overflow-y: auto;  /* Scrollable */
-    border: 1px solid #eee;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: #fff;
+    background: var(--bg-card);
 }
-/* Style the scrollbar */
+
 .history-wrapper::-webkit-scrollbar { width: 6px; }
-.history-wrapper::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+.history-wrapper::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
 /* --- Badges --- */
 .badge-base { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-active { background: #000; color: #fff; }
-.badge-pending { background: #f59e0b; color: #fff; }
-.badge-rejected { background: #dc2626; color: #fff; }
-.badge-sold { background: #16a34a; color: #fff; }
-.badge-ended { background: #9ca3af; color: #fff; }
-
-/* --- Lightbox (Same as before but ensures controls fit) --- */
-.lightbox-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
-    display: flex; flex-direction: column;
-}
-.lightbox-content {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 10px; overflow: hidden;
-}
-.lightbox-image { max-width: 100%; max-height: 100%; object-fit: contain; }
-.lightbox-close-btn {
-    position: absolute; top: 16px; right: 16px; width: 40px; height: 40px;
-    background: rgba(255,255,255,0.2); border: none; border-radius: 50%; color: #fff; font-size: 20px; cursor: pointer; z-index: 1001;
-}
-.lightbox-controls {
-    height: 60px; display: flex; align-items: center; justify-content: center; gap: 24px; padding-bottom: 10px;
-}
-.lightbox-nav-btn {
-    background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 24px;
-    width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
-}
-.lightbox-counter { color: rgba(255,255,255,0.7); font-size: 13px; }
-
-/* --- Responsive Media Queries --- */
-
-@media (max-width: 900px) {
-    .details-grid {
-        grid-template-columns: 1fr; /* Stack */
-        gap: 20px;
-    }
-    .details-right {
-        order: 2; /* Sidebar below */
-        position: static; /* Remove sticky on mobile */
-    }
-    .details-left { order: 1; }
-
-    .compact-banner {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-}
+.badge-active { background: var(--text-primary); color: var(--bg-base); }
+.badge-pending { background: var(--color-warning-text); color: var(--bg-base); }
+.badge-rejected { background: var(--color-danger-text); color: var(--bg-base); }
+.badge-sold { background: var(--color-success-text); color: var(--bg-base); }
+.badge-ended { background: var(--text-muted); color: var(--bg-base); }

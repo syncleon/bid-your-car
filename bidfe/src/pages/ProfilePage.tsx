@@ -126,36 +126,39 @@ const styles = {
         margin: "0 auto",
         padding: "40px 20px",
         fontFamily: "'Inter', system-ui, sans-serif",
-        color: "#111"
+        color: "var(--text-primary)" // Updated
     },
-    loader: { padding: "100px 20px", textAlign: "center" as const, color: "#666" },
+    loader: { padding: "100px 20px", textAlign: "center" as const, color: "var(--text-muted)" }, // Updated
     header: { marginBottom: 60 },
     title: { fontSize: "32px", fontWeight: 800, marginBottom: "32px", letterSpacing: "-0.5px" },
     subtitle: { fontSize: "20px", fontWeight: 700, marginBottom: "24px" },
     infoBlock: {
-        background: "#fff",
+        background: "var(--bg-card)", // Updated
         padding: "32px",
         borderRadius: "16px",
-        border: "1px solid #f3f4f6",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+        border: "1px solid var(--border-color)", // Updated
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+        transition: "background-color 0.3s ease, border-color 0.3s ease" // Added transition
     },
     details: { marginBottom: 32 },
     detailRow: {
         display: "flex",
         justifyContent: "space-between",
         padding: "12px 0",
-        borderBottom: "1px solid #f9fafb",
-        fontSize: "14px"
+        borderBottom: "1px solid var(--border-light)", // Updated
+        fontSize: "14px",
+        transition: "border-color 0.3s ease" // Added transition
     },
-    label: { color: "#6b7280", fontWeight: 500 },
-    value: { color: "#111", fontWeight: 600 },
+    label: { color: "var(--text-secondary)", fontWeight: 500 }, // Updated
+    value: { color: "var(--text-primary)", fontWeight: 600 }, // Updated
     actions: { display: "flex", gap: 12, flexWrap: "wrap" as const },
     formWrapper: {
         maxWidth: 440,
         padding: "32px",
-        background: "#fff",
+        background: "var(--bg-card)", // Updated
         borderRadius: "16px",
-        border: "1px solid #f3f4f6"
+        border: "1px solid var(--border-color)", // Updated
+        transition: "background-color 0.3s ease, border-color 0.3s ease" // Added transition
     },
     formTitle: { fontSize: "18px", fontWeight: 700, marginBottom: 20 },
     listingsSection: { marginTop: 40 },
@@ -167,36 +170,38 @@ const styles = {
     emptyState: {
         padding: "60px 20px",
         textAlign: "center" as const,
-        background: "#f9fafb",
+        background: "var(--bg-input)", // Updated
         borderRadius: "16px",
-        color: "#6b7280",
-        fontSize: "14px"
+        color: "var(--text-muted)", // Updated
+        fontSize: "14px",
+        transition: "background-color 0.3s ease, color 0.3s ease" // Added transition
     },
-    statusText: { fontSize: "14px", color: "#6b7280", marginBottom: 20 },
+    statusText: { fontSize: "14px", color: "var(--text-secondary)", marginBottom: 20 }, // Updated
     alertError: {
         padding: "14px 20px",
         marginBottom: 24,
-        background: "#fef2f2",
-        color: "#dc2626",
+        background: "var(--color-danger-bg)", // Updated
+        color: "var(--color-danger-text)", // Updated
         borderRadius: "12px",
         fontSize: "14px",
-        border: "1px solid #fee2e2",
+        border: "1px solid var(--color-danger-border)", // Updated
         fontWeight: 500
     },
     alertSuccess: {
         padding: "14px 20px",
         marginBottom: 24,
-        background: "#f0fdf4",
-        color: "#16a34a",
+        background: "var(--color-success-bg)", // Updated
+        color: "var(--color-success-text)", // Updated
         borderRadius: "12px",
         fontSize: "14px",
-        border: "1px solid #dcfce7",
+        border: "1px solid var(--color-success-border)", // Updated
         fontWeight: 500
     },
     btnSecondary: {
         padding: "10px 18px",
-        background: "#fff",
-        border: "1px solid #e5e7eb",
+        background: "var(--btn-secondary-bg)", // Updated
+        color: "var(--btn-secondary-text)", // Updated
+        border: "1px solid var(--border-color)", // Updated
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: 600,
@@ -205,19 +210,20 @@ const styles = {
     },
     btnDanger: {
         padding: "10px 18px",
-        background: "#fff",
-        border: "1px solid #fee2e2",
+        background: "var(--bg-base)", // Updated
+        border: "1px solid var(--color-danger-border)", // Updated
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: 600,
         fontSize: "13px",
-        color: "#ef4444"
+        color: "var(--color-danger-text)", // Updated
+        transition: "all 0.2s" // Added transition
     },
     sellBtn: {
         display: "inline-block",
         padding: "12px 20px",
-        background: "#111",
-        color: "#fff",
+        background: "var(--btn-primary-bg)", // Updated
+        color: "var(--btn-primary-text)", // Updated
         borderRadius: "10px",
         fontWeight: 700,
         fontSize: "14px",

@@ -24,22 +24,22 @@ export const VerifyPage = observer(() => {
 
     return (
         <Modal isOpen onClose={handleClose}>
-            <div style={{ textAlign: "center", padding: "20px" }}>
+            <div style={{ textAlign: "center", padding: "20px", color: "var(--text-primary)" }}>
                 <h2>Account Verification</h2>
 
-                {authStore.isLoading && <p>Verifying your token...</p>}
+                {authStore.isLoading && <p style={{ color: "var(--text-secondary)" }}>Verifying your token...</p>}
 
                 {authStore.error && (
                     <div>
-                        <p style={{ color: "red" }}>Verification Failed</p>
-                        <p>{authStore.error}</p>
+                        <p style={{ color: "var(--color-danger-text)", fontWeight: 600 }}>Verification Failed</p>
+                        <p style={{ color: "var(--text-secondary)" }}>{authStore.error}</p>
                         <button onClick={handleClose}>Close</button>
                     </div>
                 )}
 
                 {authStore.successMessage && (
                     <div>
-                        <p style={{ color: "green", fontSize: "1.2em" }}>
+                        <p style={{ color: "var(--color-success-text)", fontSize: "1.2em", fontWeight: 600 }}>
                             {authStore.successMessage}
                         </p>
                         <button onClick={handleClose}>Login Now</button>
@@ -47,7 +47,7 @@ export const VerifyPage = observer(() => {
                 )}
 
                 {!token && !authStore.isLoading && (
-                    <p style={{ color: "red" }}>Invalid link.</p>
+                    <p style={{ color: "var(--color-danger-text)", fontWeight: 600 }}>Invalid link.</p>
                 )}
             </div>
         </Modal>

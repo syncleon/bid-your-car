@@ -8,158 +8,98 @@
 
   /* Backgrounds */
   --bg-base: #ffffff;
-  --bg-card: #f9fafb;
-  --bg-input: #f3f3f3;
-  --bg-hover: #f7f7f7;
-  --bg-overlay: rgba(0, 0, 0, 0.1);
+  --bg-card: #ffffff;
+  --bg-input: #f9fafb;
+  --bg-hover: #f3f4f6;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
 
   /* Text Colors */
   --text-primary: #111111;
-  --text-secondary: #555555;
+  --text-secondary: #4b5563;
   --text-muted: #9ca3af;
 
   /* Borders */
-  --border-color: #eaeaea;
-  --border-light: #f5f5f5;
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
 
   /* Buttons */
-  --btn-primary-bg: #000000;
+  --btn-primary-bg: #111111;
   --btn-primary-text: #ffffff;
-  --btn-secondary-bg: #f9f9f9;
+  --btn-secondary-bg: #f3f4f6;
   --btn-secondary-text: #111111;
   --btn-border: transparent;
-  --btn-hover-border: #646cff;
+  --btn-hover-border: #d1d5db;
 
   /* Links & Accents */
-  --accent-color: #646cff;
-  --accent-hover: #535bf2;
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
 
-  /* Semantic Colors (Status, Alerts) */
+  /* Semantic Colors */
   --color-success-bg: #f0fdf4;
   --color-success-text: #166534;
+  --color-success-border: #dcfce7;
 
-  --color-danger-bg: #fff5f5;
-  --color-danger-text: #d32f2f;
+  --color-danger-bg: #fef2f2;
+  --color-danger-text: #ef4444;
+  --color-danger-border: #fee2e2;
 
-  --color-warning-bg: #fffbeb;
-  --color-warning-text: #b45309;
+  --color-warning-bg: #fefce8;
+  --color-warning-text: #ca8a04;
+  --color-warning-border: #fef08a;
 }
 
 /* Override: Dark Mode */
-[data-theme="dark"] {
+:root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* Backgrounds */
-  --bg-base: #121212;
-  --bg-card: #1e1e1e;
-  --bg-input: #2a2a2a;
-  --bg-hover: #2d2d2d;
-  --bg-overlay: rgba(0, 0, 0, 0.6);
+  /* Backgrounds - Deep black */
+  --bg-base: #000000;
+  --bg-card: #111111;
+  --bg-input: #1a1a1a;
+  --bg-hover: #222222;
+  --bg-overlay: rgba(0, 0, 0, 0.8);
 
-  /* Text Colors */
-  --text-primary: #f3f4f6;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  /* Text Colors - Yellow accents and bright text */
+  --text-primary: #facc15; /* Yellow-400 */
+  --text-secondary: #d1d5db; /* Gray-300 */
+  --text-muted: #6b7280;
 
   /* Borders */
-  --border-color: #3f3f46;
-  --border-light: #27272a;
+  --border-color: #333333;
+  --border-light: #222222;
 
-  /* Buttons */
-  --btn-primary-bg: #f3f4f6;
-  --btn-primary-text: #111111;
+  /* Buttons - Yellow primary buttons */
+  --btn-primary-bg: #facc15;
+  --btn-primary-text: #000000;
   --btn-secondary-bg: #1a1a1a;
-  --btn-secondary-text: #f3f4f6;
-  --btn-border: transparent;
-  --btn-hover-border: #646cff;
+  --btn-secondary-text: #facc15;
+  --btn-border: #333333;
+  --btn-hover-border: #facc15;
 
   /* Links & Accents */
-  --accent-color: #747bff;
-  --accent-hover: #9ca3af;
+  --accent-color: #fde047; /* Lighter yellow */
+  --accent-hover: #fef08a;
 
   /* Semantic Colors (Status, Alerts - Darkened for contrast) */
   --color-success-bg: rgba(22, 101, 52, 0.2);
   --color-success-text: #4ade80;
+  --color-success-border: rgba(74, 222, 128, 0.3);
 
-  --color-danger-bg: rgba(211, 47, 47, 0.2);
+  --color-danger-bg: rgba(153, 27, 27, 0.2);
   --color-danger-text: #f87171;
+  --color-danger-border: rgba(248, 113, 113, 0.3);
 
-  --color-warning-bg: rgba(180, 83, 9, 0.2);
-  --color-warning-text: #fbbf24;
+  --color-warning-bg: rgba(133, 77, 14, 0.2);
+  --color-warning-text: #facc15;
+  --color-warning-border: rgba(250, 204, 21, 0.3);
 }
 
-/* =========================================
-   2. BASE HTML & BODY SETUP
-   ========================================= */
-
-:root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
+/* Base body reset (removes Vite's place-items: center) */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
-
-  /* Apply variables */
   background-color: var(--bg-base);
   color: var(--text-primary);
-
-  /* Smooth transition when toggling themes */
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* =========================================
-   3. GLOBAL ELEMENTS
-   ========================================= */
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-a {
-  font-weight: 500;
-  color: var(--accent-color);
-  text-decoration: inherit;
-  transition: color 0.25s;
-}
-
-a:hover {
-  color: var(--accent-hover);
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid var(--btn-border);
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-
-  /* Apply variables */
-  background-color: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
-
-  /* Animate background and border on theme switch/hover */
-  transition: border-color 0.25s, background-color 0.3s ease, color 0.3s ease;
-}
-
-button:hover {
-  border-color: var(--btn-hover-border);
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }

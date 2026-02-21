@@ -330,11 +330,11 @@ export const SubmitItemForm = ({
                         </div>
 
                         <div style={{ display: 'flex', gap: '20px', marginTop: '8px', marginBottom: '8px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
                                 <input type="checkbox" name="hasServiceHistory" checked={formData.hasServiceHistory} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
                                 Includes Service History
                             </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
                                 <input type="checkbox" name="isModified" checked={formData.isModified} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
                                 Vehicle is Modified
                             </label>
@@ -349,18 +349,18 @@ export const SubmitItemForm = ({
 
                 {currentStep === 4 && (
                     <div style={styles.grid}>
-                        <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '16px', fontWeight: 600, color: '#111' }}>
+                        <div style={{ background: 'var(--bg-input)', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)', transition: 'background-color 0.3s ease, border-color 0.3s ease' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
                                 <input
                                     type="checkbox"
                                     name="isNoReserve"
                                     checked={formData.isNoReserve}
                                     onChange={handleChange}
-                                    style={{ width: '20px', height: '20px', accentColor: '#16a34a' }}
+                                    style={{ width: '20px', height: '20px', accentColor: 'var(--color-success-text)' }}
                                 />
                                 No Reserve (Sells to the highest bidder!)
                             </label>
-                            <p style={{ fontSize: '13px', color: '#6b7280', margin: '8px 0 0 30px' }}>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '8px 0 0 30px' }}>
                                 No Reserve auctions generate significantly more interest and early bidding activity.
                             </p>
                         </div>
@@ -369,7 +369,7 @@ export const SubmitItemForm = ({
                             <div style={{ marginTop: '12px' }}>
                                 <label style={styles.label}>Reserve Price (Minimum acceptable bid)</label>
                                 <div style={{ position: 'relative' }}>
-                                    <span style={{ position: 'absolute', left: '14px', top: '14px', color: '#6b7280', fontWeight: 600 }}>$</span>
+                                    <span style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>$</span>
                                     <input
                                         type="number"
                                         name="reservePrice"
@@ -434,26 +434,26 @@ export const SubmitItemForm = ({
 
 // --- Styles ---
 const styles = {
-    progressTrack: { height: "4px", background: "#f3f4f6", borderRadius: "2px", overflow: "hidden", marginBottom: "20px" },
-    progressBar: { height: "100%", background: "#111", transition: "width 0.3s ease" },
+    progressTrack: { height: "4px", background: "var(--bg-input)", borderRadius: "2px", overflow: "hidden", marginBottom: "20px" },
+    progressBar: { height: "100%", background: "var(--accent-color)", transition: "width 0.3s ease" },
     stepHeader: { marginBottom: "32px" },
-    stepCount: { fontSize: "12px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase" as const, letterSpacing: "0.5px" },
-    stepTitle: { fontSize: "24px", fontWeight: 700, color: "#111", margin: "4px 0 0 0" },
+    stepCount: { fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" as const, letterSpacing: "0.5px" },
+    stepTitle: { fontSize: "24px", fontWeight: 700, color: "var(--text-primary)", margin: "4px 0 0 0" },
 
     contentArea: { minHeight: "300px" },
     grid: { display: "grid", gridTemplateColumns: "1fr", gap: "20px" },
     halfGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
 
-    label: { display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" },
-    input: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", outline: "none", boxSizing: "border-box" as const },
-    select: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", outline: "none", background: "#fff", cursor: "pointer", boxSizing: "border-box" as const },
-    textarea: { width: "100%", height: "120px", padding: "12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", resize: "vertical" as const, boxSizing: "border-box" as const },
+    label: { display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" },
+    input: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "16px", outline: "none", boxSizing: "border-box" as const, transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
+    select: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "16px", outline: "none", cursor: "pointer", boxSizing: "border-box" as const, transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
+    textarea: { width: "100%", height: "120px", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "16px", resize: "vertical" as const, boxSizing: "border-box" as const, transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
 
-    helperText: { fontSize: "13px", color: "#6b7280", marginTop: "16px", fontStyle: "italic" },
+    helperText: { fontSize: "13px", color: "var(--text-secondary)", marginTop: "16px", fontStyle: "italic" },
 
-    footer: { display: "flex", justifyContent: "space-between", marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" },
-    backBtn: { background: "none", border: "none", color: "#6b7280", fontWeight: 600, cursor: "pointer", fontSize: "14px" },
-    primaryBtn: { background: "#111", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px" },
-    disabledBtn: { background: "#e5e7eb", color: "#9ca3af", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "not-allowed", fontSize: "14px" },
-    submitBtn: { background: "#16a34a", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px", boxShadow: "0 4px 6px -1px rgba(22, 163, 74, 0.2)" }
+    footer: { display: "flex", justifyContent: "space-between", marginTop: "40px", paddingTop: "24px", borderTop: "1px solid var(--border-color)" },
+    backBtn: { background: "none", border: "none", color: "var(--text-secondary)", fontWeight: 600, cursor: "pointer", fontSize: "14px", transition: "color 0.2s" },
+    primaryBtn: { background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px", transition: "background-color 0.2s" },
+    disabledBtn: { background: "var(--bg-input)", color: "var(--text-muted)", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "not-allowed", fontSize: "14px" },
+    submitBtn: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px", transition: "background-color 0.2s" }
 };

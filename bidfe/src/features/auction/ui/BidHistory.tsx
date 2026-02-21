@@ -65,9 +65,9 @@ export const BidHistory = ({ bids }: { bids: BidDto[] }) => {
 
 const styles = {
     container: {
-        backgroundColor: "#fff",
+        backgroundColor: "var(--bg-card)",
         borderRadius: "12px",
-        border: "1px solid #e5e7eb",
+        border: "1px solid var(--border-color)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column" as const,
@@ -76,41 +76,41 @@ const styles = {
     },
     header: {
         padding: "16px 20px",
-        borderBottom: "1px solid #f3f4f6",
+        borderBottom: "1px solid var(--border-color)",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        backgroundColor: "#fff",
+        backgroundColor: "var(--bg-card)",
         position: "sticky" as const,
         top: 0,
         zIndex: 10
     },
     headerTitleGroup: { display: "flex", alignItems: "baseline", gap: "8px" },
-    title: { margin: 0, fontSize: "14px", fontWeight: 700, color: "#111" },
-    limitLabel: { fontSize: "11px", color: "#9ca3af" },
-    count: { fontSize: "12px", color: "#6b7280", background: "#f3f4f6", padding: "2px 8px", borderRadius: "10px", fontWeight: 600 },
+    title: { margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" },
+    limitLabel: { fontSize: "11px", color: "var(--text-muted)" },
+    count: { fontSize: "12px", color: "var(--text-secondary)", background: "var(--bg-input)", padding: "2px 8px", borderRadius: "10px", fontWeight: 600 },
 
     list: { overflowY: "auto" as const, flex: 1 },
-    empty: { padding: "40px", textAlign: "center" as const, color: "#9ca3af", fontSize: "13px" },
+    empty: { padding: "40px", textAlign: "center" as const, color: "var(--text-muted)", fontSize: "13px" },
 
     row: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         padding: "12px 20px",
-        borderBottom: "1px solid #f9fafb"
+        borderBottom: "1px solid var(--border-light)"
     },
     rowWinner: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         padding: "16px 20px",
-        borderBottom: "1px solid #dcfce7",
-        backgroundColor: "#f0fdf4", // Light green background
+        borderBottom: "1px solid var(--color-warning-border)",
+        backgroundColor: "var(--color-warning-bg)", // Yellow tinted background
         position: "sticky" as const,
-        top: 0, // Keeps winner visible at the top of the scrollable list
+        top: 0,
         zIndex: 5,
-        borderLeft: "4px solid #16a34a" // Stronger green accent
+        borderLeft: "4px solid var(--color-warning-text)" // Yellow accent line
     },
 
     left: { display: "flex", alignItems: "center", gap: "12px" },
@@ -119,8 +119,8 @@ const styles = {
         width: "32px",
         height: "32px",
         borderRadius: "50%",
-        background: "#f3f4f6",
-        color: "#6b7280",
+        background: "var(--bg-input)",
+        color: "var(--text-secondary)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -131,8 +131,8 @@ const styles = {
         width: "36px",
         height: "36px",
         borderRadius: "50%",
-        background: "#fef9c3", // Gold/Yellow background
-        border: "2px solid #eab308",
+        background: "var(--bg-card)",
+        border: "2px solid var(--color-warning-text)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -141,21 +141,21 @@ const styles = {
 
     info: { display: "flex", flexDirection: "column" as const, gap: "2px" },
     nameRow: { display: "flex", alignItems: "center", gap: "6px" },
-    name: { fontSize: "13px", fontWeight: 600, color: "#374151" },
-    nameWinner: { fontSize: "14px", fontWeight: 700, color: "#166534" },
+    name: { fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" },
+    nameWinner: { fontSize: "14px", fontWeight: 700, color: "var(--color-warning-text)" }, // Yellow text
 
     winnerBadge: {
         fontSize: "9px",
         letterSpacing: "0.5px",
-        color: "#ffffff",
-        background: "#16a34a",
+        color: "var(--bg-base)", // Inverted text
+        background: "var(--color-warning-text)", // Yellow badge
         padding: "2px 6px",
         borderRadius: "4px",
         fontWeight: 900,
         textTransform: "uppercase" as const
     },
 
-    date: { fontSize: "11px", color: "#6b7280" },
-    amount: { fontSize: "15px", fontWeight: 700, color: "#111", fontVariantNumeric: "tabular-nums" },
-    amountWinner: { fontSize: "18px", fontWeight: 800, color: "#166534", fontVariantNumeric: "tabular-nums" }
+    date: { fontSize: "11px", color: "var(--text-muted)" },
+    amount: { fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" },
+    amountWinner: { fontSize: "18px", fontWeight: 800, color: "var(--color-warning-text)", fontVariantNumeric: "tabular-nums" }
 };

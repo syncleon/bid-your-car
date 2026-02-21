@@ -5,6 +5,9 @@ import { App } from "./App";
 import { RootStore } from "./stores/RootStore";
 import { StoreProvider } from "./providers/StoreProvider";
 
+import "./index.css";
+import "./App.css";
+
 const rootStore = new RootStore();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
