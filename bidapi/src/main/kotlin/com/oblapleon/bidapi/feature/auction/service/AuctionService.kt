@@ -33,7 +33,8 @@ class AuctionService(
     private val bidRepository: BidRepository,
     private val messagingTemplate: SimpMessagingTemplate,
     private val meterRegistry: MeterRegistry,
-    private val authorizationHelper: AuthorizationHelper
+    private val authorizationHelper: AuthorizationHelper,
+    private val auctionFinalizationService: AuctionFinalizationService
 ) {
 
     fun findById(id: UUID): Auction {
@@ -286,7 +287,6 @@ class AuctionService(
         return savedBid
     }
 
-    @Transactional
     fun processEndedAuctions() {
         val now = Instant.now()
         val pageRequest = PageRequest.of(0, 50)
@@ -297,40 +297,13 @@ class AuctionService(
         )
 
         expiredAuctions.forEach { auction ->
-            finalizeAuction(auction)
-        }
-    }
-
-    private fun finalizeAuction(auction: Auction) {
-        if (auction.bidCount > 0) {
-            val highestBid = auction.winningBid ?: bidRepository.findTopByAuctionOrderByAmountDesc(auction)
-
-            if (auction.isReserveMet) {
-                auction.status = AuctionStatus.SOLD
-                auction.winnerUser = highestBid?.bidder
-                auction.item.status = ItemStatus.SOLD
-            } else {
-                auction.status = AuctionStatus.UNSOLD
-                auction.item.status = ItemStatus.UNSOLD
+            try {
+                // Передаем ID, чтобы достать свежую сущность внутри REQUIRES_NEW
+                auctionFinalizationService.finalizeAuction(auction.id!!)
+            } catch (e: Exception) {
+                // Если один аукцион падает, логируем ошибку и продолжаем обрабатывать остальные
+                System.err.println("Failed to finalize auction ${auction.id}: ${e.message}")
             }
-        } else {
-            auction.status = AuctionStatus.UNSOLD
-            auction.item.status = ItemStatus.UNSOLD
-        }
-
-        itemRepository.save(auction.item)
-        auctionRepository.save(auction)
-
-        try {
-            val finalNotification = mapOf(
-                "auctionId" to auction.id.toString(),
-                "status" to auction.status.name,
-                "finalPrice" to auction.currentPrice,
-                "winner" to (auction.winnerUser?.username ?: "No Winner")
-            )
-            messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", finalNotification)
-        } catch (e: Exception) {
-            System.err.println("Failed to send auction closed notification: ${e.message}")
         }
     }
 

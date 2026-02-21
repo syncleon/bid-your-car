@@ -28,6 +28,12 @@ class AuthService(
     private val jwtTokenProvider: JwtTokenProvider,
     private val userService: UserService // Injected to delegate restore logic
 ) {
+    companion object {
+        // Валидный BCrypt-хэш (соответствует формату: $2a$10$ + 53 символа).
+        // Это реальный хэш строки "dummy", который предотвратит IllegalArgumentException
+        // и заставит алгоритм отработать полный цикл, уравнивая время ответа сервера.
+        private const val DUMMY_BCRYPT_HASH = "\$2a\$10\$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HCGFGL91Q1PdTzRjXWfJW"
+    }
 
     @Transactional
     fun register(payload: RegisterReqDto): String {
@@ -75,11 +81,12 @@ class AuthService(
 
         // 1. Timing Attack Protection
         if (user == null) {
-            passwordEncoder.matches(safePassword, "dummy_hash")
+            // Теперь передаем валидную пустышку
+            passwordEncoder.matches(safePassword, DUMMY_BCRYPT_HASH)
             throw UnauthorizedException("Invalid credentials.")
         }
 
-        // 2. Password Check (user.password is non-null String in Entity)
+        // 2. Password Check
         if (!passwordEncoder.matches(safePassword, user.password)) {
             throw UnauthorizedException("Invalid credentials.")
         }

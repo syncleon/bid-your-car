@@ -3,14 +3,13 @@ import {
     login as apiLogin,
     register as apiRegister,
     restoreAccount as apiRestoreAccount,
-    verifyEmail as apiVerifyEmail
+    verifyEmail as apiVerifyEmail,
+    fetchMe as apiFetchMe, // Импортируем новый метод для профиля
+    logoutUser as apiLogout // Импортируем новый метод логаута
 } from "../api/auth.api";
-import { tokenStorage } from "../../../shared/lib/token";
 import type {
     LoginRequestDto,
-    RegisterRequestDto,
-    AuthResponseDto,
-    RestoreResponseDto
+    RegisterRequestDto
 } from "../types";
 
 function getErrorMessage(error: unknown): string {
@@ -31,17 +30,19 @@ export const AuthUserModel = types.model("AuthUser", {
 });
 
 export const AuthStore = types.model("AuthStore", {
-    token: types.maybeNull(types.string),
+    // ПОЛЕ token УДАЛЕНО: мы его больше не храним
     user: types.maybeNull(AuthUserModel),
     modalView: types.maybeNull(types.enumeration(["login", "register"])),
     isLoading: types.optional(types.boolean, false),
+    isInitializing: types.optional(types.boolean, true), // Флаг загрузки при первом входе на сайт
     error: types.maybeNull(types.string),
     successMessage: types.maybeNull(types.string),
     isDeletedAccount: types.optional(types.boolean, false),
 })
     .views((self) => ({
+        // Теперь мы считаемся авторизованными, если есть объект пользователя
         get isAuthenticated() {
-            return Boolean(self.token);
+            return Boolean(self.user);
         }
     }))
     .actions((self) => {
@@ -52,76 +53,28 @@ export const AuthStore = types.model("AuthStore", {
             self.isDeletedAccount = false;
         }
 
-        function decodeAndSetUser(token: string) {
+        const openLogin = () => { reset(); self.modalView = 'login'; };
+        const openRegister = () => { reset(); self.modalView = 'register'; };
+        const closeModal = () => { reset(); self.modalView = null; };
+        const clearError = () => { self.error = null; };
+        const clearSuccessMessage = () => { self.successMessage = null; };
+
+        // НОВЫЙ МЕТОД: Получение данных профиля по HttpOnly куке
+        const checkAuth = flow(function* () {
             try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-
-                const payload = JSON.parse(jsonPayload);
-
-                let roles: { name: string }[] = [];
-                if (typeof payload.scp === 'string') {
-                    roles = payload.scp.split(' ').map((r: string) => ({ name: r }));
-                } else if (Array.isArray(payload.scp)) {
-                    roles = payload.scp.map((r: string) => ({ name: r }));
-                } else if (Array.isArray(payload.roles)) {
-                    roles = payload.roles.map((r: any) => ({ name: String(r.authority || r.name || r) }));
-                }
-
-                self.user = AuthUserModel.create({
-                    id: payload.uid, // <--- CHANGED FROM userId TO uid
-                    username: payload.sub,
-                    roles: roles
-                });
+                const userData = yield apiFetchMe();
+                self.user = AuthUserModel.create(userData);
             } catch (error) {
-                console.error("Failed to decode token:", error);
+                // Если запрос /me упал (например 401), значит мы не авторизованы
                 self.user = null;
+            } finally {
+                self.isInitializing = false;
             }
-        }
+        });
 
-        function setToken(token: string) {
-            self.token = token;
-            tokenStorage.set(token);
-            decodeAndSetUser(token);
-        }
-
-        const openLogin = () => {
-            reset();
-            self.modalView = 'login';
-        };
-
-        const openRegister = () => {
-            reset();
-            self.modalView = 'register';
-        };
-
-        const closeModal = () => {
-            reset();
-            self.modalView = null;
-        };
-
-        const clearError = () => {
-            self.error = null;
-        };
-
-        const clearSuccessMessage = () => {
-            self.successMessage = null;
-        };
-
-        const logout = () => {
-            self.token = null;
-            self.user = null;
-            tokenStorage.clear();
-        };
-
+        // ПРИ ЗАПУСКЕ ПРИЛОЖЕНИЯ: Запрашиваем профиль
         const afterCreate = () => {
-            const token = tokenStorage.get();
-            if (token) {
-                setToken(token);
-            }
+            checkAuth();
         };
 
         const login = flow(function* (data: LoginRequestDto) {
@@ -130,8 +83,12 @@ export const AuthStore = types.model("AuthStore", {
             self.isDeletedAccount = false;
 
             try {
-                const response = (yield apiLogin(data)) as AuthResponseDto;
-                setToken(response.token);
+                // 1. Делаем логин (сервер ставит HttpOnly куку)
+                yield apiLogin(data);
+
+                // 2. Сразу запрашиваем свой профиль (браузер сам шлет эту куку)
+                yield checkAuth();
+
                 closeModal();
             } catch (error: unknown) {
                 const msg = getErrorMessage(error);
@@ -146,14 +103,26 @@ export const AuthStore = types.model("AuthStore", {
             }
         });
 
+        const logout = flow(function* () {
+            try {
+                // Говорим бэкенду затереть куку
+                yield apiLogout();
+            } catch(e) {
+                console.error("Logout failed on server", e);
+            } finally {
+                // Удаляем пользователя из локального стейта
+                self.user = null;
+            }
+        });
+
         const register = flow(function* (data: RegisterRequestDto) {
             self.isLoading = true;
             self.error = null;
             self.successMessage = null;
 
             try {
-                const message = (yield apiRegister(data)) as string;
-                self.successMessage = message;
+                const response = yield apiRegister(data);
+                self.successMessage = response.message || response;
             } catch (error: unknown) {
                 self.error = getErrorMessage(error);
             } finally {
@@ -167,8 +136,8 @@ export const AuthStore = types.model("AuthStore", {
             self.successMessage = null;
 
             try {
-                const message = (yield apiVerifyEmail(token)) as string;
-                self.successMessage = message;
+                const response = yield apiVerifyEmail(token);
+                self.successMessage = response.message || response;
             } catch (error: unknown) {
                 self.error = getErrorMessage(error) || "Verification failed";
             } finally {
@@ -181,12 +150,11 @@ export const AuthStore = types.model("AuthStore", {
             self.error = null;
 
             try {
-                const response = (yield apiRestoreAccount(data)) as RestoreResponseDto;
-                self.successMessage = response.message;
+                const response = yield apiRestoreAccount(data);
+                self.successMessage = response.message || "Account restored";
 
-                const loginResponse = (yield apiLogin(data)) as AuthResponseDto;
-                setToken(loginResponse.token);
-                closeModal();
+                // Сразу логинимся после восстановления
+                yield login(data);
             } catch (error: unknown) {
                 self.error = getErrorMessage(error);
             } finally {
@@ -196,13 +164,12 @@ export const AuthStore = types.model("AuthStore", {
 
         return {
             reset,
-            decodeAndSetUser,
-            setToken,
             openLogin,
             openRegister,
             closeModal,
             clearError,
             clearSuccessMessage,
+            checkAuth,
             logout,
             afterCreate,
             login,

@@ -1,5 +1,3 @@
-import { tokenStorage } from "../lib/token";
-
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 export class ApiError extends Error {
@@ -27,20 +25,14 @@ export async function http<T>(
     options: HttpOptions = {}
 ): Promise<T> {
     const { timeoutMs = 10000, ...fetchOptions } = options;
-    const token = tokenStorage.get();
 
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     const url = `${BASE_URL}${cleanPath}`;
 
-    // --- UPDATED HEADER LOGIC ---
     const headers = new Headers(fetchOptions.headers);
 
-    if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-    }
-
-    // Only set application/json if it's NOT a FormData upload
-    // AND the user hasn't explicitly provided a different Content-Type
+    // Только устанавливаем application/json, если это НЕ загрузка FormData
+    // И пользователь не указал явно другой Content-Type
     if (!headers.has("Content-Type") && !(fetchOptions.body instanceof FormData)) {
         headers.set("Content-Type", "application/json");
     }
@@ -51,14 +43,18 @@ export async function http<T>(
     try {
         const response = await fetch(url, {
             ...fetchOptions,
-            headers, // Use the dynamically built Headers object
+            headers,
+            credentials: "include", // <-- ВАЖНО: Заставляет браузер отправлять HttpOnly cookie с запросом
             signal: controller.signal,
         });
 
         clearTimeout(timeoutId);
 
+        // При 401 ошибке мы больше не чистим tokenStorage, так как его нет.
+        // Браузер сам перестанет отправлять куку, если она протухла.
+        // Логика разлогинивания должна перехватываться в слое Store.
         if (response.status === 401) {
-            tokenStorage.clear();
+            console.warn("Unauthorized access - cookie invalid or missing");
         }
 
         const contentType = response.headers.get("Content-Type");

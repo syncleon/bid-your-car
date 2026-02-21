@@ -1,25 +1,36 @@
 import type {
     LoginRequestDto,
-    AuthResponseDto,
     RegisterRequestDto,
     RestoreResponseDto
 } from "../types";
-import { http } from "../../../shared/api/HttpClient.ts";
+import { http } from "../../../shared/api/HttpClient";
 
 export const register = (dto: RegisterRequestDto) =>
-    http<string>("auth/register", {
+    http<{ message: string } | string>("auth/register", {
         method: "POST",
         body: JSON.stringify(dto),
     });
 
 export const login = (dto: LoginRequestDto) =>
-    http<AuthResponseDto>("auth/login", {
+    http<{ message: string }>("auth/login", {
         method: "POST",
         body: JSON.stringify(dto),
     });
 
+// НОВЫЙ МЕТОД: Логаут (затирает HttpOnly куку на сервере)
+export const logoutUser = () =>
+    http<{ message: string }>("auth/logout", {
+        method: "POST",
+    });
+
+// НОВЫЙ МЕТОД: Получение данных текущего пользователя по куке
+export const fetchMe = () =>
+    http<any>("auth/me", {
+        method: "GET",
+    });
+
 export const verifyEmail = (token: string) =>
-    http<string>(`auth/verify?token=${token}`, {
+    http<{ message: string } | string>(`auth/verify?token=${token}`, {
         method: "GET"
     });
 
