@@ -4,20 +4,22 @@ const styles = {
     // Layout & Container
     link: { textDecoration: "none", color: "inherit", display: "block" } as CSSProperties,
     container: {
-        background: "#fff",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border-light)", // Added to help distinguish cards in dark mode
         borderRadius: "8px",
         overflow: "hidden",
         cursor: "pointer",
-        transition: "transform 0.2s, box-shadow 0.2s",
+        transition: "transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease",
     } as CSSProperties,
 
     // Image Section
     imageWrapper: {
         aspectRatio: "16/10",
         width: "100%",
-        background: "#f3f4f6",
+        background: "var(--bg-input)",
         position: "relative",
         overflow: "hidden",
+        transition: "background-color 0.3s ease",
     } as CSSProperties,
     image: {
         width: "100%",
@@ -31,9 +33,10 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#9ca3af",
+        color: "var(--text-muted)",
         fontSize: "12px",
         textTransform: "uppercase",
+        transition: "color 0.3s ease",
     } as CSSProperties,
 
     // Typography
@@ -42,10 +45,15 @@ const styles = {
         margin: "0 0 8px 0",
         fontSize: "17px",
         fontWeight: 600,
-        color: "#111",
+        color: "var(--text-primary)",
         lineHeight: 1.25,
+        transition: "color 0.3s ease",
     } as CSSProperties,
-    year: { fontWeight: 400, color: "#6b7280" } as CSSProperties,
+    year: {
+        fontWeight: 400,
+        color: "var(--text-secondary)",
+        transition: "color 0.3s ease",
+    } as CSSProperties,
 
     // Metadata & Footer
     metaRow: {
@@ -56,28 +64,41 @@ const styles = {
     } as CSSProperties,
     labelText: {
         fontSize: "10px",
-        color: "#9ca3af",
+        color: "var(--text-muted)",
         fontWeight: 700,
         letterSpacing: "0.5px",
         marginBottom: "2px",
         textTransform: "uppercase",
+        transition: "color 0.3s ease",
     } as CSSProperties,
-    priceText: { fontSize: "18px", fontWeight: 700, color: "#111", fontVariantNumeric: "tabular-nums" } as CSSProperties,
-    locationText: { fontSize: "13px", color: "#666", fontWeight: 500 } as CSSProperties,
+    priceText: {
+        fontSize: "18px",
+        fontWeight: 700,
+        color: "var(--text-primary)",
+        fontVariantNumeric: "tabular-nums",
+        transition: "color 0.3s ease",
+    } as CSSProperties,
+    locationText: {
+        fontSize: "13px",
+        color: "var(--text-secondary)",
+        fontWeight: 500,
+        transition: "color 0.3s ease",
+    } as CSSProperties,
     specsText: {
         fontSize: "12px",
-        color: "#999",
+        color: "var(--text-muted)",
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
         marginTop: "8px",
-        borderTop: "1px solid #eee",
+        borderTop: "1px solid var(--border-color)",
         paddingTop: "8px",
+        transition: "color 0.3s ease, border-color 0.3s ease",
     } as CSSProperties,
 
     // Overlays / Badges Containers
     overlayTopLeft: { position: "absolute", top: "10px", left: "10px", zIndex: 2 } as CSSProperties,
-    overlayTopRight: { position: "absolute", top: "10px", right: "10px", zIndex: 2 } as CSSProperties, // <-- ADDED HERE
+    overlayTopRight: { position: "absolute", top: "10px", right: "10px", zIndex: 2 } as CSSProperties,
     overlayBottomContainer: {
         position: "absolute",
         bottom: "10px",
@@ -89,7 +110,7 @@ const styles = {
         zIndex: 2
     } as CSSProperties,
 
-    // --- MISSING BADGE STYLES ADDED HERE ---
+    // --- BADGE STYLES ---
 
     // 1. Generic Badge (Used for PENDING)
     badge: {
@@ -100,23 +121,24 @@ const styles = {
         letterSpacing: "0.5px",
         textTransform: "uppercase",
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        background: "#fff", // Fallback
-        color: "#111"       // Fallback
+        background: "var(--bg-base)",
+        color: "var(--text-primary)",
+        transition: "background-color 0.3s ease, color 0.3s ease",
     } as CSSProperties,
 
     // 2. Ended Badge (Used for ENDED)
     badgeEnded: {
-        background: "#9ca3af",
-        color: "#fff",
+        background: "var(--text-muted)",
+        color: "var(--bg-base)",
         padding: "4px 8px",
         borderRadius: "4px",
         fontSize: "11px",
         fontWeight: 700,
         letterSpacing: "0.5px",
+        transition: "background-color 0.3s ease, color 0.3s ease",
     } as CSSProperties,
 
-    // --- Existing Badge Styles ---
-
+    // 3. Dark Overlay Badges (Left with rgba so they stand out against images in BOTH themes)
     badgeDark: {
         background: "rgba(0, 0, 0, 0.7)",
         color: "white",
@@ -126,6 +148,7 @@ const styles = {
         fontWeight: 600,
         backdropFilter: "blur(4px)",
     } as CSSProperties,
+
     badgeLive: {
         background: "rgba(0, 0, 0, 0.8)",
         color: "#fff",
@@ -138,6 +161,7 @@ const styles = {
         gap: "6px",
         letterSpacing: "0.5px",
     } as CSSProperties,
+
     badgeTimer: {
         padding: "4px 8px",
         borderRadius: "20px",
@@ -147,14 +171,18 @@ const styles = {
         alignItems: "center",
         fontVariantNumeric: "tabular-nums",
         boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-        transition: "background 0.3s, color 0.3s",
+        background: "var(--bg-base)",
+        color: "var(--text-primary)",
+        transition: "background-color 0.3s ease, color 0.3s ease",
     } as CSSProperties,
+
     dot: {
         width: "6px",
         height: "6px",
         borderRadius: "50%",
-        backgroundColor: "#ef4444",
+        backgroundColor: "var(--color-danger-text)",
         display: "block",
+        transition: "background-color 0.3s ease",
     } as CSSProperties,
 };
 

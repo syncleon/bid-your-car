@@ -23,25 +23,16 @@ export const AppRouter = () => {
 
     return (
         <>
-            {/* 2. Main Routes: Render the `background` if it exists; otherwise render `location`.
-                   This ensures the "page behind the modal" stays visible. */}
             <Routes location={background || location}>
-                {/* Home / Auction Feed */}
                 <Route path="/" element={<AuctionPage />} />
                 <Route path="/auctions" element={<AuctionPage />} />
                 <Route path="/past-auctions" element={<PastAuctionsPage />} />
                 <Route path="/auctions/:id" element={<AuctionDetailsPage />} />
                 <Route path="/items/:id" element={<ItemDetailsPage />} />
-
-                {/* Public Routes */}
-                {/* Note: These handle the "Full Page" version if user refreshes /login */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<LoginPage />} />
-
                 <Route path="/sell-car" element={<SellCarPage />} />
                 <Route path="/verify" element={<VerifyPage />} />
-
-                {/* Private Routes */}
                 <Route
                     path="/profile"
                     element={
@@ -59,9 +50,6 @@ export const AppRouter = () => {
                     }
                 />
             </Routes>
-
-            {/* 3. Modal Routes: Only render these if background exists.
-                   These render ON TOP of the Routes above. */}
             {background && (
                 <Routes>
                     <Route path="/login" element={<LoginPage isModal />} />

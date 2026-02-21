@@ -33,7 +33,7 @@ class AuctionService(
     private val bidRepository: BidRepository,
     private val messagingTemplate: SimpMessagingTemplate,
     private val meterRegistry: MeterRegistry,
-    private val authorizationHelper: AuthorizationHelper // <-- Injected Helper
+    private val authorizationHelper: AuthorizationHelper
 ) {
 
     fun findById(id: UUID): Auction {

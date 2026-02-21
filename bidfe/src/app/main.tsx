@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { RootStore } from "./stores/RootStore";
 import { StoreProvider } from "./providers/StoreProvider";
+import { ThemeProvider } from "./providers/ThemeProvider";
 
 const rootStore = new RootStore();
 
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <StoreProvider store={rootStore}>
             <BrowserRouter>
-                <App />
+                <ThemeProvider>
+                    <App />
+                </ThemeProvider>
             </BrowserRouter>
         </StoreProvider>
     </React.StrictMode>
