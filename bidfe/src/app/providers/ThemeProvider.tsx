@@ -10,21 +10,31 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Check local storage or system preference on initial load
     const [theme, setTheme] = useState<Theme>(() => {
         const savedTheme = localStorage.getItem('app-theme') as Theme;
+        console.log('[Theme] Initial load - Saved theme in localStorage:', savedTheme);
+
         if (savedTheme) return savedTheme;
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        console.log('[Theme] Initial load - System prefers dark:', systemPrefersDark);
+
+        return systemPrefersDark ? 'dark' : 'light';
     });
 
     useEffect(() => {
-        // Apply the theme to the <html> tag
+        console.log(`[Theme] useEffect triggered - Applying theme: "${theme}" to <html> element`);
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('app-theme', theme);
     }, [theme]);
 
     const toggleTheme = () => {
-        setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+        console.log(`[Theme] toggleTheme called - Current theme is: "${theme}"`);
+        setTheme((prev) => {
+            const nextTheme = prev === 'light' ? 'dark' : 'light';
+            console.log(`[Theme] State updating to: "${nextTheme}"`);
+            return nextTheme;
+        });
     };
 
     return (

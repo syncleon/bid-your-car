@@ -14,52 +14,59 @@ interface ThemeToggleButtonProps {
     toggleTheme: () => void;
 }
 
-// 1. FIXED: Extracted outside the main component to prevent recreation on every render
-const ThemeToggleButton = ({ isMobile = false, theme, toggleTheme }: ThemeToggleButtonProps) => (
-    <button
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-        style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--text-primary)",
-            display: "flex",
-            alignItems: "center",
-            gap: isMobile ? "12px" : "0",
-            padding: isMobile ? "16px 0" : "8px",
-            fontSize: isMobile ? "20px" : "inherit",
-            fontWeight: isMobile ? 600 : "normal",
-            borderBottom: isMobile ? "1px solid var(--border-light)" : "none",
-            width: isMobile ? "100%" : "auto",
-            textAlign: "left"
-        }}
-    >
-        {theme === 'light' ? (
-            <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-                {isMobile && "Dark Mode"}
-            </>
-        ) : (
-            <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-                {isMobile && "Light Mode"}
-            </>
-        )}
-    </button>
-);
+const ThemeToggleButton = ({ isMobile = false, theme, toggleTheme }: ThemeToggleButtonProps) => {
+    const handleToggleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        console.log('[Navbar] Theme toggled. Current theme was:', theme);
+        toggleTheme();
+    };
+
+    return (
+        <button
+            onClick={handleToggleClick}
+            aria-label="Toggle theme"
+            style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-primary)",
+                display: "flex",
+                alignItems: "center",
+                gap: isMobile ? "12px" : "0",
+                padding: isMobile ? "16px 0" : "8px",
+                fontSize: isMobile ? "20px" : "inherit",
+                fontWeight: isMobile ? 600 : "normal",
+                borderBottom: isMobile ? "1px solid var(--border-light)" : "none",
+                width: isMobile ? "100%" : "auto",
+                textAlign: "left"
+            }}
+        >
+            {theme === 'light' ? (
+                <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    {isMobile && "Dark Mode"}
+                </>
+            ) : (
+                <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    {isMobile && "Light Mode"}
+                </>
+            )}
+        </button>
+    );
+};
 
 export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,17 +74,12 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
     const menuRef = useRef<HTMLDivElement>(null);
 
     const location = useLocation();
-    const [prevLocation, setPrevLocation] = useState(location.pathname);
-
-    // Theme Hook
     const { theme, toggleTheme } = useTheme();
 
-    // 2. FIXED: Derived state pattern instead of useEffect for syncing with route changes
-    if (location.pathname !== prevLocation) {
-        setPrevLocation(location.pathname);
-        if (isMobileMenuOpen) setIsMobileMenuOpen(false);
-        if (isMenuOpen) setIsMenuOpen(false);
-    }
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+        setIsMenuOpen(false);
+    }, [location.pathname]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -89,7 +91,6 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Lock body scroll when mobile menu is open
     useEffect(() => {
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden';
@@ -102,12 +103,10 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
     return (
         <header className="navbar">
             <div className="navbar__container">
-                {/* --- Logo --- */}
                 <Link to="/" className="navbar__logo">
                     BidYourCar
                 </Link>
 
-                {/* --- Desktop Navigation (Hidden on Mobile) --- */}
                 <nav className="navbar__nav desktop-only">
                     <Link to="/past-auctions" className="navbar__link">
                         Past Auctions
@@ -117,10 +116,7 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                     </Link>
                 </nav>
 
-                {/* --- Desktop Right Section (Hidden on Mobile) --- */}
                 <div className="navbar__right desktop-only">
-
-                    {/* Theme Toggle Button (Desktop) */}
                     <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
 
                     {isAuthenticated ? (
@@ -168,7 +164,6 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                     )}
                 </div>
 
-                {/* --- Mobile Menu Trigger (Visible on Mobile) --- */}
                 <button
                     className="mobile-menu-trigger"
                     onClick={() => setIsMobileMenuOpen(true)}
@@ -182,7 +177,6 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                 </button>
             </div>
 
-            {/* --- Mobile Overlay & Menu --- */}
             <div className={`mobile-menu ${isMobileMenuOpen ? 'is-open' : ''}`}>
                 <div className="mobile-menu__header">
                     <span className="navbar__logo">BidYourCar</span>
@@ -202,7 +196,6 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                     <Link to="/past-auctions" className="mobile-link">Past Auctions</Link>
                     <Link to="/sell-car" className="mobile-link">Sell a Car</Link>
 
-                    {/* Theme Toggle Button (Mobile) */}
                     <ThemeToggleButton isMobile={true} theme={theme} toggleTheme={toggleTheme} />
 
                     <div className="mobile-divider"></div>
