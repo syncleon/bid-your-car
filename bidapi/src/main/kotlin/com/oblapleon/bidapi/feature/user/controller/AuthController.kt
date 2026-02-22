@@ -14,13 +14,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.Authentication
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@Tag(name = "Authentication", description = "Endpoints for user login, registration, profile, and recovery")
+@Tag(name = "Authentication", description = "Endpoints for user login, registration, and recovery")
 class AuthController(
     private val authService: AuthService
 ) {
@@ -49,24 +47,6 @@ class AuthController(
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
             .body(mapOf("message" to "Login successful"))
-    }
-
-    @Operation(summary = "Get Current User Profile", description = "Returns profile data based on HttpOnly JWT cookie.")
-    @GetMapping("/me")
-    fun me(authentication: Authentication?): ResponseEntity<Map<String, Any>> {
-        if (authentication == null || !authentication.isAuthenticated || authentication.principal !is Jwt) {
-            return ResponseEntity.ok(emptyMap())
-        }
-
-        val roles = authentication.authorities.map { it.authority.replace("ROLE_", "") }
-        val jwt = authentication.principal as Jwt
-        val userId = jwt.claims["uid"] ?: 0
-
-        return ResponseEntity.ok(mapOf(
-            "id" to userId,
-            "username" to authentication.name,
-            "roles" to roles.map { mapOf("name" to it) }
-        ))
     }
 
     @Operation(summary = "User Logout", description = "Clears the JWT HttpOnly cookie.")

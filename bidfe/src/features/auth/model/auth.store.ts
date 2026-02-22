@@ -4,20 +4,15 @@ import {
     register as apiRegister,
     restoreAccount as apiRestoreAccount,
     verifyEmail as apiVerifyEmail,
-    fetchMe as apiFetchMe, // Импортируем новый метод для профиля
-    logoutUser as apiLogout // Импортируем новый метод логаута
+    logoutUser as apiLogout
 } from "../api/auth.api";
+import { getProfile } from "../../profile/api/profile.api"; // Reused from Profile feature
+import { getErrorMessage } from "../../../shared/utils/error"; // Shared util
 import type {
     LoginRequestDto,
-    RegisterRequestDto
+    RegisterRequestDto,
+    UserDto
 } from "../types";
-
-function getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-        return error.message;
-    }
-    return String(error);
-}
 
 export const RoleModel = types.model("Role", {
     name: types.string,
@@ -56,11 +51,17 @@ export const AuthStore = types.model("AuthStore", {
         const closeModal = () => { reset(); self.modalView = null; };
         const clearError = () => { self.error = null; };
         const clearSuccessMessage = () => { self.successMessage = null; };
+
         const checkAuth = flow(function* () {
             try {
-                const userData: any = yield apiFetchMe();
+                // Now perfectly typed as UserDto without casting to 'any'
+                const userData: UserDto = yield getProfile();
                 if (userData && userData.id) {
-                    self.user = AuthUserModel.create(userData);
+                    self.user = AuthUserModel.create({
+                        id: userData.id,
+                        username: userData.username,
+                        roles: userData.roles
+                    });
                 } else {
                     self.user = null;
                 }
@@ -83,7 +84,6 @@ export const AuthStore = types.model("AuthStore", {
             try {
                 yield apiLogin(data);
                 yield checkAuth();
-
                 closeModal();
             } catch (error: unknown) {
                 const msg = getErrorMessage(error);
@@ -115,7 +115,7 @@ export const AuthStore = types.model("AuthStore", {
 
             try {
                 const response = yield apiRegister(data);
-                self.successMessage = response.message || response;
+                self.successMessage = response.message || response as string;
             } catch (error: unknown) {
                 self.error = getErrorMessage(error);
             } finally {
@@ -130,7 +130,7 @@ export const AuthStore = types.model("AuthStore", {
 
             try {
                 const response = yield apiVerifyEmail(token);
-                self.successMessage = response.message || response;
+                self.successMessage = response.message || response as string;
             } catch (error: unknown) {
                 self.error = getErrorMessage(error) || "Verification failed";
             } finally {
@@ -154,19 +154,9 @@ export const AuthStore = types.model("AuthStore", {
         });
 
         return {
-            reset,
-            openLogin,
-            openRegister,
-            closeModal,
-            clearError,
-            clearSuccessMessage,
-            checkAuth,
-            logout,
-            afterCreate,
-            login,
-            register,
-            verify,
-            restore
+            reset, openLogin, openRegister, closeModal,
+            clearError, clearSuccessMessage, checkAuth,
+            logout, afterCreate, login, register, verify, restore
         };
     });
 

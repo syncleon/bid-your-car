@@ -1,23 +1,17 @@
 import { types, flow, getRoot, type Instance } from "mobx-state-tree";
 import {
     getProfile,
-    deleteMyAccount, // <-- ИСПРАВЛЕНО: импортируем новый метод
+    deleteMyAccount,
     updateProfile,
     changePassword,
 } from "../api/profile.api";
+import { getErrorMessage } from "../../../shared/utils/error"; // Shared util
 import type {
     DeleteAccountRequestDto,
     UpdatePasswordRequestDto,
     UpdateProfileRequestDto,
     UserDto
 } from "../../auth/types";
-
-function getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-        return error.message;
-    }
-    return String(error);
-}
 
 interface IRootStoreShape {
     authStore?: {

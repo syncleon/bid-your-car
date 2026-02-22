@@ -43,7 +43,7 @@ class AuthorizationHelper(
         }
 
         if (principal is Jwt) {
-            val userIdRaw = principal.claims["userId"]
+            val userIdRaw = principal.claims["uid"]
             if (userIdRaw != null) {
                 val userId = userIdRaw.toString().toLongOrNull()
                     ?: throw AccessDeniedException("Invalid userId format in token.")

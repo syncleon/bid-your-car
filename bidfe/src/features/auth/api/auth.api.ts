@@ -22,11 +22,6 @@ export const logoutUser = () =>
         method: "POST",
     });
 
-export const fetchMe = () =>
-    http<unknown>("auth/me", {
-        method: "GET",
-    });
-
 export const verifyEmail = (token: string) =>
     http<{ message: string } | string>(`auth/verify?token=${token}`, {
         method: "GET"
