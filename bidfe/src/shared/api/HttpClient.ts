@@ -24,15 +24,13 @@ export async function http<T>(
     path: string,
     options: HttpOptions = {}
 ): Promise<T> {
-    const { timeoutMs = 10000, ...fetchOptions } = options;
+    const {timeoutMs = 10000, ...fetchOptions} = options;
 
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     const url = `${BASE_URL}${cleanPath}`;
 
     const headers = new Headers(fetchOptions.headers);
 
-    // Только устанавливаем application/json, если это НЕ загрузка FormData
-    // И пользователь не указал явно другой Content-Type
     if (!headers.has("Content-Type") && !(fetchOptions.body instanceof FormData)) {
         headers.set("Content-Type", "application/json");
     }
@@ -44,15 +42,11 @@ export async function http<T>(
         const response = await fetch(url, {
             ...fetchOptions,
             headers,
-            credentials: "include", // <-- ВАЖНО: Заставляет браузер отправлять HttpOnly cookie с запросом
+            credentials: "include",
             signal: controller.signal,
         });
 
         clearTimeout(timeoutId);
-
-        // При 401 ошибке мы больше не чистим tokenStorage, так как его нет.
-        // Браузер сам перестанет отправлять куку, если она протухла.
-        // Логика разлогинивания должна перехватываться в слое Store.
         if (response.status === 401) {
             console.warn("Unauthorized access - cookie invalid or missing");
         }

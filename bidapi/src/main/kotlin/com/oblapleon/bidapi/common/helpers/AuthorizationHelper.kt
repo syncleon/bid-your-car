@@ -63,7 +63,6 @@ class AuthorizationHelper(
         if (principal is String) {
             if (principal == "anonymousUser") throw UnauthorizedException("Not authenticated.")
 
-            // Try treating it as a numeric ID first
             val userId = principal.toLongOrNull()
             if (userId != null) {
                 return userRepository.findById(userId).orElseThrow {

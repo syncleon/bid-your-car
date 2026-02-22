@@ -58,8 +58,12 @@ export const AuthStore = types.model("AuthStore", {
         const clearSuccessMessage = () => { self.successMessage = null; };
         const checkAuth = flow(function* () {
             try {
-                const userData = yield apiFetchMe();
-                self.user = AuthUserModel.create(userData);
+                const userData: any = yield apiFetchMe();
+                if (userData && userData.id) {
+                    self.user = AuthUserModel.create(userData);
+                } else {
+                    self.user = null;
+                }
             } catch (error) {
                 self.user = null;
             } finally {

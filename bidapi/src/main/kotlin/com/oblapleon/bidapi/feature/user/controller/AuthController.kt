@@ -53,7 +53,11 @@ class AuthController(
 
     @Operation(summary = "Get Current User Profile", description = "Returns profile data based on HttpOnly JWT cookie.")
     @GetMapping("/me")
-    fun me(authentication: Authentication): ResponseEntity<Map<String, Any>> {
+    fun me(authentication: Authentication?): ResponseEntity<Map<String, Any>> {
+        if (authentication == null || !authentication.isAuthenticated || authentication.principal !is Jwt) {
+            return ResponseEntity.ok(emptyMap())
+        }
+
         val roles = authentication.authorities.map { it.authority.replace("ROLE_", "") }
         val jwt = authentication.principal as Jwt
         val userId = jwt.claims["uid"] ?: 0
