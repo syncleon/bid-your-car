@@ -6,8 +6,8 @@ import { SubmitItemPage } from "../pages/SubmitItemPage.tsx";
 import { PrivateRoute } from "../routes/PrivateRoute";
 import { VerifyPage } from "../pages/VerifyPage.tsx";
 import { AuctionPage } from "../pages/AuctionPage.tsx";
-import { AuctionDetailsPage } from "../features/auction/ui/AuctionDetailsPage.tsx";
-import { ItemDetailsPage } from "../features/item/ui/ItemDetailsPage.tsx";
+import { AuctionDetailsPage } from "../pages/AuctionDetailsPage.tsx";
+import { ItemDetailsPage } from "../pages/ItemDetailsPage.tsx";
 import {PastAuctionsPage} from "../pages/PastAuctionsPage.tsx";
 import {ProfilePage} from "../pages/ProfilePage.tsx";
 

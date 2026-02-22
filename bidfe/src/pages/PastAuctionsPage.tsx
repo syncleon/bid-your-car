@@ -1,4 +1,4 @@
-import {AuctionListTemplate} from "../features/auction/ui/AuctionListTemplate.tsx";
+import {AuctionListTemplate} from "./AuctionListTemplate.tsx";
 
 export const PastAuctionsPage = () => {
     return (

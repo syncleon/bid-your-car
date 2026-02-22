@@ -32,8 +32,8 @@ fun Item.toDto(): ItemDto {
         exteriorColor = this.exteriorColor,
         interiorColor = this.interiorColor,
         sellerType = this.sellerType,
-
-        images = this.images.map { it.toDto() }.sortedBy { it.sortOrder }
+        images = this.images.map { it.toDto() }.sortedBy { it.sortOrder },
+        auctionId = auctionId
     )
 }
 

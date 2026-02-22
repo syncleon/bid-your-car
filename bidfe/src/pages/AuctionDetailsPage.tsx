@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
-import { useStore } from "../../../shared/hooks/useStore";
-import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo } from "../../../shared/ui/details";
-import { BiddingCard } from "./BiddingCard";
-import { BidHistory } from "./BidHistory";
+import { useStore } from "../shared/hooks/useStore.ts";
+import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo } from "../shared/ui/details";
+import { BiddingCard } from "../features/auction/ui/BiddingCard.tsx";
+import { BidHistory } from "../features/auction/ui/BidHistory.tsx";
 import { formatDistanceToNow } from "date-fns";
-import { EditItemModal } from "../../item/ui/EditItemModal";
-import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../../item/types";
+import type { ItemImageDto } from "../features/item/types.ts";
 import "./AuctionDetails.css";
 import {Client} from "@stomp/stompjs";
 import SockJS from "sockjs-client"
@@ -63,13 +62,11 @@ export const AuctionDetailsPage = observer(() => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const { auctionStore, authStore, itemStore } = useStore();
+    const { auctionStore, authStore} = useStore();
     const [actionLoading, setActionLoading] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isCanceling, setIsCanceling] = useState(false);
     const [showCancelTooltip, setShowCancelTooltip] = useState(false);
-    const [showEditTooltip, setShowEditTooltip] = useState(false); // <-- ADD THIS
     useEffect(() => {
         if (!id) return;
 
@@ -121,21 +118,11 @@ export const AuctionDetailsPage = observer(() => {
         setActionLoading(false);
     };
 
-    const handleItemUpdate = async (
-        data: ItemUpdateRequest,
-        newFilesWithCategories: { file: File, category: ImageCategory }[],
-        deletedImageIds: string[] = []
-    ) => {
-        if (!item.id) return;
-        const success = await itemStore.updateListing(item.id, data, newFilesWithCategories, deletedImageIds);
-        if (success) {
-            setIsEditModalOpen(false);
-            if (id) await auctionStore.loadAuctionDetails(id);
-        }
-    };
-
     const handleCancelAuction = async () => {
-        if (window.confirm("Are you sure you want to cancel this auction? The vehicle will be returned to your garage as a draft.")) {
+        if (window.confirm(
+            "Are you sure you want to cancel this auction? " +
+            "The vehicle will be returned to your garage as a draft."
+        )) {
             setIsCanceling(true);
             await auctionStore.cancelAuction(auction.id);
             setIsCanceling(false);
@@ -188,67 +175,10 @@ export const AuctionDetailsPage = observer(() => {
                             <div className="owner-panel compact-card" style={{ marginBottom: '16px' }}>
                                 <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-
                                     <div
                                         style={{ position: "relative", width: "100%" }}
-                                        onMouseEnter={() => { if (isActive) setShowEditTooltip(true); }}
-                                        onMouseLeave={() => setShowEditTooltip(false)}
-                                    >
-                                        <div style={{
-                                            position: "absolute",
-                                            bottom: "100%",
-                                            left: "50%",
-                                            transform: "translateX(-50%)",
-                                            marginBottom: "8px",
-                                            backgroundColor: "#ef4444",
-                                            color: "white",
-                                            padding: "8px 12px",
-                                            borderRadius: "6px",
-                                            fontSize: "12px",
-                                            fontWeight: 600,
-                                            whiteSpace: "nowrap",
-                                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                                            zIndex: 10,
-                                            pointerEvents: "none",
-                                            opacity: showEditTooltip ? 1 : 0,
-                                            visibility: showEditTooltip ? "visible" : "hidden",
-                                            transition: "opacity 0.2s ease-in-out, visibility 0.2s"
-                                        }}>
-                                            Cannot edit details of an active auction.
-
-                                            <div style={{
-                                                position: "absolute",
-                                                top: "100%",
-                                                left: "50%",
-                                                transform: "translateX(-50%)",
-                                                borderWidth: "5px",
-                                                borderStyle: "solid",
-                                                borderColor: "#ef4444 transparent transparent transparent"
-                                            }} />
-                                        </div>
-
-                                        <button
-                                            onClick={() => setIsEditModalOpen(true)}
-                                            disabled={isActive}
-                                            style={{
-                                                width: "100%",
-                                                padding: "10px",
-                                                background: isActive ? "#f3f4f6" : "#fff",
-                                                border: "1px solid #d1d5db",
-                                                borderRadius: "6px",
-                                                fontWeight: 600,
-                                                color: isActive ? "#9ca3af" : "#111",
-                                                cursor: isActive ? "not-allowed" : "pointer",
-                                                pointerEvents: isActive ? "none" : "auto"
-                                            }}
-                                        >
-                                            Edit Vehicle Details
-                                        </button>
-                                    </div>
-
-                                    <div
-                                        style={{ position: "relative", width: "100%" }}
-                                        onMouseEnter={() => { if (auction.bidCount > 0) setShowCancelTooltip(true); }}
+                                        onMouseEnter={() => {
+                                            if (auction.bidCount > 0 || isActive) setShowCancelTooltip(true); }}
                                         onMouseLeave={() => setShowCancelTooltip(false)}
                                     >
                                         <div style={{
@@ -271,7 +201,7 @@ export const AuctionDetailsPage = observer(() => {
                                             visibility: showCancelTooltip ? "visible" : "hidden",
                                             transition: "opacity 0.2s ease-in-out, visibility 0.2s"
                                         }}>
-                                            Cannot cancel an auction with active bids. Contact Support.
+                                            Cannot cancel active auction. Contact Support.
                                             <div style={{
                                                 position: "absolute",
                                                 top: "100%",
@@ -285,7 +215,7 @@ export const AuctionDetailsPage = observer(() => {
 
                                         <button
                                             onClick={handleCancelAuction}
-                                            disabled={isCanceling || auction.bidCount > 0}
+                                            disabled={isCanceling || auction.bidCount > 0 || isActive}
                                             style={{
                                                 width: "100%",
                                                 padding: "10px",
@@ -326,14 +256,6 @@ export const AuctionDetailsPage = observer(() => {
                     </div>
                 </div>
             </div>
-
-            <EditItemModal
-                item={item}
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                onSubmit={handleItemUpdate}
-                isLoading={itemStore.isLoading}
-            />
 
             {lightboxIndex !== null && item.images && item.images.length > 0 && (
                 <Lightbox

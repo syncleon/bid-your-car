@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
-import { useStore } from "../../../shared/hooks/useStore";
-import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo, ResponsiveGrid, SidebarCard } from "../../../shared/ui/details";
-import { CreateAuctionModal } from "../../auction/ui/CreateAuctionModal";
-import { EditItemModal } from "../ui/EditItemModal";
-import type { CreateAuctionDto } from "../../auction/types";
-import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../types";
+import { useStore } from "../shared/hooks/useStore.ts";
+import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo, ResponsiveGrid, SidebarCard } from "../shared/ui/details";
+import { CreateAuctionModal } from "../features/auction/ui/CreateAuctionModal.tsx";
+import { EditItemModal } from "../features/item/ui/EditItemModal.tsx";
+import type { CreateAuctionDto } from "../features/auction/types.ts";
+import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../features/item/types.ts";
 
 const badges = {
     live: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
@@ -94,7 +94,7 @@ export const ItemDetailsPage = observer(() => {
                 if (auctionStore.currentAuction.status === 'PENDING_APPROVAL') {
                     await itemStore.loadItemDetails(id!);
                 } else {
-                    navigate(`/auctions/${auctionStore.currentAuction.id}`);
+                    navigate(`/auctions/${item.auctionId}`);
                 }
             }
         }
@@ -143,9 +143,6 @@ export const ItemDetailsPage = observer(() => {
 
     const item = itemStore.selectedItem;
     const isOwner = authStore.user?.id?.toString() === item.seller?.id?.toString();
-    console.log("My Auth ID:", authStore.user?.id);
-    console.log("Item Seller ID:", item.seller?.id);
-    console.log("Entire Item Object:", item);
     const isDraft = item.status === 'DRAFT';
     const isUnsold = item.status === 'UNSOLD';
     const canList = isDraft || isUnsold;
@@ -177,9 +174,6 @@ export const ItemDetailsPage = observer(() => {
             <ResponsiveGrid>
                 <div>
                     <ImageGallery item={item} statusLabel={statusBadge} onImageClick={(index) => setLightboxIndex(index)} />
-                    {item.images && item.images.length > 0 && (
-                        <div style={pageStyles.zoomHint} onClick={() => setLightboxIndex(0)}>🔍 Click to enlarge photos</div>
-                    )}
                     <VehicleInfo item={item} />
                 </div>
 
@@ -201,9 +195,7 @@ export const ItemDetailsPage = observer(() => {
                                 getStatusText()
                             )}
                         </div>
-
-                        {/* --- PRICING STRATEGY DISPLAY --- */}
-                        <div style={pageStyles.pricingBox}>
+                       <div style={pageStyles.pricingBox}>
                             <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
                             {item.isNoReserve ? (
                                 <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
@@ -217,7 +209,7 @@ export const ItemDetailsPage = observer(() => {
                         <div style={{ marginTop: 24 }}>
                             {(isActiveAuction || isScheduled || isPending) && (
                                 <button
-                                    onClick={() => navigate(`/auctions/${item.activeAuctionId || item.auction?.id}`)}
+                                    onClick={() => navigate(`/auctions/${item.auctionId}`)}
                                     style={{ ...pageStyles.btnPrimary, marginBottom: '12px' }}
                                 >
                                     {isPending ? "View Submitted Auction" : "View Live Auction"}

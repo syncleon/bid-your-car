@@ -7,56 +7,22 @@ import {
     updateItem,
     uploadItemImage
 } from "../api/item.api";
-import type {
-    AuctionStatus,
-    ConditionGrade,
-    ImageCategory,
-    ItemCreateRequest,
-    ItemDto,
-    ItemStatus,
-    ItemUpdateRequest
+import {
+    CONDITION_GRADES,
+    type ConditionGrade, IMAGE_CATEGORIES,
+    type ImageCategory, ITEM_STATUSES,
+    type ItemCreateRequest,
+    type ItemDto,
+    type ItemStatus,
+    type ItemUpdateRequest
 } from "../types";
-import type { AuctionDto } from "../../auction/types";
 import type { UserDto } from "../../auth/types";
+import type {AuctionDto} from "../../auction/types.ts";
 
-const ItemStatusEnum = types.enumeration<ItemStatus>("ItemStatus", [
-    "DRAFT",
-    "PENDING_AUCTION",
-    "LISTED_AUCTION",
-    "ACTIVE_AUCTION",
-    "SOLD",
-    "UNSOLD",
-    "ARCHIVED"
-]);
+const ItemStatusEnum = types.enumeration<ItemStatus>("ItemStatus", ITEM_STATUSES);
+const ConditionGradeEnum = types.enumeration<ConditionGrade>("ConditionGrade", CONDITION_GRADES);
+const ImageCategoryEnum = types.enumeration<ImageCategory>("ImageCategory", IMAGE_CATEGORIES);
 
-const AuctionStatusEnum = types.enumeration<AuctionStatus>("AuctionStatus", [
-    "PENDING_APPROVAL",
-    "SCHEDULED",
-    "ACTIVE",
-    "SOLD",
-    "UNSOLD",
-    "CANCELLED"
-]);
-
-const ConditionGradeEnum = types.enumeration<ConditionGrade>("ConditionGrade", [
-    "EXCELLENT",
-    "VERY_GOOD",
-    "GOOD",
-    "FAIR",
-    "POOR",
-    "PARTS_ONLY"
-]);
-
-const ImageCategoryEnum = types.enumeration<ImageCategory>("ImageCategory", [
-    "MAIN",
-    "EXTERIOR",
-    "INTERIOR",
-    "ENGINE",
-    "SERVICE",
-    "OTHER"
-]);
-
-// --- Models ---
 const ItemImageModel = types.model("ItemImage", {
     id: types.identifier,
     url: types.string,
@@ -75,22 +41,15 @@ export const ItemModel = types.model("Item", {
     mileage: types.number,
     description: types.maybeNull(types.string),
     thumbnailUrl: types.maybeNull(types.string),
-
     seller: types.frozen<UserDto>(),
-
-    // --- New Mechanical & Condition Fields ---
     fuelType: types.maybeNull(types.string),
     horsepower: types.maybeNull(types.number),
     condition: ConditionGradeEnum,
     titleStatus: types.maybeNull(types.string),
     isModified: types.boolean,
     hasServiceHistory: types.boolean,
-
-    // --- New Pricing Logic ---
     reservePrice: types.maybeNull(types.number),
     isNoReserve: types.boolean,
-
-    // --- Existing Technical Specs ---
     engine: types.maybeNull(types.string),
     drivetrain: types.maybeNull(types.string),
     transmission: types.maybeNull(types.string),
@@ -98,13 +57,9 @@ export const ItemModel = types.model("Item", {
     exteriorColor: types.maybeNull(types.string),
     interiorColor: types.maybeNull(types.string),
     sellerType: types.maybeNull(types.string),
-
     images: types.array(ItemImageModel),
-
-    // --- Auction Context ---
-    auctionStatus: types.maybeNull(AuctionStatusEnum),
-    activeAuctionId: types.maybeNull(types.string),
-    auction: types.maybeNull(types.frozen<AuctionDto>())
+    auctionId: types.maybeNull(types.string),
+    auction: types.frozen<AuctionDto>(),
 });
 
 export const ItemStore = types
@@ -193,7 +148,7 @@ export const ItemStore = types
 
                     const finalItem: ItemDto = yield getItemById(newItem.id);
                     self.myItems.unshift(cast(finalItem));
-                    self.selectedItem = finalItem.id as any;
+                    self.selectedItem = finalItem.id as unknown as Instance<typeof ItemModel>;
                     return finalItem;
                 }
                 self.myItems.unshift(cast(newItem));

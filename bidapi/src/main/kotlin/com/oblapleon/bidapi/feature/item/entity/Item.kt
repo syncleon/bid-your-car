@@ -52,13 +52,11 @@ class Item(
     @Column(columnDefinition = "TEXT")
     var description: String? = null,
 
-    // Denormalized field: Allows showing a picture in search results
-    // without joining the Images table.
     @Column(name = "thumbnail_url")
     var thumbnailUrl: String? = null,
 
     @Column(name = "fuel_type", length = 30)
-    var fuelType: String? = null, // e.g., Gasoline, Diesel, Electric, Hybrid
+    var fuelType: String? = null,
 
     @Column(name = "horsepower")
     var horsepower: Int? = null,
@@ -68,7 +66,7 @@ class Item(
     var condition: ConditionGrade = ConditionGrade.GOOD,
 
     @Column(name = "title_status", length = 50)
-    var titleStatus: String? = null, // e.g., Clean, Salvage, Rebuilt
+    var titleStatus: String? = null,
 
     @Column(name = "is_modified")
     var isModified: Boolean = false,
@@ -76,7 +74,6 @@ class Item(
     @Column(name = "has_service_records", nullable = false)
     var hasServiceHistory: Boolean = false,
 
-    // --- Pricing Logic ---
     @Column(name = "reserve_price", precision = 19, scale = 2)
     var reservePrice: java.math.BigDecimal? = null,
 
@@ -114,7 +111,10 @@ class Item(
     var images: MutableSet<ItemImage> = mutableSetOf(),
 
     @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
-    var auctions: MutableSet<Auction> = mutableSetOf()
+    var auctions: MutableSet<Auction> = mutableSetOf(),
+
+    @Column(name = "auction_id")
+    var auctionId: UUID? = null
 
 ) : BaseEntity<UUID>() {
 

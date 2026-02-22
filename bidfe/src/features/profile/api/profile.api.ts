@@ -14,24 +14,28 @@ export const getProfile = () =>
     });
 
 export const updateProfile = (data: UpdateProfileRequestDto) =>
-    http<UserDto>("/users/me", {
+    http<UserDto>(
+        "/users/me", {
         method: "PATCH",
         body: JSON.stringify(data),
     });
 
 export const changePassword = (data: UpdatePasswordRequestDto) =>
-    http<void>("/users/me/password", {
+    http<void>(
+        "/users/me/password", {
         method: "PUT",
         body: JSON.stringify(data),
     });
 
 export const deleteMyAccount = (data: DeleteAccountRequestDto) =>
-    http<void>(`/users/me`, {
+    http<void>(
+        `/users/me`, {
         method: "DELETE",
         body: JSON.stringify(data),
     });
 
 export const getUserItems = () =>
-    http<Page<ItemDto>>("/users/me/items", {
+    http<Page<ItemDto>>(
+        "/users/me/items", {
         method: "GET"
     });

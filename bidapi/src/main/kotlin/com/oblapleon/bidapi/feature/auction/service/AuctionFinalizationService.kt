@@ -35,10 +35,12 @@ class AuctionFinalizationService(
             } else {
                 auction.status = AuctionStatus.UNSOLD
                 auction.item.status = ItemStatus.UNSOLD
+                auction.item.auctionId = null
             }
         } else {
             auction.status = AuctionStatus.UNSOLD
             auction.item.status = ItemStatus.UNSOLD
+            auction.item.auctionId = null
         }
 
         itemRepository.save(auction.item)

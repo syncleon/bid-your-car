@@ -107,10 +107,12 @@ class AuctionService(
             status = AuctionStatus.PENDING_APPROVAL
         )
 
+        val savedAuction = auctionRepository.save(auction)
         item.status = ItemStatus.PENDING_AUCTION
+        item.auctionId = savedAuction.id
         itemRepository.save(item)
 
-        return auctionRepository.save(auction)
+        return savedAuction
     }
 
     @Transactional
@@ -150,9 +152,12 @@ class AuctionService(
     fun cancelAuction(id: UUID) {
         val auction = findById(id)
 
-        // This validates that the requester is the item owner or an admin
         val currentUser = authorizationHelper.checkOwnerOrAdmin(auction.item.seller.id!!)
         val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
+
+        if(auction.status == AuctionStatus.ACTIVE) {
+            throw ConflictException("Cannot cancel active auction.")
+        }
 
         if (auction.bidCount > 0 && !isAdmin) {
             throw ConflictException("Cannot cancel auction with existing bids. Contact support.")
@@ -161,8 +166,9 @@ class AuctionService(
         auction.status = AuctionStatus.CANCELLED
 
         auction.item.status = ItemStatus.DRAFT
-        itemRepository.save(auction.item)
+        auction.item.auctionId = null
 
+        itemRepository.save(auction.item)
         auctionRepository.save(auction)
     }
 

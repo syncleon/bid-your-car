@@ -1,5 +1,5 @@
-import type { AuctionDto } from "../auction/types";
 import type { UserDto } from "../auth/types";
+import type {AuctionDto} from "../auction/types.ts";
 
 export interface Page<T> {
     content: T[];
@@ -12,43 +12,44 @@ export interface Page<T> {
     empty: boolean;
 }
 
-export type ConditionGrade =
-    | "EXCELLENT"
-    | "VERY_GOOD"
-    | "GOOD"
-    | "FAIR"
-    | "POOR"
-    | "PARTS_ONLY";
+export const ITEM_STATUSES = [
+    "DRAFT",
+    "PENDING_AUCTION",
+    "LISTED_AUCTION",
+    "ACTIVE_AUCTION",
+    "SOLD",
+    "UNSOLD",
+    "ARCHIVED",
+] as const;
 
-export type ImageCategory =
-    | "MAIN"
-    | "EXTERIOR"
-    | "INTERIOR"
-    | "ENGINE"
-    | "SERVICE"
-    | "OTHER";
+export type ItemStatus = typeof ITEM_STATUSES[number];
 
-export type ItemStatus =
-    | "DRAFT"           // Being created by seller
-    | "PENDING_AUCTION" // Submitted, waiting for admin approval
-    | "LISTED_AUCTION"  // Approved, waiting for start_time
-    | "ACTIVE_AUCTION"  // Currently live in an auction
-    | "SOLD"            // Auction ended, reserve met
-    | "UNSOLD"          // Auction ended, reserve not met / no bids
-    | "ARCHIVED";       // Soft deleted or very old
+export const CONDITION_GRADES = [
+    "EXCELLENT",
+    "VERY_GOOD",
+    "GOOD",
+    "FAIR",
+    "POOR",
+    "PARTS_ONLY",
+] as const;
 
-export type AuctionStatus =
-    | "PENDING_APPROVAL" // Waiting for admin to approve listing
-    | "SCHEDULED"        // Approved, but start_time is in the future
-    | "ACTIVE"           // Live bidding is open
-    | "SOLD"             // Winner declared and reserve met
-    | "UNSOLD"           // Time up, no bids or reserve not met
-    | "CANCELLED";       // Administratively removed
+export type ConditionGrade = typeof CONDITION_GRADES[number];
+
+export const IMAGE_CATEGORIES = [
+    "MAIN",
+    "EXTERIOR",
+    "INTERIOR",
+    "ENGINE",
+    "SERVICE",
+    "OTHER",
+] as const;
+
+export type ImageCategory = typeof IMAGE_CATEGORIES[number];
 
 export interface ItemImageDto {
     id: string;
     url: string;
-    category: ImageCategory; // Added category
+    category: ImageCategory;
     sortOrder: number;
 }
 
@@ -80,9 +81,8 @@ export interface ItemDto {
     interiorColor: string | null;
     sellerType: string | null;
     images: ItemImageDto[];
-    auctionStatus?: AuctionStatus | null;
-    activeAuctionId?: string | null;
-    auction?: AuctionDto | null;
+    auctionId: string | null;
+    auction: AuctionDto;
 }
 
 export interface ItemCreateRequest {

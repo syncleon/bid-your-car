@@ -37,7 +37,9 @@ data class ItemDto(
     val exteriorColor: String?,
     val interiorColor: String?,
     val sellerType: String?,
-    val images: List<ItemImageDto> = emptyList()
+    val images: List<ItemImageDto> = emptyList(),
+    val auctionId: UUID?,
+
 ) : Serializable
 
 data class ItemImageDto(
