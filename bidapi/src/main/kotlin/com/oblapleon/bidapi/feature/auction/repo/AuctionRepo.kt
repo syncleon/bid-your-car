@@ -61,6 +61,13 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
         pageable: Pageable
     ): List<Auction>
 
+    // ✅ NEW for scheduled activation
+    fun findAllByStatusAndStartTimeBefore(
+        status: AuctionStatus,
+        now: Instant,
+        pageable: Pageable
+    ): List<Auction>
+
     @Modifying
     @Query("UPDATE Auction a SET a.status = 'CANCELLED' WHERE a.item.seller.id = :sellerId AND a.status = 'ACTIVE'")
     fun cancelAllActiveAuctionsBySellerId(@Param("sellerId") sellerId: Long)

@@ -82,7 +82,7 @@ export interface ItemDto {
     sellerType: string | null;
     images: ItemImageDto[];
     auctionId: string | null;
-    auction: AuctionDto;
+    auction: AuctionDto | null;
 }
 
 export interface ItemCreateRequest {

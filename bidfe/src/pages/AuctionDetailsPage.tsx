@@ -107,10 +107,20 @@ export const AuctionDetailsPage = observer(() => {
     const isOwner = user?.id?.toString() === item.seller.id.toString();
     const isAdmin = user?.roles?.some((r: { name: string }) => r.name === 'ADMIN');
 
+// --- status flags ---
     const isActive = auction.status === 'ACTIVE';
     const isPending = auction.status === 'PENDING_APPROVAL';
+    const isScheduled = auction.status === 'SCHEDULED';
     const isCancelled = auction.status === 'CANCELLED';
     const isEnded = ['SOLD', 'UNSOLD', 'CANCELLED'].includes(auction.status);
+
+// --- cancel state helpers ---
+    const cannotCancelReason =
+        isActive ? "Cannot cancel active auction. Contact Support."
+            : auction.bidCount > 0 ? "Cannot cancel auction with existing bids. Contact Support."
+                : null;
+
+    const isCancelDisabled = isCanceling || !!cannotCancelReason;
 
     const handleApprove = async () => {
         setActionLoading(true);
@@ -154,6 +164,14 @@ export const AuctionDetailsPage = observer(() => {
                                 <p>{isOwner ? "Under review." : "Waiting for admin."}</p>
                             </div>
                         )}
+
+                        {isScheduled && (
+                            <div className="compact-banner banner-pending">
+                                <strong>Scheduled</strong>
+                                <p>Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}.</p>
+                            </div>
+                        )}
+
                         {isCancelled && (
                             <div className="compact-banner banner-rejected">
                                 <strong>Cancelled</strong>
@@ -178,7 +196,8 @@ export const AuctionDetailsPage = observer(() => {
                                     <div
                                         style={{ position: "relative", width: "100%" }}
                                         onMouseEnter={() => {
-                                            if (auction.bidCount > 0 || isActive) setShowCancelTooltip(true); }}
+                                            if (cannotCancelReason) setShowCancelTooltip(true);
+                                        }}
                                         onMouseLeave={() => setShowCancelTooltip(false)}
                                     >
                                         <div style={{
@@ -201,7 +220,7 @@ export const AuctionDetailsPage = observer(() => {
                                             visibility: showCancelTooltip ? "visible" : "hidden",
                                             transition: "opacity 0.2s ease-in-out, visibility 0.2s"
                                         }}>
-                                            Cannot cancel active auction. Contact Support.
+                                            {cannotCancelReason ?? ""}
                                             <div style={{
                                                 position: "absolute",
                                                 top: "100%",
@@ -215,7 +234,7 @@ export const AuctionDetailsPage = observer(() => {
 
                                         <button
                                             onClick={handleCancelAuction}
-                                            disabled={isCanceling || auction.bidCount > 0 || isActive}
+                                            disabled={isCancelDisabled}
                                             style={{
                                                 width: "100%",
                                                 padding: "10px",
@@ -223,9 +242,9 @@ export const AuctionDetailsPage = observer(() => {
                                                 border: "none",
                                                 color: "#dc2626",
                                                 fontWeight: 600,
-                                                cursor: (isCanceling || auction.bidCount > 0) ? "not-allowed" : "pointer",
-                                                opacity: (isCanceling || auction.bidCount > 0) ? 0.5 : 1,
-                                                pointerEvents: (isCanceling || auction.bidCount > 0) ? "none" : "auto"
+                                                cursor: isCancelDisabled ? "not-allowed" : "pointer",
+                                                opacity: isCancelDisabled ? 0.5 : 1,
+                                                pointerEvents: isCancelDisabled ? "none" : "auto"
                                             }}
                                         >
                                             {isCanceling ? "Canceling..." : "Cancel Auction"}
@@ -242,11 +261,25 @@ export const AuctionDetailsPage = observer(() => {
                         ) : (
                             <div className={`status-card compact-card ${isCancelled ? 'card-rejected' : 'card-inactive'}`}>
                                 <h4>
-                                    {isPending && "Coming Soon"}
+                                    {isPending && "Pending Approval"}
+                                    {isScheduled && "Scheduled"}
                                     {isCancelled && "Cancelled"}
                                     {isEnded && !isCancelled && `Auction ${auction.status}`}
                                 </h4>
-                                {isEnded && <span className="text-small">Ended {formatDistanceToNow(new Date(auction.endTime))} ago</span>}
+
+                                {isPending && <span className="text-small">Waiting for admin approval</span>}
+
+                                {isScheduled && (
+                                    <span className="text-small">
+            Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}
+        </span>
+                                )}
+
+                                {isEnded && (
+                                    <span className="text-small">
+            Ended {formatDistanceToNow(new Date(auction.endTime))} ago
+        </span>
+                                )}
                             </div>
                         )}
 
@@ -273,6 +306,7 @@ const StatusBadge = ({ status, isNoReserve }: { status: string, isNoReserve: boo
     switch (status) {
         case 'ACTIVE': className += "badge-active"; break;
         case 'PENDING_APPROVAL': className += "badge-pending"; break;
+        case 'SCHEDULED': className += "badge-pending"; break; // or badge-scheduled
         case 'CANCELLED': className += "badge-rejected"; break;
         case 'SOLD': className += "badge-sold"; break;
         case 'UNSOLD': className += "badge-ended"; break;

@@ -13,7 +13,7 @@ import {
     approveAuction,
     getRecentlySold
 } from "../api/auction.api";
-import type { AuctionDto, CreateAuctionDto, BidDto } from "../types";
+import type {AuctionDto, CreateAuctionDto, BidDto, AuctionStatus} from "../types";
 import type { RootStore } from "../../../app/stores/RootStore";
 
 export class AuctionStore {
@@ -60,7 +60,7 @@ export class AuctionStore {
         return defaultMessage;
     }
 
-    loadAuctions = async (filter?: string, status?: string, page = 0, size = 20) => {
+    loadAuctions = async (filter?: string, status?: AuctionStatus, page = 0, size = 20) => {
         this.isLoading = true;
         this.error = null;
 
@@ -235,20 +235,36 @@ export class AuctionStore {
         }
     }
 
+    private replaceAuctionInCollections = (updated: AuctionDto) => {
+        const replace = (list: AuctionDto[]) => {
+            const index = list.findIndex(a => a.id === updated.id);
+            if (index !== -1) list[index] = updated;
+        };
+
+        replace(this.auctions);
+        replace(this.endingSoon);
+        replace(this.soldAuctions);
+        replace(this.myWins);
+        replace(this.myListings);
+
+        if (this.selectedAuction?.id === updated.id) {
+            this.selectedAuction = updated;
+        }
+    };
+
     approveAuction = async (id: string) => {
         this.isLoading = true;
         this.error = null;
 
         try {
             await approveAuction(id);
+            const freshAuction = await getAuctionById(id);
+
             runInAction(() => {
-                if (this.selectedAuction?.id === id) this.selectedAuction.status = 'ACTIVE';
-
-                const index = this.auctions.findIndex(a => a.id === id);
-                if (index !== -1) this.auctions[index].status = 'ACTIVE';
-
+                this.replaceAuctionInCollections(freshAuction);
                 this.isLoading = false;
             });
+
             return true;
         } catch (error: unknown) {
             runInAction(() => {

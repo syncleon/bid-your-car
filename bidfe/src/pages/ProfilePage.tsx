@@ -3,8 +3,8 @@ import { observer } from "mobx-react-lite";
 import { useStoreContext } from "../app/providers/useStoreContext";
 import { useUserListings } from "../features/profile/hooks/useUserListings";
 import { ChangePasswordForm, EditProfileForm } from "../features/profile/ui/ProfileActions";
-import { ListingCardAdapter } from "../features/profile/ui/ListingCardsAdapter";
 import {Link} from "react-router-dom";
+import {ItemCard} from "../features/item/ui/ItemCard.tsx";
 
 export const ProfilePage = observer(() => {
     const { profileStore } = useStoreContext();
@@ -112,7 +112,7 @@ export const ProfilePage = observer(() => {
 
                 <div style={styles.grid}>
                     {Array.isArray(items) && items.map(item => (
-                        <ListingCardAdapter key={item.id} item={item} />
+                        <ItemCard key={item.id} item={item} />
                     ))}
                 </div>
             </section>

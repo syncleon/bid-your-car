@@ -132,14 +132,24 @@ class AuctionService(
 
         val now = Instant.now()
 
-        if (auction.startTime.isBefore(now)) {
-            val originalDuration = ChronoUnit.SECONDS.between(auction.startTime, auction.endTime)
-            auction.startTime = now
-            auction.endTime = now.plus(originalDuration, ChronoUnit.SECONDS)
-            auction.status = AuctionStatus.ACTIVE
+        // Original requested duration must be valid
+        val originalDurationSeconds = ChronoUnit.SECONDS.between(auction.startTime, auction.endTime)
+        if (originalDurationSeconds <= 0) {
+            throw BadRequestException("Auction duration must be greater than zero.")
+        }
 
+        // Small tolerance to avoid edge cases when approval happens "at start time"
+        val activationToleranceSeconds = 5L
+        val activateImmediatelyThreshold = now.plusSeconds(activationToleranceSeconds)
+
+        if (!auction.startTime.isAfter(activateImmediatelyThreshold)) {
+            // Requested start time is in the past OR now-ish => activate immediately
+            auction.startTime = now
+            auction.endTime = now.plusSeconds(originalDurationSeconds)
+            auction.status = AuctionStatus.ACTIVE
             auction.item.status = ItemStatus.ACTIVE_AUCTION
         } else {
+            // Start time is in the future => keep requested schedule
             auction.status = AuctionStatus.SCHEDULED
             auction.item.status = ItemStatus.LISTED_AUCTION
         }
@@ -293,6 +303,38 @@ class AuctionService(
                 auctionFinalizationService.finalizeAuction(auction.id!!)
             } catch (e: Exception) {
                 System.err.println("Failed to finalize auction ${auction.id}: ${e.message}")
+            }
+        }
+    }
+
+    @Transactional
+    fun processScheduledAuctions() {
+        val now = Instant.now()
+        val pageRequest = PageRequest.of(0, 50)
+
+        val dueAuctions = auctionRepository.findAllByStatusAndStartTimeBefore(
+            AuctionStatus.SCHEDULED,
+            now,
+            pageRequest
+        )
+
+        dueAuctions.forEach { auction ->
+            try {
+                if (!auction.endTime.isAfter(now)) {
+                    val durationSeconds = ChronoUnit.SECONDS.between(auction.startTime, auction.endTime)
+                    if (durationSeconds > 0) {
+                        auction.startTime = now
+                        auction.endTime = now.plusSeconds(durationSeconds)
+                    }
+                }
+
+                auction.status = AuctionStatus.ACTIVE
+                auction.item.status = ItemStatus.ACTIVE_AUCTION
+
+                itemRepository.save(auction.item)
+                auctionRepository.save(auction)
+            } catch (e: Exception) {
+                System.err.println("Failed to activate scheduled auction ${auction.id}: ${e.message}")
             }
         }
     }

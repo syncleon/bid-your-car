@@ -11,12 +11,18 @@ class AuctionScheduler(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(fixedRate = 60000)
-    fun checkAndCloseExpiredAuctions() {
+    @Scheduled(fixedRate = 15000)
+    fun processAuctionLifecycle() {
+        try {
+            auctionService.processScheduledAuctions()
+        } catch (e: Exception) {
+            logger.error("Error while activating scheduled auctions: ${e.message}", e)
+        }
+
         try {
             auctionService.processEndedAuctions()
         } catch (e: Exception) {
-            logger.error("Error while closing auction: ${e.message}", e)
+            logger.error("Error while closing expired auctions: ${e.message}", e)
         }
     }
 }
