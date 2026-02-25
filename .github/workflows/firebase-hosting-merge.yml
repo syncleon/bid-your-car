@@ -3,16 +3,12 @@ on:
   push:
     branches:
       - develop
-permissions:
-  checks: write
-  contents: read
-  pull-requests: write
 jobs:
-  build_and_preview:
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - run: cd bidfe && npm install && npm run build
         env:
           VITE_API_URL: https://bid-your-car-867648614239.europe-west1.run.app/api/v1
@@ -21,5 +17,6 @@ jobs:
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BIDFE_APP }}
+          channelId: live
           projectId: bidfe-app
           entryPoint: ./bidfe
