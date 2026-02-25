@@ -11,11 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: cd bidfe && npm install -g firebase-tools && npm install && npm run build
+      - name: Install dependencies and build
+        run: |
+          cd bidfe
+          npm install
+          npm run build
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BIDFE_APP }}
-          projectId: bidfe-app
-          entryPoint: ./bidfe
+      - name: Deploy Preview to Firebase
+        run: |
+          cd bidfe
+          npx firebase-tools hosting:channel:deploy pr-${{ github.event.number }} --expires 7d --project project-d2f657cf-d1e8-4e22-97a --token ${{ secrets.FIREBASE_TOKEN }}
