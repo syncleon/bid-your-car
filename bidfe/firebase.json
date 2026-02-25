@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "bidyourcar",
     "public": "dist",
     "ignore": [
       "firebase.json",
