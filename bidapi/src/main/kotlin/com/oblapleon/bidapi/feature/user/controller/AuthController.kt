@@ -38,10 +38,10 @@ class AuthController(
 
         val jwtCookie = ResponseCookie.from("jwt", response.token)
             .httpOnly(true)
-            .secure(false)
+            .secure(true)
             .path("/")
             .maxAge(30 * 24 * 60 * 60)
-            .sameSite("Lax")
+            .sameSite("None")
             .build()
 
         return ResponseEntity.ok()
@@ -54,10 +54,10 @@ class AuthController(
     fun logout(): ResponseEntity<Map<String, String>> {
         val clearCookie = ResponseCookie.from("jwt", "")
             .httpOnly(true)
-            .secure(false)
+            .secure(true)
             .path("/")
             .maxAge(0)
-            .sameSite("Lax")
+            .sameSite("None")
             .build()
 
         return ResponseEntity.ok()
