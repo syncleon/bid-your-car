@@ -36,7 +36,7 @@ class AuthController(
     fun login(@Valid @RequestBody payload: LoginReqDto): ResponseEntity<Map<String, String>> {
         val response = authService.login(payload)
 
-        val jwtCookie = ResponseCookie.from("jwt", response.token)
+        val jwtCookie = ResponseCookie.from("__session", response.token)
             .httpOnly(true)
             .secure(true)
             .path("/")
@@ -52,7 +52,7 @@ class AuthController(
     @Operation(summary = "User Logout", description = "Clears the JWT HttpOnly cookie.")
     @PostMapping("/logout")
     fun logout(): ResponseEntity<Map<String, String>> {
-        val clearCookie = ResponseCookie.from("jwt", "")
+        val clearCookie = ResponseCookie.from("__session", "")
             .httpOnly(true)
             .secure(true)
             .path("/")
