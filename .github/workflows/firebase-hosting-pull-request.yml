@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci && npm run build
+      - run: npm install && npm run build
         working-directory: ./bidfe
         env:
           VITE_API_URL: https://bid-your-car-867648614239.europe-west1.run.app/api/v1
