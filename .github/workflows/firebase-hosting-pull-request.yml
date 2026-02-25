@@ -11,9 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: cd bidfe && npm install && npm run build
-        env:
-          VITE_API_URL: https://bid-your-car-867648614239.europe-west1.run.app/api/v1
+      - run: cd bidfe && npm install -g firebase-tools && npm install && npm run build
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
