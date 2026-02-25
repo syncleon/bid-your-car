@@ -87,7 +87,7 @@ export const ItemStore = types
         // Private helper to sync lists
         const updateLocalCache = (itemData: ItemDto) => {
             const existingInMyItems = self.myItems.findIndex(i => i.id === itemData.id);
-            if (existingInMyItems !== -1) self.myItems[existingInMyItems] = cast(itemData);
+            if (existingInMyItems !== -1) self.myItems[existingInMyItems] = cast(itemData as any);
         };
 
         const loadItemDetails = flow(function* (id: string) {
@@ -99,7 +99,7 @@ export const ItemStore = types
 
                 const exists = self.myItems.find(i => i.id === id);
                 if (!exists) {
-                    self.myItems.push(cast(itemData));
+                    self.myItems.push(cast(itemData as any));
                 }
 
                 self.selectedItem = id as unknown as Instance<typeof ItemModel>;
@@ -147,11 +147,11 @@ export const ItemStore = types
                     }
 
                     const finalItem: ItemDto = yield getItemById(newItem.id);
-                    self.myItems.unshift(cast(finalItem));
+                    self.myItems.unshift(cast(finalItem as any));
                     self.selectedItem = finalItem.id as unknown as Instance<typeof ItemModel>;
                     return finalItem;
                 }
-                self.myItems.unshift(cast(newItem));
+                self.myItems.unshift(cast(newItem) as any);
                 self.selectedItem = newItem.id as unknown as Instance<typeof ItemModel>;
                 return newItem;
             } catch (err) {

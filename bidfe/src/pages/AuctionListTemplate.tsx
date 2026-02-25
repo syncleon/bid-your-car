@@ -79,7 +79,7 @@ export const AuctionListTemplate = observer(({
         if (status === 'SOLD') {
             auctionStore.loadRecentlySold(0, pageSize);
         } else {
-            auctionStore.loadAuctions(undefined, status, 0, pageSize);
+            auctionStore.loadAuctions(undefined, status as any, 0, pageSize);
         }
     }, [status, pageSize, defaultSort, auctionStore]);
 
