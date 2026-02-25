@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service
 @Service
 class EmailService(
     private val mailSender: JavaMailSender,
-    @Value("\${app.base-url}") private val baseUrl: String
+    @Value("\${app.base-url:https://project-d2f657cf-d1e8-4e22-97a.web.app}")
+    private val baseUrl: String
 ) {
     fun sendVerificationEmail(toEmail: String, token: String) {
         val email = SimpleMailMessage()
