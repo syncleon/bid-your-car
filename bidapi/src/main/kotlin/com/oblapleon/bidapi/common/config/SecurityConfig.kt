@@ -31,7 +31,7 @@ class CookieBearerTokenResolver : BearerTokenResolver {
     private val defaultResolver = DefaultBearerTokenResolver()
 
     override fun resolve(request: HttpServletRequest): String? {
-        val jwtCookie = request.cookies?.firstOrNull { it.name == "jwt" }
+        val jwtCookie = request.cookies?.firstOrNull { it.name == "__session" }
         if (jwtCookie != null && jwtCookie.value.isNotBlank()) {
             return jwtCookie.value
         }
