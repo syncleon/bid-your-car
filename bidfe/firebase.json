@@ -10,7 +10,7 @@
       {
         "source": "/api/**",
         "run": {
-          "serviceId": "bidapi",
+          "serviceId": "bid-your-car",
           "region": "europe-west1"
         }
       },
