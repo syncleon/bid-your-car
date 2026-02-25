@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      # То же самое: папка, скрипт и переменная
       - run: npm ci && npm run build
         working-directory: ./bidfe
         env:
