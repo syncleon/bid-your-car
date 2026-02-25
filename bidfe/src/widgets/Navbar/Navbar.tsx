@@ -194,7 +194,13 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
 
                 <div className="mobile-menu__content">
                     <Link to="/past-auctions" className="mobile-link">Past Auctions</Link>
-                    <Link to="/sell-car" className="mobile-link">Sell a Car</Link>
+                    <Link
+                        to="/sell-car"
+                        className="mobile-link mobile-cta"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                        Sell a Car
+                    </Link>
 
                     <ThemeToggleButton isMobile={true} theme={theme} toggleTheme={toggleTheme} />
 

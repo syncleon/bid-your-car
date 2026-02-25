@@ -256,3 +256,19 @@ body {
         display: block;
     }
 }
+
+.mobile-link.mobile-cta {
+    margin-top: 12px;
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    text-align: center;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+}
+.mobile-link.mobile-cta:active {
+    transform: translateY(1px);
+}
