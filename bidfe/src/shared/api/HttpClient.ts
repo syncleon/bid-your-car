@@ -49,9 +49,6 @@ export async function http<T>(
         });
 
         clearTimeout(timeoutId);
-        if (response.status === 401) {
-            console.warn("Unauthorized access - cookie invalid or missing");
-        }
 
         const contentType = response.headers.get("Content-Type");
         const isJson = contentType?.includes("application/json");
