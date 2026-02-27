@@ -8,9 +8,15 @@ import { BidHistory } from "../features/auction/ui/BidHistory.tsx";
 import { formatDistanceToNow } from "date-fns";
 import type { ItemImageDto } from "../features/item/types.ts";
 import "./AuctionDetails.css";
-import {Client} from "@stomp/stompjs";
-import SockJS from "sockjs-client"
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
+const getWebSocketUrl = () => {
+    if (import.meta.env.PROD) {
+        return `${window.location.origin}/ws`;
+    }
+    return "http://localhost:8080/ws";
+};
 const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
     const [index, setIndex] = useState(initialIndex)
     const handleNext = (e: React.MouseEvent) => {
@@ -67,13 +73,15 @@ export const AuctionDetailsPage = observer(() => {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isCanceling, setIsCanceling] = useState(false);
     const [showCancelTooltip, setShowCancelTooltip] = useState(false);
+
     useEffect(() => {
         if (!id) return;
 
         auctionStore.loadAuctionDetails(id);
 
         const stompClient = new Client({
-            webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+            // --- MODIFIED: Using the dynamic URL helper here ---
+            webSocketFactory: () => new SockJS(getWebSocketUrl()),
             reconnectDelay: 5000,
             onConnect: () => {
                 stompClient.subscribe(`/topic/auctions/${id}`, (message) => {
