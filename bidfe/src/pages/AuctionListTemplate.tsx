@@ -56,9 +56,9 @@ export const AuctionListTemplate = observer(({
     const observerRef = useRef<IntersectionObserver | null>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
-    const auctionsFromStore = status === 'SOLD'
+    const auctionsFromStore = (status === 'SOLD'
         ? auctionStore.soldAuctions
-        : auctionStore.auctions;
+        : auctionStore.auctions).slice();
 
     const makes = useMemo(() => {
         const unique = new Set(auctionsFromStore.map(a => a.item.make));
