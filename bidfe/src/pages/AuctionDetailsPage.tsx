@@ -12,11 +12,9 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
 const getWebSocketUrl = () => {
-    if (import.meta.env.PROD) {
-        return `${window.location.origin}/ws`;
-    }
-    return "http://localhost:8080/ws";
+    return import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
 };
+
 const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
     const [index, setIndex] = useState(initialIndex)
     const handleNext = (e: React.MouseEvent) => {
