@@ -49,11 +49,7 @@ jwt:
   expiration: 86400000
 
 cors:
-  allowed-origins:
-  - "http://localhost:5173"
-  - "http://localhost:8080"
-  - "https://bidyourcar.web.app"
-  - "https://bid-your-car-867648614239.europe-west1.run.app"
+  allowed-origins: "http://localhost:5173,http://localhost:8080,https://bidyourcar.web.app,https://bid-your-car-867648614239.europe-west1.run.app"
 
 cloudflare:
   r2:
