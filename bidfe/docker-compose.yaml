@@ -3,11 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Ensure your Dockerfile CMD runs `npm run dev` for local dev
     container_name: bidfe_frontend
     restart: always
     ports:
-      # Map host port 5173 to container port 80
-      - "5173:80"
+      - "5173:5173" # Changed from 80 to 5173 for the Vite dev server
+    volumes:
+      - .:/app # Mount source code for hot-reloading
+      - /app/node_modules # Prevent host node_modules from overwriting container's
     networks:
       - app-network
 
