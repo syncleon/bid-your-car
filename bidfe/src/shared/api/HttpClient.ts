@@ -26,7 +26,7 @@ export async function http<T>(
     path: string,
     options: HttpOptions = {}
 ): Promise<T> {
-    const {timeoutMs = 10000, ...fetchOptions} = options;
+    const {timeoutMs = 30000, ...fetchOptions} = options;
 
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     const url = `${BASE_URL}${cleanPath}`;
