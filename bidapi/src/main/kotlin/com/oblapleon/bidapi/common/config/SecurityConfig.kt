@@ -45,7 +45,7 @@ class CookieBearerTokenResolver : BearerTokenResolver {
 class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val jwtDecoder: JwtDecoder,
-    @Value("\${cors.allowed-origins:http://localhost:5173}") private val allowedOrigins: String
+    @Value("\${cors.allowed-origins:http://localhost:5174}") private val allowedOrigins: String
 ) {
 
     @Bean
