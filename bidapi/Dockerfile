@@ -1,5 +1,4 @@
 # Stage 1: Build
-# We use the standard JDK 21 image which supports all platforms (Mac M1/M2, Linux, Windows)
 FROM gradle:8.5-jdk21 AS builder
 WORKDIR /bidapi
 
@@ -19,15 +18,12 @@ COPY src ./src
 RUN ./gradlew bootJar -x test --no-daemon
 
 # Stage 2: Runtime
-# We KEEP Alpine here to ensure the final production image is small (~100MB)
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /bidapi
 
-# Add non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
-# Copy the JAR from the builder stage
 COPY --from=builder /bidapi/build/libs/*-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
