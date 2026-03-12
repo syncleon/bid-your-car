@@ -32,7 +32,6 @@ BidYourCar web app is real-time car auctioning platform.
 * **Documentation:** Springdoc OpenAPI (Swagger UI)
 
 #### Frontend (`bidfe`)
-* 
 * **Core:** React 19, TypeScript
 * **Build Tool:** Vite (optimized for fast HMR and lightweight production builds)
 * **State Management:** MobX & MobX State Tree.
