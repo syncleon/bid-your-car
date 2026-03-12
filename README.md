@@ -16,7 +16,6 @@ BidYourCar web app is real-time car auctioning platform.
   * multi-container orchestration
   * db: postgres:15-alpine, 
   * caching: redis:7-alpine.
-  * monitoring: prom/prometheus:latest
   * backend: car-auction-backend (eclipse-temurin:21-jre-alpine)
 * **Hosting:** Google Cloud Platform (GCP).
 * **Observability:** Prometheus (metrics scraping) & Grafana (visual dashboards).
