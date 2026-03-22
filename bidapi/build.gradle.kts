@@ -48,7 +48,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
-    implementation("com.google.cloud.sql:postgres-socket-factory:1.17.2")
+    implementation("com.google.cloud.sql:postgres-socket-factory:1.28.2")
 
     // Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
