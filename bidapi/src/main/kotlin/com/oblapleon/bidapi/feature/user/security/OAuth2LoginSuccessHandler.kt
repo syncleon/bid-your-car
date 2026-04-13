@@ -56,7 +56,7 @@ class OAuth2LoginSuccessHandler(
 
         val jwtCookie = ResponseCookie.from("__session", token)
             .httpOnly(true)
-            .secure(isLocal)
+            .secure(!isLocal)
             .path("/")
             .maxAge((30 * 24 * 60 * 60).toLong())
             .sameSite("Lax")
