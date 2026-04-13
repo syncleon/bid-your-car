@@ -10,7 +10,11 @@ import type {
 
 export const getProfile = () =>
     http<UserDto>("/users/me", {
-        method: "GET"
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
     });
 
 export const updateProfile = (data: UpdateProfileRequestDto) =>

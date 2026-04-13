@@ -56,10 +56,11 @@ class OAuth2LoginSuccessHandler(
 
         val jwtCookie = ResponseCookie.from("__session", token)
             .httpOnly(true)
-            .secure(!isLocal)
+            .secure(!isLocal) // This forces HTTPS for the cookie in production
             .path("/")
             .maxAge((30 * 24 * 60 * 60).toLong())
-            .sameSite("Lax")
+            // Fix: Use 'None' for production (cross-site), and 'Lax' for local development (HTTP)
+            .sameSite(if (isLocal) "Lax" else "None")
             .build()
 
         response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString())
