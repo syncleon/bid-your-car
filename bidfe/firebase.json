@@ -10,14 +10,7 @@
         }
       },
       {
-        "source": "/oauth2/authorization/google",
-        "run": {
-          "serviceId": "bid-your-car",
-          "region": "europe-west1"
-        }
-      },
-      {
-        "source": "/login/oauth2/code/google",
+        "source": "/login/oauth2/**",
         "run": {
           "serviceId": "bid-your-car",
           "region": "europe-west1"
