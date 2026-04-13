@@ -54,6 +54,7 @@ class OAuth2LoginSuccessHandler(
             )
             user = userRepository.save(user)
         }
+
         val token = jwtTokenProvider.createToken(user)
 
         val jwtCookie = ResponseCookie.from("__session", token)
@@ -66,6 +67,22 @@ class OAuth2LoginSuccessHandler(
 
         response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString())
 
-        redirectStrategy.sendRedirect(request, response, "$frontendUrl/profile")
+        response.contentType = "text/html;charset=UTF-8"
+        response.status = HttpServletResponse.SC_OK
+        response.writer.write("""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Redirecting...</title>
+            </head>
+            <body>
+                <script>
+                    window.location.href = '$frontendUrl/profile';
+                </script>
+            </body>
+            </html>
+        """.trimIndent())
+        response.writer.flush()
     }
 }
