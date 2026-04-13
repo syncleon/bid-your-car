@@ -8,8 +8,6 @@ import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpHeaders
-import org.springframework.http.ResponseCookie
 import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.core.user.OAuth2User
@@ -23,11 +21,7 @@ class OAuth2LoginSuccessHandler(
     private val roleRepository: RoleRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val passwordEncoder: PasswordEncoder,
-
-    // Inject variables from application.yml
-    @Value("\${app.frontend-url:http://localhost:5173}") private val frontendUrl: String,
-    @Value("\${app.cookie.secure:false}") private val secureCookie: Boolean,
-    @Value("\${app.cookie.same-site:Lax}") private val sameSiteCookie: String
+    @Value("\${app.frontend-url:http://localhost:5173}") private val frontendUrl: String
 ) : SimpleUrlAuthenticationSuccessHandler() {
 
     override fun onAuthenticationSuccess(
@@ -57,32 +51,7 @@ class OAuth2LoginSuccessHandler(
 
         val token = jwtTokenProvider.createToken(user)
 
-        val jwtCookie = ResponseCookie.from("__session", token)
-            .httpOnly(true)
-            .secure(secureCookie)
-            .path("/")
-            .maxAge((30 * 24 * 60 * 60).toLong())
-            .sameSite(sameSiteCookie)
-            .build()
-
-        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-
-        response.contentType = "text/html;charset=UTF-8"
-        response.status = HttpServletResponse.SC_OK
-        response.writer.write("""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Redirecting...</title>
-            </head>
-            <body>
-                <script>
-                    window.location.href = '$frontendUrl/profile';
-                </script>
-            </body>
-            </html>
-        """.trimIndent())
-        response.writer.flush()
+        // Redirect to the frontend carrying the token
+        redirectStrategy.sendRedirect(request, response, "$frontendUrl/oauth-success?token=$token")
     }
 }
