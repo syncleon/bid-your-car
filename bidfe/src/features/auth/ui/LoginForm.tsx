@@ -52,10 +52,8 @@ export const LoginForm = observer(() => {
         }
     };
 
-    // Функция для редиректа на Google OAuth2
     const handleGoogleLogin = () => {
-        // Укажите URL вашего бэкенда. Для локальной разработки это обычно http://localhost:8080
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://bid-your-car-867648614239.europe-west1.run.app';
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://bidyourcar.web.app';
         window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
     };
 

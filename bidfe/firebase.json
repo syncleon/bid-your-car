@@ -1,6 +1,5 @@
 {
   "hosting": {
-    "site": "bidyourcar",
     "public": "dist",
     "ignore": [
       "firebase.json",
@@ -10,6 +9,20 @@
     "rewrites": [
       {
         "source": "/api/**",
+        "run": {
+          "serviceId": "bid-your-car",
+          "region": "europe-west1"
+        }
+      },
+      {
+        "source": "/oauth2/**",
+        "run": {
+          "serviceId": "bid-your-car",
+          "region": "europe-west1"
+        }
+      },
+      {
+        "source": "/login/oauth2/**",
         "run": {
           "serviceId": "bid-your-car",
           "region": "europe-west1"

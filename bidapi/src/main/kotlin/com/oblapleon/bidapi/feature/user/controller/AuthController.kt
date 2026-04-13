@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -33,14 +34,18 @@ class AuthController(
         ]
     )
     @PostMapping("/login")
-    fun login(@Valid @RequestBody payload: LoginReqDto): ResponseEntity<Map<String, String>> {
+    fun login(
+        @Valid @RequestBody payload: LoginReqDto,
+        request: HttpServletRequest
+    ): ResponseEntity<Map<String, String>> {
         val response = authService.login(payload)
+        val isLocal = request.serverName == "localhost" || request.serverName == "127.0.0.1"
 
         val jwtCookie = ResponseCookie.from("__session", response.token)
             .httpOnly(true)
-            .secure(true)
+            .secure(!isLocal)
             .path("/")
-            .maxAge(30 * 24 * 60 * 60)
+            .maxAge((30 * 24 * 60 * 60).toLong())
             .sameSite("Lax")
             .build()
 
@@ -51,10 +56,12 @@ class AuthController(
 
     @Operation(summary = "User Logout", description = "Clears the JWT HttpOnly cookie.")
     @PostMapping("/logout")
-    fun logout(): ResponseEntity<Map<String, String>> {
+    fun logout(request: HttpServletRequest): ResponseEntity<Map<String, String>> {
+        val isLocal = request.serverName == "localhost" || request.serverName == "127.0.0.1"
+
         val clearCookie = ResponseCookie.from("__session", "")
             .httpOnly(true)
-            .secure(true)
+            .secure(!isLocal)
             .path("/")
             .maxAge(0)
             .sameSite("Lax")

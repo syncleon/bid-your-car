@@ -52,11 +52,11 @@ class OAuth2LoginSuccessHandler(
         }
         val token = jwtTokenProvider.createToken(user)
 
-        val isProd = request.serverName.contains("run.app")
+        val isLocal = request.serverName == "localhost" || request.serverName == "127.0.0.1"
 
         val jwtCookie = ResponseCookie.from("__session", token)
             .httpOnly(true)
-            .secure(isProd)
+            .secure(!isLocal)
             .path("/")
             .maxAge((30 * 24 * 60 * 60).toLong())
             .sameSite("Lax")
@@ -64,10 +64,10 @@ class OAuth2LoginSuccessHandler(
 
         response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString())
 
-        val frontendUrl = if (isProd) {
-            "https://bidyourcar.web.app"
-        } else {
+        val frontendUrl = if (isLocal) {
             "http://localhost:5173"
+        } else {
+            "https://bidyourcar.web.app"
         }
 
         redirectStrategy.sendRedirect(request, response, "$frontendUrl/profile")
