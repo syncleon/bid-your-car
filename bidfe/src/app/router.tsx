@@ -10,7 +10,6 @@ import { AuctionDetailsPage } from "../pages/AuctionDetailsPage.tsx";
 import { ItemDetailsPage } from "../pages/ItemDetailsPage.tsx";
 import {PastAuctionsPage} from "../pages/PastAuctionsPage.tsx";
 import {ProfilePage} from "../pages/ProfilePage.tsx";
-import {OAuth2SuccessPage} from "../pages/OAuth2SuccessPage.tsx";
 
 export const AppRouter = () => {
     const location = useLocation();
@@ -29,7 +28,6 @@ export const AppRouter = () => {
                 <Route path="/register" element={<LoginPage />} />
                 <Route path="/sell-car" element={<SellCarPage />} />
                 <Route path="/verify" element={<VerifyPage />} />
-                <Route path="/oauth-success" element={<OAuth2SuccessPage />} />
                 <Route
                     path="/profile"
                     element={
