@@ -69,5 +69,10 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_CACHE_TYPE: redis
 
+      # 5. Google auth
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
 volumes:
   car-auction-data:

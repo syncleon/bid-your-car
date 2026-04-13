@@ -4,6 +4,14 @@ spring:
     redis:
       time-to-live: 600000
       cache-null-values: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: profile, email
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
@@ -21,7 +29,6 @@ spring:
     properties:
       jdbc:
         time_zone: UTC
-
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 2525

@@ -3,6 +3,7 @@ package com.oblapleon.bidapi.common.config
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
 import com.oblapleon.bidapi.common.security.JwtTokenProvider
+import com.oblapleon.bidapi.feature.user.security.OAuth2LoginSuccessHandler
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -52,6 +53,7 @@ class CookieBearerTokenResolver : BearerTokenResolver {
 class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val jwtDecoder: JwtDecoder,
+    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler,
     @Value("\${cors.allowed-origins:http://localhost:5174}") private val allowedOrigins: List<String>
 ) {
 
@@ -68,6 +70,9 @@ class SecurityConfig(
                     .requestMatchers(antMatcher("/actuator/**")).hasAuthority("ADMIN")
                     .requestMatchers(antMatcher("/ws/**")).permitAll()
                     .requestMatchers(antMatcher("/api/v1/auth/**")).permitAll()
+                    .requestMatchers(antMatcher("/api/v1/auth/**")).permitAll()
+                    .requestMatchers(antMatcher("/login/oauth2/**")).permitAll()
+                    .requestMatchers(antMatcher("/oauth2/**")).permitAll()
                     .requestMatchers(antMatcher("/v3/api-docs/**")).permitAll()
                     .requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
                     .requestMatchers(antMatcher("/swagger-ui.html")).permitAll()
@@ -78,9 +83,11 @@ class SecurityConfig(
 
                     .anyRequest().authenticated()
             }
+            .oauth2Login { oauth2 ->
+                oauth2.successHandler(oAuth2LoginSuccessHandler)
+            }
             .oauth2ResourceServer { oauth2 ->
                 oauth2.bearerTokenResolver(CookieBearerTokenResolver())
-
                 oauth2.jwt { jwt ->
                     jwt.decoder(jwtDecoder)
                     jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
@@ -97,8 +104,6 @@ class SecurityConfig(
             JwtAuthenticationToken(jwt, authorities, username)
         }
     }
-    @Bean
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
