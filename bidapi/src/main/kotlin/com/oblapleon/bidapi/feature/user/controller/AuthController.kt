@@ -4,13 +4,11 @@ import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
 import com.oblapleon.bidapi.feature.user.dto.RegisterReqDto
 import com.oblapleon.bidapi.feature.user.service.AuthService
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.media.Content
-import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
@@ -21,32 +19,23 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "Endpoints for user login, registration, and recovery")
 class AuthController(
-    private val authService: AuthService
+    private val authService: AuthService,
+    @Value("\${app.cookie.secure:false}") private val secureCookie: Boolean,
+    @Value("\${app.cookie.same-site:Lax}") private val sameSiteCookie: String
 ) {
 
-    @Operation(summary = "User Login", description = "Authenticates user and sets an HttpOnly JWT cookie.")
-    @ApiResponses(
-        value = [
-            ApiResponse(responseCode = "200", description = "Login successful",
-                content = [Content(schema = Schema(implementation = Map::class))]),
-            ApiResponse(responseCode = "400", description = "Invalid input or missing fields"),
-            ApiResponse(responseCode = "401", description = "Invalid credentials or account not verified")
-        ]
-    )
+    @Operation(summary = "User Login")
     @PostMapping("/login")
     fun login(
-        @Valid @RequestBody payload: LoginReqDto,
-        request: HttpServletRequest
+        @Valid @RequestBody payload: LoginReqDto
     ): ResponseEntity<Map<String, String>> {
         val response = authService.login(payload)
-        val isLocal = request.serverName == "localhost" || request.serverName == "127.0.0.1"
-
         val jwtCookie = ResponseCookie.from("__session", response.token)
             .httpOnly(true)
-            .secure(!isLocal)
+            .secure(secureCookie)
             .path("/")
             .maxAge((30 * 24 * 60 * 60).toLong())
-            .sameSite("Lax")
+            .sameSite(sameSiteCookie)
             .build()
 
         return ResponseEntity.ok()
@@ -54,17 +43,15 @@ class AuthController(
             .body(mapOf("message" to "Login successful"))
     }
 
-    @Operation(summary = "User Logout", description = "Clears the JWT HttpOnly cookie.")
+    @Operation(summary = "User Logout")
     @PostMapping("/logout")
-    fun logout(request: HttpServletRequest): ResponseEntity<Map<String, String>> {
-        val isLocal = request.serverName == "localhost" || request.serverName == "127.0.0.1"
-
+    fun logout(): ResponseEntity<Map<String, String>> {
         val clearCookie = ResponseCookie.from("__session", "")
             .httpOnly(true)
-            .secure(!isLocal)
+            .secure(secureCookie)
             .path("/")
             .maxAge(0)
-            .sameSite("Lax")
+            .sameSite(sameSiteCookie)
             .build()
 
         return ResponseEntity.ok()

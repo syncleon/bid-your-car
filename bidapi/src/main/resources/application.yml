@@ -87,3 +87,12 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.security.web.access: TRACE
+
+app:
+  # Default to local development URL
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+  cookie:
+    # Default to false for local development (HTTP)
+    secure: ${APP_COOKIE_SECURE:false}
+    # Default to Lax for local development
+    same-site: ${APP_COOKIE_SAME_SITE:Lax}

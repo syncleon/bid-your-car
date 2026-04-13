@@ -23,7 +23,11 @@ class OAuth2LoginSuccessHandler(
     private val roleRepository: RoleRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val passwordEncoder: PasswordEncoder,
-    @Value("\${cors.allowed-origins:http://localhost:5174}") private val allowedOrigins: List<String>
+
+    // Inject variables from application.yml
+    @Value("\${app.frontend-url:http://localhost:5173}") private val frontendUrl: String,
+    @Value("\${app.cookie.secure:false}") private val secureCookie: Boolean,
+    @Value("\${app.cookie.same-site:Lax}") private val sameSiteCookie: String
 ) : SimpleUrlAuthenticationSuccessHandler() {
 
     override fun onAuthenticationSuccess(
@@ -52,25 +56,16 @@ class OAuth2LoginSuccessHandler(
         }
         val token = jwtTokenProvider.createToken(user)
 
-        val isLocal = request.serverName == "localhost" || request.serverName == "127.0.0.1"
-
         val jwtCookie = ResponseCookie.from("__session", token)
             .httpOnly(true)
-            .secure(!isLocal) // This forces HTTPS for the cookie in production
+            .secure(secureCookie)
             .path("/")
             .maxAge((30 * 24 * 60 * 60).toLong())
-            // Fix: Use 'None' for production (cross-site), and 'Lax' for local development (HTTP)
-            .sameSite(if (isLocal) "Lax" else "None")
+            .sameSite(sameSiteCookie)
             .build()
 
         response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString())
 
-        val frontendUrl = if (isLocal) {
-            "http://localhost:5173"
-        } else {
-            "https://bidyourcar.web.app"
-        }
-
-        redirectStrategy.sendRedirect(request, response, "$frontendUrl/")
+        redirectStrategy.sendRedirect(request, response, "$frontendUrl/profile")
     }
 }
