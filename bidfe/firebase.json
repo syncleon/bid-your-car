@@ -15,13 +15,6 @@
         }
       },
       {
-        "source": "/oauth2/**",
-        "run": {
-          "serviceId": "bid-your-car",
-          "region": "europe-west1"
-        }
-      },
-      {
         "source": "/login/oauth2/**",
         "run": {
           "serviceId": "bid-your-car",
