@@ -70,6 +70,6 @@ class OAuth2LoginSuccessHandler(
             "https://bidyourcar.web.app"
         }
 
-        redirectStrategy.sendRedirect(request, response, "$frontendUrl/profile")
+        redirectStrategy.sendRedirect(request, response, "$frontendUrl/")
     }
 }
