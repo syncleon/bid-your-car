@@ -70,9 +70,13 @@ services:
       SPRING_CACHE_TYPE: redis
 
       # 5. Google auth
-
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+      # 6. App & Cookie Settings
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5173}
+      APP_COOKIE_SECURE: ${APP_COOKIE_SECURE:-false}
+      APP_COOKIE_SAME_SITE: ${APP_COOKIE_SAME_SITE:-Lax}
 
 volumes:
   car-auction-data:
