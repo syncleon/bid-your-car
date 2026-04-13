@@ -53,10 +53,8 @@ export const LoginForm = observer(() => {
     };
 
     const handleGoogleLogin = () => {
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://bidyourcar.web.app';
-        window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
+        window.location.href = '/oauth2/authorization/google';
     };
-
     return (
         <div style={formStyles.container}>
             <h2 style={formStyles.header}>Welcome back</h2>
