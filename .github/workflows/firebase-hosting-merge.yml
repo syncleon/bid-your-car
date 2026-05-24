@@ -18,4 +18,4 @@ jobs:
       - name: Deploy to Firebase
         run: |
           cd bidfe
-          npx firebase-tools deploy --only hosting --project bidyourcar --token ${{ secrets.FIREBASE_TOKEN }}
+          npx firebase-tools deploy --only hosting --project project-d2f657cf-d1e8-4e22-97a --token ${{ secrets.FIREBASE_TOKEN }}
