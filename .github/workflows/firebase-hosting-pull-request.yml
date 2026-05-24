@@ -20,4 +20,4 @@ jobs:
       - name: Deploy Preview to Firebase
         run: |
           cd bidfe
-          npx firebase-tools hosting:channel:deploy pr-${{ github.event.number }} --expires 7d --project bidyourcar --token ${{ secrets.FIREBASE_TOKEN }}
+          npx firebase-tools hosting:channel:deploy pr-${{ github.event.number }} --expires 7d --project project-d2f657cf-d1e8-4e22-97a --token ${{ secrets.FIREBASE_TOKEN }}
