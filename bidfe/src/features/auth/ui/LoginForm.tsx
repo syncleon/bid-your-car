@@ -52,9 +52,10 @@ export const LoginForm = observer(() => {
         }
     };
 
-    const handleGoogleLogin = () => {
-        window.location.href = '/oauth2/authorization/google';
-    };
+    // const handleGoogleLogin = () => {
+    //     window.location.href = '/oauth2/authorization/google';
+    // };
+
     return (
         <div style={formStyles.container}>
             <h2 style={formStyles.header}>Welcome back</h2>
@@ -102,28 +103,28 @@ export const LoginForm = observer(() => {
                 </button>
             </form>
 
-            <div style={{ textAlign: 'center', margin: '20px 0', color: '#666', fontSize: '14px' }}>
-                or
-            </div>
+            {/*<div style={{ textAlign: 'center', margin: '20px 0', color: '#666', fontSize: '14px' }}>*/}
+            {/*    or*/}
+            {/*</div>*/}
 
-            <button
-                type="button"
-                onClick={handleGoogleLogin}
-                style={{
-                    ...formStyles.primaryBtn,
-                    backgroundColor: '#fff',
-                    color: '#333',
-                    border: '1px solid #d1d5db',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    marginBottom: '20px'
-                }}
-            >
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20" height="20" />
-                Sign in with Google
-            </button>
+            {/*<button*/}
+            {/*    type="button"*/}
+            {/*    onClick={handleGoogleLogin}*/}
+            {/*    style={{*/}
+            {/*        ...formStyles.primaryBtn,*/}
+            {/*        backgroundColor: '#fff',*/}
+            {/*        color: '#333',*/}
+            {/*        border: '1px solid #d1d5db',*/}
+            {/*        display: 'flex',*/}
+            {/*        alignItems: 'center',*/}
+            {/*        justifyContent: 'center',*/}
+            {/*        gap: '10px',*/}
+            {/*        marginBottom: '20px'*/}
+            {/*    }}*/}
+            {/*>*/}
+            {/*    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20" height="20" />*/}
+            {/*    Sign in with Google*/}
+            {/*</button>*/}
 
             <div style={formStyles.footer}>
                 <span style={{ color: "#666" }}>Don't have an account? </span>
