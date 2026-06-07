@@ -19,7 +19,7 @@ interface ItemRepository : BaseRepository<Item, UUID> {
     fun findAllBySellerIdAndStatus(sellerId: Long, status: ItemStatus, pageable: Pageable): Page<Item>
     fun existsByVin(vin: String): Boolean
 
-    @Query("SELECT i FROM Item i WHERE i.status = 'PENDING_AUCTION' AND i.auctions IS EMPTY")
+    @Query("SELECT i FROM Item i WHERE i.status = 'DRAFT' AND i.auctions IS EMPTY")
     fun findReadyForAuction(pageable: Pageable): Page<Item>
 
     @Query(

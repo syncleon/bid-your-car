@@ -145,11 +145,15 @@ export const ItemDetailsPage = observer(() => {
     const isOwner = authStore.user?.id?.toString() === item.seller?.id?.toString();
     const isDraft = item.status === 'DRAFT';
     const isUnsold = item.status === 'UNSOLD';
-    const canList = isDraft || isUnsold;
     const isPending = item.status === 'PENDING_AUCTION';
     const isScheduled = item.status === 'LISTED_AUCTION';
     const isActiveAuction = item.status === 'ACTIVE_AUCTION';
     const isSold = item.status === 'SOLD';
+
+    const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
+    const isGhostPending = isPending && !targetAuctionId;
+
+    const canList = isDraft || isUnsold || isGhostPending;
 
     const soldPrice = item.auction?.currentPrice;
 
@@ -162,6 +166,7 @@ export const ItemDetailsPage = observer(() => {
     const getStatusText = () => {
         if (isActiveAuction) return "Active Auction";
         if (isScheduled) return "Scheduled for Auction";
+        if (isGhostPending) return "Garage Inventory (Draft)";
         if (isPending) return "Pending Admin Approval";
         if (isUnsold) return "Unsold / Returned to Garage";
         return "Garage Inventory (Draft)";
@@ -207,7 +212,7 @@ export const ItemDetailsPage = observer(() => {
                         </div>
 
                         <div style={{ marginTop: 24 }}>
-                            {(isActiveAuction || isScheduled || isPending) && (
+                            {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
                                 <button
                                     onClick={() => {
                                         const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;

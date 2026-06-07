@@ -91,6 +91,16 @@ class AuctionSeederService(
             auction.status = AuctionStatus.UNSOLD
             auctionRepository.save(auction)
         }
+        
+        when (auction.status) {
+            AuctionStatus.ACTIVE -> item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.ACTIVE_AUCTION
+            AuctionStatus.SOLD -> item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.SOLD
+            AuctionStatus.UNSOLD -> item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.UNSOLD
+            AuctionStatus.SCHEDULED -> item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.LISTED_AUCTION
+            AuctionStatus.PENDING_APPROVAL -> item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.PENDING_AUCTION
+            else -> {}
+        }
+        itemRepository.save(item)
     }
 
     private fun simulateBiddingWar(auction: Auction, allUsers: List<User>) {
@@ -131,12 +141,15 @@ class AuctionSeederService(
                 if (auction.status != AuctionStatus.ACTIVE) {
                     auction.status = AuctionStatus.SOLD
                     auction.winnerUser = winningBid.bidder
+                    auction.item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.SOLD
                 }
             } else if (auction.status != AuctionStatus.ACTIVE) {
                 auction.status = AuctionStatus.UNSOLD
+                auction.item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.UNSOLD
             }
 
             auctionRepository.save(auction)
+            itemRepository.save(auction.item)
         }
     }
 }

@@ -18,19 +18,9 @@ class ItemSeederService(
     private val faker = Faker()
 
     private fun generateCarImages(): List<String> {
-        val fallbackImages = listOf(
-            "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80",
-            "https://cdn.pixabay.com/photo/2017/03/05/15/29/aston-martin-2118857_1280.jpg",
-            "https://cdn.pixabay.com/photo/2012/11/02/13/02/car-63930_1280.jpg"
-        )
+        val fallbackImages = (1..10).map { "/images/cars/car$it.png" }
 
-        return fallbackImages.shuffled()
+        return fallbackImages.shuffled().take(10) // Returns 10 random images per car
     }
 
     @Transactional
