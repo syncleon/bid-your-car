@@ -6,8 +6,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
-@EnableScheduling
-@EnableJpaAuditing
 class BidapiApplication
 
 fun main(args: Array<String>) {

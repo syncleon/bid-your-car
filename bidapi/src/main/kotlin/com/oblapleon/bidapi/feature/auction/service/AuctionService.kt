@@ -5,8 +5,8 @@ import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
+import com.oblapleon.bidapi.feature.auction.event.BidPlacedEvent
 import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
-import com.oblapleon.bidapi.feature.bid.dto.BidNotificationDto
 import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
@@ -14,10 +14,11 @@ import com.oblapleon.bidapi.feature.item.repository.ItemRepository
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import io.micrometer.core.instrument.MeterRegistry
+import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -31,11 +32,13 @@ class AuctionService(
     private val itemRepository: ItemRepository,
     private val userRepository: UserRepository,
     private val bidRepository: BidRepository,
-    private val messagingTemplate: SimpMessagingTemplate,
+    private val eventPublisher: ApplicationEventPublisher,
     private val meterRegistry: MeterRegistry,
     private val authorizationHelper: AuthorizationHelper,
     private val auctionFinalizationService: AuctionFinalizationService
 ) {
+
+    private val logger = LoggerFactory.getLogger(AuctionService::class.java)
 
     fun findById(id: UUID): Auction {
         return auctionRepository.findById(id)
@@ -192,8 +195,30 @@ class AuctionService(
     fun placeBidAsUser(auctionId: UUID, bidderId: Long, amount: BigDecimal): Bid {
         val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
             .orElseThrow { NotFoundException("Auction not found.") }
-        val now = Instant.now()
+        
+        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(auction.minBidIncrement)
+        if (amount < minRequired) throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
 
+        return executeBidCore(auction, bidderId, amount, Instant.now())
+    }
+
+    @Transactional
+    fun placeNextMinimumBid(auctionId: UUID): Bid {
+        val currentUser = authorizationHelper.getCurrentUser()
+
+        val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
+            .orElseThrow { NotFoundException("Auction not found.") }
+
+        val exactAmountToBid = if (auction.bidCount == 0) {
+            auction.startPrice
+        } else {
+            auction.currentPrice.add(auction.minBidIncrement)
+        }
+
+        return executeBidCore(auction, currentUser.id!!, exactAmountToBid, Instant.now())
+    }
+
+    private fun executeBidCore(auction: Auction, bidderId: Long, amount: BigDecimal, now: Instant): Bid {
         if (auction.status != AuctionStatus.ACTIVE) throw BadRequestException("Auction is not active.")
         if (now.isAfter(auction.endTime)) throw BadRequestException("Auction has ended.")
         if (now.isBefore(auction.startTime)) throw BadRequestException("Auction has not started yet.")
@@ -202,9 +227,6 @@ class AuctionService(
 
         val bidder = userRepository.findById(bidderId)
             .orElseThrow { NotFoundException("User account not found.") }
-
-        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(auction.minBidIncrement)
-        if (amount < minRequired) throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
 
         val secondsRemaining = ChronoUnit.SECONDS.between(now, auction.endTime)
         if (secondsRemaining < 120) auction.endTime = now.plus(120, ChronoUnit.SECONDS)
@@ -225,66 +247,7 @@ class AuctionService(
         auctionRepository.save(auction)
         meterRegistry.counter("auction.bids.placed", "status", "success").increment()
 
-        dispatchBidNotifications(auction, savedBid, bidder.username)
-
-        return savedBid
-    }
-
-    @Transactional
-    fun placeNextMinimumBid(auctionId: UUID): Bid {
-        val currentUser = authorizationHelper.getCurrentUser()
-
-        val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
-            .orElseThrow { NotFoundException("Auction not found.") }
-        val now = Instant.now()
-
-        if (auction.status != AuctionStatus.ACTIVE) {
-            throw BadRequestException("Auction is not active.")
-        }
-        if (now.isAfter(auction.endTime)) {
-            throw BadRequestException("Auction has ended.")
-        }
-        if (now.isBefore(auction.startTime)) {
-            throw BadRequestException("Auction has not started yet.")
-        }
-        if (auction.item.seller.id == currentUser.id) {
-            throw ForbiddenException("You cannot bid on your own item.")
-        }
-        if (auction.winningBid?.bidder?.id == currentUser.id) {
-            throw BadRequestException("You are already the highest bidder.")
-        }
-
-        val bidder = userRepository.findById(currentUser.id!!)
-            .orElseThrow { NotFoundException("User account not found.") }
-
-        val exactAmountToBid = if (auction.bidCount == 0) {
-            auction.startPrice
-        } else {
-            auction.currentPrice.add(auction.minBidIncrement)
-        }
-
-        val secondsRemaining = ChronoUnit.SECONDS.between(now, auction.endTime)
-        if (secondsRemaining < 120) {
-            auction.endTime = now.plus(120, ChronoUnit.SECONDS)
-        }
-
-        val bid = Bid(
-            auction = auction,
-            bidder = bidder,
-            amount = exactAmountToBid,
-            bidTime = now,
-            maxAmount = exactAmountToBid
-        )
-        val savedBid = bidRepository.save(bid)
-
-        auction.currentPrice = exactAmountToBid
-        auction.bidCount += 1
-        auction.winningBid = savedBid
-
-        auctionRepository.save(auction)
-        meterRegistry.counter("auction.bids.placed", "status", "success").increment()
-
-        dispatchBidNotifications(auction, savedBid, bidder.username)
+        eventPublisher.publishEvent(BidPlacedEvent(auction, savedBid, bidder.username))
 
         return savedBid
     }
@@ -302,7 +265,7 @@ class AuctionService(
             try {
                 auctionFinalizationService.finalizeAuction(auction.id!!)
             } catch (e: Exception) {
-                System.err.println("Failed to finalize auction ${auction.id}: ${e.message}")
+                logger.error("Failed to finalize auction ${auction.id}: ${e.message}", e)
             }
         }
     }
@@ -334,33 +297,8 @@ class AuctionService(
                 itemRepository.save(auction.item)
                 auctionRepository.save(auction)
             } catch (e: Exception) {
-                System.err.println("Failed to activate scheduled auction ${auction.id}: ${e.message}")
+                logger.error("Failed to activate scheduled auction ${auction.id}: ${e.message}", e)
             }
-        }
-    }
-
-    private fun dispatchBidNotifications(auction: Auction, savedBid: Bid, bidderUsername: String) {
-        try {
-            val notification = BidNotificationDto(
-                auctionId = auction.id!!,
-                newPrice = auction.currentPrice,
-                bidCount = auction.bidCount,
-                bidderUsername = bidderUsername,
-                bidTime = savedBid.bidTime,
-                newEndTime = auction.endTime
-            )
-            messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", notification)
-
-            val globalFeedItem = mapOf(
-                "auctionId" to auction.id.toString(),
-                "carName" to "${auction.item.year} ${auction.item.make} ${auction.item.model}",
-                "newPrice" to auction.currentPrice,
-                "bidder" to bidderUsername,
-                "timestamp" to savedBid.bidTime.toString()
-            )
-            messagingTemplate.convertAndSend("/topic/admin/bids/live", globalFeedItem)
-        } catch (e: Exception) {
-            System.err.println("Failed to send WebSocket notification: ${e.message}")
         }
     }
 }
