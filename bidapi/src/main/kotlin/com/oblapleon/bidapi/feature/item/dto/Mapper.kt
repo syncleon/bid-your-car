@@ -33,7 +33,7 @@ fun Item.toDto(): ItemDto {
         interiorColor = this.interiorColor,
         sellerType = this.sellerType,
         images = this.images.map { it.toDto() }.sortedBy { it.sortOrder },
-        auctionId = auctionId
+        auctionId = this.auctionId ?: this.auctions.firstOrNull { it.status != com.oblapleon.bidapi.feature.auction.entity.AuctionStatus.CANCELLED }?.id
     )
 }
 
