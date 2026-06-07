@@ -12,10 +12,11 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import com.oblapleon.bidapi.common.config.ApiConstants
 import java.util.UUID
 
 @RestController
-@RequestMapping("/api/v1/bids")
+@RequestMapping(ApiConstants.BIDS)
 @Tag(name = "Bids", description = "Bid history and user activity")
 class BidController(
     private val bidService: BidService,
