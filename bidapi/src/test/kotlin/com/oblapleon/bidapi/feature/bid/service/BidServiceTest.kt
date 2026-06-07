@@ -1,17 +1,19 @@
 package com.oblapleon.bidapi.feature.bid.service
 
 import com.oblapleon.bidapi.common.exception.NotFoundException
+import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
+import com.oblapleon.bidapi.feature.user.entity.User
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.any
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import java.math.BigDecimal
@@ -27,16 +29,25 @@ class BidServiceTest {
     @InjectMocks
     private lateinit var bidService: BidService
 
+    private fun mockBid(
+        id: UUID = UUID.randomUUID(),
+        amount: BigDecimal = BigDecimal("100.00")
+    ): Bid {
+        val auction = mock(Auction::class.java)
+        val bidder = mock(User::class.java)
+        return Bid(
+            id = id,
+            auction = auction,
+            bidder = bidder,
+            amount = amount,
+            bidTime = Instant.now()
+        )
+    }
+
     @Test
     fun `findById should return bid when found`() {
         val id = UUID.randomUUID()
-        val bid = Bid(
-            id = id,
-            auctionId = UUID.randomUUID(),
-            bidderId = 1L,
-            amount = BigDecimal("100.00"),
-            bidTime = Instant.now()
-        )
+        val bid = mockBid(id = id, amount = BigDecimal("100.00"))
 
         `when`(bidRepository.findById(id)).thenReturn(Optional.of(bid))
 
@@ -61,8 +72,8 @@ class BidServiceTest {
         val auctionId = UUID.randomUUID()
         val pageable = PageRequest.of(0, 10)
         val bids = listOf(
-            Bid(UUID.randomUUID(), auctionId, 1L, BigDecimal("100.00"), Instant.now()),
-            Bid(UUID.randomUUID(), auctionId, 2L, BigDecimal("150.00"), Instant.now())
+            mockBid(amount = BigDecimal("100.00")),
+            mockBid(amount = BigDecimal("150.00"))
         )
         val expectedPage = PageImpl(bids, pageable, bids.size.toLong())
 

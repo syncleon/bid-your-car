@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "Endpoints for user login, registration, and recovery")
@@ -95,19 +96,4 @@ class AuthController(
         return ResponseEntity.ok(mapOf("message" to "Account restored successfully. You can now log in."))
     }
 
-    @Operation(summary = "OAuth2 Cookie Setter", description = "Sets the HTTP-only cookie after redirect")
-    @GetMapping("/oauth2-success")
-    fun oauth2Success(@RequestParam token: String): ResponseEntity<Map<String, String>> {
-        val jwtCookie = ResponseCookie.from("__session", token)
-            .httpOnly(true)
-            .secure(secureCookie)
-            .path("/")
-            .maxAge((30 * 24 * 60 * 60).toLong())
-            .sameSite(sameSiteCookie)
-            .build()
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-            .body(mapOf("message" to "OAuth2 login successful"))
-    }
 }

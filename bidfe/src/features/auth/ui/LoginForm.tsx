@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useStore } from "../../../shared/hooks/useStore";
 import { formStyles } from "./formStyles";
 
@@ -8,6 +8,7 @@ export const LoginForm = observer(() => {
     const { authStore } = useStore();
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
 
     const [formData, setFormData] = useState({ username: "", password: "" });
 
@@ -15,17 +16,25 @@ export const LoginForm = observer(() => {
         authStore.reset();
     }, [authStore]);
 
+    // Resolve where to go after a successful login:
+    // 1. ?redirect= param (set by PrivateRoute)
+    // 2. backgroundLocation state (modal open from a page)
+    // 3. fallback: home
+    const getRedirectTarget = () => {
+        const redirectParam = searchParams.get("redirect");
+        if (redirectParam) return redirectParam;
+        const bg = location.state?.backgroundLocation;
+        if (bg && bg.pathname !== "/login" && bg.pathname !== "/register") {
+            return `${bg.pathname}${bg.search || ""}${bg.hash || ""}`;
+        }
+        return "/";
+    };
+
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await authStore.login(formData);
-
-            const bg = location.state?.backgroundLocation;
-            if (bg) {
-                navigate(bg.pathname, { replace: true });
-            } else {
-                navigate("/profile");
-            }
+            navigate(getRedirectTarget(), { replace: true });
         } catch (error) {
             console.error("Login failed", error);
         }
@@ -34,12 +43,7 @@ export const LoginForm = observer(() => {
     const handleRestore = async () => {
         try {
             await authStore.restore(formData);
-            const bg = location.state?.backgroundLocation;
-            if (bg) {
-                navigate(bg.pathname, { replace: true });
-            } else {
-                navigate("/profile");
-            }
+            navigate(getRedirectTarget(), { replace: true });
         } catch(error) {
             console.error("Restore failed", error);
         }
@@ -103,9 +107,9 @@ export const LoginForm = observer(() => {
             </form>
 
             <div style={formStyles.footer}>
-                <span style={{ color: "#666" }}>Don't have an account? </span>
+                <span style={{ color: "var(--text-secondary)" }}>Don't have an account? </span>
                 <Link
-                    to="/register"
+                    to={`/register${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`}
                     replace={true}
                     state={{ backgroundLocation: location.state?.backgroundLocation }}
                     style={formStyles.linkBtn}

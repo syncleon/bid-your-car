@@ -5,11 +5,15 @@ import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.item.repository.ItemRepository
+import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
+
 
 @Service
 class AuctionFinalizationService(
@@ -18,6 +22,7 @@ class AuctionFinalizationService(
     private val bidRepository: BidRepository,
     private val messagingTemplate: SimpMessagingTemplate
 ) {
+    private val logger = LoggerFactory.getLogger(AuctionFinalizationService::class.java)
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun finalizeAuction(auctionId: UUID) {
@@ -55,7 +60,36 @@ class AuctionFinalizationService(
             )
             messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", finalNotification)
         } catch (e: Exception) {
-            System.err.println("Failed to send auction closed notification: ${e.message}")
+            logger.error("Failed to send auction closed notification for auction ${auction.id}: ${e.message}", e)
         }
+    }
+
+    /**
+     * Activates a single SCHEDULED auction in its own transaction (REQUIRES_NEW),
+     * matching the isolation pattern of finalizeAuction so one failure doesn't
+     * roll back the entire scheduler batch.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun activateScheduledAuction(auctionId: UUID) {
+        val auction = auctionRepository.findById(auctionId).orElse(null) ?: return
+
+        if (auction.status != AuctionStatus.SCHEDULED) return
+
+        val now = Instant.now()
+
+        if (!auction.endTime.isAfter(now)) {
+            val durationSeconds = ChronoUnit.SECONDS.between(auction.startTime, auction.endTime)
+            if (durationSeconds > 0) {
+                auction.startTime = now
+                auction.endTime = now.plusSeconds(durationSeconds)
+            }
+        }
+
+        auction.status = AuctionStatus.ACTIVE
+        auction.item.status = ItemStatus.ACTIVE_AUCTION
+
+        itemRepository.save(auction.item)
+        auctionRepository.save(auction)
+        logger.info("Activated scheduled auction ${auction.id}")
     }
 }

@@ -32,17 +32,12 @@ class CookieBearerTokenResolver : BearerTokenResolver {
     private val defaultResolver = DefaultBearerTokenResolver()
 
     override fun resolve(request: HttpServletRequest): String? {
-        // Log all cookies the backend is receiving
-        println("SECURITY DEBUG: All cookies received: ${request.cookies?.map { it.name }}")
-
         val jwtCookie = request.cookies?.firstOrNull { it.name == "__session" }
 
         if (jwtCookie != null && jwtCookie.value.isNotBlank()) {
-            println("SECURITY DEBUG: Successfully found __session cookie!")
             return jwtCookie.value
         }
 
-        println("SECURITY DEBUG: No __session cookie found. Falling back to default header check.")
         return defaultResolver.resolve(request)
     }
 }
@@ -69,7 +64,6 @@ class SecurityConfig(
                     .requestMatchers(antMatcher("/actuator/prometheus")).permitAll()
                     .requestMatchers(antMatcher("/actuator/**")).hasAuthority("ADMIN")
                     .requestMatchers(antMatcher("/ws/**")).permitAll()
-                    .requestMatchers(antMatcher("/api/v1/auth/**")).permitAll()
                     .requestMatchers(antMatcher("/api/v1/auth/**")).permitAll()
                     .requestMatchers(antMatcher("/login/oauth2/**")).permitAll()
                     .requestMatchers(antMatcher("/oauth2/**")).permitAll()

@@ -20,7 +20,7 @@ data class CreateAuctionDto(
     val endTime: Instant,
 
     @field:NotNull(message = "Starting bid is required")
-    @field:DecimalMin(value = "0.0", inclusive = true)
+    @field:DecimalMin(value = "0.01", inclusive = true, message = "Starting price must be at least 0.01")
     val startPrice: BigDecimal,
 
     @field:DecimalMin(value = "1.0", inclusive = true)

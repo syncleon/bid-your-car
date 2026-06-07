@@ -120,13 +120,7 @@ class AuctionService(
 
     @Transactional
     fun approveAuction(auctionId: UUID) {
-        val currentUser = authorizationHelper.getCurrentUser()
-        val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
-
-        if (!isAdmin) {
-            throw ForbiddenException("Only administrators can approve auctions.")
-        }
-
+        // Admin role already enforced by @PreAuthorize on the controller
         val auction = findById(auctionId)
 
         if (auction.status != AuctionStatus.PENDING_APPROVAL) {
@@ -168,8 +162,8 @@ class AuctionService(
         val currentUser = authorizationHelper.checkOwnerOrAdmin(auction.item.seller.id!!)
         val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
 
-        if(auction.status == AuctionStatus.ACTIVE) {
-            throw ConflictException("Cannot cancel active auction.")
+        if (auction.status == AuctionStatus.ACTIVE && !isAdmin) {
+            throw ConflictException("Cannot cancel an active auction. Contact support.")
         }
 
         if (auction.bidCount > 0 && !isAdmin) {
@@ -177,12 +171,28 @@ class AuctionService(
         }
 
         auction.status = AuctionStatus.CANCELLED
-
         auction.item.status = ItemStatus.DRAFT
         auction.item.auctionId = null
 
         itemRepository.save(auction.item)
         auctionRepository.save(auction)
+    }
+
+    /**
+     * Admin-only force cancel: bypasses ACTIVE and bid-count guards.
+     * The controller must enforce @PreAuthorize("hasRole('ADMIN')") before calling this.
+     */
+    @Transactional
+    fun adminForceCancelAuction(id: UUID) {
+        val auction = findById(id)
+
+        auction.status = AuctionStatus.CANCELLED
+        auction.item.status = ItemStatus.DRAFT
+        auction.item.auctionId = null
+
+        itemRepository.save(auction.item)
+        auctionRepository.save(auction)
+        logger.info("Admin force-cancelled auction ${auction.id}")
     }
 
     @Transactional
@@ -270,7 +280,6 @@ class AuctionService(
         }
     }
 
-    @Transactional
     fun processScheduledAuctions() {
         val now = Instant.now()
         val pageRequest = PageRequest.of(0, 50)
@@ -283,19 +292,7 @@ class AuctionService(
 
         dueAuctions.forEach { auction ->
             try {
-                if (!auction.endTime.isAfter(now)) {
-                    val durationSeconds = ChronoUnit.SECONDS.between(auction.startTime, auction.endTime)
-                    if (durationSeconds > 0) {
-                        auction.startTime = now
-                        auction.endTime = now.plusSeconds(durationSeconds)
-                    }
-                }
-
-                auction.status = AuctionStatus.ACTIVE
-                auction.item.status = ItemStatus.ACTIVE_AUCTION
-
-                itemRepository.save(auction.item)
-                auctionRepository.save(auction)
+                auctionFinalizationService.activateScheduledAuction(auction.id!!)
             } catch (e: Exception) {
                 logger.error("Failed to activate scheduled auction ${auction.id}: ${e.message}", e)
             }

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import type {ReactNode} from "react";
+import type { ReactNode } from "react";
 import styles from "./styles.ts";
+import "./BaseCard.css";
 
 interface BaseCardProps {
     to: string;
@@ -16,24 +17,42 @@ interface BaseCardProps {
         bottomLeft?: ReactNode;
         bottomRight?: ReactNode;
     };
+    /** Extra metadata row rendered below the image (passed as children) */
     children: ReactNode;
+    /** When true, applies the urgent pulse ring to signal imminent end */
+    isUrgent?: boolean;
+    /** Layout mode: grid (default) or list (horizontal) */
+    viewMode?: "grid" | "list";
 }
 
-export const BaseCard = ({ to, imageUrl, title, overlays, children }: BaseCardProps) => {
+export const BaseCard = ({ to, imageUrl, title, overlays, children, isUrgent, viewMode = "grid" }: BaseCardProps) => {
+    const isList = viewMode === "list";
     return (
-        <Link to={to} style={styles.link}>
-            <div style={styles.container}>
-                <div style={styles.imageWrapper}>
+        <Link
+            to={to}
+            className={`base-card-link${isList ? " base-card-link--list" : ""}`}
+        >
+            <div
+                className={`base-card${isUrgent ? " base-card--urgent" : ""}${isList ? " base-card--list" : ""}`}
+                style={styles.container}
+                data-urgent={isUrgent ? "true" : undefined}
+            >
+                <div
+                    className={`base-card-image-wrapper${isList ? " base-card-image-wrapper--list" : ""}`}
+                    style={styles.imageWrapper}
+                >
                     {imageUrl ? (
                         <img
                             src={imageUrl}
                             alt={`${title.year} ${title.make} ${title.model}`}
+                            className="base-card-image"
                             style={styles.image}
                             loading="lazy"
                         />
                     ) : (
                         <div style={styles.placeholder}>No Photos</div>
                     )}
+
                     {overlays?.topLeft && (
                         <div style={styles.overlayTopLeft}>{overlays.topLeft}</div>
                     )}
@@ -47,7 +66,8 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children }: BaseCardPr
                         </div>
                     )}
                 </div>
-                <div style={styles.content}>
+
+                <div style={isList ? { ...styles.content, flex: 1, padding: "12px 14px" } : styles.content}>
                     <h3 style={styles.title}>
                         <span style={styles.year}>{title.year}</span> {title.make} {title.model}
                     </h3>

@@ -1,10 +1,11 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../shared/hooks/useStore.ts";
 import { AuctionCard } from "../features/auction/ui/AuctionCard.tsx";
 import "./AuctionList.css";
 
 const ITEMS_PER_BATCH = 20;
+
 interface FilterOption {
     label: string | number;
     value: string | number;
@@ -17,21 +18,143 @@ interface FilterSelectProps {
     onChange: (val: string) => void;
 }
 
-const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) => (
-    <div className="filter-group">
-        <label className="filter-label">{label}</label>
-        <div className="select-wrapper">
-            <select className="filter-select" value={value} onChange={(e) => onChange(e.target.value)}>
-                {options.map((opt, idx) => {
-                    const val = typeof opt === 'object' && opt !== null ? opt.value : opt;
-                    const lab = typeof opt === 'object' && opt !== null ? opt.label : opt;
-                    return <option key={`${val}-${idx}`} value={val}>{lab}</option>;
-                })}
-            </select>
+// ── Custom Dropdown ────────────────────────────────────────
+const ChevronIcon = ({ open }: { open: boolean }) => (
+    <svg
+        width="13" height="13" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="2.5"
+        strokeLinecap="round" strokeLinejoin="round"
+        style={{ transition: "transform 0.18s", transform: open ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}
+    >
+        <path d="m6 9 6 6 6-6" />
+    </svg>
+);
+
+const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    // Normalise options to { label, value }
+    const normalised = options.map(o =>
+        typeof o === "object" && o !== null
+            ? { label: String(o.label), value: String(o.value) }
+            : { label: String(o), value: String(o) }
+    );
+
+    // Current display label
+    const current = normalised.find(o => o.value === String(value));
+    const displayLabel = current && current.value !== "All" ? current.label : label;
+    const hasValue = current?.value !== "All";
+
+    // Close on outside click
+    const handleOutside = useCallback((e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }, []);
+
+    useEffect(() => {
+        if (open) document.addEventListener("mousedown", handleOutside);
+        else document.removeEventListener("mousedown", handleOutside);
+        return () => document.removeEventListener("mousedown", handleOutside);
+    }, [open, handleOutside]);
+
+    const select = (val: string) => { onChange(val); setOpen(false); };
+
+    return (
+        <div className={`custom-select${open ? " custom-select--open" : ""}`} ref={ref}>
+            <button
+                type="button"
+                className={`custom-select__trigger${hasValue ? " custom-select__trigger--active" : ""}`}
+                onClick={() => setOpen(v => !v)}
+                aria-expanded={open}
+                aria-haspopup="listbox"
+            >
+                <span className="custom-select__label">{displayLabel}</span>
+                <ChevronIcon open={open} />
+            </button>
+
+            {open && (
+                <div className="custom-select__dropdown" role="listbox">
+                    {/* "All" / reset option */}
+                    <button
+                        type="button"
+                        role="option"
+                        aria-selected={!hasValue}
+                        className={`custom-select__option${!hasValue ? " custom-select__option--selected" : ""}`}
+                        onClick={() => select("All")}
+                    >
+                        {label}
+                        {!hasValue && <CheckIcon />}
+                    </button>
+                    {normalised.filter(o => o.value !== "All").map(o => (
+                        <button
+                            key={o.value}
+                            type="button"
+                            role="option"
+                            aria-selected={String(value) === o.value}
+                            className={`custom-select__option${String(value) === o.value ? " custom-select__option--selected" : ""}`}
+                            onClick={() => select(o.value)}
+                        >
+                            {o.label}
+                            {String(value) === o.value && <CheckIcon />}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const CheckIcon = () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+        <polyline points="20 6 9 17 4 12" />
+    </svg>
+);
+
+// ── Skeleton loader ────────────────────────────────────────
+const SkeletonCard = () => (
+    <div className="skeleton-card">
+        <div className="skeleton-image shimmer" />
+        <div className="skeleton-body">
+            <div className="skeleton-line wide shimmer" />
+            <div className="skeleton-line medium shimmer" />
+            <div className="skeleton-line narrow shimmer" />
         </div>
     </div>
 );
 
+const SkeletonGrid = () => (
+    <div className="skeleton-grid">
+        {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+    </div>
+);
+
+// ── Icons ──────────────────────────────────────────────────
+const GridIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="3" y="3" width="8" height="8" rx="1.5" />
+        <rect x="13" y="3" width="8" height="8" rx="1.5" />
+        <rect x="3" y="13" width="8" height="8" rx="1.5" />
+        <rect x="13" y="13" width="8" height="8" rx="1.5" />
+    </svg>
+);
+
+const ListIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <rect x="3" y="4" width="18" height="5" rx="1" />
+        <rect x="3" y="11" width="18" height="5" rx="1" />
+        <rect x="3" y="18" width="18" height="3" rx="1" />
+    </svg>
+);
+
+const SearchIcon = () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+    </svg>
+);
+
+// ── Template ────────────────────────────────────────────────
 interface TemplateProps {
     title: string;
     status?: string;
@@ -40,16 +163,18 @@ interface TemplateProps {
 }
 
 export const AuctionListTemplate = observer(({
-                                                 title,
-                                                 status,
-                                                 pageSize,
-                                                 defaultSort = "ending_soon"
-                                             }: TemplateProps) => {
+    title,
+    status,
+    pageSize,
+    defaultSort = "ending_soon"
+}: TemplateProps) => {
     const { auctionStore } = useStore();
 
     const [filterMake, setFilterMake] = useState("All");
     const [filterYear, setFilterYear] = useState("All");
     const [sortBy, setSortBy] = useState(defaultSort);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
     const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
 
@@ -73,6 +198,7 @@ export const AuctionListTemplate = observer(({
     useEffect(() => {
         setFilterMake("All");
         setFilterYear("All");
+        setSearchQuery("");
         setSortBy(status === 'SOLD' ? "newly_sold" : defaultSort);
         setVisibleCount(ITEMS_PER_BATCH);
 
@@ -94,6 +220,7 @@ export const AuctionListTemplate = observer(({
         } else {
             options.unshift({ label: "Ending Soon", value: "ending_soon" });
             options.push({ label: "Newly Listed", value: "newly_listed" });
+            options.push({ label: "Most Bids", value: "most_bids" });
         }
         return options;
     }, [status]);
@@ -103,6 +230,13 @@ export const AuctionListTemplate = observer(({
 
         if (filterMake !== "All") result = result.filter(a => a.item.make === filterMake);
         if (filterYear !== "All") result = result.filter(a => a.item.year.toString() === filterYear);
+
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            result = result.filter(a =>
+                `${a.item.year} ${a.item.make} ${a.item.model} ${a.item.location}`.toLowerCase().includes(q)
+            );
+        }
 
         result.sort((a, b) => {
             switch (sortBy) {
@@ -114,6 +248,8 @@ export const AuctionListTemplate = observer(({
                     return a.currentPrice - b.currentPrice;
                 case "price_high":
                     return b.currentPrice - a.currentPrice;
+                case "most_bids":
+                    return b.bidCount - a.bidCount;
                 case "ending_soon":
                 default:
                     return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
@@ -121,7 +257,7 @@ export const AuctionListTemplate = observer(({
         });
 
         return result;
-    }, [auctionsFromStore, filterMake, filterYear, sortBy]);
+    }, [auctionsFromStore, filterMake, filterYear, searchQuery, sortBy]);
 
     const visibleAuctions = useMemo(() => {
         return filteredAuctions.slice(0, visibleCount);
@@ -136,63 +272,126 @@ export const AuctionListTemplate = observer(({
             if (entries[0].isIntersecting && hasMore) {
                 setVisibleCount((prev) => Math.min(prev + ITEMS_PER_BATCH, filteredAuctions.length));
             }
-        }, {
-            root: null,
-            rootMargin: "600px",
-            threshold: 0.1
-        });
+        }, { root: null, rootMargin: "600px", threshold: 0.1 });
 
         if (sentinelRef.current) observerRef.current.observe(sentinelRef.current);
-
         return () => observerRef.current?.disconnect();
     }, [hasMore, filteredAuctions.length]);
 
-    if (auctionStore.isLoading && auctionsFromStore.length === 0) {
-        return <div className="loading-state">Loading vehicles...</div>;
-    }
+    // Determine active filter chips
+    const chips: { label: string; clear: () => void }[] = [];
+    if (filterMake !== "All") chips.push({ label: filterMake, clear: () => setFilterMake("All") });
+    if (filterYear !== "All") chips.push({ label: filterYear.toString(), clear: () => setFilterYear("All") });
+    if (searchQuery.trim()) chips.push({ label: `"${searchQuery}"`, clear: () => setSearchQuery("") });
 
-    const hasActiveFilters = filterMake !== "All" || filterYear !== "All";
+    const hasActiveFilters = chips.length > 0;
+
+    if (auctionStore.isLoading && auctionsFromStore.length === 0) {
+        return (
+            <div className="auction-container">
+                <div style={{ padding: "14px 0 12px", marginBottom: "24px" }}>
+                    <div className="header-top">
+                        <h1 className="page-title">{title}</h1>
+                    </div>
+                </div>
+                <SkeletonGrid />
+            </div>
+        );
+    }
 
     return (
         <div className="auction-container">
             <header className="auction-header">
                 <div className="header-top">
                     <h1 className="page-title">{title}</h1>
-                    <span className="result-count">
-                        {filteredAuctions.length} vehicles found
-                    </span>
+                    <span className="result-count">{filteredAuctions.length} vehicles</span>
                 </div>
 
-                <button className="mobile-filter-toggle" onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}>
-                    {isMobileFiltersOpen ? 'Hide Filters' : 'Show Filters & Sort'}
+                {/* Mobile toggle */}
+                <button
+                    className="mobile-filter-toggle"
+                    onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+                >
+                    {isMobileFiltersOpen ? '▲ Hide Filters' : '▼ Filters & Sort'}
                 </button>
 
-                <div className={`controls-wrapper ${isMobileFiltersOpen ? 'is-open' : ''}`}>
-                    <div className="filters-row">
-                        <FilterSelect label="Make" value={filterMake} options={makes} onChange={setFilterMake} />
-                        <FilterSelect label="Year" value={filterYear} options={years} onChange={setFilterYear} />
-                        <FilterSelect label="Sort By" value={sortBy} options={sortOptions} onChange={setSortBy} />
+                <div className={`controls-wrapper ${isMobileFiltersOpen ? 'mobile-open' : 'mobile-hidden'}`}>
+                    {/* Single row: search + selects + view toggle */}
+                    <div className="controls-bar">
+                        <div className="search-wrapper">
+                            <span className="search-icon"><SearchIcon /></span>
+                            <input
+                                className="search-input"
+                                type="text"
+                                placeholder="Search make, model, location…"
+                                value={searchQuery}
+                                onChange={e => {
+                                    setSearchQuery(e.target.value);
+                                    setVisibleCount(ITEMS_PER_BATCH);
+                                }}
+                            />
+                        </div>
+
+                        <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                        <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                        <FilterSelect label="Sort" value={sortBy} options={sortOptions} onChange={setSortBy} />
+
+                        <div className="view-controls">
+                            <button
+                                className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                                onClick={() => setViewMode('grid')}
+                                title="Grid view"
+                            >
+                                <GridIcon />
+                            </button>
+                            <button
+                                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                                onClick={() => setViewMode('list')}
+                                title="List view"
+                            >
+                                <ListIcon />
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Active filter chips */}
                     {hasActiveFilters && (
-                        <button className="reset-btn" onClick={() => { setFilterMake("All"); setFilterYear("All"); }}>Reset</button>
+                        <div className="active-chips">
+                            {chips.map((chip, i) => (
+                                <button key={i} className="filter-chip" onClick={chip.clear}>
+                                    {chip.label}
+                                    <span className="filter-chip-x">×</span>
+                                </button>
+                            ))}
+                            <button className="reset-btn" onClick={() => {
+                                setFilterMake("All");
+                                setFilterYear("All");
+                                setSearchQuery("");
+                            }}>
+                                Clear all
+                            </button>
+                        </div>
                     )}
                 </div>
             </header>
 
             {visibleAuctions.length === 0 ? (
-                <div className="empty-state"><h3>No vehicles found</h3></div>
+                <div className="empty-state">
+                    <h3>No vehicles found</h3>
+                    <p>Try adjusting your filters or search query.</p>
+                </div>
             ) : (
-                <div className="auction-grid">
+                <div className={viewMode === 'grid' ? 'auction-grid' : 'auction-list'}>
                     {visibleAuctions.map((auction) => (
                         <div key={auction.id} className="fade-in-item">
-                            <AuctionCard auction={auction} />
+                            <AuctionCard auction={auction} viewMode={viewMode} />
                         </div>
                     ))}
                     <div ref={sentinelRef} style={{ height: "20px", width: "100%", gridColumn: "1 / -1" }} />
                 </div>
             )}
 
-            {hasMore && <div className="scroll-loader">Loading more...</div>}
+            {hasMore && <div className="scroll-loader">Loading more…</div>}
         </div>
     );
 });

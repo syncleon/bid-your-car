@@ -1,12 +1,14 @@
 import { observer } from "mobx-react-lite";
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useStore } from "../../../shared/hooks/useStore";
 import { formStyles } from "./formStyles";
 
 export const RegisterForm = observer(() => {
     const { authStore } = useStore();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
+    const redirectParam = searchParams.get("redirect") ?? "";
 
     const [formData, setFormData] = useState({ username: "", email: "", password: "" });
 
@@ -38,7 +40,7 @@ export const RegisterForm = observer(() => {
                 <p style={{ ...formStyles.subHeader, margin: "0 0 32px 0" }}>{authStore.successMessage}</p>
 
                 <Link
-                    to="/login"
+                    to={`/login${redirectParam ? `?redirect=${redirectParam}` : ""}`}
                     replace={true}
                     state={{ backgroundLocation: location.state?.backgroundLocation }}
                     style={{ ...formStyles.primaryBtn, display: "inline-block", textDecoration: "none", boxSizing: "border-box" }}
@@ -99,9 +101,9 @@ export const RegisterForm = observer(() => {
             </form>
 
             <div style={formStyles.footer}>
-                <span style={{ color: "#666" }}>Already have an account? </span>
+                <span style={{ color: "var(--text-secondary)" }}>Already have an account? </span>
                 <Link
-                    to="/login"
+                    to={`/login${redirectParam ? `?redirect=${redirectParam}` : ""}`}
                     replace={true}
                     state={{ backgroundLocation: location.state?.backgroundLocation }}
                     style={formStyles.linkBtn}

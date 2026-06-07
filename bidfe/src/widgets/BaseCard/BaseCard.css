@@ -1,0 +1,71 @@
+/* ============================================================
+   BaseCard — 2025 Hover & Urgency Styles
+   ============================================================ */
+
+.base-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.base-card-link--list {
+    display: block;
+}
+
+/* ── Card Base ───────────────────────────────────────────── */
+.base-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition:
+        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.3s ease;
+}
+
+.base-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ── List mode ───────────────────────────────────────────── */
+.base-card--list {
+    display: flex;
+    flex-direction: row;
+    border-radius: 12px;
+}
+
+.base-card-image-wrapper--list {
+    flex-shrink: 0;
+    width: 220px !important;
+    aspect-ratio: unset !important;
+    height: 140px;
+}
+
+/* ── Image zoom on hover ─────────────────────────────────── */
+.base-card-image {
+    transition: transform 0.4s ease !important;
+}
+
+.base-card:hover .base-card-image {
+    transform: scale(1.04);
+}
+
+/* ── Urgent card: pulsing border ring ────────────────────── */
+.base-card--urgent {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
+    animation: urgentPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.base-card--urgent:hover {
+    border-color: #ef4444 !important;
+}
+
+@keyframes urgentPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+    }
+}

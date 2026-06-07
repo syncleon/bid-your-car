@@ -1,0 +1,130 @@
+/* ============================================================
+   AuctionCard — Card Body Styles
+   ============================================================ */
+
+/* ── Card body container ─────────────────────────────────── */
+.auction-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 2px;
+}
+
+/* ── Spec pills row ─────────────────────────────────────── */
+.auction-card-specs {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.auction-card-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    letter-spacing: 0.1px;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    white-space: nowrap;
+}
+
+/* ── Footer: location + bid count ───────────────────────── */
+.auction-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 8px;
+    margin-top: 2px;
+    transition: border-color 0.3s ease;
+}
+
+.auction-card-location {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    overflow: hidden;
+    transition: color 0.3s ease;
+}
+
+.auction-card-location span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Bid count ───────────────────────────────────────────── */
+.auction-card-bids {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.auction-card-bids--hot {
+    color: #f97316;
+}
+
+.auction-card-bids--none {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* ── No Reserve badge ───────────────────────────────────── */
+.badge-no-reserve {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    backdrop-filter: blur(4px);
+    margin-top: 4px;
+}
+
+/* ── Hot badge (top-right) ──────────────────────────────── */
+.badge-hot {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(249, 115, 22, 0.85);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    letter-spacing: 0.2px;
+}
+
+/* ── Urgent pulsing dot (in timer badge) ────────────────── */
+.urgent-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fff;
+    flex-shrink: 0;
+    animation: dotPulse 1s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+}

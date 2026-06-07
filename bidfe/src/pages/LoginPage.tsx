@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { LoginForm } from "../features/auth/ui/LoginForm";
 import { RegisterForm } from "../features/auth/ui/RegisterForm";
 
@@ -9,13 +9,16 @@ interface LoginPageProps {
 export const LoginPage = ({ isModal = false }: LoginPageProps) => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const isRegister = location.pathname === "/register";
 
     const handleClose = () => {
-        if (isModal) {
-            navigate(-1);
+        const bg = location.state?.backgroundLocation;
+        if (bg && bg.pathname !== "/login" && bg.pathname !== "/register") {
+            navigate(`${bg.pathname}${bg.search || ""}${bg.hash || ""}`, { replace: true });
         } else {
-            navigate("/");
+            const redirect = searchParams.get("redirect");
+            navigate(redirect || "/", { replace: true });
         }
     };
 

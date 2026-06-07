@@ -150,13 +150,13 @@ class AuctionController(
         return ResponseEntity.ok(mapOf("message" to "Auction approved successfully."))
     }
 
-    @Operation(summary = "Force Cancel", description = "Admin: Cancel an auction even if bids exist.")
+    @Operation(summary = "Force Cancel", description = "Admin: Cancel an auction even if active or if bids exist.")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/{id}/cancel")
     fun adminCancelAuction(
         @PathVariable id: UUID
     ): ResponseEntity<Map<String, String>> {
-        auctionService.cancelAuction(id)
-        return ResponseEntity.ok(mapOf("message" to "Auction cancelled by admin."))
+        auctionService.adminForceCancelAuction(id)
+        return ResponseEntity.ok(mapOf("message" to "Auction force-cancelled by admin."))
     }
 }
