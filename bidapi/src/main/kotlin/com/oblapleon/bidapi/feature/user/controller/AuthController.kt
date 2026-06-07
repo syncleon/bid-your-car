@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URI
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -21,7 +22,8 @@ import org.springframework.web.bind.annotation.*
 class AuthController(
     private val authService: AuthService,
     @Value("\${app.cookie.secure:false}") private val secureCookie: Boolean,
-    @Value("\${app.cookie.same-site:Lax}") private val sameSiteCookie: String
+    @Value("\${app.cookie.same-site:Lax}") private val sameSiteCookie: String,
+    @Value("\${app.frontend-url}") private val frontendUrl: String
 ) {
 
     @Operation(summary = "User Login")
@@ -73,11 +75,17 @@ class AuthController(
         return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to message))
     }
 
-    @Operation(summary = "Verify Email", description = "Validates the token sent via email.")
+    @Operation(summary = "Verify Email", description = "Validates the token sent via email and redirects to the frontend login page.")
     @GetMapping("/verify")
-    fun verify(@RequestParam token: String): ResponseEntity<Map<String, String>> {
-        val message = authService.verifyAccount(token)
-        return ResponseEntity.ok(mapOf("message" to message))
+    fun verify(@RequestParam token: String): ResponseEntity<Void> { // <-- Changed return type
+        // 1. Run the verification logic
+        authService.verifyAccount(token)
+
+        // 2. Build the redirect URL and send a 302 response
+        return ResponseEntity
+            .status(HttpStatus.FOUND)
+            .location(URI.create("$frontendUrl/login?verified=true"))
+            .build()
     }
 
     @Operation(summary = "Restore Account", description = "Reactivates a soft-deleted account using valid credentials.")

@@ -92,7 +92,7 @@ class AuthService(
     }
 
     @Transactional
-    fun verifyAccount(tokenString: String): String {
+    fun verifyAccount(tokenString: String) { // <-- Removed the : String return type
         val verificationToken = verificationTokenRepository.findByToken(tokenString)
             ?: throw BadRequestException("Invalid or expired verification token.")
 
@@ -108,7 +108,6 @@ class AuthService(
         }
 
         verificationTokenRepository.delete(verificationToken)
-        return "Account verified successfully! You can now login."
     }
 
     @Transactional
