@@ -94,7 +94,7 @@ export const ItemDetailsPage = observer(() => {
                 if (auctionStore.currentAuction.status === 'PENDING_APPROVAL') {
                     await itemStore.loadItemDetails(id!);
                 } else {
-                    navigate(`/auctions/${item.auctionId}`);
+                    navigate(`/auctions/${auctionStore.currentAuction.id}`);
                 }
             }
         }
@@ -209,7 +209,14 @@ export const ItemDetailsPage = observer(() => {
                         <div style={{ marginTop: 24 }}>
                             {(isActiveAuction || isScheduled || isPending) && (
                                 <button
-                                    onClick={() => navigate(`/auctions/${item.auctionId}`)}
+                                    onClick={() => {
+                                        const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
+                                        if (targetAuctionId) {
+                                            navigate(`/auctions/${targetAuctionId}`);
+                                        } else {
+                                            console.error("Auction ID is missing on the item:", item);
+                                        }
+                                    }}
                                     style={{ ...pageStyles.btnPrimary, marginBottom: '12px' }}
                                 >
                                     {isPending ? "View Submitted Auction" : "View Live Auction"}

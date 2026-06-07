@@ -59,7 +59,7 @@ export const ItemModel = types.model("Item", {
     sellerType: types.maybeNull(types.string),
     images: types.array(ItemImageModel),
     auctionId: types.maybeNull(types.string),
-    auction: types.frozen<AuctionDto>(),
+    auction: types.maybeNull(types.frozen<AuctionDto>()),
 });
 
 export const ItemStore = types
