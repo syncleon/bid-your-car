@@ -3,28 +3,28 @@
   color-scheme: light;
 
   /* Backgrounds */
-  --bg-base: #ffffff;
+  --bg-base: #f8fafc;
   --bg-card: #ffffff;
-  --bg-input: #f9fafb;
-  --bg-hover: #f3f4f6;
+  --bg-input: #f1f5f9;
+  --bg-hover: #e2e8f0;
   --bg-overlay: rgba(0, 0, 0, 0.5);
 
   /* Text Colors */
-  --text-primary: #111111;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
 
   /* Borders */
-  --border-color: #e5e7eb;
-  --border-light: #f3f4f6;
+  --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
 
   /* Buttons */
-  --btn-primary-bg: #111111;
+  --btn-primary-bg: #0f172a;
   --btn-primary-text: #ffffff;
-  --btn-secondary-bg: #f3f4f6;
-  --btn-secondary-text: #111111;
+  --btn-secondary-bg: #e2e8f0;
+  --btn-secondary-text: #0f172a;
   --btn-border: transparent;
-  --btn-hover-border: #d1d5db;
+  --btn-hover-border: #cbd5e1;
 
   /* Links & Accents */
   --accent-color: #2563eb;
@@ -48,33 +48,33 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* Backgrounds - Deep black */
+  /* Backgrounds - Pure Black */
   --bg-base: #000000;
-  --bg-card: #111111;
-  --bg-input: #1a1a1a;
-  --bg-hover: #222222;
+  --bg-card: #0a0a0a;
+  --bg-input: #111111;
+  --bg-hover: #1a1a1a;
   --bg-overlay: rgba(0, 0, 0, 0.8);
 
-  /* Text Colors - Yellow accents and bright text */
-  --text-primary: #facc15;
-  --text-secondary: #d1d5db;
-  --text-muted: #6b7280;
+  /* Text Colors - Soft whites */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
   /* Borders */
-  --border-color: #333333;
-  --border-light: #222222;
+  --border-color: #222222;
+  --border-light: #111111;
 
-  /* Buttons - Yellow primary buttons */
-  --btn-primary-bg: #facc15;
-  --btn-primary-text: #000000;
-  --btn-secondary-bg: #1a1a1a;
-  --btn-secondary-text: #facc15;
-  --btn-border: #333333;
-  --btn-hover-border: #facc15;
+  /* Buttons - Blue primary buttons */
+  --btn-primary-bg: #3b82f6;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #111111;
+  --btn-secondary-text: #3b82f6;
+  --btn-border: #222222;
+  --btn-hover-border: #3b82f6;
 
   /* Links & Accents */
-  --accent-color: #fde047;
-  --accent-hover: #fef08a;
+  --accent-color: #3b82f6;
+  --accent-hover: #60a5fa;
 
   /* Semantic Colors (Status, Alerts - Darkened for contrast) */
   --color-success-bg: rgba(22, 101, 52, 0.2);

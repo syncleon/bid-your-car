@@ -23,6 +23,7 @@ body {
 }
 
 .navbar__container {
+    width: 80%;
     max-width: 1400px;
     margin: 0 auto;
     height: 100%;

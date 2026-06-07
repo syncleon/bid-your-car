@@ -35,7 +35,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
                 style={styles.mainWrapper}
                 onClick={() => onImageClick?.(0)}
             >
-                <img src={mainImage} alt={item.model} style={styles.mainImg} />
+                <img src={mainImage} alt={item.model} style={styles.mainImg} className="main-img-hover" />
                 {statusLabel && <div style={styles.statusOverlay}>{statusLabel}</div>}
                 <div style={styles.hoverOverlay}><span>View Fullscreen</span></div>
             </div>
@@ -53,7 +53,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
                                 style={styles.thumbWrapper}
                                 onClick={() => onImageClick?.(realIndex)}
                             >
-                                <img src={img.url} alt={`View ${realIndex}`} style={styles.thumbImg} />
+                                <img src={img.url} alt={`View ${realIndex}`} style={styles.thumbImg} className="thumb-inactive" />
                                 {isLastAndOverflowing && (
                                     <div style={styles.moreOverlay}>+{remainingCount + 1}</div>
                                 )}
@@ -73,12 +73,12 @@ export const VehicleInfo = ({ item }: { item: ItemDto }) => (
 
         {(item.hasServiceHistory || item.isModified) && (
             <div style={styles.tagsContainer}>
-                {item.hasServiceHistory && <span style={styles.tag}>Service History</span>}
-                {item.isModified && <span style={styles.tag}>Modified</span>}
+                {item.hasServiceHistory && <span style={styles.tag} className="tag-vibrant">Service History</span>}
+                {item.isModified && <span style={styles.tag} className="tag-vibrant">Modified</span>}
             </div>
         )}
 
-        <div style={styles.specsContainer}>
+        <div className="spec-grid-modern">
             <SpecItem label="VIN" value={item.vin} />
             <SpecItem label="Condition" value={item.condition?.replace('_', ' ')} />
             <SpecItem label="Title Status" value={item.titleStatus} />
@@ -99,7 +99,7 @@ export const VehicleInfo = ({ item }: { item: ItemDto }) => (
 );
 
 const SpecItem = ({ label, value }: { label: string, value?: string | null }) => (
-    <div style={styles.specItem}>
+    <div className="spec-card-modern">
         <span style={styles.specLabel}>{label}</span>
         <span style={styles.specValue}>{value || "—"}</span>
     </div>
@@ -137,7 +137,7 @@ const minStyles = {
 };
 
 const styles = {
-    container: { maxWidth: 1200, margin: "0 auto", padding: "40px 24px", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
+    container: { width: "100%", margin: "0 auto", padding: "40px 0", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
     headerRow: { marginBottom: 24, display: 'flex', justifyContent: 'space-between' },
     grid: { display: "grid", alignItems: "start" },
 
@@ -151,7 +151,7 @@ const styles = {
     thumbImg: { width: "100%", height: "100%", objectFit: "cover" as const, },
     moreOverlay: { position: "absolute" as const, inset: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 600, backdropFilter: "blur(2px)" },
     placeholder: { width: "100%", height: "300px", backgroundColor: "var(--bg-input)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "14px", transition: "background-color 0.3s ease, color 0.3s ease" },
-    title: { fontSize: "32px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 8px 0", letterSpacing: "-0.5px", transition: "color 0.3s ease" },
+    title: { fontSize: "36px", fontWeight: 800, color: "var(--text-primary)", margin: "0 0 8px 0", letterSpacing: "-1px", transition: "color 0.3s ease" },
     subtitle: { fontSize: "18px", color: "var(--text-secondary)", margin: 0, transition: "color 0.3s ease" },
     tagsContainer: { display: "flex", gap: "8px", marginTop: "16px" },
     tag: { padding: "4px 10px", backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-color)", borderRadius: "16px", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },

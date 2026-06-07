@@ -95,7 +95,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const isUrgent = isActive && !isEnded && (new Date(auction.endTime).getTime() - Date.now() < 3600000);
 
     return (
-        <div style={styles.card}>
+        <div style={styles.card} className={isActive && !isEnded ? "bidding-card-active" : ""}>
             <style>{`
                 input[type=number]::-webkit-inner-spin-button, 
                 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -112,9 +112,12 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                     <span style={styles.label}>Time Left</span>
                     <span style={{
                         ...styles.value,
-                        color: isUrgent ? "#dc2626" : "#111",
-                        fontWeight: isUrgent ? 800 : 700
+                        color: isUrgent ? "#dc2626" : "var(--text-primary)",
+                        fontWeight: isUrgent ? 800 : 700,
+                        display: "flex",
+                        alignItems: "center"
                     }}>
+                        {isUrgent && <span className="pulse-dot"></span>}
                         {timeLeft}
                     </span>
                 </div>
@@ -158,12 +161,11 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                             type="button"
                             onClick={handleOneClickQuickBid}
                             disabled={isQuickBtnDisabled}
+                            className="btn-quick-bid"
                             style={{
-                                ...styles.quickBidMasterBtn,
+                                width: "100%",
                                 opacity: isQuickBtnDisabled ? 0.5 : 1,
-                                cursor: isQuickBtnDisabled ? 'not-allowed' : 'pointer',
-                                backgroundColor: isCoolingDown ? "var(--bg-input)" : "var(--btn-primary-bg)",
-                                color: isCoolingDown ? "var(--text-muted)" : "var(--btn-primary-text)"
+                                cursor: isQuickBtnDisabled ? 'not-allowed' : 'pointer'
                             }}
                         >
                             <span style={{ fontSize: '18px', display: 'block' }}>
@@ -198,12 +200,12 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                             <button
                                 type="submit"
                                 disabled={isManualBtnDisabled}
+                                className="btn-pill-primary"
                                 style={{
-                                    ...styles.primaryBtn,
+                                    width: "100%",
+                                    marginTop: "16px",
                                     opacity: isManualBtnDisabled ? 0.4 : 1,
-                                    cursor: isManualBtnDisabled ? 'not-allowed' : 'pointer',
-                                    backgroundColor: isCoolingDown ? "var(--bg-input)" : "var(--btn-primary-bg)",
-                                    color: isCoolingDown ? "var(--text-muted)" : "var(--btn-primary-text)"
+                                    cursor: isManualBtnDisabled ? 'not-allowed' : 'pointer'
                                 }}
                             >
                                 {auctionStore.isBidding

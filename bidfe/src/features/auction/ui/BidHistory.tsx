@@ -25,12 +25,12 @@ export const BidHistory = ({ bids }: { bids: BidDto[] }) => {
                 <span style={styles.count}>{bids.length} Bids</span>
             </div>
 
-            <div style={styles.list}>
+            <div style={styles.list} className="history-list-modern">
                 {processedBids.length === 0 ? (
                     <div style={styles.empty}>No bids yet. Be the first!</div>
                 ) : (
                     processedBids.map((bid) => (
-                        <div key={bid.id} style={bid.isWinner ? styles.rowWinner : styles.row}>
+                        <div key={bid.id} style={bid.isWinner ? styles.rowWinner : styles.row} className={bid.isWinner ? "row-winner-modern" : ""}>
                             <div style={styles.left}>
                                 <div style={bid.isWinner ? styles.avatarWinner : styles.avatar}>
                                     {bid.isWinner ? "🏆" : (bid.bidderName?.charAt(0).toUpperCase() || "?")}

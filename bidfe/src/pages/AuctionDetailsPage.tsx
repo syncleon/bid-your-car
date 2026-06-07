@@ -44,7 +44,7 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
     const url = currentImg?.url;
 
     return (
-        <div className="lightbox-overlay" onClick={onClose}>
+        <div className="lightbox-overlay lightbox-glass" onClick={onClose}>
             <button className="lightbox-close-btn" aria-label="Close">✕</button>
 
             {images.length > 1 && (

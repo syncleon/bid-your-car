@@ -122,7 +122,8 @@ export const ProfilePage = observer(() => {
 
 const styles = {
     container: {
-        maxWidth: 1000,
+        width: "80%",
+        maxWidth: 1400,
         margin: "0 auto",
         padding: "40px 20px",
         fontFamily: "'Inter', system-ui, sans-serif",

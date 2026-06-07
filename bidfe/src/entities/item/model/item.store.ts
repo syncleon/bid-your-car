@@ -95,6 +95,7 @@ export const ItemStore = types
             self.error = null;
             try {
                 const itemData: ItemDto = yield getItemById(id);
+                console.log("DEBUG: loadItemDetails API response:", JSON.parse(JSON.stringify(itemData)));
                 updateLocalCache(itemData);
 
                 const exists = self.myItems.find(i => i.id === id);
