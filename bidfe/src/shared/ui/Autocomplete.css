@@ -1,0 +1,166 @@
+/* ============================================================
+   Autocomplete — Shared UI Component
+   ============================================================ */
+
+.ac-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.ac-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.ac-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ac-required {
+    color: #ef4444;
+}
+
+/* Input wrapper — positions clear + chevron */
+.ac-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ac-input {
+    width: 100%;
+    padding-right: 40px !important; /* space for clear / chevron */
+    box-sizing: border-box;
+}
+
+/* When open add focus ring immediately */
+.ac-input-wrap--open .ac-input {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+/* Clear button */
+.ac-clear {
+    position: absolute;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    line-height: 1;
+}
+
+.ac-clear:hover {
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+}
+
+/* No clear button when no chevron */
+.ac-wrapper:not(:has(.ac-chevron)) .ac-clear {
+    right: 10px;
+}
+
+/* Chevron */
+.ac-chevron {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s;
+}
+
+.ac-chevron--open {
+    transform: translateY(-50%) rotate(180deg);
+    color: var(--color-primary);
+}
+
+/* Dropdown menu */
+.ac-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.12);
+    max-height: 240px;
+    overflow-y: auto;
+    animation: acDropIn 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform-origin: top;
+}
+
+@keyframes acDropIn {
+    from { opacity: 0; transform: translateY(-6px) scaleY(0.97); }
+    to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+/* Custom scrollbar inside the menu */
+.ac-menu::-webkit-scrollbar { width: 5px; }
+.ac-menu::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+/* Option row */
+.ac-option {
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ac-option:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.ac-option--active {
+    background: linear-gradient(135deg, var(--color-primary, #2563eb), #334155) !important;
+    color: #ffffff !important;
+}
+
+.ac-option--active strong {
+    color: #fff !important;
+}
+
+/* Empty state */
+.ac-empty {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    animation: acDropIn 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}

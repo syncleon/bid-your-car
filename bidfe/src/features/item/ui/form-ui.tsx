@@ -2,7 +2,7 @@ import { type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes } f
 
 const COLORS = {
     border: "#e2e8f0",
-    focus: "#2563eb",
+    focus: "var(--color-primary)",
     error: "#ef4444",
     text: "#1e293b",
     textLight: "#64748b",

@@ -37,7 +37,7 @@ export const ItemCard = ({ item }: ItemCardProps) => {
         );
     } else if (isScheduled) {
         statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: '#2563eb', color: '#fff' }}>
+            <div style={{ ...styles.badge, backgroundColor: 'var(--color-primary)', color: '#fff' }}>
                 SCHEDULED
             </div>
         );

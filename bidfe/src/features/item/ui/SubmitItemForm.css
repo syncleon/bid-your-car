@@ -1,0 +1,131 @@
+/* View Transitions for Form Steps */
+
+.form-step-container {
+    view-transition-name: form-step;
+}
+
+/* Base animations */
+@keyframes slide-to-left {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(-30px); opacity: 0; }
+}
+
+@keyframes slide-from-right {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slide-to-right {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(30px); opacity: 0; }
+}
+
+@keyframes slide-from-left {
+    from { transform: translateX(-30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Going Forward (Next) */
+html.going-forward::view-transition-old(form-step) {
+    animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+}
+
+html.going-forward::view-transition-new(form-step) {
+    animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+}
+
+/* Going Backward (Back) */
+html.going-backward::view-transition-old(form-step) {
+    animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-to-right;
+}
+
+html.going-backward::view-transition-new(form-step) {
+    animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-from-left;
+}
+
+/* Form inputs styling */
+.modern-input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid var(--ghost-border);
+    background: var(--ghost-bg);
+    color: var(--text-primary);
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    backdrop-filter: var(--ghost-blur);
+    -webkit-backdrop-filter: var(--ghost-blur);
+}
+
+.modern-input:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
+    background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+}
+
+.modern-input:user-invalid {
+    border-color: #dc2626;
+}
+
+.modern-input:user-valid {
+    border-color: #16a34a;
+}
+
+.modern-textarea {
+    min-height: 120px;
+    resize: vertical;
+    padding: 16px;
+}
+
+/* Progress Tracker */
+.progress-tracker {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.progress-tracker::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--bg-input);
+    z-index: 0;
+    transform: translateY(-50%);
+}
+
+.progress-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 2px solid var(--bg-input);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.progress-step.completed {
+    border-color: var(--color-primary);
+    background: var(--bg-card);
+    color: var(--color-primary);
+}

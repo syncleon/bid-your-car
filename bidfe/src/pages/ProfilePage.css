@@ -54,7 +54,7 @@
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-color) 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--accent-color) 0%, #a1a1aa 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -268,7 +268,7 @@
 
 .garage-empty-state:hover {
     border-color: var(--accent-color);
-    background: rgba(59, 130, 246, 0.05); /* very subtle blue tint */
+    background: rgba(37, 99, 235, 0.05); /* very subtle blue tint */
 }
 
 .garage-empty-icon {
@@ -310,19 +310,18 @@
     font-size: 15px;
     text-decoration: none;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    animation: pulseGlow 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    animation: pulse 2s infinite ease-in-out;
 }
 
-@keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-    50% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.6); }
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+    50% { box-shadow: 0 4px 20px rgba(37, 99, 235, 0.6); }
 }
 
 .garage-btn-sell:hover {
-    background: var(--accent-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
     animation: none;
 }
 

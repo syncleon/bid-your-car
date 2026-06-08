@@ -20,17 +20,18 @@
   --border-color: #262626;
   --border-light: #1a1a1a;
 
-  /* Buttons - Vibrant Blue Primary */
-  --btn-primary-bg: #3b82f6;
+  /* Buttons - Blue & Grey Primary */
+  --btn-primary-bg: #2563eb;
   --btn-primary-text: #ffffff;
-  --btn-secondary-bg: #1a1a1a;
+  --btn-secondary-bg: #1e293b;
   --btn-secondary-text: #f8fafc;
-  --btn-border: #333333;
-  --btn-hover-border: #60a5fa;
+  --btn-border: #334155;
+  --btn-hover-border: #3b82f6;
 
   /* Links & Accents */
   --accent-color: #3b82f6;
   --accent-hover: #60a5fa;
+  --color-primary: #2563eb;
 
   /* Semantic Colors */
   --color-success-bg: rgba(22, 101, 52, 0.25);

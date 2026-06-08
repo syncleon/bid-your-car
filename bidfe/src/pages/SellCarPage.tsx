@@ -27,7 +27,7 @@ export const SellCarPage = () => {
                 height: "80vw",
                 maxWidth: "800px",
                 maxHeight: "800px",
-                background: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%)",
+                background: "radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 60%)",
                 zIndex: 0,
                 pointerEvents: "none"
             }} />
@@ -62,7 +62,7 @@ export const SellCarPage = () => {
                 <button
                     onClick={() => navigate("/sell-car/submit")}
                     style={{
-                        background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                        background: "linear-gradient(135deg, var(--color-primary) 0%, #475569 100%)",
                         color: "#ffffff",
                         padding: "18px 48px",
                         borderRadius: "50px",
@@ -71,16 +71,16 @@ export const SellCarPage = () => {
                         fontWeight: 700,
                         letterSpacing: "0.5px",
                         cursor: "pointer",
-                        boxShadow: "0 8px 30px rgba(59, 130, 246, 0.4)",
+                        boxShadow: "0 8px 30px rgba(37, 99, 235, 0.4)",
                         transition: "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease",
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
-                        e.currentTarget.style.boxShadow = "0 12px 40px rgba(139, 92, 246, 0.6)";
+                        e.currentTarget.style.boxShadow = "0 12px 40px rgba(37, 99, 235, 0.6)";
                     }}
                     onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow = "0 8px 30px rgba(59, 130, 246, 0.4)";
+                        e.currentTarget.style.boxShadow = "0 8px 30px rgba(37, 99, 235, 0.4)";
                     }}
                 >
                     Start Your Listing

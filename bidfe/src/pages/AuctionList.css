@@ -144,7 +144,7 @@
 }
 
 .search-input:focus {
-    border-color: var(--color-accent, #3b82f6);
+    border-color: var(--accent-color);
     background: var(--bg-card);
 }
 

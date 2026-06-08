@@ -265,7 +265,7 @@ export const CreateAuctionModal = ({
                                             onClick={() => setSelectedImgIdx(i)}
                                             style={{
                                                 ...styles.thumbBtn,
-                                                borderColor: i === selectedImgIdx ? "#2563eb" : "transparent"
+                                                borderColor: i === selectedImgIdx ? "var(--color-primary)" : "transparent"
                                             }}
                                         >
                                             <img src={img.url} style={styles.thumbImg} alt="" />

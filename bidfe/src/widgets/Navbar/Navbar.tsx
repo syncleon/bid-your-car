@@ -58,7 +58,7 @@ export const Navbar = observer(({ isAuthenticated }: Props) => {
                                 className="user-menu__trigger"
                                 style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-input)', padding: '6px 16px 6px 6px', borderRadius: '30px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s ease', textDecoration: 'none' }}
                             >
-                                <div className="user-avatar-placeholder" style={{ background: 'linear-gradient(135deg, var(--accent-color) 0%, #8b5cf6 100%)', color: '#fff', fontWeight: 'bold' }}>
+                                <div className="user-avatar-placeholder" style={{ background: 'linear-gradient(135deg, var(--accent-color) 0%, #a1a1aa 100%)', color: '#fff', fontWeight: 'bold' }}>
                                     {user?.profilePhotoUrl ? (
                                         <img src={user.profilePhotoUrl} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                     ) : user?.username ? (
