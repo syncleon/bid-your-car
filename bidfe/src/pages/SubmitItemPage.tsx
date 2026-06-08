@@ -57,11 +57,11 @@ export const SubmitItemPage = observer(() => {
 
 const styles = {
     pageWrapper: { minHeight: "100vh", background: "var(--bg-base)", padding: "40px 20px", transition: "background-color 0.3s ease" },
-    container: { width: "80%", maxWidth: "1400px", margin: "0 auto" },
+    container: { width: "80%", margin: "0 auto" },
     header: { textAlign: "center" as const, marginBottom: "32px" },
     title: { fontSize: "32px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px", transition: "color 0.3s ease" },
     subtitle: { fontSize: "16px", color: "var(--text-secondary)", transition: "color 0.3s ease" },
-    card: { maxWidth: "700px", margin: "0 auto", background: "var(--bg-card)", borderRadius: "16px", padding: "32px", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", border: "1px solid var(--border-color)", transition: "background-color 0.3s ease, border-color 0.3s ease" },
+    card: { margin: "0 auto", background: "var(--bg-card)", borderRadius: "16px", padding: "32px", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", border: "1px solid var(--border-color)", transition: "background-color 0.3s ease, border-color 0.3s ease" },
     errorBanner: { background: "var(--color-danger-bg)", color: "var(--color-danger-text)", padding: "12px", borderRadius: "8px", marginBottom: "24px", border: "1px solid var(--color-danger-border)" },
 
     progressOverlay: { position: "fixed" as const, top: 0, left: 0, right: 0, bottom: 0, background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 },

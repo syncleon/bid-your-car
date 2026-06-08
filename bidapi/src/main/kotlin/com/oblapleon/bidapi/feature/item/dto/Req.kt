@@ -53,7 +53,15 @@ data class ItemCreateRequest(
     val bodyStyle: String? = null,
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
-    val sellerType: String? = null
+    val sellerType: String? = null,
+    @field:Size(max = 5000, message = "Highlights is too long")
+    val highlights: String? = null,
+    @field:Size(max = 5000, message = "Known flaws is too long")
+    val knownFlaws: String? = null,
+    @field:Size(max = 5000, message = "Service history is too long")
+    val recentServiceHistory: String? = null,
+    @field:Size(max = 5000, message = "Other items is too long")
+    val otherItemsIncluded: String? = null
 )
 
 data class ItemUpdateRequest(
@@ -83,5 +91,13 @@ data class ItemUpdateRequest(
     val exteriorColor: String? = null,
     val interiorColor: String? = null,
     val sellerType: String? = null,
+    @field:Size(max = 5000, message = "Highlights is too long")
+    val highlights: String? = null,
+    @field:Size(max = 5000, message = "Known flaws is too long")
+    val knownFlaws: String? = null,
+    @field:Size(max = 5000, message = "Service history is too long")
+    val recentServiceHistory: String? = null,
+    @field:Size(max = 5000, message = "Other items is too long")
+    val otherItemsIncluded: String? = null,
     val keepImageIds: List<UUID>? = null
 )

@@ -68,9 +68,11 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children, isUrgent, vi
                 </div>
 
                 <div style={isList ? { ...styles.content, flex: 1, padding: "12px 14px" } : styles.content}>
-                    <h3 style={styles.title}>
-                        <span style={styles.year}>{title.year}</span> {title.make} {title.model}
-                    </h3>
+                    <div className="base-card-title-row">
+                        <h3 style={styles.title}>
+                            <span style={styles.year}>{title.year}</span> {title.make} {title.model}
+                        </h3>
+                    </div>
                     {children}
                 </div>
             </div>

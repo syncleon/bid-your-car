@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useTheme } from "../../app/providers/ThemeProvider";
+import { useStoreContext } from "../../app/providers/useStoreContext";
+import { observer } from "mobx-react-lite";
 import "./Navbar.css";
 
 interface Props {
@@ -8,88 +9,20 @@ interface Props {
     onLogout?: () => void;
 }
 
-interface ThemeToggleButtonProps {
-    isMobile?: boolean;
-    theme: string;
-    toggleTheme: () => void;
-}
 
-const ThemeToggleButton = ({ isMobile = false, theme, toggleTheme }: ThemeToggleButtonProps) => {
-    const handleToggleClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        console.log('[Navbar] Theme toggled. Current theme was:', theme);
-        toggleTheme();
-    };
 
-    return (
-        <button
-            onClick={handleToggleClick}
-            aria-label="Toggle theme"
-            style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--text-primary)",
-                display: "flex",
-                alignItems: "center",
-                gap: isMobile ? "12px" : "0",
-                padding: isMobile ? "16px 0" : "8px",
-                fontSize: isMobile ? "20px" : "inherit",
-                fontWeight: isMobile ? 600 : "normal",
-                borderBottom: isMobile ? "1px solid var(--border-light)" : "none",
-                width: isMobile ? "100%" : "auto",
-                textAlign: "left"
-            }}
-        >
-            {theme === 'light' ? (
-                <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    {isMobile && "Dark Mode"}
-                </>
-            ) : (
-                <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                    {isMobile && "Light Mode"}
-                </>
-            )}
-        </button>
-    );
-};
-
-export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+export const Navbar = observer(({ isAuthenticated }: Props) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
+    const { authStore } = useStoreContext();
+    const user = authStore.user;
 
     const location = useLocation();
-    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         setIsMobileMenuOpen(false);
-        setIsMenuOpen(false);
     }, [location.pathname]);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+
 
     useEffect(() => {
         if (isMobileMenuOpen) {
@@ -117,46 +50,33 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                 </nav>
 
                 <div className="navbar__right desktop-only">
-                    <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
 
                     {isAuthenticated ? (
-                        <div className="user-menu" ref={menuRef}>
-                            <button
+                        <div className="user-menu">
+                            <Link
+                                to="/profile"
                                 className="user-menu__trigger"
-                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-input)', padding: '6px 16px 6px 6px', borderRadius: '30px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s ease', textDecoration: 'none' }}
                             >
-                                <div className="user-avatar-placeholder">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
+                                <div className="user-avatar-placeholder" style={{ background: 'linear-gradient(135deg, var(--accent-color) 0%, #8b5cf6 100%)', color: '#fff', fontWeight: 'bold' }}>
+                                    {user?.username ? user.username.charAt(0).toUpperCase() : (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                        </svg>
+                                    )}
                                 </div>
-                            </button>
-
-                            {isMenuOpen && (
-                                <div className="dropdown-menu">
-                                    <Link to="/profile" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
-                                        Profile
-                                    </Link>
-                                    <button
-                                        className="dropdown-item dropdown-item--danger"
-                                        onClick={() => {
-                                            if (onLogout) onLogout();
-                                            setIsMenuOpen(false);
-                                        }}
-                                    >
-                                        Log out
-                                    </button>
-                                </div>
-                            )}
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px', letterSpacing: '-0.3px' }}>
+                                    {user?.username || "Profile"}
+                                </span>
+                            </Link>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                             <Link
                                 to="/login"
                                 state={{ backgroundLocation: location }}
-                                className="navbar__link"
-                                style={{ fontWeight: 700 }}
+                                className="navbar__login-btn"
                             >
                                 Sign In
                             </Link>
@@ -202,22 +122,11 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
                         Sell a Car
                     </Link>
 
-                    <ThemeToggleButton isMobile={true} theme={theme} toggleTheme={toggleTheme} />
-
                     <div className="mobile-divider"></div>
 
                     {isAuthenticated ? (
                         <>
-                            <Link to="/profile" className="mobile-link">Profile</Link>
-                            <button
-                                className="mobile-link mobile-link--danger"
-                                onClick={() => {
-                                    if(onLogout) onLogout();
-                                    setIsMobileMenuOpen(false);
-                                }}
-                            >
-                                Log out
-                            </button>
+                            <Link to="/profile" className="mobile-link" onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>
                         </>
                     ) : (
                         <Link
@@ -232,4 +141,4 @@ export const Navbar = ({ isAuthenticated, onLogout }: Props) => {
             </div>
         </header>
     );
-};
+});

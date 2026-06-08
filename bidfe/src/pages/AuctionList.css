@@ -4,7 +4,7 @@
 
 .auction-container {
     padding: 0 16px 40px;
-    width: 80%;
+    width: 80vw;
     max-width: 1400px;
     margin: 0 auto;
     font-family: 'Inter', sans-serif;
@@ -22,7 +22,11 @@
     border-bottom: 1px solid var(--border-color);
     padding: 14px 0 12px;
     margin-bottom: 24px;
-    transition: border-color 0.3s ease, background 0.3s ease;
+    transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auction-header.header-hidden {
+    transform: translateY(-100%);
 }
 
 .header-top {
@@ -59,8 +63,46 @@
 .controls-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: nowrap;
+}
+
+/* Inline Sort Tabs */
+.sort-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.sort-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.sort-tab {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.sort-tab:hover {
+    border-color: var(--accent-color);
+    color: var(--text-primary);
+}
+
+.sort-tab.active {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
 }
 
 .search-wrapper {
@@ -211,7 +253,6 @@
     text-align: left;
     cursor: pointer;
     transition: background 0.1s, color 0.1s;
-    white-space: nowrap;
 }
 
 .custom-select__option:hover {
@@ -225,40 +266,7 @@
 }
 
 
-/* ── View Toggle ─────────────────────────────────────────── */
-.view-controls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: auto;
-    flex-shrink: 0;
-}
 
-.view-toggle-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-input);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-    flex-shrink: 0;
-}
-
-.view-toggle-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.view-toggle-btn.active {
-    background: var(--text-primary);
-    color: var(--bg-base);
-    border-color: var(--text-primary);
-}
 
 /* ── Active Filter Chips ──────────────────────────────────── */
 .active-chips {
@@ -344,7 +352,6 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
-    align-items: start;
 }
 
 /* 3 columns ≤ 1200px */
@@ -369,17 +376,16 @@
     }
 }
 
-/* ── List Layout ─────────────────────────────────────────── */
-.auction-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+
 
 /* ── Fade-in animation ───────────────────────────────────── */
 .fade-in-item {
     animation: fadeInUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
     will-change: opacity, transform;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 @keyframes fadeInUp {
@@ -546,9 +552,7 @@
         min-width: 90px;
     }
 
-    .view-controls {
-        margin-left: 0;
-    }
+
 
     .auction-grid {
         gap: 12px;

@@ -49,7 +49,23 @@ export const StepCondition = ({ formData, handleChange, conditionGrades, titleSt
 
         <div>
             <label style={styles.label}>Description & Story</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} style={styles.textarea} placeholder="Tell us about the car's history, flaws, condition, and any modifications..." />
+            <textarea name="description" value={formData.description || ''} onChange={handleChange} style={styles.textarea} placeholder="Tell us about the car's history..." />
+        </div>
+        <div>
+            <label style={styles.label}>Highlights</label>
+            <textarea name="highlights" value={formData.highlights || ''} onChange={handleChange} style={styles.textarea} placeholder="List the standout features and equipment..." />
+        </div>
+        <div>
+            <label style={styles.label}>Known Flaws</label>
+            <textarea name="knownFlaws" value={formData.knownFlaws || ''} onChange={handleChange} style={styles.textarea} placeholder="Describe any cosmetic or mechanical imperfections..." />
+        </div>
+        <div>
+            <label style={styles.label}>Recent Service History</label>
+            <textarea name="recentServiceHistory" value={formData.recentServiceHistory || ''} onChange={handleChange} style={styles.textarea} placeholder="List recent maintenance, oil changes, or major repairs..." />
+        </div>
+        <div>
+            <label style={styles.label}>Other Items Included in Sale</label>
+            <textarea name="otherItemsIncluded" value={formData.otherItemsIncluded || ''} onChange={handleChange} style={styles.textarea} placeholder="e.g. 2 keys, owner's manuals, car cover..." />
         </div>
     </div>
 );

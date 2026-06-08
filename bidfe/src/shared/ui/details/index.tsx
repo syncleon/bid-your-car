@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import type { ItemDto } from "../../../features/item/types";
+import { useStore } from "../../hooks/useStore";
 
 export const DetailPageLayout = ({ children }: { children: React.ReactNode }) => (
     <div style={styles.container}>{children}</div>
@@ -93,17 +94,50 @@ export const VehicleInfo = ({ item }: { item: ItemDto }) => (
 
         <div style={styles.divider} />
 
-        <h3 style={styles.sectionTitle}>About this Vehicle</h3>
-        <p style={styles.description}>{item.description || "No description provided."}</p>
+        <h3 style={styles.sectionTitleCB}>Highlights</h3>
+        <p style={styles.descriptionCB}>{item.highlights || "No highlights provided."}</p>
+
+        <h3 style={styles.sectionTitleCB}>Known Flaws</h3>
+        <p style={styles.descriptionCB}>{item.knownFlaws || "No known flaws provided."}</p>
+
+        <h3 style={styles.sectionTitleCB}>Recent Service History</h3>
+        <p style={styles.descriptionCB}>{item.recentServiceHistory || "No recent service history provided."}</p>
+
+        <h3 style={styles.sectionTitleCB}>Other Items Included in Sale</h3>
+        <p style={styles.descriptionCB}>{item.otherItemsIncluded || "No other items specified."}</p>
+
+        <h3 style={styles.sectionTitleCB}>Seller Notes</h3>
+        <p style={styles.descriptionCB}>{item.description || "No seller notes provided."}</p>
     </div>
 );
 
-const SpecItem = ({ label, value }: { label: string, value?: string | null }) => (
-    <div className="spec-card-modern">
-        <span style={styles.specLabel}>{label}</span>
-        <span style={styles.specValue}>{value || "—"}</span>
-    </div>
-);
+const SpecItem = ({ label, value }: { label: string, value?: string | null }) => {
+    const { toastStore } = useStore();
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        if (!value || value === "—") return;
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        toastStore.addToast(`Copied ${label} to clipboard`, "success");
+        setTimeout(() => setCopied(false), 1500);
+    };
+
+    return (
+        <div 
+            className="spec-item-cb" 
+            onClick={handleCopy}
+            style={{ cursor: value && value !== "—" ? "pointer" : "default" }}
+            title={value && value !== "—" ? "Click to copy" : undefined}
+        >
+            <span className="spec-label-cb">{label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                {copied && <span style={{ fontSize: '12px', color: 'var(--color-success-text)', animation: 'fadeIn 0.2s ease' }}>✓</span>}
+                <span className="spec-value-cb">{value || "—"}</span>
+            </div>
+        </div>
+    );
+};
 
 export const SidebarCard = ({ children, title }: { children: React.ReactNode, title?: string }) => (
     <div style={styles.card}>
@@ -137,7 +171,7 @@ const minStyles = {
 };
 
 const styles = {
-    container: { width: "100%", margin: "0 auto", padding: "40px 0", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
+    container: { width: "80%", margin: "0 auto", padding: "40px 0", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
     headerRow: { marginBottom: 24, display: 'flex', justifyContent: 'space-between' },
     grid: { display: "grid", alignItems: "start" },
 
@@ -158,12 +192,14 @@ const styles = {
 
     specsContainer: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 40px", marginTop: "24px", padding: "24px 0", borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)", transition: "border-color 0.3s ease" },
     specItem: { display: "flex", justifyContent: "space-between", alignItems: "baseline" },
-    specLabel: { fontSize: "13px", color: "var(--text-muted)", fontWeight: 500, textTransform: "uppercase" as const, transition: "color 0.3s ease" },
-    specValue: { fontSize: "15px", color: "var(--text-primary)", fontWeight: 500, transition: "color 0.3s ease" },
+    specLabel: { fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.5px", transition: "color 0.3s ease" },
+    specValue: { fontSize: "14px", color: "var(--text-primary)", fontWeight: 600, letterSpacing: "-0.2px", textAlign: "right" as const, transition: "color 0.3s ease" },
     divider: { height: "1px", backgroundColor: "var(--border-color)", margin: "40px 0", transition: "background-color 0.3s ease" },
     sectionTitle: { fontSize: "18px", fontWeight: 600, marginBottom: "16px", color: "var(--text-primary)", transition: "color 0.3s ease" },
     description: { fontSize: "16px", lineHeight: 1.6, color: "var(--text-secondary)", whiteSpace: "pre-wrap" as const, transition: "color 0.3s ease" },
 
     card: { backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "24px", marginBottom: "24px", transition: "background-color 0.3s ease, border-color 0.3s ease" },
     cardTitle: { fontSize: "12px", fontWeight: 700, textTransform: "uppercase" as const, color: "var(--text-muted)", marginBottom: "16px", transition: "color 0.3s ease" },
+    sectionTitleCB: { fontSize: "20px", fontWeight: 700, marginTop: "32px", marginBottom: "16px", color: "var(--text-primary)" },
+    descriptionCB: { fontSize: "15px", lineHeight: 1.6, color: "var(--text-primary)", whiteSpace: "pre-wrap" as const },
 };

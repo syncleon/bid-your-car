@@ -130,23 +130,6 @@ const SkeletonGrid = () => (
 );
 
 // ── Icons ──────────────────────────────────────────────────
-const GridIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="3" y="3" width="8" height="8" rx="1.5" />
-        <rect x="13" y="3" width="8" height="8" rx="1.5" />
-        <rect x="3" y="13" width="8" height="8" rx="1.5" />
-        <rect x="13" y="13" width="8" height="8" rx="1.5" />
-    </svg>
-);
-
-const ListIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <rect x="3" y="4" width="18" height="5" rx="1" />
-        <rect x="3" y="11" width="18" height="5" rx="1" />
-        <rect x="3" y="18" width="18" height="3" rx="1" />
-    </svg>
-);
-
 const SearchIcon = () => (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" />
@@ -174,12 +157,13 @@ export const AuctionListTemplate = observer(({
     const [filterYear, setFilterYear] = useState("All");
     const [sortBy, setSortBy] = useState(defaultSort);
     const [searchQuery, setSearchQuery] = useState("");
-    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
     const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
+    const [isHeaderHidden, setIsHeaderHidden] = useState(false);
 
     const observerRef = useRef<IntersectionObserver | null>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
+    const lastScrollY = useRef(0);
 
     const auctionsFromStore = (status === 'SOLD'
         ? auctionStore.soldAuctions
@@ -220,7 +204,7 @@ export const AuctionListTemplate = observer(({
         } else {
             options.unshift({ label: "Ending Soon", value: "ending_soon" });
             options.push({ label: "Newly Listed", value: "newly_listed" });
-            options.push({ label: "Most Bids", value: "most_bids" });
+            options.push({ label: "Lowest Mileage", value: "lowest_mileage" });
         }
         return options;
     }, [status]);
@@ -248,8 +232,8 @@ export const AuctionListTemplate = observer(({
                     return a.currentPrice - b.currentPrice;
                 case "price_high":
                     return b.currentPrice - a.currentPrice;
-                case "most_bids":
-                    return b.bidCount - a.bidCount;
+                case "lowest_mileage":
+                    return a.item.mileage - b.item.mileage;
                 case "ending_soon":
                 default:
                     return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
@@ -278,6 +262,21 @@ export const AuctionListTemplate = observer(({
         return () => observerRef.current?.disconnect();
     }, [hasMore, filteredAuctions.length]);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+                setIsHeaderHidden(true);
+            } else {
+                setIsHeaderHidden(false);
+            }
+            lastScrollY.current = currentScrollY;
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
     // Determine active filter chips
     const chips: { label: string; clear: () => void }[] = [];
     if (filterMake !== "All") chips.push({ label: filterMake, clear: () => setFilterMake("All") });
@@ -301,10 +300,9 @@ export const AuctionListTemplate = observer(({
 
     return (
         <div className="auction-container">
-            <header className="auction-header">
+            <header className={`auction-header ${isHeaderHidden ? 'header-hidden' : ''}`}>
                 <div className="header-top">
                     <h1 className="page-title">{title}</h1>
-                    <span className="result-count">{filteredAuctions.length} vehicles</span>
                 </div>
 
                 {/* Mobile toggle */}
@@ -334,23 +332,17 @@ export const AuctionListTemplate = observer(({
 
                         <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                         <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
-                        <FilterSelect label="Sort" value={sortBy} options={sortOptions} onChange={setSortBy} />
-
-                        <div className="view-controls">
-                            <button
-                                className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                                onClick={() => setViewMode('grid')}
-                                title="Grid view"
-                            >
-                                <GridIcon />
-                            </button>
-                            <button
-                                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
-                                onClick={() => setViewMode('list')}
-                                title="List view"
-                            >
-                                <ListIcon />
-                            </button>
+                        
+                        <div className="sort-tabs">
+                            {sortOptions.map((opt: any) => (
+                                <button
+                                    key={opt.value}
+                                    className={`sort-tab ${sortBy === opt.value ? 'active' : ''}`}
+                                    onClick={() => setSortBy(opt.value)}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -381,10 +373,10 @@ export const AuctionListTemplate = observer(({
                     <p>Try adjusting your filters or search query.</p>
                 </div>
             ) : (
-                <div className={viewMode === 'grid' ? 'auction-grid' : 'auction-list'}>
+                <div className="auction-grid">
                     {visibleAuctions.map((auction) => (
                         <div key={auction.id} className="fade-in-item">
-                            <AuctionCard auction={auction} viewMode={viewMode} />
+                            <AuctionCard auction={auction} viewMode="grid" />
                         </div>
                     ))}
                     <div ref={sentinelRef} style={{ height: "20px", width: "100%", gridColumn: "1 / -1" }} />

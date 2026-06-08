@@ -101,6 +101,18 @@ class Item(
     @Column(name = "seller_type", length = 20)
     var sellerType: String? = null,
 
+    @Column(columnDefinition = "TEXT")
+    var highlights: String? = null,
+
+    @Column(name = "known_flaws", columnDefinition = "TEXT")
+    var knownFlaws: String? = null,
+
+    @Column(name = "recent_service_history", columnDefinition = "TEXT")
+    var recentServiceHistory: String? = null,
+
+    @Column(name = "other_items_included", columnDefinition = "TEXT")
+    var otherItemsIncluded: String? = null,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     var seller: User,

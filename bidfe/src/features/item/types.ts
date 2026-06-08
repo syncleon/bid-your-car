@@ -80,6 +80,10 @@ export interface ItemDto {
     exteriorColor: string | null;
     interiorColor: string | null;
     sellerType: string | null;
+    highlights: string | null;
+    knownFlaws: string | null;
+    recentServiceHistory: string | null;
+    otherItemsIncluded: string | null;
     images: ItemImageDto[];
     auctionId: string | null;
     auction: AuctionDto | null;
@@ -108,6 +112,10 @@ export interface ItemCreateRequest {
     exteriorColor?: string;
     interiorColor?: string;
     sellerType?: string;
+    highlights?: string;
+    knownFlaws?: string;
+    recentServiceHistory?: string;
+    otherItemsIncluded?: string;
 }
 
 export interface ItemUpdateRequest {
@@ -132,5 +140,9 @@ export interface ItemUpdateRequest {
     exteriorColor?: string;
     interiorColor?: string;
     sellerType?: string;
+    highlights?: string;
+    knownFlaws?: string;
+    recentServiceHistory?: string;
+    otherItemsIncluded?: string;
     keepImageIds?: string[];
 }

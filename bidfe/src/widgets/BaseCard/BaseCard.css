@@ -5,7 +5,11 @@
 .base-card-link {
     text-decoration: none;
     color: inherit;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%;
+    min-width: 0;
 }
 
 .base-card-link--list {
@@ -19,12 +23,44 @@
     transition:
         transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
         box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-        border-color 0.3s ease;
+        border-color 0.3s ease,
+        opacity 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .base-card:hover {
-    transform: translateY(-3px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+    opacity: 0.8;
+}
+
+.base-card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.base-card-star-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    margin-top: 2px; /* Slight alignment tweak */
+}
+
+.base-card-star-btn:hover {
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.base-card-star-btn:active {
+    transform: scale(0.9);
 }
 
 /* ── List mode ───────────────────────────────────────────── */
@@ -44,10 +80,6 @@
 /* ── Image zoom on hover ─────────────────────────────────── */
 .base-card-image {
     transition: transform 0.4s ease !important;
-}
-
-.base-card:hover .base-card-image {
-    transform: scale(1.04);
 }
 
 /* ── Urgent card: pulsing border ring ────────────────────── */

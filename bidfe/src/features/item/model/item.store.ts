@@ -57,9 +57,13 @@ export const ItemModel = types.model("Item", {
     exteriorColor: types.maybeNull(types.string),
     interiorColor: types.maybeNull(types.string),
     sellerType: types.maybeNull(types.string),
+    highlights: types.maybeNull(types.string),
+    knownFlaws: types.maybeNull(types.string),
+    recentServiceHistory: types.maybeNull(types.string),
+    otherItemsIncluded: types.maybeNull(types.string),
     images: types.array(ItemImageModel),
     auctionId: types.maybeNull(types.string),
-    auction: types.frozen<AuctionDto>(),
+    auction: types.maybeNull(types.frozen<AuctionDto>()),
 });
 
 export const ItemStore = types

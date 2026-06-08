@@ -3,11 +3,13 @@ import { AuthStore, type IAuthStore } from "../../features/auth/model/auth.store
 import { ProfileStore, type IProfileStore } from "../../features/profile/model/profile.store";
 import { ItemStore, type IItemStore } from "../../features/item/model/item.store";
 import { AuctionStore } from "../../features/auction/model/auction.store";
+import { ToastStore, type IToastStore } from "../../shared/model/toast.store";
 
 const MstRootModel = types.model("MstRoot", {
     authStore: AuthStore,
     profileStore: ProfileStore,
     itemStore: ItemStore,
+    toastStore: ToastStore,
 });
 
 export class RootStore {
@@ -18,7 +20,8 @@ export class RootStore {
         this.mstRoot = MstRootModel.create({
             authStore: {},
             profileStore: {},
-            itemStore: {}
+            itemStore: {},
+            toastStore: {}
         });
         this.auctionStore = new AuctionStore(this);
     }
@@ -32,6 +35,10 @@ export class RootStore {
 
     get itemStore(): IItemStore {
         return this.mstRoot.itemStore;
+    }
+
+    get toastStore(): IToastStore {
+        return this.mstRoot.toastStore;
     }
 }
 

@@ -32,18 +32,19 @@ const useAuctionTimer = (endTime: string) => {
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            if (days > 0) {
-                setTimeLeft(`${days}d ${hours}h`);
+            if (days >= 7) {
+                const weeks = Math.floor(days / 7);
+                setTimeLeft(`${weeks} ${weeks === 1 ? 'week' : 'weeks'}`);
                 setIsUrgent(false);
-            } else if (hours > 0) {
-                setTimeLeft(`${hours}h ${minutes}m`);
-                setIsUrgent(hours < 1);
-            } else if (minutes > 0) {
-                setTimeLeft(`${minutes}m ${seconds}s`);
-                setIsUrgent(true);
+            } else if (days >= 1) {
+                setTimeLeft(`${days} ${days === 1 ? 'day' : 'days'}`);
+                setIsUrgent(false);
             } else {
-                setTimeLeft(`${seconds}s`);
-                setIsUrgent(true);
+                const h = String(hours).padStart(2, '0');
+                const m = String(minutes).padStart(2, '0');
+                const s = String(seconds).padStart(2, '0');
+                setTimeLeft(`${h}:${m}:${s}`);
+                setIsUrgent(hours < 1);
             }
         };
 
@@ -56,20 +57,13 @@ const useAuctionTimer = (endTime: string) => {
 };
 
 // ── Helper formatters ────────────────────────────────────────
-const formatMileage = (m: number) =>
-    m >= 1000 ? `${Math.round(m / 1000 * 10) / 10}k mi` : `${m} mi`;
+const formatPrice = (p: number) => `$${p.toLocaleString()}`;
 
-const formatPrice = (p: number) =>
-    p >= 1000 ? `$${(p / 1000).toFixed(p % 1000 === 0 ? 0 : 1)}k` : `$${p}`;
 
-// ── Spec pill ────────────────────────────────────────────────
-const Pill = ({ children }: { children: React.ReactNode }) => (
-    <span className="auction-card-pill">{children}</span>
-);
 
 // ── Main component ────────────────────────────────────────────
 export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
-    const { item, currentPrice, endTime, status, bidCount, isNoReserve } = auction;
+    const { item, currentPrice, endTime, status, isNoReserve } = auction;
     const { timeLeft, isEnded, isUrgent } = useAuctionTimer(endTime);
 
     const firstImage = item.images?.[0];
@@ -78,7 +72,6 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
     const isActive = status === 'ACTIVE';
     const isPending = status === 'PENDING_APPROVAL';
     const isSold = status === 'SOLD';
-    const isHot = bidCount >= 10;
 
     // ── Timer badge (bottom-left overlay) ─────────────────────
     const timerBadgeStyle: React.CSSProperties = {
@@ -88,8 +81,8 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
         color: "#fff",
         fontWeight: 700,
         fontVariantNumeric: "tabular-nums",
-        fontSize: "12px",
-        padding: "5px 10px",
+        fontSize: "14px",
+        padding: "8px 12px",
         display: "flex",
         alignItems: "center",
         gap: "6px",
@@ -131,13 +124,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                     </>
                 ),
 
-                topRight: (
-                    <>
-                        {isHot && isActive && !isEnded && (
-                            <div className="badge-hot">🔥 {bidCount}</div>
-                        )}
-                    </>
-                ),
+
 
                 bottomLeft: (
                     <>
@@ -146,7 +133,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                                 {isUrgent ? <UrgentDot /> : <ClockIcon />}
                                 <span>{timeLeft}</span>
                                 <span style={{ opacity: 0.5, fontWeight: 300, margin: "0 2px" }}>·</span>
-                                <span>{formatPrice(currentPrice)}</span>
+                                <span>Bid: {formatPrice(currentPrice)}</span>
                             </div>
                         )}
                         {isSold && (
@@ -165,38 +152,19 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                 ),
             }}
         >
-            {/* ── Card body below image ────────────────────────── */}
             <div className="auction-card-body">
-                {/* Specs row: mileage + transmission */}
-                <div className="auction-card-specs">
-                    {item.mileage != null && (
-                        <Pill>{formatMileage(item.mileage)}</Pill>
-                    )}
-                    {item.transmission && (
-                        <Pill>{item.transmission}</Pill>
-                    )}
-                    {item.fuelType && (
-                        <Pill>{item.fuelType}</Pill>
-                    )}
+                <div className="auction-card-subtitle">
+                    {item.description || [
+                        item.engine,
+                        item.transmission,
+                        item.drivetrain,
+                        item.fuelType,
+                        item.exteriorColor
+                    ].filter(Boolean).join(", ")}
                 </div>
 
-                {/* Footer: location + bid count */}
-                <div className="auction-card-footer">
-                    <div className="auction-card-location">
-                        <LocationIcon />
-                        <span>{item.location}</span>
-                    </div>
-                    {!isSold && bidCount > 0 && (
-                        <div className={`auction-card-bids${isHot ? " auction-card-bids--hot" : ""}`}>
-                            <span>{bidCount}</span>
-                            <span style={{ opacity: 0.6 }}>{bidCount === 1 ? "bid" : "bids"}</span>
-                        </div>
-                    )}
-                    {isActive && bidCount === 0 && (
-                        <div className="auction-card-bids auction-card-bids--none">
-                            No bids yet
-                        </div>
-                    )}
+                <div className="auction-card-location-text">
+                    {item.location}
                 </div>
             </div>
         </BaseCard>
@@ -213,11 +181,4 @@ const ClockIcon = () => (
 
 const UrgentDot = () => (
     <span className="urgent-dot" />
-);
-
-const LocationIcon = () => (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z" />
-        <circle cx="12" cy="10" r="3" />
-    </svg>
 );

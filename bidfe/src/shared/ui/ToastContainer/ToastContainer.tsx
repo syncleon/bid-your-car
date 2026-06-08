@@ -1,5 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../hooks/useStore";
+import type { IToast } from "../../model/toast.store";
 import "./ToastContainer.css";
 
 export const ToastContainer = observer(() => {
@@ -9,7 +10,7 @@ export const ToastContainer = observer(() => {
 
     return (
         <div className="toast-container">
-            {toastStore.toasts.map((toast) => (
+            {toastStore.toasts.map((toast: IToast) => (
                 <div key={toast.id} className={`toast toast-${toast.type} glass-panel`}>
                     <div className="toast-icon">
                         {toast.type === "success" && "✓"}

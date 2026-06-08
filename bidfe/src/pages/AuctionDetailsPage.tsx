@@ -159,7 +159,13 @@ export const AuctionDetailsPage = observer(() => {
                                 onImageClick={(index) => setLightboxIndex(index)}
                             />
                         </div>
+
                         <VehicleInfo item={item} />
+                        
+                        <div className="history-wrapper">
+                            <h3 style={{ padding: '20px 24px 0 24px', margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Comments & Bids</h3>
+                            <BidHistory bids={auctionStore.bidHistory} />
+                        </div>
                     </div>
 
                     <div className="details-right">
@@ -289,9 +295,6 @@ export const AuctionDetailsPage = observer(() => {
                             </div>
                         )}
 
-                        <div className="history-wrapper">
-                            <BidHistory bids={auctionStore.bidHistory} />
-                        </div>
                     </div>
                 </div>
             </div>

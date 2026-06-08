@@ -10,7 +10,7 @@ export const styles = {
     halfGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
 
     label: { display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" },
-    input: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "16px", outline: "none", boxSizing: "border-box" as const, transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
+    input: { width: "100%", height: "48px", padding: "0 12px", borderRadius: "8px", fontSize: "16px", outline: "none", boxSizing: "border-box" as const },
     select: { 
         width: "100%", 
         height: "48px", 
@@ -26,14 +26,14 @@ export const styles = {
         cursor: "pointer", 
         boxSizing: "border-box" as const, 
         transition: "all 0.3s ease",
-        appearance: "none",
-        WebkitAppearance: "none",
+        appearance: "none" as const,
+        WebkitAppearance: "none" as const,
         backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 16px center",
         boxShadow: "var(--shadow-sm)"
     },
-    textarea: { width: "100%", height: "120px", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "16px", resize: "vertical" as const, boxSizing: "border-box" as const, transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
+    textarea: { width: "100%", height: "120px", padding: "12px", borderRadius: "8px", fontSize: "16px", resize: "vertical" as const, boxSizing: "border-box" as const },
 
     helperText: { fontSize: "13px", color: "var(--text-secondary)", marginTop: "16px", fontStyle: "italic" as const },
 
