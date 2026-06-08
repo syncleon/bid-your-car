@@ -1,5 +1,6 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { ImageUploader } from "./ImageUploader";
+import { ConfirmDialog } from "../../../shared/ui/dialog/ConfirmDialog";
 import type { ItemCreateRequest, ItemImageDto, ConditionGrade, ImageCategory } from "../types";
 
 // --- Constants ---
@@ -53,6 +54,7 @@ export const SubmitItemForm = ({
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
     const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
+    const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean, targetId: string | null}>({ isOpen: false, targetId: null });
 
     const [formData, setFormData] = useState({
         year: currentYear,
@@ -130,9 +132,16 @@ export const SubmitItemForm = ({
     };
 
     const handleRemoveExisting = (id: string) => {
-        if (!confirm("Remove this photo?")) return;
-        setFormData(prev => ({ ...prev, images: prev.images.filter(img => img.id !== id) }));
-        setDeletedImageIds(prev => [...prev, id]);
+        setConfirmDialog({ isOpen: true, targetId: id });
+    };
+
+    const confirmRemoveExisting = () => {
+        const id = confirmDialog.targetId;
+        if (id) {
+            setFormData(prev => ({ ...prev, images: prev.images.filter(img => img.id !== id) }));
+            setDeletedImageIds(prev => [...prev, id]);
+        }
+        setConfirmDialog({ isOpen: false, targetId: null });
     };
 
     // --- Validation ---
@@ -427,6 +436,16 @@ export const SubmitItemForm = ({
                     </button>
                 )}
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen}
+                title="Remove Photo"
+                message="Are you sure you want to remove this photo?"
+                onConfirm={confirmRemoveExisting}
+                onCancel={() => setConfirmDialog({ isOpen: false, targetId: null })}
+                confirmLabel="Remove"
+                isDestructive={true}
+            />
         </form>
     );
 };

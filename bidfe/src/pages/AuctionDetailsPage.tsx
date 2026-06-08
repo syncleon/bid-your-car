@@ -10,6 +10,7 @@ import type { ItemImageDto } from "../features/item/types.ts";
 import "./AuctionDetails.css";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
 
 const getWebSocketUrl = () => {
     return import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
@@ -71,6 +72,7 @@ export const AuctionDetailsPage = observer(() => {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isCanceling, setIsCanceling] = useState(false);
     const [showCancelTooltip, setShowCancelTooltip] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -135,14 +137,14 @@ export const AuctionDetailsPage = observer(() => {
     };
 
     const handleCancelAuction = async () => {
-        if (window.confirm(
-            "Are you sure you want to cancel this auction? " +
-            "The vehicle will be returned to your garage as a draft."
-        )) {
-            setIsCanceling(true);
-            await auctionStore.cancelAuction(auction.id);
-            setIsCanceling(false);
-        }
+        setCancelDialogOpen(true);
+    };
+
+    const confirmCancelAuction = async () => {
+        setCancelDialogOpen(false);
+        setIsCanceling(true);
+        await auctionStore.cancelAuction(auction.id);
+        setIsCanceling(false);
     };
 
     return (
@@ -306,6 +308,16 @@ export const AuctionDetailsPage = observer(() => {
                     onClose={() => setLightboxIndex(null)}
                 />
             )}
+
+            <ConfirmDialog
+                isOpen={cancelDialogOpen}
+                title="Cancel Auction"
+                message="Are you sure you want to cancel this auction? The vehicle will be returned to your garage as a draft."
+                onConfirm={confirmCancelAuction}
+                onCancel={() => setCancelDialogOpen(false)}
+                confirmLabel="Cancel Auction"
+                isDestructive={true}
+            />
         </DetailPageLayout>
     );
 });

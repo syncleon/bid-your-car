@@ -15,11 +15,22 @@ export const StepSpecs = ({ formData, handleChange, transmissions, drivetrains, 
         <div style={styles.halfGrid}>
             <div>
                 <label style={styles.label}>Mileage</label>
-                <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} style={styles.input} placeholder="0" autoFocus />
+                <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className="modern-input" placeholder="e.g. 15000" min={0} required />
             </div>
             <div>
                 <label style={styles.label}>Location</label>
-                <input name="location" value={formData.location} onChange={handleChange} style={styles.input} placeholder="City, State" />
+                <input name="location" value={formData.location} onChange={handleChange} className="modern-input" placeholder="City, State, Zip" required />
+            </div>
+        </div>
+
+        <div style={styles.halfGrid}>
+            <div>
+                <label style={styles.label}>Engine</label>
+                <input name="engine" value={formData.engine} onChange={handleChange} className="modern-input" placeholder="e.g. 4.0L Flat-6" required />
+            </div>
+            <div>
+                <label style={styles.label}>Horsepower</label>
+                <input type="number" name="horsepower" value={formData.horsepower} onChange={handleChange} className="modern-input" placeholder="e.g. 500" min={1} required />
             </div>
         </div>
 

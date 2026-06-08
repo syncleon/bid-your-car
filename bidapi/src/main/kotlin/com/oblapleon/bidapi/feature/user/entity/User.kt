@@ -31,6 +31,12 @@ class User(
     @Column(name = "deleted_at")
     var deletedAt: Instant? = null,
 
+    @Column(name = "profile_photo_url")
+    var profilePhotoUrl: String? = null,
+
+    @Column(columnDefinition = "TEXT")
+    var bio: String? = null,
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",

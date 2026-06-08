@@ -7,6 +7,7 @@ import { CreateAuctionModal } from "../features/auction/ui/CreateAuctionModal.ts
 import { EditItemModal } from "../features/item/ui/EditItemModal.tsx";
 import type { CreateAuctionDto } from "../features/auction/types.ts";
 import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../features/item/types.ts";
+import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
 
 const badges = {
     live: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
@@ -80,6 +81,7 @@ export const ItemDetailsPage = observer(() => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     useEffect(() => {
         if (id) itemStore.loadItemDetails(id);
@@ -115,14 +117,18 @@ export const ItemDetailsPage = observer(() => {
 
     const handleDeleteItem = async () => {
         if (!id) return;
-        if (window.confirm("Are you sure you want to permanently delete this listing? This cannot be undone.")) {
-            setIsDeleting(true);
-            await itemStore.deleteListing(id);
-            if (!itemStore.error) {
-                navigate("/profile");
-            } else {
-                setIsDeleting(false);
-            }
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDeleteItem = async () => {
+        if (!id) return;
+        setDeleteDialogOpen(false);
+        setIsDeleting(true);
+        await itemStore.deleteListing(id);
+        if (!itemStore.error) {
+            navigate("/profile");
+        } else {
+            setIsDeleting(false);
         }
     };
 
@@ -274,6 +280,16 @@ export const ItemDetailsPage = observer(() => {
             {lightboxIndex !== null && item.images && item.images.length > 0 && (
                 <Lightbox images={item.images} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
             )}
+
+            <ConfirmDialog
+                isOpen={deleteDialogOpen}
+                title="Delete Listing"
+                message="Are you sure you want to permanently delete this listing? This cannot be undone."
+                onConfirm={confirmDeleteItem}
+                onCancel={() => setDeleteDialogOpen(false)}
+                confirmLabel="Delete"
+                isDestructive={true}
+            />
         </DetailPageLayout>
     );
 });

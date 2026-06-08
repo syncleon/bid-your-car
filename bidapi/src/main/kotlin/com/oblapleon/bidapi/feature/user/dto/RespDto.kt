@@ -17,6 +17,8 @@ data class UserDto(
     val id: Long,
     val username: String,
     val email: String,
+    val bio: String?,
+    val profilePhotoUrl: String?,
     val roles: Set<RoleDto>,
     val createdDate: Instant?
 ) : Serializable

@@ -43,3 +43,13 @@ export const getUserItems = () =>
         "/users/me/items", {
         method: "GET"
     });
+
+export const uploadProfilePhoto = (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return http<UserDto>("/users/me/photo", {
+        method: "POST",
+        body: formData,
+        // HttpClient handles FormData boundaries correctly without setting Content-Type
+    });
+};

@@ -15,6 +15,7 @@ export interface DeleteAccountRequestDto {
 export interface UpdateProfileRequestDto {
     username?: string;
     email?: string;
+    bio?: string;
 }
 
 export interface UpdatePasswordRequestDto {
@@ -29,6 +30,8 @@ export interface UserDto {
     id: number;
     username: string;
     email: string;
+    bio?: string;
+    profilePhotoUrl?: string;
     roles: RoleDto[];
     createdDate?: string;
 }

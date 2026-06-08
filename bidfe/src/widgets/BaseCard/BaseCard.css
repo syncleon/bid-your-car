@@ -101,3 +101,13 @@
         box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
     }
 }
+
+/* ── Container Queries for Size-Aware Styling ────────────────────── */
+@container garage (max-width: 360px) {
+    .base-card {
+        border-radius: 8px !important;
+    }
+    .base-card-title-row h3 {
+        font-size: 15px !important;
+    }
+}

@@ -13,13 +13,13 @@ export const StepCondition = ({ formData, handleChange, conditionGrades, titleSt
         <div style={styles.halfGrid}>
             <div>
                 <label style={styles.label}>Condition Grade</label>
-                <select name="condition" value={formData.condition} onChange={handleChange} style={styles.select}>
+                <select name="condition" value={formData.condition} onChange={handleChange} className="modern-input" required>
                     {conditionGrades.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
             </div>
             <div>
                 <label style={styles.label}>Title Status</label>
-                <select name="titleStatus" value={formData.titleStatus} onChange={handleChange} style={styles.select}>
+                <select name="titleStatus" value={formData.titleStatus} onChange={handleChange} className="modern-input" required>
                     {titleStatuses.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
             </div>
@@ -28,11 +28,11 @@ export const StepCondition = ({ formData, handleChange, conditionGrades, titleSt
         <div style={styles.halfGrid}>
             <div>
                 <label style={styles.label}>Exterior Color</label>
-                <input name="exteriorColor" value={formData.exteriorColor} onChange={handleChange} style={styles.input} placeholder="e.g. Guards Red" />
+                <input name="exteriorColor" value={formData.exteriorColor} onChange={handleChange} className="modern-input" placeholder="e.g. Guards Red" required />
             </div>
             <div>
                 <label style={styles.label}>Interior Color</label>
-                <input name="interiorColor" value={formData.interiorColor} onChange={handleChange} style={styles.input} placeholder="e.g. Black Leather" />
+                <input name="interiorColor" value={formData.interiorColor} onChange={handleChange} className="modern-input" placeholder="e.g. Black Leather" required />
             </div>
         </div>
 
@@ -48,8 +48,15 @@ export const StepCondition = ({ formData, handleChange, conditionGrades, titleSt
         </div>
 
         <div>
-            <label style={styles.label}>Description & Story</label>
-            <textarea name="description" value={formData.description || ''} onChange={handleChange} style={styles.textarea} placeholder="Tell us about the car's history..." />
+            <label style={styles.label}>Detailed Description</label>
+            <textarea
+                name="description"
+                value={formData.description || ''}
+                onChange={handleChange}
+                className="modern-input modern-textarea"
+                placeholder="Highlight options, known flaws, recent maintenance, ownership history..."
+                required
+            />
         </div>
         <div>
             <label style={styles.label}>Highlights</label>

@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
+import com.oblapleon.bidapi.common.service.StorageService
 import java.time.Instant
 import java.util.Optional
 
@@ -24,7 +26,8 @@ class UserService(
     private val userRepository: UserRepository,
     private val auctionRepository: AuctionRepository,
     private val bidRepository: BidRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val storageService: StorageService
 ) {
 
     fun findById(id: Long): User = userRepository.findById(id).orElseThrow { NotFoundException("User not found") }
@@ -64,6 +67,9 @@ class UserService(
                 if (existsByEmail(newEmail)) throw ConflictException("Email taken")
                 user.email = newEmail
             }
+        }
+        if (request.bio != null) {
+            user.bio = request.bio
         }
         if (!isSelfUpdate && request.password != null) {
             if (request.password.length < 6) throw BadRequestException("Password too short")
@@ -132,5 +138,17 @@ class UserService(
 
         user.deletedAt = null
         userRepository.save(user)
+    }
+
+    @Transactional
+    fun uploadProfilePhoto(userId: Long, file: MultipartFile): User {
+        val user = findById(userId)
+        
+        // Optional: delete old photo if exists to save space (would need full URL -> Key logic)
+        // user.profilePhotoUrl?.let { storageService.deleteFile(it) }
+
+        val imageUrl = storageService.uploadFile(file)
+        user.profilePhotoUrl = imageUrl
+        return userRepository.save(user)
     }
 }

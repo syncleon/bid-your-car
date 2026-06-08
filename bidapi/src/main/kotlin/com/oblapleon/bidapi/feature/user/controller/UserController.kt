@@ -18,6 +18,8 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.http.MediaType
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -45,10 +47,21 @@ class UserController(
 
         val serviceRequest = UpdateUserReqDto(
             username = request.username,
-            email = request.email
+            email = request.email,
+            bio = request.bio
         )
 
         val updatedUser = userService.updateUser(user.id!!, serviceRequest, isSelfUpdate = true)
+        return ResponseEntity.ok(updatedUser.toDto())
+    }
+
+    @Operation(summary = "Upload Profile Photo", description = "Uploads an avatar for the current user.")
+    @PostMapping(value = ["/me/photo"], consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun uploadProfilePhoto(
+        @RequestParam("file") file: MultipartFile
+    ): ResponseEntity<UserDto> {
+        val user = authorizationHelper.getCurrentUser()
+        val updatedUser = userService.uploadProfilePhoto(user.id!!, file)
         return ResponseEntity.ok(updatedUser.toDto())
     }
 

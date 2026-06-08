@@ -9,6 +9,8 @@ fun User.toDto(): UserDto = UserDto(
     id = id ?: throw IllegalStateException("Cannot map User to DTO: ID is null"),
     username = username,
     email = email,
+    bio = bio,
+    profilePhotoUrl = profilePhotoUrl,
     roles = roles.map { it.toDto() }.toSet(),
     createdDate = createdDate
 )

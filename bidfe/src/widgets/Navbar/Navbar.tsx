@@ -59,7 +59,11 @@ export const Navbar = observer(({ isAuthenticated }: Props) => {
                                 style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-input)', padding: '6px 16px 6px 6px', borderRadius: '30px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s ease', textDecoration: 'none' }}
                             >
                                 <div className="user-avatar-placeholder" style={{ background: 'linear-gradient(135deg, var(--accent-color) 0%, #8b5cf6 100%)', color: '#fff', fontWeight: 'bold' }}>
-                                    {user?.username ? user.username.charAt(0).toUpperCase() : (
+                                    {user?.profilePhotoUrl ? (
+                                        <img src={user.profilePhotoUrl} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                    ) : user?.username ? (
+                                        user.username.charAt(0).toUpperCase()
+                                    ) : (
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                             <circle cx="12" cy="7" r="4"></circle>

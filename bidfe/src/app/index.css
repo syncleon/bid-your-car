@@ -78,3 +78,14 @@ input:focus, textarea:focus, select:focus {
 input::placeholder, textarea::placeholder {
     color: var(--text-muted);
 }
+
+/* Hide number input arrows globally */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}

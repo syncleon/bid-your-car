@@ -4,6 +4,7 @@ import {
     deleteMyAccount,
     updateProfile,
     changePassword,
+    uploadProfilePhoto,
 } from "../api/profile.api";
 import { getErrorMessage } from "../../../shared/utils/error"; // Shared util
 import type {
@@ -27,6 +28,8 @@ export const UserProfileModel = types.model("UserProfile", {
     id: types.number,
     username: types.string,
     email: types.string,
+    bio: types.maybeNull(types.string),
+    profilePhotoUrl: types.maybeNull(types.string),
     roles: types.array(UserRoleModel),
     createdDate: types.maybeNull(types.string),
 })
@@ -115,12 +118,36 @@ export const ProfileStore = types.model("ProfileStore", {
             }
         });
 
+        const uploadPhoto = flow(function* (file: File) {
+            self.isLoading = true;
+            clearMessages();
+            try {
+                const updated = (yield uploadProfilePhoto(file)) as UserDto;
+                if (self.profile) {
+                    self.profile.profilePhotoUrl = updated.profilePhotoUrl || null;
+                }
+                self.successMessage = "Profile photo updated successfully!";
+                
+                // Keep authStore in sync
+                const root = getRoot<any>(self);
+                if (root?.authStore?.user) {
+                    root.authStore.user.profilePhotoUrl = updated.profilePhotoUrl || null;
+                }
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error);
+                throw error;
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
         return {
             clearMessages,
             loadProfile,
             updateProfileData,
             changeUserPassword,
-            deleteAccount
+            deleteAccount,
+            uploadPhoto
         };
     });
 

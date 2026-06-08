@@ -94,10 +94,57 @@ test.describe('Auction Details & Bidding', () => {
     await expect(page.locator('h4', { hasText: 'Owner Actions' })).toBeVisible();
     
     // Verify Cancel button is visible
-    const cancelBtn = page.locator('button', { hasText: 'Cancel Auction' });
+    const cancelBtn = page.locator('button:has-text("Cancel Auction"):not(.dialog-btn)');
     await expect(cancelBtn).toBeVisible();
 
     // Bidding controls should NOT be visible for the owner
     await expect(page.locator('button', { hasText: 'Quick Bid' })).not.toBeVisible();
+  });
+
+  test('allows seller to cancel an auction from the details page', async ({ page }) => {
+    // 1. Mock logged in user (id: 2, which IS the seller)
+    await page.route('**/api/v1/users/me', async route => {
+      await route.fulfill({ json: { id: 2, username: "sellerUser", roles: [{name: "USER"}] } });
+    });
+
+    // 2. Mock auction details AND cancellation
+    const cancellableAuction = { ...mockAuction, bidCount: 0, status: 'PENDING_APPROVAL' };
+    let cancelCalled = false;
+    await page.route('**/api/v1/auctions/auction-1', async route => {
+      if (route.request().method() === 'DELETE') {
+        cancelCalled = true;
+        await route.fulfill({ status: 200, json: { message: "Auction cancelled" } });
+      } else {
+        await route.fulfill({ json: cancellableAuction });
+      }
+    });
+
+    await page.route('**/api/v1/bids/auction/auction-1*', async route => {
+      await route.fulfill({ json: { content: [], totalElements: 0 } });
+    });
+
+    // Navigate to the auction details page
+    await page.goto('/auctions/auction-1');
+
+    // Verify Cancel button is visible and enabled
+    const cancelBtn = page.locator('button:has-text("Cancel Auction"):not(.dialog-btn)');
+    await expect(cancelBtn).toBeVisible();
+    await expect(cancelBtn).toBeEnabled();
+
+    // Click Cancel Auction
+    await cancelBtn.click();
+
+    // Verify ConfirmDialog appears
+    const dialogTitle = page.locator('.dialog-title', { hasText: 'Cancel Auction' });
+    await expect(dialogTitle).toBeVisible();
+
+    // Confirm Cancellation
+    const confirmBtn = page.locator('.dialog-btn-destructive', { hasText: 'Cancel Auction' });
+    await confirmBtn.click();
+
+    // Verify cancel endpoint was called
+    await expect(async () => {
+      expect(cancelCalled).toBe(true);
+    }).toPass();
   });
 });

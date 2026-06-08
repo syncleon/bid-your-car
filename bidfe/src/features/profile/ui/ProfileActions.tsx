@@ -10,7 +10,8 @@ interface FormProps {
 export const EditProfileForm = observer(({ store, onCancel }: FormProps) => {
     const [formData, setFormData] = useState({
         username: store.profile?.username || "",
-        email: store.profile?.email || ""
+        email: store.profile?.email || "",
+        bio: store.profile?.bio || ""
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -42,6 +43,15 @@ export const EditProfileForm = observer(({ store, onCancel }: FormProps) => {
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                     style={{ padding: 8, width: '100%' }}
                     required
+                />
+            </div>
+            <div style={{ marginBottom: 15 }}>
+                <label style={{ display: 'block', marginBottom: 5 }}>Bio</label>
+                <textarea
+                    value={formData.bio}
+                    onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                    style={{ padding: 8, width: '100%', minHeight: '80px', resize: 'vertical' }}
+                    maxLength={500}
                 />
             </div>
             <div style={{ display: 'flex', gap: 10 }}>

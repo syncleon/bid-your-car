@@ -43,6 +43,9 @@ data class UpdateUserReqDto(
     @field:Size(max = 100, message = "Email cannot exceed 100 characters")
     val email: String? = null,
 
+    @field:Size(max = 500, message = "Bio cannot exceed 500 characters")
+    val bio: String? = null,
+
     @field:Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     val password: String? = null
 )
@@ -54,7 +57,10 @@ data class UpdateProfileReqDto(
 
     @field:Email
     @field:Size(max = 100)
-    val email: String? = null
+    val email: String? = null,
+
+    @field:Size(max = 500, message = "Bio cannot exceed 500 characters")
+    val bio: String? = null
 )
 
 data class UpdatePasswordReqDto(

@@ -21,14 +21,20 @@
 
 /* Sidebar / Profile Card */
 .profile-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: color-mix(in srgb, var(--bg-card) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, rgba(255, 255, 255, 0.1));
     border-radius: 20px;
     padding: 32px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    view-transition-name: profile-card;
+}
+
+::view-transition-old(profile-card),
+::view-transition-new(profile-card) {
+    height: 100%;
 }
 
 .profile-card:hover {
@@ -57,6 +63,36 @@
     color: #ffffff;
     margin-bottom: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-avatar-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.profile-avatar:hover .profile-avatar-overlay {
+    opacity: 1;
 }
 
 .profile-username {
@@ -70,6 +106,16 @@
     font-size: 14px;
     color: var(--text-secondary);
     margin: 0;
+}
+
+.profile-bio {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 12px 0 0 0;
+    line-height: 1.5;
+    max-width: 100%;
+    word-break: break-word;
+    white-space: pre-wrap;
 }
 
 /* Details List */
@@ -198,6 +244,8 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
+    container-type: inline-size;
+    container-name: garage;
 }
 
 /* Empty State Modernization */
@@ -263,12 +311,19 @@
     text-decoration: none;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    animation: pulseGlow 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+    50% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.6); }
 }
 
 .garage-btn-sell:hover {
     background: var(--accent-hover);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    animation: none;
 }
 
 /* Alerts and Loaders */

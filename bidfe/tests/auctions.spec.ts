@@ -40,7 +40,7 @@ test.describe('Auction Feed', () => {
     
     // Wait for the mock item to render
     await expect(page.locator('text=Toyota Camry').first()).toBeVisible();
-    await expect(page.locator('text=$12k').first()).toBeVisible();
+    await expect(page.locator('text=$12,000').first()).toBeVisible();
   });
 
   test('displays empty state when no auctions available', async ({ page }) => {

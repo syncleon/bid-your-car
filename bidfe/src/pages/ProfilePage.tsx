@@ -5,6 +5,8 @@ import { useUserListings } from "../features/profile/hooks/useUserListings";
 import { ChangePasswordForm, EditProfileForm } from "../features/profile/ui/ProfileActions";
 import { Link, useNavigate } from "react-router-dom";
 import { ItemCard } from "../features/item/ui/ItemCard";
+import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
+import { PromptDialog } from "../shared/ui/dialog/PromptDialog";
 import "./ProfilePage.css";
 
 export const ProfilePage = observer(() => {
@@ -12,6 +14,18 @@ export const ProfilePage = observer(() => {
     const navigate = useNavigate();
     const { items, isLoading: itemsLoading, error: itemsError } = useUserListings();
     const [viewMode, setViewMode] = useState<'view' | 'edit' | 'password'>('view');
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
+
+    const handleSetViewMode = (mode: 'view' | 'edit' | 'password') => {
+        if (!document.startViewTransition) {
+            setViewMode(mode);
+            return;
+        }
+        document.startViewTransition(() => {
+            setViewMode(mode);
+        });
+    };
 
     useEffect(() => {
         if (!profileStore.profile) {
@@ -29,19 +43,32 @@ export const ProfilePage = observer(() => {
     }
 
     const handleDeleteAccount = () => {
-        const password = prompt("Enter password to confirm deletion:");
-        if (password) {
-            profileStore.deleteAccount({ password });
-        }
+        setDeleteAccountDialogOpen(true);
     };
 
-    const handleLogout = async () => {
+    const confirmDeleteAccount = (password: string) => {
+        setDeleteAccountDialogOpen(false);
+        profileStore.deleteAccount({ password });
+    };
+
+    const handleLogout = () => {
+        setLogoutDialogOpen(true);
+    };
+
+    const confirmLogout = async () => {
+        setLogoutDialogOpen(false);
         await authStore.logout();
         navigate("/");
     };
 
     const username = profileStore.profile.username || "User";
     const initial = username.charAt(0).toUpperCase();
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            profileStore.uploadPhoto(e.target.files[0]);
+        }
+    };
 
     return (
         <div className="profile-container">
@@ -56,9 +83,22 @@ export const ProfilePage = observer(() => {
                 <aside className="profile-sidebar">
                     <div className="profile-card">
                         <div className="profile-header-visual">
-                            <div className="profile-avatar">{initial}</div>
+                            <div className="profile-avatar">
+                                {profileStore.profile.profilePhotoUrl ? (
+                                    <img src={profileStore.profile.profilePhotoUrl} alt="Avatar" className="profile-avatar-img" />
+                                ) : (
+                                    initial
+                                )}
+                                <label className="profile-avatar-overlay">
+                                    <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: 'none' }} />
+                                    <span>Edit</span>
+                                </label>
+                            </div>
                             <h1 className="profile-username">@{username}</h1>
                             <p className="profile-email">{profileStore.profile.email}</p>
+                            {profileStore.profile.bio && (
+                                <p className="profile-bio">{profileStore.profile.bio}</p>
+                            )}
                         </div>
 
                         {viewMode === 'view' && (
@@ -74,10 +114,10 @@ export const ProfilePage = observer(() => {
                                     </div>
                                 </div>
                                 <div className="profile-actions">
-                                    <button className="profile-btn profile-btn--secondary" onClick={() => setViewMode('edit')}>
+                                    <button className="profile-btn profile-btn--secondary" onClick={() => handleSetViewMode('edit')}>
                                         Edit Profile
                                     </button>
-                                    <button className="profile-btn profile-btn--secondary" onClick={() => setViewMode('password')}>
+                                    <button className="profile-btn profile-btn--secondary" onClick={() => handleSetViewMode('password')}>
                                         Update Password
                                     </button>
                                     <button className="profile-btn profile-btn--secondary" onClick={handleLogout}>
@@ -93,14 +133,14 @@ export const ProfilePage = observer(() => {
                         {viewMode === 'edit' && (
                             <div className="profile-form-wrapper">
                                 <h2 className="profile-form-title">Edit Profile Info</h2>
-                                <EditProfileForm store={profileStore} onCancel={() => setViewMode('view')} />
+                                <EditProfileForm store={profileStore} onCancel={() => handleSetViewMode('view')} />
                             </div>
                         )}
 
                         {viewMode === 'password' && (
                             <div className="profile-form-wrapper">
                                 <h2 className="profile-form-title">Change Password</h2>
-                                <ChangePasswordForm store={profileStore} onCancel={() => setViewMode('view')} />
+                                <ChangePasswordForm store={profileStore} onCancel={() => handleSetViewMode('view')} />
                             </div>
                         )}
                     </div>
@@ -136,6 +176,26 @@ export const ProfilePage = observer(() => {
                     </div>
                 </section>
             </div>
+
+            <ConfirmDialog
+                isOpen={logoutDialogOpen}
+                title="Log Out"
+                message="Are you sure you want to log out?"
+                onConfirm={confirmLogout}
+                onCancel={() => setLogoutDialogOpen(false)}
+                confirmLabel="Log Out"
+            />
+
+            <PromptDialog
+                isOpen={deleteAccountDialogOpen}
+                title="Delete Account"
+                message="This action is permanent and cannot be undone. Enter your password to confirm."
+                placeholder="Password"
+                isPassword={true}
+                onConfirm={confirmDeleteAccount}
+                onCancel={() => setDeleteAccountDialogOpen(false)}
+                confirmLabel="Delete Account"
+            />
         </div>
     );
 });

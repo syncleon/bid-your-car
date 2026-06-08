@@ -21,6 +21,7 @@ export const RoleModel = types.model("Role", {
 export const AuthUserModel = types.model("AuthUser", {
     id: types.number,
     username: types.string,
+    profilePhotoUrl: types.maybeNull(types.string),
     roles: types.array(RoleModel),
 });
 
@@ -60,6 +61,7 @@ export const AuthStore = types.model("AuthStore", {
                     self.user = AuthUserModel.create({
                         id: userData.id,
                         username: userData.username,
+                        profilePhotoUrl: userData.profilePhotoUrl || null,
                         roles: userData.roles
                     });
                 } else {

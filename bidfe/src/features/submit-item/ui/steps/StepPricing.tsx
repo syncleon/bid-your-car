@@ -25,20 +25,22 @@ export const StepPricing = ({ formData, handleChange }: Props) => (
         </div>
 
         {!formData.isNoReserve && (
-            <div style={{ marginTop: '12px' }}>
-                <label style={styles.label}>Reserve Price (Minimum acceptable bid)</label>
-                <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>$</span>
-                    <input
-                        type="number"
-                        name="reservePrice"
-                        value={formData.reservePrice}
-                        onChange={handleChange}
-                        style={{ ...styles.input, paddingLeft: '28px' }}
-                        placeholder="50000"
-                    />
-                </div>
-                <p style={styles.helperText}>Hidden from buyers. If bidding does not reach this amount, the vehicle will not sell.</p>
+            <div style={{ marginTop: "24px" }}>
+                <label style={styles.label}>Reserve Price ($)</label>
+                <input
+                    type="number"
+                    name="reservePrice"
+                    value={formData.reservePrice}
+                    onChange={handleChange}
+                    className="modern-input"
+                    placeholder="e.g. 50000"
+                    disabled={formData.isNoReserve}
+                    min={1}
+                    required={!formData.isNoReserve}
+                />
+                <p style={styles.helperText}>
+                    The minimum price you are willing to accept. If the highest bid does not meet this amount, the vehicle will not sell.
+                </p>
             </div>
         )}
     </div>
