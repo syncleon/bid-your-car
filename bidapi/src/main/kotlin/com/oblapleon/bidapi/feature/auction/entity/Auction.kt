@@ -28,7 +28,7 @@ class Auction(
     override var id: UUID? = null,
 
     @Version
-    var version: Long? = null,
+    var version: Long = 0L,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "item_id", nullable = false)

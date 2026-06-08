@@ -12,6 +12,7 @@ import com.oblapleon.bidapi.feature.bid.repository.BidRepository
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.item.repository.ItemRepository
 import com.oblapleon.bidapi.feature.user.entity.ERole
+import com.oblapleon.bidapi.feature.user.entity.User
 import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -202,14 +203,55 @@ class AuctionService(
     }
 
     @Transactional
-    fun placeBidAsUser(auctionId: UUID, bidderId: Long, amount: BigDecimal): Bid {
+    fun placeBidAsUser(auctionId: UUID, bidderId: Long, maxAmount: BigDecimal): Bid {
         val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
             .orElseThrow { NotFoundException("Auction not found.") }
-        
-        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(auction.minBidIncrement)
-        if (amount < minRequired) throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
 
-        return executeBidCore(auction, bidderId, amount, Instant.now())
+        val now = Instant.now()
+        if (auction.status != AuctionStatus.ACTIVE) throw BadRequestException("Auction is not active.")
+        if (now.isAfter(auction.endTime)) throw BadRequestException("Auction has ended.")
+        if (now.isBefore(auction.startTime)) throw BadRequestException("Auction has not started yet.")
+        if (auction.item.seller.id == bidderId) throw ForbiddenException("You cannot bid on your own item.")
+
+        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(auction.minBidIncrement)
+
+        val currentWinnerId = auction.winningBid?.bidder?.id
+        val currentMax = auction.winningBid?.maxAmount ?: BigDecimal.ZERO
+
+        if (currentWinnerId == bidderId) {
+            if (maxAmount <= currentMax) {
+                throw BadRequestException("Your new max bid must be higher than your current max bid ($currentMax).")
+            }
+            val bidder = userRepository.findById(bidderId).orElseThrow { NotFoundException("User not found") }
+            return recordBid(auction, bidder, auction.currentPrice, maxAmount, now)
+        }
+
+        if (maxAmount < minRequired) {
+             throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
+        }
+
+        // Allow any bid >= minRequired. Proxy bidding handles the rest.
+
+        val bidder = userRepository.findById(bidderId).orElseThrow { NotFoundException("User not found") }
+
+        if (auction.bidCount == 0) {
+            return recordBid(auction, bidder, auction.startPrice, maxAmount, now)
+        }
+
+        if (maxAmount <= currentMax) {
+            // New bidder is immediately outbid by current winner
+            recordBid(auction, bidder, maxAmount, maxAmount, now)
+            val nextIncrement = maxAmount.add(auction.minBidIncrement)
+            val newPriceForA = if (currentMax >= nextIncrement) nextIncrement else currentMax
+            return recordBid(auction, auction.winningBid!!.bidder, newPriceForA, currentMax, now.plusMillis(1))
+        } else {
+            // New bidder outbids current winner
+            val prevWinner = auction.winningBid!!.bidder
+            recordBid(auction, prevWinner, currentMax, currentMax, now)
+            val nextIncrement = currentMax.add(auction.minBidIncrement)
+            val newPriceForB = if (maxAmount >= nextIncrement) nextIncrement else maxAmount
+            return recordBid(auction, bidder, newPriceForB, maxAmount, now.plusMillis(1))
+        }
     }
 
     @Transactional
@@ -225,19 +267,11 @@ class AuctionService(
             auction.currentPrice.add(auction.minBidIncrement)
         }
 
-        return executeBidCore(auction, currentUser.id!!, exactAmountToBid, Instant.now())
+        // Delegate to the main proxy bidding function
+        return placeBidAsUser(auctionId, currentUser.id!!, exactAmountToBid)
     }
 
-    private fun executeBidCore(auction: Auction, bidderId: Long, amount: BigDecimal, now: Instant): Bid {
-        if (auction.status != AuctionStatus.ACTIVE) throw BadRequestException("Auction is not active.")
-        if (now.isAfter(auction.endTime)) throw BadRequestException("Auction has ended.")
-        if (now.isBefore(auction.startTime)) throw BadRequestException("Auction has not started yet.")
-        if (auction.item.seller.id == bidderId) throw ForbiddenException("You cannot bid on your own item.")
-        if (auction.winningBid?.bidder?.id == bidderId) throw BadRequestException("You are already the highest bidder.")
-
-        val bidder = userRepository.findById(bidderId)
-            .orElseThrow { NotFoundException("User account not found.") }
-
+    private fun recordBid(auction: Auction, bidder: User, amount: BigDecimal, maxAmount: BigDecimal, now: Instant): Bid {
         val secondsRemaining = ChronoUnit.SECONDS.between(now, auction.endTime)
         if (secondsRemaining < 120) auction.endTime = now.plus(120, ChronoUnit.SECONDS)
 
@@ -246,7 +280,7 @@ class AuctionService(
             bidder = bidder,
             amount = amount,
             bidTime = now,
-            maxAmount = amount
+            maxAmount = maxAmount
         )
         val savedBid = bidRepository.save(bid)
 

@@ -201,13 +201,14 @@ export const ItemStore = types
         });
 
         const deleteListing = flow(function* (id: string) {
+            self.error = null;
             try {
                 yield deleteItem(id);
 
+                if (self.selectedItem?.id === id) self.selectedItem = null;
+
                 const myItemToRemove = self.myItems.find(i => i.id === id);
                 if (myItemToRemove) self.myItems.remove(myItemToRemove);
-
-                if (self.selectedItem?.id === id) self.selectedItem = null;
             } catch (err) {
                 self.error = err instanceof Error ? err.message : "Delete failed";
             }

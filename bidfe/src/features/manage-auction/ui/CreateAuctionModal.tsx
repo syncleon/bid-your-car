@@ -247,11 +247,9 @@ export const CreateAuctionModal = ({
                                     <div style={styles.placeholderHero}>No Images Available</div>
                                 )}
                                 <div style={styles.heroOverlay}>
-                                    <h3 style={styles.heroTitle}>
-                                        {item.year} {item.make} {item.model}
-                                    </h3>
-                                    <div style={styles.heroSubtitle}>
-                                        {item.vin} • {item.mileage.toLocaleString()} mi
+                                    <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>{item.year} {item.make} {item.model}</div>
+                                    <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                                        {item.vin} • {item.mileage.toLocaleString()} km
                                     </div>
                                 </div>
                             </div>

@@ -4,11 +4,11 @@
 :root {
   color-scheme: dark;
 
-  /* Backgrounds - Pure Black */
-  --bg-base: #000000;
-  --bg-card: #0c0c0c;
-  --bg-input: #121212;
-  --bg-hover: #1f1f1f;
+  /* Backgrounds - Dark Gray */
+  --bg-base: #18181b;
+  --bg-card: #27272a;
+  --bg-input: #3f3f46;
+  --bg-hover: #52525b;
   --bg-overlay: rgba(0, 0, 0, 0.85);
 
   /* Text Colors - Soft whites for readability */
@@ -17,8 +17,8 @@
   --text-muted: #94a3b8;
 
   /* Borders */
-  --border-color: #262626;
-  --border-light: #1a1a1a;
+  --border-color: #3f3f46;
+  --border-light: #27272a;
 
   /* Buttons - Blue & Grey Primary */
   --btn-primary-bg: #2563eb;

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../shared/hooks/useStore.ts";
 import { AuctionCard } from "../features/auction/ui/AuctionCard.tsx";
@@ -155,10 +156,22 @@ export const AuctionListTemplate = observer(({
 
     const [filterMake, setFilterMake] = useState("All");
     const [filterYear, setFilterYear] = useState("All");
+    const [filterTransmission, setFilterTransmission] = useState("All");
+    const [filterCondition, setFilterCondition] = useState("All");
     const [sortBy, setSortBy] = useState(defaultSort);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const searchQuery = searchParams.get("q") || "";
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
     const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
+
+    const setSearchQuery = (val: string) => {
+        setSearchParams(prev => {
+            if (val) prev.set("q", val);
+            else prev.delete("q");
+            return prev;
+        }, { replace: true });
+        setVisibleCount(ITEMS_PER_BATCH);
+    };
     const [isHeaderHidden, setIsHeaderHidden] = useState(false);
 
     const observerRef = useRef<IntersectionObserver | null>(null);
@@ -179,10 +192,21 @@ export const AuctionListTemplate = observer(({
         return ["All", ...Array.from(unique).sort((a, b) => b - a)];
     }, [auctionsFromStore]);
 
+    const transmissions = useMemo(() => {
+        const unique = new Set(auctionsFromStore.map(a => a.item.transmission).filter(Boolean));
+        return ["All", ...Array.from(unique).sort()];
+    }, [auctionsFromStore]);
+
+    const conditions = useMemo(() => {
+        const unique = new Set(auctionsFromStore.map(a => a.item.condition).filter(Boolean));
+        return ["All", ...Array.from(unique).sort()];
+    }, [auctionsFromStore]);
+
     useEffect(() => {
         setFilterMake("All");
         setFilterYear("All");
-        setSearchQuery("");
+        setFilterTransmission("All");
+        setFilterCondition("All");
         setSortBy(status === 'SOLD' ? "newly_sold" : defaultSort);
         setVisibleCount(ITEMS_PER_BATCH);
 
@@ -214,6 +238,8 @@ export const AuctionListTemplate = observer(({
 
         if (filterMake !== "All") result = result.filter(a => a.item.make === filterMake);
         if (filterYear !== "All") result = result.filter(a => a.item.year.toString() === filterYear);
+        if (filterTransmission !== "All") result = result.filter(a => a.item.transmission === filterTransmission);
+        if (filterCondition !== "All") result = result.filter(a => a.item.condition === filterCondition);
 
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
@@ -241,7 +267,7 @@ export const AuctionListTemplate = observer(({
         });
 
         return result;
-    }, [auctionsFromStore, filterMake, filterYear, searchQuery, sortBy]);
+    }, [auctionsFromStore, filterMake, filterYear, filterTransmission, filterCondition, searchQuery, sortBy]);
 
     const visibleAuctions = useMemo(() => {
         return filteredAuctions.slice(0, visibleCount);
@@ -281,6 +307,8 @@ export const AuctionListTemplate = observer(({
     const chips: { label: string; clear: () => void }[] = [];
     if (filterMake !== "All") chips.push({ label: filterMake, clear: () => setFilterMake("All") });
     if (filterYear !== "All") chips.push({ label: filterYear.toString(), clear: () => setFilterYear("All") });
+    if (filterTransmission !== "All") chips.push({ label: filterTransmission, clear: () => setFilterTransmission("All") });
+    if (filterCondition !== "All") chips.push({ label: filterCondition.replace('_', ' '), clear: () => setFilterCondition("All") });
     if (searchQuery.trim()) chips.push({ label: `"${searchQuery}"`, clear: () => setSearchQuery("") });
 
     const hasActiveFilters = chips.length > 0;
@@ -303,6 +331,21 @@ export const AuctionListTemplate = observer(({
             <header className={`auction-header ${isHeaderHidden ? 'header-hidden' : ''}`}>
                 <div className="header-top">
                     <h1 className="page-title">{title}</h1>
+                    <div className="search-wrapper">
+                        <span className="search-icon"><SearchIcon /></span>
+                        <input
+                            className="search-input"
+                            type="text"
+                            placeholder="Search make, model, location…"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                        />
+                        {searchQuery && (
+                            <button className="filter-chip-x" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, display: 'flex', fontSize: '18px' }} onClick={() => setSearchQuery("")}>
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Mobile toggle */}
@@ -314,24 +357,20 @@ export const AuctionListTemplate = observer(({
                 </button>
 
                 <div className={`controls-wrapper ${isMobileFiltersOpen ? 'mobile-open' : 'mobile-hidden'}`}>
-                    {/* Single row: search + selects + view toggle */}
+                    {/* selects + view toggle */}
                     <div className="controls-bar">
-                        <div className="search-wrapper">
-                            <span className="search-icon"><SearchIcon /></span>
-                            <input
-                                className="search-input"
-                                type="text"
-                                placeholder="Search make, model, location…"
-                                value={searchQuery}
-                                onChange={e => {
-                                    setSearchQuery(e.target.value);
-                                    setVisibleCount(ITEMS_PER_BATCH);
-                                }}
-                            />
-                        </div>
-
                         <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                         <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                        <FilterSelect label="Transmission" value={filterTransmission} options={transmissions} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                        <FilterSelect 
+                            label="Condition" 
+                            value={filterCondition === "All" ? "All" : filterCondition.replace('_', ' ')} 
+                            options={conditions.map(c => c === "All" ? "All" : c.replace('_', ' '))} 
+                            onChange={v => { 
+                                setFilterCondition(v === "All" ? "All" : conditions.find(cond => cond.replace('_', ' ') === v) || v); 
+                                setVisibleCount(ITEMS_PER_BATCH); 
+                            }} 
+                        />
                         
                         <div className="sort-tabs">
                             {sortOptions.map((opt: any) => (

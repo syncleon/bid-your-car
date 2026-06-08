@@ -14,7 +14,7 @@ export const StepSpecs = ({ formData, handleChange, transmissions, drivetrains, 
     <div style={styles.grid}>
         <div style={styles.halfGrid}>
             <div>
-                <label style={styles.label}>Mileage</label>
+                <label style={styles.label}>Mileage (km)</label>
                 <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className="modern-input" placeholder="e.g. 15000" min={0} required />
             </div>
             <div>

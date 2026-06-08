@@ -76,7 +76,7 @@ export const LoginForm = observer(() => {
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} autoComplete="off">
                 <div style={formStyles.inputGroup}>
                     <label style={formStyles.label}>Username</label>
                     <input
@@ -84,6 +84,8 @@ export const LoginForm = observer(() => {
                         placeholder="Enter your username"
                         value={formData.username}
                         onChange={(e) => handleChange("username", e.target.value)}
+                        autoComplete="off"
+                        name="username_field"
                         required
                     />
                 </div>
@@ -95,6 +97,8 @@ export const LoginForm = observer(() => {
                         placeholder="••••••••"
                         value={formData.password}
                         onChange={(e) => handleChange("password", e.target.value)}
+                        autoComplete="new-password"
+                        name="password_field"
                         required
                     />
                 </div>

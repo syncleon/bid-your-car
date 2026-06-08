@@ -14,6 +14,42 @@ export const DetailHeader = ({ onBack, title }: { onBack: () => void, title?: st
     </div>
 );
 
+export const VehicleHeader = ({ item }: { item: ItemDto }) => {
+    const handleShare = async () => {
+        const shareData = {
+            title: `${item.year} ${item.make} ${item.model}`,
+            text: `Check out this ${item.year} ${item.make} ${item.model} on BidYourCar!`,
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.error("Error sharing:", err);
+            }
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link copied to clipboard!");
+        }
+    };
+
+    return (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+            <div>
+                <h1 style={styles.title}>{item.year} {item.make} {item.model}</h1>
+                <p style={styles.subtitle}>{item.mileage.toLocaleString()} km • {item.location}</p>
+            </div>
+            <div style={{ display: "flex", gap: "12px" }}>
+                <button onClick={handleShare} style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "var(--bg-input)", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: "6px", padding: "8px 16px", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    Share
+                </button>
+            </div>
+        </div>
+    );
+};
+
 interface GalleryProps {
     item: ItemDto;
     statusLabel?: React.ReactNode;
@@ -23,8 +59,8 @@ interface GalleryProps {
 export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) => {
     const images = item.images || [];
     const mainImage = images.find(img => img.category === "MAIN")?.url || images[0]?.url;
-    const thumbnails = images.filter(img => img.url !== mainImage).slice(0, 4);
-    const remainingCount = Math.max(0, images.length - 5);
+    const thumbnails = images.filter(img => img.url !== mainImage).slice(0, 6);
+    const remainingCount = Math.max(0, images.length - 7);
 
     if (!mainImage) {
         return <div style={styles.placeholder}>No Photos Available</div>;
@@ -46,7 +82,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
                     {thumbnails.map((img, idx) => {
                         // Correctly find the index in the original array for the lightbox
                         const realIndex = images.findIndex(origImg => origImg.id === img.id);
-                        const isLastAndOverflowing = idx === 3 && remainingCount > 0;
+                        const isLastAndOverflowing = idx === 5 && remainingCount > 0;
 
                         return (
                             <div
@@ -56,7 +92,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
                             >
                                 <img src={img.url} alt={`View ${realIndex}`} style={styles.thumbImg} className="thumb-inactive" />
                                 {isLastAndOverflowing && (
-                                    <div style={styles.moreOverlay}>+{remainingCount + 1}</div>
+                                    <div style={styles.moreOverlay}>All Photos ({images.length})</div>
                                 )}
                             </div>
                         );
@@ -67,10 +103,16 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
     );
 };
 
-export const VehicleInfo = ({ item }: { item: ItemDto }) => (
+
+
+export const VehicleInfo = ({ item, hideHeader = false }: { item: ItemDto, hideHeader?: boolean }) => (
     <div>
-        <h1 style={styles.title}>{item.year} {item.make} {item.model}</h1>
-        <p style={styles.subtitle}>{item.mileage.toLocaleString()} miles • {item.location}</p>
+        {!hideHeader && (
+            <>
+                <h1 style={styles.title}>{item.year} {item.make} {item.model}</h1>
+                <p style={styles.subtitle}>{item.mileage.toLocaleString()} miles • {item.location}</p>
+            </>
+        )}
 
         {(item.hasServiceHistory || item.isModified) && (
             <div style={styles.tagsContainer}>
@@ -171,18 +213,18 @@ const minStyles = {
 };
 
 const styles = {
-    container: { width: "80%", margin: "0 auto", padding: "40px 0", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
+    container: { width: "80%", margin: "0 auto", padding: "16px 0", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
     headerRow: { marginBottom: 24, display: 'flex', justifyContent: 'space-between' },
     grid: { display: "grid", alignItems: "start" },
 
-    galleryContainer: { display: "flex", flexDirection: "column" as const, gap: "12px", marginBottom: "32px" },
-    mainWrapper: { position: "relative" as const, width: "100%", aspectRatio: "16/10", borderRadius: "12px", overflow: "hidden", cursor: "zoom-in", backgroundColor: "var(--bg-input)", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "background-color 0.3s ease" },
-    mainImg: { width: "100%", height: "100%", objectFit: "cover" as const, transition: "transform 0.3s ease", },
+    galleryContainer: { display: "grid", gridTemplateColumns: "1fr 35%", gap: "12px", marginBottom: "24px" },
+    mainWrapper: { position: "relative" as const, width: "100%", height: "100%", aspectRatio: "16/10", borderRadius: "8px", overflow: "hidden", cursor: "zoom-in", backgroundColor: "var(--bg-input)", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "background-color 0.3s ease" },
+    mainImg: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" as const, transition: "transform 0.3s ease", },
     hoverOverlay: { position: "absolute" as const, inset: 0, background: "rgba(0,0,0,0.2)", opacity: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: "14px", pointerEvents: "none" as const, },
     statusOverlay: { position: "absolute" as const, top: 16, left: 16, zIndex: 10 },
-    thumbGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" },
-    thumbWrapper: { position: "relative" as const, aspectRatio: "4/3", borderRadius: "8px", overflow: "hidden", cursor: "pointer", backgroundColor: "var(--bg-input)", transition: "background-color 0.3s ease" },
-    thumbImg: { width: "100%", height: "100%", objectFit: "cover" as const, },
+    thumbGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "repeat(3, 1fr)", gap: "8px" },
+    thumbWrapper: { position: "relative" as const, borderRadius: "8px", overflow: "hidden", cursor: "pointer", backgroundColor: "var(--bg-input)", transition: "background-color 0.3s ease" },
+    thumbImg: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" as const, },
     moreOverlay: { position: "absolute" as const, inset: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 600, backdropFilter: "blur(2px)" },
     placeholder: { width: "100%", height: "300px", backgroundColor: "var(--bg-input)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "14px", transition: "background-color 0.3s ease, color 0.3s ease" },
     title: { fontSize: "36px", fontWeight: 800, color: "var(--text-primary)", margin: "0 0 8px 0", letterSpacing: "-1px", transition: "color 0.3s ease" },

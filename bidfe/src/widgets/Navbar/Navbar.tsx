@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useStoreContext } from "../../app/providers/useStoreContext";
 import { observer } from "mobx-react-lite";
 import "./Navbar.css";
@@ -21,8 +21,6 @@ export const Navbar = observer(({ isAuthenticated }: Props) => {
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
-
-
 
     useEffect(() => {
         if (isMobileMenuOpen) {
@@ -49,8 +47,7 @@ export const Navbar = observer(({ isAuthenticated }: Props) => {
                     </Link>
                 </nav>
 
-                <div className="navbar__right desktop-only">
-
+                <div className="navbar__right desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, justifyContent: 'flex-end' }}>
                     {isAuthenticated ? (
                         <div className="user-menu">
                             <Link

@@ -76,7 +76,7 @@ export const ItemCard = ({ item }: ItemCardProps) => {
 
                 bottomLeft: (
                     <div style={styles.badgeDark}>
-                        {item.mileage.toLocaleString()} mi
+                        {item.mileage.toLocaleString()} km
                     </div>
                 )
             }}

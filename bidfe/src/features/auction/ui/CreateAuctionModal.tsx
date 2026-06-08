@@ -251,7 +251,7 @@ export const CreateAuctionModal = ({
                                         {item.year} {item.make} {item.model}
                                     </h3>
                                     <div style={styles.heroSubtitle}>
-                                        {item.vin} • {item.mileage.toLocaleString()} mi
+                                        {item.vin} • {item.mileage.toLocaleString()} km
                                     </div>
                                 </div>
                             </div>

@@ -83,11 +83,12 @@
 
 .sort-tab {
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
     color: var(--text-secondary);
-    border-radius: 20px;
-    padding: 6px 16px;
-    font-size: 13px;
+    padding: 6px 12px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -95,26 +96,26 @@
 }
 
 .sort-tab:hover {
-    border-color: var(--accent-color);
     color: var(--text-primary);
 }
 
 .sort-tab.active {
-    background: var(--accent-color);
-    border-color: var(--accent-color);
-    color: white;
+    background: transparent;
+    border-color: transparent;
+    border-bottom: 2px solid var(--btn-primary-bg);
+    color: var(--text-primary);
 }
 
 .search-wrapper {
     position: relative;
     flex: 1;
-    min-width: 160px;
-    max-width: 260px;
+    min-width: 200px;
+    max-width: 400px;
 }
 
 .search-icon {
     position: absolute;
-    left: 10px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
@@ -125,18 +126,18 @@
 
 .search-input {
     width: 100%;
-    padding: 0 12px 0 34px;
-    font-size: 14px;
+    padding: 0 40px 0 40px;
+    font-size: 15px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 22px;
     background: var(--bg-input);
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
-    font-weight: 400;
+    font-weight: 500;
     box-sizing: border-box;
     transition: border-color 0.2s, background 0.3s ease, color 0.3s ease;
     outline: none;
-    height: 36px;
+    height: 44px;
 }
 
 .search-input::placeholder {

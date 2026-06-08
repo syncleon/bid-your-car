@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../shared/hooks/useStore.ts";
-import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo } from "../shared/ui/details";
+import { DetailPageLayout, ImageGallery, VehicleInfo, VehicleHeader } from "../shared/ui/details";
 import { BiddingCard } from "../features/auction/ui/BiddingCard.tsx";
 import { BidHistory } from "../features/auction/ui/BidHistory.tsx";
 import { formatDistanceToNow } from "date-fns";
@@ -65,7 +65,7 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
 
 export const AuctionDetailsPage = observer(() => {
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
+    const { auctionId } = useParams<{ auctionId: string }>();
 
     const { auctionStore, authStore} = useStore();
     const [actionLoading, setActionLoading] = useState(false);
@@ -149,156 +149,145 @@ export const AuctionDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            <div className="compact-container">
-                <DetailHeader onBack={() => navigate("/auctions")} title={`${item.year} ${item.make} ${item.model}`} />
-
-                <div className="details-grid">
-                    <div className="details-left">
-                        <div className="gallery-wrapper">
-                            <ImageGallery
-                                item={item}
-                                statusLabel={<StatusBadge status={auction.status} isNoReserve={auction.isNoReserve} />}
-                                onImageClick={(index) => setLightboxIndex(index)}
-                            />
+            <div className="compact-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* Status Banners & Actions at the top */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {isPending && (
+                        <div className="compact-banner banner-pending">
+                            <strong>Pending Approval</strong>
+                            <p>{isOwner ? "Under review." : "Waiting for admin."}</p>
                         </div>
+                    )}
 
-                        <VehicleInfo item={item} />
-                        
-                        <div className="history-wrapper">
-                            <h3 style={{ padding: '20px 24px 0 24px', margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Comments & Bids</h3>
-                            <BidHistory bids={auctionStore.bidHistory} />
+                    {isScheduled && auction.startTime && (
+                        <div className="compact-banner banner-pending">
+                            <strong>Scheduled</strong>
+                            <p>Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}.</p>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="details-right">
+                    {isCancelled && (
+                        <div className="compact-banner banner-rejected">
+                            <strong>Cancelled</strong>
+                            <p>{isOwner ? "This listing was cancelled." : "Administratively removed."}</p>
+                        </div>
+                    )}
 
-                        {isPending && (
-                            <div className="compact-banner banner-pending">
-                                <strong>Pending Approval</strong>
-                                <p>{isOwner ? "Under review." : "Waiting for admin."}</p>
+                    {isAdmin && isPending && (
+                        <div className="admin-panel compact-card">
+                            <div className="admin-btn-group">
+                                <button onClick={handleApprove} disabled={actionLoading} className="btn-approve">
+                                    {actionLoading ? "..." : "✓ Approve"}
+                                </button>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {isScheduled && (
-                            <div className="compact-banner banner-pending">
-                                <strong>Scheduled</strong>
-                                <p>Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}.</p>
-                            </div>
-                        )}
+                    {isOwner && !isEnded && (
+                        <div className="owner-panel compact-card">
+                            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <div
+                                    style={{ position: "relative" }}
+                                    onMouseEnter={() => {
+                                        if (cannotCancelReason) setShowCancelTooltip(true);
+                                    }}
+                                    onMouseLeave={() => setShowCancelTooltip(false)}
+                                >
+                                    <div style={{
+                                        position: "absolute",
+                                        bottom: "100%",
+                                        left: "50%",
+                                        transform: "translateX(-50%)",
+                                        marginBottom: "8px",
+                                        backgroundColor: "#ef4444",
+                                        color: "white",
+                                        padding: "8px 12px",
+                                        borderRadius: "6px",
+                                        fontSize: "12px",
+                                        fontWeight: 600,
+                                        whiteSpace: "nowrap",
+                                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                        zIndex: 10,
+                                        pointerEvents: "none",
+                                        opacity: showCancelTooltip ? 1 : 0,
+                                        visibility: showCancelTooltip ? "visible" : "hidden",
+                                        transition: "opacity 0.2s ease-in-out, visibility 0.2s"
+                                    }}>
+                                        {cannotCancelReason ?? ""}
+                                        <div style={{
+                                            position: "absolute",
+                                            top: "100%",
+                                            left: "50%",
+                                            transform: "translateX(-50%)",
+                                            borderWidth: "5px",
+                                            borderStyle: "solid",
+                                            borderColor: "#ef4444 transparent transparent transparent"
+                                        }} />
+                                    </div>
 
-                        {isCancelled && (
-                            <div className="compact-banner banner-rejected">
-                                <strong>Cancelled</strong>
-                                <p>{isOwner ? "This listing was cancelled." : "Administratively removed."}</p>
-                            </div>
-                        )}
-
-                        {isAdmin && isPending && (
-                            <div className="admin-panel compact-card">
-                                <div className="admin-btn-group">
-                                    <button onClick={handleApprove} disabled={actionLoading} className="btn-approve">
-                                        {actionLoading ? "..." : "✓ Approve"}
+                                    <button
+                                        onClick={handleCancelAuction}
+                                        disabled={isCancelDisabled}
+                                        style={{
+                                            padding: "8px 16px",
+                                            background: "transparent",
+                                            border: "1px solid #dc2626",
+                                            borderRadius: "6px",
+                                            color: "#dc2626",
+                                            fontWeight: 600,
+                                            cursor: isCancelDisabled ? "not-allowed" : "pointer",
+                                            opacity: isCancelDisabled ? 0.5 : 1,
+                                            pointerEvents: isCancelDisabled ? "none" : "auto"
+                                        }}
+                                    >
+                                        {isCanceling ? "Canceling..." : "Cancel Auction"}
                                     </button>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {isOwner && !isEnded && (
-                            <div className="owner-panel compact-card" style={{ marginBottom: '16px' }}>
-                                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <div
-                                        style={{ position: "relative", width: "100%" }}
-                                        onMouseEnter={() => {
-                                            if (cannotCancelReason) setShowCancelTooltip(true);
-                                        }}
-                                        onMouseLeave={() => setShowCancelTooltip(false)}
-                                    >
-                                        <div style={{
-                                            position: "absolute",
-                                            bottom: "100%",
-                                            left: "50%",
-                                            transform: "translateX(-50%)",
-                                            marginBottom: "8px",
-                                            backgroundColor: "#ef4444",
-                                            color: "white",
-                                            padding: "8px 12px",
-                                            borderRadius: "6px",
-                                            fontSize: "12px",
-                                            fontWeight: 600,
-                                            whiteSpace: "nowrap",
-                                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                                            zIndex: 10,
-                                            pointerEvents: "none",
-                                            opacity: showCancelTooltip ? 1 : 0,
-                                            visibility: showCancelTooltip ? "visible" : "hidden",
-                                            transition: "opacity 0.2s ease-in-out, visibility 0.2s"
-                                        }}>
-                                            {cannotCancelReason ?? ""}
-                                            <div style={{
-                                                position: "absolute",
-                                                top: "100%",
-                                                left: "50%",
-                                                transform: "translateX(-50%)",
-                                                borderWidth: "5px",
-                                                borderStyle: "solid",
-                                                borderColor: "#ef4444 transparent transparent transparent"
-                                            }} />
-                                        </div>
-
-                                        <button
-                                            onClick={handleCancelAuction}
-                                            disabled={isCancelDisabled}
-                                            style={{
-                                                width: "100%",
-                                                padding: "10px",
-                                                background: "transparent",
-                                                border: "none",
-                                                color: "#dc2626",
-                                                fontWeight: 600,
-                                                cursor: isCancelDisabled ? "not-allowed" : "pointer",
-                                                opacity: isCancelDisabled ? 0.5 : 1,
-                                                pointerEvents: isCancelDisabled ? "none" : "auto"
-                                            }}
-                                        >
-                                            {isCanceling ? "Canceling..." : "Cancel Auction"}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {isActive ? (
-                            <div className="bidding-wrapper">
-                                <BiddingCard auction={auction} />
-                            </div>
-                        ) : (
-                            <div className={`status-card compact-card ${isCancelled ? 'card-rejected' : 'card-inactive'}`}>
-                                <h4>
-                                    {isPending && "Pending Approval"}
-                                    {isScheduled && "Scheduled"}
-                                    {isCancelled && "Cancelled"}
-                                    {isEnded && !isCancelled && `Auction ${auction.status}`}
-                                </h4>
-
+                    {!isActive && (
+                        <div className={`status-card compact-card ${isCancelled ? 'card-rejected' : 'card-inactive'}`}>
+                            <h4 style={{ margin: 0, fontSize: '16px' }}>
+                                {isPending && "Pending Approval"}
+                                {isScheduled && "Scheduled"}
+                                {isCancelled && "Cancelled"}
+                                {isEnded && !isCancelled && `Auction ${auction.status}`}
+                            </h4>
+                            <div style={{ marginTop: '4px' }}>
                                 {isPending && <span className="text-small">Waiting for admin approval</span>}
-
-                                {isScheduled && (
-                                    <span className="text-small">
-            Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}
-        </span>
-                                )}
-
-                                {isEnded && (
-                                    <span className="text-small">
-            Ended {formatDistanceToNow(new Date(auction.endTime))} ago
-        </span>
-                                )}
+                                {isScheduled && auction.startTime && <span className="text-small">Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}</span>}
+                                {isEnded && auction.endTime && <span className="text-small">Ended {formatDistanceToNow(new Date(auction.endTime))} ago</span>}
                             </div>
-                        )}
-
-                    </div>
+                        </div>
+                    )}
                 </div>
+
+                <VehicleHeader item={item} />
+                
+                <div className="gallery-wrapper">
+                    <ImageGallery
+                        item={item}
+                        statusLabel={<StatusBadge status={auction.status} isNoReserve={auction.isNoReserve} />}
+                        onImageClick={(index) => setLightboxIndex(index)}
+                    />
+                </div>
+
+                {isActive && (
+                    <div className="bidding-wrapper">
+                        <BiddingCard auction={auction} />
+                    </div>
+                )}
+
+                <VehicleInfo item={item} hideHeader={true} />
+                
+                <div className="history-wrapper" style={{ marginTop: '24px' }}>
+                    <BidHistory bids={auctionStore.bidHistory} />
+                </div>
+
             </div>
 
             {lightboxIndex !== null && item.images && item.images.length > 0 && (

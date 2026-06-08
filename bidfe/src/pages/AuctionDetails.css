@@ -436,4 +436,3 @@
 .history-list-modern::-webkit-scrollbar-track { background: transparent; }
 .history-list-modern::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 .history-list-modern::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-

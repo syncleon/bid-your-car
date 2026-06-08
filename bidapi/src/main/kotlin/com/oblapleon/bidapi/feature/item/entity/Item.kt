@@ -25,7 +25,7 @@ class Item(
     override var id: UUID? = null,
 
     @Version
-    var version: Long? = null,
+    var version: Long = 0L,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

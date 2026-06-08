@@ -44,7 +44,7 @@ const useAuctionTimer = (endTime: string) => {
                 const m = String(minutes).padStart(2, '0');
                 const s = String(seconds).padStart(2, '0');
                 setTimeLeft(`${h}:${m}:${s}`);
-                setIsUrgent(hours < 1);
+                setIsUrgent(hours < 2);
             }
         };
 

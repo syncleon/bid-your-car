@@ -180,8 +180,6 @@ export const ItemDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            <DetailHeader onBack={() => navigate(-1)} title="Back to Garage" />
-
             <ResponsiveGrid>
                 <div>
                     <ImageGallery item={item} statusLabel={statusBadge} onImageClick={(index) => setLightboxIndex(index)} />

@@ -21,13 +21,14 @@
 
 /* Sidebar / Profile Card */
 .profile-card {
-    background: color-mix(in srgb, var(--bg-card) 60%, transparent);
-    border: 1px solid color-mix(in srgb, var(--border-color) 80%, rgba(255, 255, 255, 0.1));
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 32px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    view-transition-name: profile-card;
+}
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     view-transition-name: profile-card;
 }
@@ -54,7 +55,7 @@
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-color) 0%, #a1a1aa 100%);
+    background: linear-gradient(135deg, var(--btn-primary-bg) 0%, #3f3f46 100%);
     display: flex;
     align-items: center;
     justify-content: center;
