@@ -12,6 +12,7 @@ export const App = observer(() => {
         <ThemeProvider>
             <Navbar
                 isAuthenticated={authStore.isAuthenticated}
+                isInitializing={authStore.isInitializing}
             />
             <AppRouter />
         </ThemeProvider>

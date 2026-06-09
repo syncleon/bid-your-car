@@ -7,6 +7,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { ItemCard } from "../features/item/ui/ItemCard";
 import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
 import { PromptDialog } from "../shared/ui/dialog/PromptDialog";
+import { Modal } from "../shared/ui/dialog/Modal";
+import { Loader } from "../shared/ui/Loader/Loader";
+import { Skeleton } from "../shared/ui/Skeleton/Skeleton";
 import "./ProfilePage.css";
 
 export const ProfilePage = observer(() => {
@@ -16,6 +19,7 @@ export const ProfilePage = observer(() => {
     const [viewMode, setViewMode] = useState<'view' | 'edit' | 'password'>('view');
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
+    const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
 
     const handleSetViewMode = (mode: 'view' | 'edit' | 'password') => {
         if (!document.startViewTransition) {
@@ -35,7 +39,7 @@ export const ProfilePage = observer(() => {
     }, [profileStore]);
 
     if (profileStore.isLoading && !profileStore.profile) {
-        return <div className="profile-loader">Loading Profile...</div>;
+        return <Loader fullPage label="Loading Profile..." />;
     }
 
     if (!profileStore.profile) {
@@ -43,12 +47,19 @@ export const ProfilePage = observer(() => {
     }
 
     const handleDeleteAccount = () => {
+        setDeleteAccountError(null);
         setDeleteAccountDialogOpen(true);
     };
 
-    const confirmDeleteAccount = (password: string) => {
-        setDeleteAccountDialogOpen(false);
-        profileStore.deleteAccount({ password });
+    const confirmDeleteAccount = async (password: string) => {
+        setDeleteAccountError(null);
+        try {
+            await profileStore.deleteAccount({ password });
+            setDeleteAccountDialogOpen(false);
+        } catch (error: any) {
+            setDeleteAccountError(profileStore.error || "Failed to delete account");
+            profileStore.clearMessages();
+        }
     };
 
     const handleLogout = () => {
@@ -101,48 +112,30 @@ export const ProfilePage = observer(() => {
                             )}
                         </div>
 
-                        {viewMode === 'view' && (
-                            <>
-                                <div className="profile-details">
-                                    <div className="profile-detail-row">
-                                        <span className="profile-detail-label">Member Since</span>
-                                        <span className="profile-detail-value">
-                                            {profileStore.profile.createdDate
-                                                ? new Date(profileStore.profile.createdDate).toLocaleDateString()
-                                                : "N/A"}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="profile-actions">
-                                    <button className="profile-btn profile-btn--secondary" onClick={() => handleSetViewMode('edit')}>
-                                        Edit Profile
-                                    </button>
-                                    <button className="profile-btn profile-btn--secondary" onClick={() => handleSetViewMode('password')}>
-                                        Update Password
-                                    </button>
-                                    <button className="profile-btn profile-btn--secondary" onClick={handleLogout}>
-                                        Log Out
-                                    </button>
-                                    <button className="profile-btn profile-btn--danger" onClick={handleDeleteAccount}>
-                                        Deactivate Account
-                                    </button>
-                                </div>
-                            </>
-                        )}
-
-                        {viewMode === 'edit' && (
-                            <div className="profile-form-wrapper">
-                                <h2 className="profile-form-title">Edit Profile Info</h2>
-                                <EditProfileForm store={profileStore} onCancel={() => handleSetViewMode('view')} />
+                        <div className="profile-details">
+                            <div className="profile-detail-row">
+                                <span className="profile-detail-label">Member Since</span>
+                                <span className="profile-detail-value">
+                                    {profileStore.profile.createdDate
+                                        ? new Date(profileStore.profile.createdDate).toLocaleDateString()
+                                        : "N/A"}
+                                </span>
                             </div>
-                        )}
-
-                        {viewMode === 'password' && (
-                            <div className="profile-form-wrapper">
-                                <h2 className="profile-form-title">Change Password</h2>
-                                <ChangePasswordForm store={profileStore} onCancel={() => handleSetViewMode('view')} />
-                            </div>
-                        )}
+                        </div>
+                        <div className="profile-actions">
+                            <button className="profile-btn profile-btn--secondary" onClick={() => handleSetViewMode('edit')}>
+                                Edit Profile
+                            </button>
+                            <button className="profile-btn profile-btn--secondary" onClick={() => handleSetViewMode('password')}>
+                                Update Password
+                            </button>
+                            <button className="profile-btn profile-btn--secondary" onClick={handleLogout}>
+                                Log Out
+                            </button>
+                            <button className="profile-btn profile-btn--danger" onClick={handleDeleteAccount}>
+                                Deactivate Account
+                            </button>
+                        </div>
                     </div>
                 </aside>
 
@@ -151,7 +144,13 @@ export const ProfilePage = observer(() => {
                         <h2 className="garage-title">My Garage</h2>
                     </div>
 
-                    {itemsLoading && <p className="profile-loader">Syncing listings...</p>}
+                    {itemsLoading && (
+                        <div className="garage-grid">
+                            {[1, 2, 3].map(i => (
+                                <Skeleton key={i} height="320px" borderRadius="12px" />
+                            ))}
+                        </div>
+                    )}
                     {itemsError && <p className="profile-alert profile-alert--error">{itemsError}</p>}
 
                     {!itemsLoading && !itemsError && items.length === 0 && (
@@ -192,10 +191,19 @@ export const ProfilePage = observer(() => {
                 message="This action is permanent and cannot be undone. Enter your password to confirm."
                 placeholder="Password"
                 isPassword={true}
+                error={deleteAccountError}
                 onConfirm={confirmDeleteAccount}
                 onCancel={() => setDeleteAccountDialogOpen(false)}
                 confirmLabel="Delete Account"
             />
+
+            <Modal isOpen={viewMode === 'edit'} onClose={() => handleSetViewMode('view')} title="Edit Profile">
+                <EditProfileForm store={profileStore} onCancel={() => handleSetViewMode('view')} />
+            </Modal>
+
+            <Modal isOpen={viewMode === 'password'} onClose={() => handleSetViewMode('view')} title="Update Password">
+                <ChangePasswordForm store={profileStore} onCancel={() => handleSetViewMode('view')} />
+            </Modal>
         </div>
     );
 });

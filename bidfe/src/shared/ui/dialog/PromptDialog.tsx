@@ -11,6 +11,7 @@ interface PromptDialogProps {
     confirmLabel?: string;
     cancelLabel?: string;
     isPassword?: boolean;
+    error?: string | null;
 }
 
 export const PromptDialog: React.FC<PromptDialogProps> = ({
@@ -22,7 +23,8 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({
     onCancel,
     confirmLabel = "Submit",
     cancelLabel = "Cancel",
-    isPassword = false
+    isPassword = false,
+    error
 }) => {
     const [value, setValue] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +54,7 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({
             <div onClick={(e) => e.stopPropagation()}>
                 <h3 className="dialog-title">{title}</h3>
                 <p className="dialog-message">{message}</p>
+                {error && <div className="dialog-error">{error}</div>}
                 <input
                     ref={inputRef}
                     type={isPassword ? "password" : "text"}

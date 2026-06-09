@@ -44,7 +44,7 @@ const useAuctionTimer = (endTime: string) => {
                 const m = String(minutes).padStart(2, '0');
                 const s = String(seconds).padStart(2, '0');
                 setTimeLeft(`${h}:${m}:${s}`);
-                setIsUrgent(hours < 2);
+                setIsUrgent(hours < 1 && days === 0);
             }
         };
 
@@ -81,12 +81,12 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
         color: "#fff",
         fontWeight: 700,
         fontVariantNumeric: "tabular-nums",
-        fontSize: "14px",
-        padding: "8px 12px",
+        fontSize: "12px",
+        padding: "4px 8px",
         display: "flex",
         alignItems: "center",
-        gap: "6px",
-        borderRadius: "20px",
+        gap: "4px",
+        borderRadius: "12px",
         border: isUrgent ? "1px solid rgba(255,255,255,0.3)" : "none",
     };
 
@@ -129,7 +129,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                 bottomLeft: (
                     <>
                         {isActive && !isEnded && timeLeft && (
-                            <div style={timerBadgeStyle}>
+                            <div style={timerBadgeStyle} className={isUrgent ? "urgent-timer-anim" : ""}>
                                 {isUrgent ? <UrgentDot /> : <ClockIcon />}
                                 <span>{timeLeft}</span>
                                 <span style={{ opacity: 0.5, fontWeight: 300, margin: "0 2px" }}>·</span>
@@ -154,7 +154,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
         >
             <div className="auction-card-body">
                 <div className="auction-card-subtitle">
-                    {item.description || [
+                    {[
                         item.engine,
                         item.transmission,
                         item.drivetrain,

@@ -66,6 +66,7 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
 export const AuctionDetailsPage = observer(() => {
     const { id } = useParams<{ id: string }>();
     const { auctionId } = useParams<{ auctionId: string }>();
+    const navigate = useNavigate();
 
     const { auctionStore, authStore} = useStore();
     const [actionLoading, setActionLoading] = useState(false);
@@ -73,6 +74,8 @@ export const AuctionDetailsPage = observer(() => {
     const [isCanceling, setIsCanceling] = useState(false);
     const [showCancelTooltip, setShowCancelTooltip] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -131,9 +134,31 @@ export const AuctionDetailsPage = observer(() => {
     const isCancelDisabled = isCanceling || !!cannotCancelReason;
 
     const handleApprove = async () => {
+        setApproveDialogOpen(true);
+    };
+
+    const confirmApprove = async () => {
+        setApproveDialogOpen(false);
         setActionLoading(true);
-        await auctionStore.approveAuction(auction.id);
+        const success = await auctionStore.approveAuction(auction.id);
         setActionLoading(false);
+        if (success) {
+            navigate('/admin');
+        }
+    };
+
+    const handleReject = async () => {
+        setRejectDialogOpen(true);
+    };
+
+    const confirmReject = async () => {
+        setRejectDialogOpen(false);
+        setActionLoading(true);
+        const success = await auctionStore.adminCancelAuction(auction.id);
+        setActionLoading(false);
+        if (success) {
+            navigate('/admin');
+        }
     };
 
     const handleCancelAuction = async () => {
@@ -174,11 +199,22 @@ export const AuctionDetailsPage = observer(() => {
                         </div>
                     )}
 
+                    {isEnded && !isCancelled && (
+                        <div className="compact-banner" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                            <strong>Auction {auction.status}</strong>
+                            <p>Ended {auction.endTime ? formatDistanceToNow(new Date(auction.endTime)) : ''} ago.</p>
+                        </div>
+                    )}
+
                     {isAdmin && isPending && (
-                        <div className="admin-panel compact-card">
-                            <div className="admin-btn-group">
-                                <button onClick={handleApprove} disabled={actionLoading} className="btn-approve">
-                                    {actionLoading ? "..." : "✓ Approve"}
+                        <div className="admin-panel-2025 compact-card" style={{ padding: '20px' }}>
+                            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: 'var(--text-primary)', fontWeight: 700, letterSpacing: '0.5px' }}>⚡ ADMIN REVIEW REQUIRED</h4>
+                            <div className="admin-btn-group" style={{ display: 'flex', gap: '12px' }}>
+                                <button onClick={handleApprove} disabled={actionLoading} className="btn-approve-2025" style={{ flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
+                                    {actionLoading ? "Processing..." : "✓ Approve Listing"}
+                                </button>
+                                <button onClick={handleReject} disabled={actionLoading} className="btn-reject-2025" style={{ flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
+                                    {actionLoading ? "Processing..." : "✗ Reject Listing"}
                                 </button>
                             </div>
                         </div>
@@ -249,21 +285,7 @@ export const AuctionDetailsPage = observer(() => {
                         </div>
                     )}
 
-                    {!isActive && (
-                        <div className={`status-card compact-card ${isCancelled ? 'card-rejected' : 'card-inactive'}`}>
-                            <h4 style={{ margin: 0, fontSize: '16px' }}>
-                                {isPending && "Pending Approval"}
-                                {isScheduled && "Scheduled"}
-                                {isCancelled && "Cancelled"}
-                                {isEnded && !isCancelled && `Auction ${auction.status}`}
-                            </h4>
-                            <div style={{ marginTop: '4px' }}>
-                                {isPending && <span className="text-small">Waiting for admin approval</span>}
-                                {isScheduled && auction.startTime && <span className="text-small">Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}</span>}
-                                {isEnded && auction.endTime && <span className="text-small">Ended {formatDistanceToNow(new Date(auction.endTime))} ago</span>}
-                            </div>
-                        </div>
-                    )}
+
                 </div>
 
                 <VehicleHeader item={item} />
@@ -305,6 +327,26 @@ export const AuctionDetailsPage = observer(() => {
                 onConfirm={confirmCancelAuction}
                 onCancel={() => setCancelDialogOpen(false)}
                 confirmLabel="Cancel Auction"
+                isDestructive={true}
+            />
+
+            <ConfirmDialog
+                isOpen={approveDialogOpen}
+                title="Approve Listing"
+                message="Are you sure you want to approve this listing? It will immediately become active and public for bidding."
+                onConfirm={confirmApprove}
+                onCancel={() => setApproveDialogOpen(false)}
+                confirmLabel="Approve Listing"
+                isDestructive={false}
+            />
+
+            <ConfirmDialog
+                isOpen={rejectDialogOpen}
+                title="Reject Listing"
+                message="Are you sure you want to completely reject and cancel this listing? This action cannot be undone."
+                onConfirm={confirmReject}
+                onCancel={() => setRejectDialogOpen(false)}
+                confirmLabel="Reject Listing"
                 isDestructive={true}
             />
         </DetailPageLayout>

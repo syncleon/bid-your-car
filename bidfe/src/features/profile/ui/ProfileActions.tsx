@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { observer } from "mobx-react-lite";
 import type { IProfileStore } from "../model/profile.store";
+import { Loader } from "../../../shared/ui/Loader/Loader";
+import "./ProfileActions.css";
 
 interface FormProps {
     store: IProfileStore;
@@ -25,41 +27,41 @@ export const EditProfileForm = observer(({ store, onCancel }: FormProps) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="profile-form">
-            <div style={{ marginBottom: 15 }}>
-                <label style={{ display: 'block', marginBottom: 5 }}>Username</label>
+        <form onSubmit={handleSubmit} className="modern-form">
+            <div className="modern-form-group">
+                <label className="modern-label">Username</label>
                 <input
+                    className="modern-input"
                     value={formData.username}
                     onChange={e => setFormData({ ...formData, username: e.target.value })}
-                    style={{ padding: 8, width: '100%' }}
                     required
                 />
             </div>
-            <div style={{ marginBottom: 15 }}>
-                <label style={{ display: 'block', marginBottom: 5 }}>Email</label>
+            <div className="modern-form-group">
+                <label className="modern-label">Email</label>
                 <input
                     type="email"
+                    className="modern-input"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    style={{ padding: 8, width: '100%' }}
                     required
                 />
             </div>
-            <div style={{ marginBottom: 15 }}>
-                <label style={{ display: 'block', marginBottom: 5 }}>Bio</label>
+            <div className="modern-form-group">
+                <label className="modern-label">Bio</label>
                 <textarea
+                    className="modern-input modern-textarea"
                     value={formData.bio}
                     onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                    style={{ padding: 8, width: '100%', minHeight: '80px', resize: 'vertical' }}
                     maxLength={500}
                 />
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" disabled={store.isLoading}>
-                    {store.isLoading ? "Saving..." : "Save"}
-                </button>
-                <button type="button" onClick={onCancel} disabled={store.isLoading}>
+            <div className="modern-form-actions">
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={onCancel} disabled={store.isLoading}>
                     Cancel
+                </button>
+                <button type="submit" className="modern-btn modern-btn--primary" disabled={store.isLoading}>
+                    {store.isLoading ? <Loader size="small" /> : "Save Changes"}
                 </button>
             </div>
         </form>
@@ -80,32 +82,34 @@ export const ChangePasswordForm = observer(({ store, onCancel }: FormProps) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="profile-form">
-            <div style={{ marginBottom: 15 }}>
+        <form onSubmit={handleSubmit} className="modern-form">
+            <div className="modern-form-group">
+                <label className="modern-label">Old Password</label>
                 <input
                     type="password"
-                    placeholder="Old Password"
+                    className="modern-input"
                     value={formData.oldPassword}
                     onChange={e => setFormData({ ...formData, oldPassword: e.target.value })}
-                    style={{ padding: 8, width: '100%', marginBottom: 10 }}
                     required
                 />
+            </div>
+            <div className="modern-form-group">
+                <label className="modern-label">New Password</label>
                 <input
                     type="password"
-                    placeholder="New Password"
+                    className="modern-input"
                     value={formData.newPassword}
                     onChange={e => setFormData({ ...formData, newPassword: e.target.value })}
-                    style={{ padding: 8, width: '100%' }}
                     required
                     minLength={6}
                 />
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" disabled={store.isLoading}>
-                    {store.isLoading ? "Updating..." : "Update Password"}
-                </button>
-                <button type="button" onClick={onCancel} disabled={store.isLoading}>
+            <div className="modern-form-actions">
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={onCancel} disabled={store.isLoading}>
                     Cancel
+                </button>
+                <button type="submit" className="modern-btn modern-btn--primary" disabled={store.isLoading}>
+                    {store.isLoading ? <Loader size="small" /> : "Update Password"}
                 </button>
             </div>
         </form>

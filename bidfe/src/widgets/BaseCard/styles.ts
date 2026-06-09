@@ -6,10 +6,10 @@ const styles = {
     container: {
         background: "var(--bg-card)",
         boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-        border: "1px solid var(--border-color)",
+        border: "none",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        borderRadius: "12px",
+        borderRadius: "4px",
         overflow: "hidden",
         cursor: "pointer",
         transition: "transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease",
@@ -21,7 +21,7 @@ const styles = {
     } as CSSProperties,
 
     imageWrapper: {
-        aspectRatio: "16/9",
+        aspectRatio: "4/3",
         flexShrink: 0,
         width: "100%",
         background: "var(--bg-input)",
@@ -47,17 +47,17 @@ const styles = {
         transition: "color 0.3s ease",
     } as CSSProperties,
 
-    content: { padding: "16px", flexGrow: 1, display: "flex", flexDirection: "column" } as CSSProperties,
+    content: { padding: "12px", flexGrow: 1, display: "flex", flexDirection: "column" } as CSSProperties,
     title: {
-        margin: "0 0 8px 0",
-        fontSize: "17px",
-        fontWeight: 600,
+        margin: "0 0 4px 0",
+        fontSize: "18px",
+        fontWeight: 800,
         color: "var(--text-primary)",
         lineHeight: 1.25,
         transition: "color 0.3s ease",
     } as CSSProperties,
     year: {
-        fontWeight: 500,
+        fontWeight: 800,
         color: "var(--text-secondary)",
         transition: "color 0.3s ease",
     } as CSSProperties,

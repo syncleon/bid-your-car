@@ -1,0 +1,106 @@
+import { types, flow, type Instance } from "mobx-state-tree";
+import { adminApi } from "../api/admin.api";
+
+// We can keep it simple and just store plain objects, or define minimal MST models for lists
+const AdminUserModel = types.model("AdminUser", {
+    id: types.number,
+    username: types.string,
+    email: types.string,
+    enabled: types.boolean,
+    profilePhotoUrl: types.maybeNull(types.string),
+});
+
+const AdminAuctionItemModel = types.model("AdminAuctionItem", {
+    year: types.number,
+    make: types.string,
+    model: types.string,
+});
+
+const AdminAuctionModel = types.model("AdminAuction", {
+    id: types.string,
+    status: types.string,
+    startTime: types.maybeNull(types.string),
+    endTime: types.maybeNull(types.string),
+    item: AdminAuctionItemModel,
+});
+
+export const AdminStore = types.model("AdminStore", {
+    users: types.array(AdminUserModel),
+    auctions: types.array(AdminAuctionModel),
+    isLoadingUsers: false,
+    isLoadingAuctions: false,
+    error: types.maybeNull(types.string),
+}).views((self) => ({
+    get sortedAuctions() {
+        return self.auctions.slice().sort((a, b) => {
+            if (a.status === 'PENDING_APPROVAL' && b.status !== 'PENDING_APPROVAL') return -1;
+            if (a.status !== 'PENDING_APPROVAL' && b.status === 'PENDING_APPROVAL') return 1;
+            return 0;
+        });
+    }
+})).actions((self) => {
+    const fetchUsers = flow(function* (page = 0, query = "") {
+        self.isLoadingUsers = true;
+        self.error = null;
+        try {
+            const response = query 
+                ? yield adminApi.searchUsers(query, page)
+                : yield adminApi.getUsers(page);
+            self.users.replace(response.content);
+        } catch (error: any) {
+            self.error = error.message;
+        } finally {
+            self.isLoadingUsers = false;
+        }
+    });
+
+    const deactivateUser = flow(function* (userId: number) {
+        try {
+            yield adminApi.deactivateUser(userId);
+            yield fetchUsers(); // Re-fetch to update list
+        } catch (error: any) {
+            self.error = error.message;
+        }
+    });
+
+    const fetchAuctions = flow(function* (status?: string, page = 0) {
+        self.isLoadingAuctions = true;
+        self.error = null;
+        try {
+            const response = yield adminApi.getAuctions(status, page);
+            self.auctions.replace(response.content);
+        } catch (error: any) {
+            self.error = error.message;
+        } finally {
+            self.isLoadingAuctions = false;
+        }
+    });
+
+    const approveAuction = flow(function* (auctionId: string, status?: string) {
+        try {
+            yield adminApi.approveAuction(auctionId);
+            yield fetchAuctions(status);
+        } catch (error: any) {
+            self.error = error.message;
+        }
+    });
+
+    const forceCancelAuction = flow(function* (auctionId: string, status?: string) {
+        try {
+            yield adminApi.forceCancelAuction(auctionId);
+            yield fetchAuctions(status);
+        } catch (error: any) {
+            self.error = error.message;
+        }
+    });
+
+    return {
+        fetchUsers,
+        deactivateUser,
+        fetchAuctions,
+        approveAuction,
+        forceCancelAuction
+    };
+});
+
+export type IAdminStore = Instance<typeof AdminStore>;

@@ -172,7 +172,6 @@ export const AuctionListTemplate = observer(({
         }, { replace: true });
         setVisibleCount(ITEMS_PER_BATCH);
     };
-    const [isHeaderHidden, setIsHeaderHidden] = useState(false);
 
     const observerRef = useRef<IntersectionObserver | null>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -289,18 +288,7 @@ export const AuctionListTemplate = observer(({
     }, [hasMore, filteredAuctions.length]);
 
     useEffect(() => {
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY;
-            if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
-                setIsHeaderHidden(true);
-            } else {
-                setIsHeaderHidden(false);
-            }
-            lastScrollY.current = currentScrollY;
-        };
-
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        return () => window.removeEventListener("scroll", handleScroll);
+        // Native scrolling used instead
     }, []);
 
     // Determine active filter chips
@@ -313,39 +301,13 @@ export const AuctionListTemplate = observer(({
 
     const hasActiveFilters = chips.length > 0;
 
-    if (auctionStore.isLoading && auctionsFromStore.length === 0) {
-        return (
-            <div className="auction-container">
-                <div style={{ padding: "14px 0 12px", marginBottom: "24px" }}>
-                    <div className="header-top">
-                        <h1 className="page-title">{title}</h1>
-                    </div>
-                </div>
-                <SkeletonGrid />
-            </div>
-        );
-    }
+    const isInitialLoading = auctionStore.isLoading && auctionsFromStore.length === 0;
 
     return (
         <div className="auction-container">
-            <header className={`auction-header ${isHeaderHidden ? 'header-hidden' : ''}`}>
+            <header className="auction-header">
                 <div className="header-top">
                     <h1 className="page-title">{title}</h1>
-                    <div className="search-wrapper">
-                        <span className="search-icon"><SearchIcon /></span>
-                        <input
-                            className="search-input"
-                            type="text"
-                            placeholder="Search make, model, location…"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                        />
-                        {searchQuery && (
-                            <button className="filter-chip-x" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, display: 'flex', fontSize: '18px' }} onClick={() => setSearchQuery("")}>
-                                ×
-                            </button>
-                        )}
-                    </div>
                 </div>
 
                 {/* Mobile toggle */}
@@ -406,7 +368,9 @@ export const AuctionListTemplate = observer(({
                 </div>
             </header>
 
-            {visibleAuctions.length === 0 ? (
+            {isInitialLoading ? (
+                <SkeletonGrid />
+            ) : visibleAuctions.length === 0 ? (
                 <div className="empty-state">
                     <h3>No vehicles found</h3>
                     <p>Try adjusting your filters or search query.</p>

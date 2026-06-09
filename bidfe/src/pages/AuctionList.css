@@ -10,23 +10,12 @@
     font-family: 'Inter', sans-serif;
 }
 
-/* ── Sticky Header ────────────────────────────────────────── */
+/* ── Header ────────────────────────────────────────── */
 .auction-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
     background: var(--bg-base);
-    /* Glassmorphism: subtle blur + translucency */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
     padding: 14px 0 12px;
     margin-bottom: 24px;
-    transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.auction-header.header-hidden {
-    transform: translateY(-100%);
 }
 
 .header-top {
@@ -106,48 +95,7 @@
     color: var(--text-primary);
 }
 
-.search-wrapper {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-    max-width: 400px;
-}
 
-.search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0 40px 0 40px;
-    font-size: 15px;
-    border: 1px solid var(--border-color);
-    border-radius: 22px;
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    box-sizing: border-box;
-    transition: border-color 0.2s, background 0.3s ease, color 0.3s ease;
-    outline: none;
-    height: 44px;
-}
-
-.search-input::placeholder {
-    color: var(--text-muted);
-}
-
-.search-input:focus {
-    border-color: var(--accent-color);
-    background: var(--bg-card);
-}
 
 /* ── Filter Selects ───────────────────────────────────────── */
 .filters-row {
@@ -184,9 +132,7 @@
 }
 
 .custom-select__trigger:hover {
-    background: var(--bg-hover);
-    border-color: var(--text-muted);
-    color: var(--text-primary);
+    opacity: 0.85;
 }
 
 /* Active = a real value is selected (not the placeholder label) */
@@ -282,10 +228,10 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 3px 10px 3px 10px;
+    padding: 6px 12px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
     color: var(--text-primary);
@@ -305,12 +251,12 @@
 }
 
 .reset-btn {
-    padding: 4px 12px;
+    padding: 8px 16px;
     font-size: 12px;
     color: var(--text-secondary);
     background: transparent;
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
     transition: all 0.15s;

@@ -6,17 +6,46 @@ import "./Navbar.css";
 
 interface Props {
     isAuthenticated: boolean;
+    isInitializing?: boolean;
     onLogout?: () => void;
 }
 
 
 
-export const Navbar = observer(({ isAuthenticated }: Props) => {
+const SearchIcon = () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+    </svg>
+);
+
+export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Props) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { authStore } = useStoreContext();
     const user = authStore.user;
 
     const location = useLocation();
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const searchQuery = searchParams.get("q") || "";
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        if (location.pathname !== "/" && location.pathname !== "/past-auctions") {
+            navigate(`/?q=${encodeURIComponent(val)}`);
+            return;
+        }
+        
+        setSearchParams(prev => {
+            if (val) prev.set("q", val);
+            else prev.delete("q");
+            return prev;
+        }, { replace: true });
+    };
+
+    const handleClearSearch = () => {
+        handleSearchChange({ target: { value: "" } } as any);
+    };
 
     useEffect(() => {
         setIsMobileMenuOpen(false);
@@ -47,17 +76,40 @@ export const Navbar = observer(({ isAuthenticated }: Props) => {
                     </Link>
                 </nav>
 
-                <div className="navbar__right desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, justifyContent: 'flex-end' }}>
-                    {isAuthenticated ? (
+                <div className="navbar__search desktop-only">
+                    <span className="navbar__search-icon"><SearchIcon /></span>
+                    <input
+                        className="navbar__search-input"
+                        type="search"
+                        name="q"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck="false"
+                        placeholder="Search make, model, location…"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                    />
+                    {searchQuery && (
+                        <button style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, display: 'flex', fontSize: '18px' }} onClick={handleClearSearch}>
+                            ×
+                        </button>
+                    )}
+                </div>
+
+                <div className="navbar__right desktop-only">
+                    {isInitializing ? (
+                        <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                        </div>
+                    ) : isAuthenticated ? (
                         <div className="user-menu">
                             <Link
                                 to="/profile"
                                 className="user-menu__trigger"
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-input)', padding: '6px 16px 6px 6px', borderRadius: '30px', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s ease', textDecoration: 'none' }}
                             >
-                                <div className="user-avatar-placeholder" style={{ background: 'linear-gradient(135deg, var(--accent-color) 0%, #a1a1aa 100%)', color: '#fff', fontWeight: 'bold' }}>
+                                <div className="user-avatar-placeholder">
                                     {user?.profilePhotoUrl ? (
-                                        <img src={user.profilePhotoUrl} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                        <img src={user.profilePhotoUrl} alt="Avatar" className="user-avatar-image" />
                                     ) : user?.username ? (
                                         user.username.charAt(0).toUpperCase()
                                     ) : (
@@ -67,7 +119,7 @@ export const Navbar = observer(({ isAuthenticated }: Props) => {
                                         </svg>
                                     )}
                                 </div>
-                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px', letterSpacing: '-0.3px' }}>
+                                <span className="user-menu__name">
                                     {user?.username || "Profile"}
                                 </span>
                             </Link>

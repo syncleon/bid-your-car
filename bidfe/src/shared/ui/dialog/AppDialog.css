@@ -15,23 +15,23 @@
     
     /* Base exit state */
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.95) translateY(10px);
     
     /* Top-layer transition properties */
     transition-property: opacity, transform, display, overlay;
-    transition-duration: 0.3s;
-    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     transition-behavior: allow-discrete;
 }
 
 /* Open entry state */
 .app-dialog[open] {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
     
     @starting-style {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.95) translateY(10px);
     }
 }
 
@@ -46,8 +46,8 @@
 
 /* Backdrop open state */
 .app-dialog[open]::backdrop {
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
     
     @starting-style {
         background-color: rgba(0, 0, 0, 0);
@@ -87,7 +87,7 @@
 }
 
 .dialog-btn {
-    padding: 10px 16px;
+    padding: 14px 24px;
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
@@ -134,4 +134,14 @@
 .dialog-input:focus {
     outline: none;
     border-color: var(--accent-color);
+}
+
+.dialog-error {
+    color: #ef4444;
+    font-size: 14px;
+    margin-bottom: 16px;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }

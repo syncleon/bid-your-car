@@ -1,0 +1,89 @@
+.modern-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modern-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modern-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.modern-input {
+    width: 100%;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    background: var(--bg-input, #1a1a1a);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) inset;
+}
+
+.modern-input:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 2px 4px rgba(0,0,0,0.05) inset;
+    background: var(--bg-card);
+}
+
+.modern-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.modern-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.modern-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 40px;
+}
+
+.modern-btn--primary {
+    background: var(--btn-primary-bg, #2563eb);
+    color: #fff;
+    border: none;
+}
+
+.modern-btn--primary:hover:not(:disabled) {
+    background: var(--btn-primary-hover, #1d4ed8);
+    transform: translateY(-1px);
+}
+
+.modern-btn--secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color, #333);
+}
+
+.modern-btn--secondary:hover:not(:disabled) {
+    background: var(--bg-hover, #2a2a2a);
+}
+
+.modern-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

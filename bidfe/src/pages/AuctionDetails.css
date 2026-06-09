@@ -385,20 +385,20 @@
     background: var(--text-primary);
     color: var(--bg-base);
     border: none;
-    border-radius: 50px;
+    border-radius: 8px;
     font-weight: 700;
     font-size: 16px;
-    padding: 16px;
+    padding: 18px 24px;
     cursor: pointer;
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, background 0.3s ease;
+    transition: box-shadow 0.3s ease, background 0.3s ease;
 }
 .btn-pill-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
+    /* transform removed */
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     background: var(--text-secondary);
 }
 .btn-pill-primary:active:not(:disabled) {
-    transform: translateY(0);
+    /* No movement */
 }
 .btn-pill-primary:disabled {
     opacity: 0.5;
@@ -409,20 +409,20 @@
     background: linear-gradient(135deg, var(--color-primary) 0%, #475569 100%);
     color: #ffffff;
     border: none;
-    border-radius: 50px;
+    border-radius: 8px;
     font-weight: 700;
-    padding: 14px;
+    padding: 18px 24px;
     cursor: pointer;
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, filter 0.3s ease;
+    transition: box-shadow 0.3s ease, filter 0.3s ease;
     box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
 }
 .btn-quick-bid:hover:not(:disabled) {
-    transform: translateY(-2px);
+    /* transform removed */
     box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
     filter: brightness(1.1);
 }
 .btn-quick-bid:active:not(:disabled) {
-    transform: translateY(0);
+    /* No movement */
     box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
 }
 
@@ -436,3 +436,95 @@
 .history-list-modern::-webkit-scrollbar-track { background: transparent; }
 .history-list-modern::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 .history-list-modern::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* 2025 Admin Panel Trends */
+.admin-panel-2025 {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+.admin-panel-2025::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), #10b981, #3b82f6);
+}
+
+.btn-approve-2025 {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 18px 24px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-approve-2025:hover:not(:disabled) {
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    filter: brightness(1.1);
+}
+
+.btn-reject-2025 {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    padding: 18px 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-reject-2025:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+}
+
+/* 2025 Admin Panel Trends */
+.admin-panel-2025 {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+.admin-panel-2025::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), #10b981, #3b82f6);
+}
+
+.btn-approve-2025 {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 18px 24px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-approve-2025:hover:not(:disabled) {
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    filter: brightness(1.1);
+}
+
+.btn-reject-2025 {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    padding: 18px 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-reject-2025:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+}

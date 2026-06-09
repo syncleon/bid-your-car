@@ -20,5 +20,6 @@ data class UserDto(
     val bio: String?,
     val profilePhotoUrl: String?,
     val roles: Set<RoleDto>,
-    val createdDate: Instant?
+    val createdDate: Instant?,
+    val enabled: Boolean
 ) : Serializable

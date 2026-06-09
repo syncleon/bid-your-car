@@ -12,5 +12,6 @@ fun User.toDto(): UserDto = UserDto(
     bio = bio,
     profilePhotoUrl = profilePhotoUrl,
     roles = roles.map { it.toDto() }.toSet(),
-    createdDate = createdDate
+    createdDate = createdDate,
+    enabled = enabled
 )

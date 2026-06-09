@@ -4,10 +4,14 @@
 :root {
   color-scheme: dark;
 
+html {
+  scrollbar-gutter: stable;
+}
+
   /* Backgrounds - Dark Gray */
-  --bg-base: #18181b;
-  --bg-card: #27272a;
-  --bg-input: #3f3f46;
+  --bg-base: #141414;
+  --bg-card: #141414;
+  --bg-input: #262626;
   --bg-hover: #52525b;
   --bg-overlay: rgba(0, 0, 0, 0.85);
 
@@ -89,4 +93,17 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+/* Make all interactive components dim on hover */
+button:not(:disabled):hover,
+a:not(:disabled):not(.user-menu__trigger):hover,
+[role="button"]:not([aria-disabled="true"]):hover,
+.base-card:hover,
+.profile-card:hover,
+.custom-select__option:not([aria-disabled="true"]):hover,
+.sort-tab:not(.active):hover {
+    opacity: 0.85 !important;
+    filter: none !important;
+    transition: opacity 0.2s ease !important;
 }

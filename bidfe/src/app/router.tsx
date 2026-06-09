@@ -11,6 +11,12 @@ import { ItemDetailsPage } from "../pages/ItemDetailsPage.tsx";
 import {PastAuctionsPage} from "../pages/PastAuctionsPage.tsx";
 import {ProfilePage} from "../pages/ProfilePage.tsx";
 
+import { AdminRoute } from "../routes/AdminRoute";
+import { AdminLayout } from "../widgets/AdminLayout/AdminLayout";
+import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage";
+import { AdminUsersPage } from "../pages/admin/AdminUsersPage";
+import { AdminAuctionsPage } from "../pages/admin/AdminAuctionsPage";
+
 export const AppRouter = () => {
     const location = useLocation();
     const state = location.state as { backgroundLocation?: Location };
@@ -42,6 +48,36 @@ export const AppRouter = () => {
                         <PrivateRoute>
                             <SubmitItemPage />
                         </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/admin"
+                    element={
+                        <AdminRoute>
+                            <AdminLayout>
+                                <AdminDashboardPage />
+                            </AdminLayout>
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/users"
+                    element={
+                        <AdminRoute>
+                            <AdminLayout>
+                                <AdminUsersPage />
+                            </AdminLayout>
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/auctions"
+                    element={
+                        <AdminRoute>
+                            <AdminLayout>
+                                <AdminAuctionsPage />
+                            </AdminLayout>
+                        </AdminRoute>
                     }
                 />
             </Routes>
