@@ -1,6 +1,6 @@
 import { http } from "../../../shared/api/HttpClient";
-import type { UserDto } from "../../../entities/user/types";
-import type { AuctionDto } from "../../../entities/auction/types";
+import type { UserDto } from "../../auth/types";
+import type { AuctionDto } from "../../auction/types";
 
 // Note: Spring Data JPA Pagination returns 'content' for items
 export interface PageResponse<T> {

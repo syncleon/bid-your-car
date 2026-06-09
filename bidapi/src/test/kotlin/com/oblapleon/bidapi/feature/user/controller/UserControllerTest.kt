@@ -55,6 +55,7 @@ class UserControllerTest {
     lateinit var oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
 
     @Test
+    @org.springframework.security.test.context.support.WithMockUser
     fun `getCurrentUser should return user profile`() {
         val user = User(username = "testuser", email = "test@example.com", password = "pw")
         user.id = 1L

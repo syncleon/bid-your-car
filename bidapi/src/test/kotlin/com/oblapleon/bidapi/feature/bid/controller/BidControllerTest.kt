@@ -59,6 +59,7 @@ class BidControllerTest {
     lateinit var oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
 
     @Test
+    @org.springframework.security.test.context.support.WithMockUser
     fun `getAuctionHistory should return paginated list of bids`() {
         val auctionId = UUID.randomUUID()
         val bidder = User(username = "bidder1", email = "bidder@test.com", password = "pw")
@@ -71,7 +72,7 @@ class BidControllerTest {
                 currentPrice = BigDecimal("100"),
                 startTime = Instant.now(),
                 endTime = Instant.now().plusSeconds(100)
-            ),
+            ).apply { id = auctionId },
             bidder = bidder,
             amount = BigDecimal("105"),
             bidTime = Instant.now(),
@@ -87,6 +88,7 @@ class BidControllerTest {
             get("/api/v1/bids/auction/{auctionId}", auctionId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
+            .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content[0].id").value(bid.id.toString()))
             .andExpect(jsonPath("$.content[0].amount").value(105))
