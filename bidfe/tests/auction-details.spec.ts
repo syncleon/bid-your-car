@@ -52,11 +52,11 @@ test.describe('Auction Details & Bidding', () => {
 
     // Verify auction details rendered
     await expect(page.locator('h1', { hasText: '2024 Porsche 911 GT3' })).toBeVisible();
-    await expect(page.locator('text=Current Bid')).toBeVisible();
+    await expect(page.locator('text=High Bid')).toBeVisible();
     await expect(page.locator('text=$155,000')).toBeVisible();
 
     // Verify Quick Bid button is visible (since user is not seller)
-    const quickBidBtn = page.locator('button', { hasText: 'Quick Bid' });
+    const quickBidBtn = page.locator('button', { hasText: /Fast Bid/ });
     await expect(quickBidBtn).toBeVisible();
 
     // Setup an alert handler to catch the JS alert or handle toast if it exists
@@ -98,7 +98,7 @@ test.describe('Auction Details & Bidding', () => {
     await expect(cancelBtn).toBeVisible();
 
     // Bidding controls should NOT be visible for the owner
-    await expect(page.locator('button', { hasText: 'Quick Bid' })).not.toBeVisible();
+    await expect(page.locator('button', { hasText: /Fast Bid/ })).not.toBeVisible();
   });
 
   test('allows seller to cancel an auction from the details page', async ({ page }) => {
