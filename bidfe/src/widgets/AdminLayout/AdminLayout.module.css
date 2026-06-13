@@ -1,7 +1,6 @@
 .adminLayout {
     display: flex;
-    min-height: calc(100vh - 64px); /* Assuming Navbar is ~64px */
-    background-color: var(--bg-base);
+    min-height: calc(100vh - 64px);     background-color: var(--bg-base);
 }
 
 .sidebar {

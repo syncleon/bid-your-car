@@ -1,7 +1,7 @@
 import { types, flow, type Instance } from "mobx-state-tree";
 import { adminApi } from "../api/admin.api";
 
-// We can keep it simple and just store plain objects, or define minimal MST models for lists
+
 const AdminUserModel = types.model("AdminUser", {
     id: types.number,
     username: types.string,
@@ -57,7 +57,7 @@ export const AdminStore = types.model("AdminStore", {
     const deactivateUser = flow(function* (userId: number) {
         try {
             yield adminApi.deactivateUser(userId);
-            yield fetchUsers(); // Re-fetch to update list
+            yield fetchUsers(); 
         } catch (error: any) {
             self.error = error.message;
         }

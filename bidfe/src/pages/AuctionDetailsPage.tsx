@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../shared/hooks/useStore.ts";
-import { DetailPageLayout, ImageGallery, VehicleInfo, VehicleHeader } from "../shared/ui/details";
+import { DetailPageLayout, ImageGallery, VehicleInfo, VehicleHeader, DetailSkeleton } from "../shared/ui/details";
 import { BiddingCard } from "../features/auction/ui/BiddingCard.tsx";
 import { BidHistory } from "../features/auction/ui/BidHistory.tsx";
 import { formatDistanceToNow } from "date-fns";
@@ -65,7 +65,6 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
 
 export const AuctionDetailsPage = observer(() => {
     const { id } = useParams<{ id: string }>();
-    const { auctionId } = useParams<{ auctionId: string }>();
     const navigate = useNavigate();
 
     const { auctionStore, authStore} = useStore();
@@ -83,7 +82,7 @@ export const AuctionDetailsPage = observer(() => {
         auctionStore.loadAuctionDetails(id);
 
         const stompClient = new Client({
-            // --- MODIFIED: Using the dynamic URL helper here ---
+            
             webSocketFactory: () => new SockJS(getWebSocketUrl()),
             reconnectDelay: 5000,
             onConnect: () => {
@@ -104,7 +103,7 @@ export const AuctionDetailsPage = observer(() => {
     }, [id, auctionStore]);
 
     if (auctionStore.isLoading && !auctionStore.selectedAuction) {
-        return <div className="details-loading">Loading Auction...</div>;
+        return <DetailSkeleton />;
     }
 
     if (!auctionStore.selectedAuction) {
@@ -118,14 +117,14 @@ export const AuctionDetailsPage = observer(() => {
     const isOwner = user?.id?.toString() === item.seller.id.toString();
     const isAdmin = user?.roles?.some((r: { name: string }) => r.name === 'ADMIN');
 
-// --- status flags ---
+
     const isActive = auction.status === 'ACTIVE';
     const isPending = auction.status === 'PENDING_APPROVAL';
     const isScheduled = auction.status === 'SCHEDULED';
     const isCancelled = auction.status === 'CANCELLED';
     const isEnded = ['SOLD', 'UNSOLD', 'CANCELLED'].includes(auction.status);
 
-// --- cancel state helpers ---
+
     const cannotCancelReason =
         isActive ? "Cannot cancel active auction. Contact Support."
             : auction.bidCount > 0 ? "Cannot cancel auction with existing bids. Contact Support."
@@ -176,7 +175,7 @@ export const AuctionDetailsPage = observer(() => {
         <DetailPageLayout>
             <div className="compact-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
-                {/* Status Banners & Actions at the top */}
+                {}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {isPending && (
                         <div className="compact-banner banner-pending">
@@ -358,7 +357,7 @@ const StatusBadge = ({ status, isNoReserve }: { status: string, isNoReserve: boo
     switch (status) {
         case 'ACTIVE': className += "badge-active"; break;
         case 'PENDING_APPROVAL': className += "badge-pending"; break;
-        case 'SCHEDULED': className += "badge-pending"; break; // or badge-scheduled
+        case 'SCHEDULED': className += "badge-pending"; break; 
         case 'CANCELLED': className += "badge-rejected"; break;
         case 'SOLD': className += "badge-sold"; break;
         case 'UNSOLD': className += "badge-ended"; break;

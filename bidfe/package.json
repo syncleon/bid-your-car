@@ -19,6 +19,7 @@
     "mobx-state-tree": "^7.0.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-easy-crop": "^6.0.2",
     "react-lite": "^0.15.40",
     "react-router-dom": "^7.11.0",
     "sockjs-client": "^1.6.1"

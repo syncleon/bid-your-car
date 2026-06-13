@@ -10,9 +10,9 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Permanent Black Style
+    
     const theme: Theme = 'dark';
-    const toggleTheme = () => {}; // No-op
+    const toggleTheme = () => {}; 
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);

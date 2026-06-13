@@ -57,7 +57,7 @@ export const SubmitItemPage = observer(() => {
 
 const styles = {
     pageWrapper: { minHeight: "100vh", background: "var(--bg-base)", padding: "40px 20px", transition: "background-color 0.3s ease" },
-    container: { width: "80%", margin: "0 auto" },
+    container: { width: "100%", maxWidth: "1200px", margin: "0 auto" },
     header: { textAlign: "center" as const, marginBottom: "32px" },
     title: { fontSize: "32px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px", transition: "color 0.3s ease" },
     subtitle: { fontSize: "16px", color: "var(--text-secondary)", transition: "color 0.3s ease" },

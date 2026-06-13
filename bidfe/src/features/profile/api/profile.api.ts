@@ -50,6 +50,6 @@ export const uploadProfilePhoto = (file: File) => {
     return http<UserDto>("/users/me/photo", {
         method: "POST",
         body: formData,
-        // HttpClient handles FormData boundaries correctly without setting Content-Type
+        
     });
 };

@@ -1,0 +1,121 @@
+.cookie-policy-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+    color: var(--text-primary);
+}
+
+.cookie-policy-header {
+    margin-bottom: 48px;
+}
+
+.cookie-policy-title {
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin: 0 0 12px;
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--text-muted) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.cookie-policy-updated {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.cookie-policy-section {
+    margin-bottom: 36px;
+}
+
+.cookie-policy-section h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 12px;
+}
+
+.cookie-policy-section p,
+.cookie-policy-section li {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin: 0 0 12px;
+}
+
+.cookie-policy-section ul {
+    padding-left: 20px;
+    margin: 0 0 12px;
+}
+
+.cookie-policy-section li {
+    margin-bottom: 8px;
+}
+
+.cookie-table-wrapper {
+    overflow-x: auto;
+    margin: 16px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.cookie-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.cookie-table th,
+.cookie-table td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cookie-table th {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cookie-table td {
+    color: var(--text-secondary);
+}
+
+.cookie-table tr:last-child td {
+    border-bottom: none;
+}
+
+.cookie-policy-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 32px;
+    transition: opacity 0.2s;
+}
+
+.cookie-policy-back:hover {
+    opacity: 0.8;
+}
+
+@media (max-width: 600px) {
+    .cookie-policy-container {
+        padding: 32px 16px 60px;
+    }
+
+    .cookie-policy-section h2 {
+        font-size: 1.15rem;
+    }
+
+    .cookie-table th,
+    .cookie-table td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+}

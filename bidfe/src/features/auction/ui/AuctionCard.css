@@ -1,8 +1,4 @@
-/* ============================================================
-   AuctionCard — Card Body Styles
-   ============================================================ */
 
-/* ── Card body container ─────────────────────────────────── */
 .auction-card-body {
     display: flex;
     flex-direction: column;
@@ -12,7 +8,6 @@
     min-width: 0;
 }
 
-/* ── Subtitle (Description or Specs) ────────────────────── */
 .auction-card-subtitle {
     font-size: 14px;
     font-weight: 500;
@@ -25,7 +20,6 @@
     overflow: hidden;
 }
 
-/* ── Footer: location ───────────────────────────────────── */
 .auction-card-location-text {
     font-size: 13px;
     color: var(--text-secondary);
@@ -33,7 +27,6 @@
     margin-top: auto;
 }
 
-/* ── No Reserve badge ───────────────────────────────────── */
 .badge-no-reserve {
     display: inline-flex;
     align-items: center;
@@ -56,7 +49,6 @@
     border-color: rgba(245, 158, 11, 0.6);
 }
 
-/* ── Urgent pulsing dot (in timer badge) ────────────────── */
 .urgent-dot {
     display: inline-block;
     width: 7px;

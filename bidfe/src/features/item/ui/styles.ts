@@ -9,8 +9,8 @@ export const styles = {
 
     label: { display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" },
     
-    // We remove the old inline input styles and replace them with className="modern-input"
-    // However, if any old code still relies on these inline styles, we leave a fallback.
+    
+    
     input: { },
     select: { },
     textarea: { },

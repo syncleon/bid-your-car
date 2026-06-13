@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AuctionCard } from "./AuctionCard";
 import { getAuctionById } from "../api/auction.api";
 import type { AuctionDto } from "../types";
-import type { ItemDto } from "../../item/types"; // <-- Import the ItemDto type!
+import type { ItemDto } from "../../item/types"; 
 import { BaseCard } from "../../../widgets/BaseCard/BaseCard";
 import styles from "../../../widgets/BaseCard/styles";
 

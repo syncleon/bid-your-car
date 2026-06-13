@@ -19,7 +19,7 @@ export const StepSpecs = ({ formData, handleChange, transmissions, drivetrains, 
 
     return (
         <div style={styles.grid}>
-            {/* Mileage + Location */}
+            {}
             <div style={styles.halfGrid}>
                 <div>
                     <label style={styles.label}>Mileage (km)</label>
@@ -47,7 +47,7 @@ export const StepSpecs = ({ formData, handleChange, transmissions, drivetrains, 
                 </div>
             </div>
 
-            {/* Body Style + Transmission */}
+            {}
             <div style={styles.halfGrid}>
                 <div>
                     <label style={styles.label}>Body Style</label>
@@ -73,7 +73,7 @@ export const StepSpecs = ({ formData, handleChange, transmissions, drivetrains, 
                 </div>
             </div>
 
-            {/* Drivetrain + Fuel Type */}
+            {}
             <div style={styles.halfGrid}>
                 <div>
                     <label style={styles.label}>Drivetrain</label>
@@ -99,7 +99,7 @@ export const StepSpecs = ({ formData, handleChange, transmissions, drivetrains, 
                 </div>
             </div>
 
-            {/* Engine + Horsepower */}
+            {}
             <div style={styles.halfGrid}>
                 <div>
                     <label style={styles.label}>Engine Details</label>
@@ -126,7 +126,7 @@ export const StepSpecs = ({ formData, handleChange, transmissions, drivetrains, 
                 </div>
             </div>
 
-            {/* Exterior + Interior Color */}
+            {}
             <div style={styles.halfGrid}>
                 <div>
                     <label style={styles.label}>Exterior Color</label>

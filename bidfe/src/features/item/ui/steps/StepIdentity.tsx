@@ -12,13 +12,13 @@ interface Props {
 }
 
 export const StepIdentity = ({ formData, handleChange, isEditMode, years }: Props) => {
-    // All makes from the cars database
+    
     const makes = useMemo(() =>
         (carsData as { brand: string; models: string[] }[]).map(c => c.brand).sort(),
         []
     );
 
-    // Models for the currently selected make
+    
     const models = useMemo(() => {
         const found = (carsData as { brand: string; models: string[] }[]).find(
             c => c.brand.toLowerCase() === formData.make?.toLowerCase()
@@ -26,14 +26,14 @@ export const StepIdentity = ({ formData, handleChange, isEditMode, years }: Prop
         return found ? found.models : [];
     }, [formData.make]);
 
-    // Synthetic event factories so we reuse the parent handleChange
+    
     const emitChange = (name: string, value: string) => {
         handleChange({ target: { name, value } } as ChangeEvent<HTMLInputElement>);
     };
 
     const handleMakeChange = (val: string) => {
         emitChange("make", val);
-        // Reset model when make changes
+        
         emitChange("model", "");
     };
 
@@ -43,7 +43,7 @@ export const StepIdentity = ({ formData, handleChange, isEditMode, years }: Prop
 
     return (
         <div style={styles.grid}>
-            {/* VIN */}
+            {}
             <div>
                 <label style={styles.label}>VIN (17 Characters)</label>
                 <input
@@ -64,7 +64,7 @@ export const StepIdentity = ({ formData, handleChange, isEditMode, years }: Prop
                 </div>
             </div>
 
-            {/* Year */}
+            {}
             <div>
                 <label style={styles.label}>Year</label>
                 <Autocomplete
@@ -77,7 +77,7 @@ export const StepIdentity = ({ formData, handleChange, isEditMode, years }: Prop
                 />
             </div>
 
-            {/* Make + Model side by side */}
+            {}
             <div style={styles.halfGrid}>
                 <div>
                     <label style={styles.label}>Make</label>

@@ -44,13 +44,15 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         minHeight: "100vh",
         backgroundColor: "var(--bg-base)",
         transition: "background-color 0.3s ease",
+        padding: "16px",
+        boxSizing: "border-box"
     };
 
     const contentBoxStyle: React.CSSProperties = {
         position: "relative",
         width: "100%",
         maxWidth: "440px",
-        padding: "40px",
+        padding: "clamp(24px, 5vw, 40px)",
         backgroundColor: "var(--bg-card)",
         borderRadius: "16px",
         boxShadow: isModal ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" : "none",
@@ -84,8 +86,8 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
                         onClick={handleClose}
                         style={closeButtonStyle}
                         aria-label="Close"
-                        onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} // Updated
-                        onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-muted)"} // Updated
+                        onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} 
+                        onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-muted)"} 
                     >
                         &times;
                     </button>

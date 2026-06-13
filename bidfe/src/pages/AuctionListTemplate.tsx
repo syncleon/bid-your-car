@@ -19,7 +19,7 @@ interface FilterSelectProps {
     onChange: (val: string) => void;
 }
 
-// ── Custom Dropdown ────────────────────────────────────────
+
 const ChevronIcon = ({ open }: { open: boolean }) => (
     <svg
         width="13" height="13" viewBox="0 0 24 24"
@@ -35,19 +35,19 @@ const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) =>
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
-    // Normalise options to { label, value }
+    
     const normalised = options.map(o =>
         typeof o === "object" && o !== null
             ? { label: String(o.label), value: String(o.value) }
             : { label: String(o), value: String(o) }
     );
 
-    // Current display label
+    
     const current = normalised.find(o => o.value === String(value));
     const displayLabel = current && current.value !== "All" ? current.label : label;
     const hasValue = current?.value !== "All";
 
-    // Close on outside click
+    
     const handleOutside = useCallback((e: MouseEvent) => {
         if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }, []);
@@ -75,7 +75,7 @@ const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) =>
 
             {open && (
                 <div className="custom-select__dropdown" role="listbox">
-                    {/* "All" / reset option */}
+                    {}
                     <button
                         type="button"
                         role="option"
@@ -112,7 +112,7 @@ const CheckIcon = () => (
     </svg>
 );
 
-// ── Skeleton loader ────────────────────────────────────────
+
 const SkeletonCard = () => (
     <div className="skeleton-card">
         <div className="skeleton-image shimmer" />
@@ -130,15 +130,11 @@ const SkeletonGrid = () => (
     </div>
 );
 
-// ── Icons ──────────────────────────────────────────────────
-const SearchIcon = () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" />
-    </svg>
-);
 
-// ── Template ────────────────────────────────────────────────
+
+
+
+
 interface TemplateProps {
     title: string;
     status?: string;
@@ -175,7 +171,6 @@ export const AuctionListTemplate = observer(({
 
     const observerRef = useRef<IntersectionObserver | null>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
-    const lastScrollY = useRef(0);
 
     const auctionsFromStore = (status === 'SOLD'
         ? auctionStore.soldAuctions
@@ -248,21 +243,29 @@ export const AuctionListTemplate = observer(({
         }
 
         result.sort((a, b) => {
+            let diff = 0;
             switch (sortBy) {
                 case "newly_sold":
-                    return new Date(b.endTime).getTime() - new Date(a.endTime).getTime();
+                    diff = new Date(b.endTime).getTime() - new Date(a.endTime).getTime();
+                    break;
                 case "newly_listed":
-                    return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+                    diff = new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+                    break;
                 case "price_low":
-                    return a.currentPrice - b.currentPrice;
+                    diff = a.currentPrice - b.currentPrice;
+                    break;
                 case "price_high":
-                    return b.currentPrice - a.currentPrice;
+                    diff = b.currentPrice - a.currentPrice;
+                    break;
                 case "lowest_mileage":
-                    return a.item.mileage - b.item.mileage;
+                    diff = a.item.mileage - b.item.mileage;
+                    break;
                 case "ending_soon":
                 default:
-                    return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+                    diff = new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+                    break;
             }
+            return diff !== 0 ? diff : a.id.localeCompare(b.id);
         });
 
         return result;
@@ -288,10 +291,19 @@ export const AuctionListTemplate = observer(({
     }, [hasMore, filteredAuctions.length]);
 
     useEffect(() => {
-        // Native scrolling used instead
-    }, []);
+        
+        const intervalId = setInterval(() => {
+            if (status === 'SOLD') {
+                auctionStore.loadRecentlySold(0, pageSize);
+            } else {
+                auctionStore.loadAuctions(undefined, status as any, 0, pageSize);
+            }
+        }, 15000);
 
-    // Determine active filter chips
+        return () => clearInterval(intervalId);
+    }, [status, pageSize, auctionStore]);
+
+    
     const chips: { label: string; clear: () => void }[] = [];
     if (filterMake !== "All") chips.push({ label: filterMake, clear: () => setFilterMake("All") });
     if (filterYear !== "All") chips.push({ label: filterYear.toString(), clear: () => setFilterYear("All") });
@@ -310,7 +322,7 @@ export const AuctionListTemplate = observer(({
                     <h1 className="page-title">{title}</h1>
                 </div>
 
-                {/* Mobile toggle */}
+                {}
                 <button
                     className="mobile-filter-toggle"
                     onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
@@ -319,11 +331,11 @@ export const AuctionListTemplate = observer(({
                 </button>
 
                 <div className={`controls-wrapper ${isMobileFiltersOpen ? 'mobile-open' : 'mobile-hidden'}`}>
-                    {/* selects + view toggle */}
+                    {}
                     <div className="controls-bar">
                         <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                         <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
-                        <FilterSelect label="Transmission" value={filterTransmission} options={transmissions} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                        <FilterSelect label="Transmission" value={filterTransmission} options={transmissions as any} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                         <FilterSelect 
                             label="Condition" 
                             value={filterCondition === "All" ? "All" : filterCondition.replace('_', ' ')} 
@@ -347,7 +359,7 @@ export const AuctionListTemplate = observer(({
                         </div>
                     </div>
 
-                    {/* Active filter chips */}
+                    {}
                     {hasActiveFilters && (
                         <div className="active-chips">
                             {chips.map((chip, i) => (

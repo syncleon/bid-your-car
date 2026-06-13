@@ -2,7 +2,7 @@ import { http } from "../../../shared/api/HttpClient";
 import type { UserDto } from "../../auth/types";
 import type { AuctionDto } from "../../auction/types";
 
-// Note: Spring Data JPA Pagination returns 'content' for items
+
 export interface PageResponse<T> {
     content: T[];
     totalPages: number;
@@ -12,7 +12,7 @@ export interface PageResponse<T> {
 }
 
 export const adminApi = {
-    // Users
+    
     getUsers: (page = 0, size = 20) => {
         return http<PageResponse<UserDto>>(`/users?page=${page}&size=${size}`);
     },
@@ -23,7 +23,7 @@ export const adminApi = {
         return http<{ message: string }>(`/users/${userId}`, { method: "DELETE" });
     },
 
-    // Auctions
+    
     getAuctions: (status?: string, page = 0, size = 20) => {
         const statusParam = status ? `&status=${status}` : '';
         return http<PageResponse<AuctionDto>>(`/auctions?page=${page}&size=${size}${statusParam}&sort=createdDate,desc`);

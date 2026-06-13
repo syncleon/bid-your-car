@@ -11,7 +11,7 @@ export interface Page<T> {
     empty: boolean;
 }
 
-// MATCHED EXACTLY TO BACKEND
+
 export type AuctionStatus =
     | "PENDING_APPROVAL"
     | "SCHEDULED"

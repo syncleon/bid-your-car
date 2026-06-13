@@ -10,6 +10,7 @@ import { AuctionDetailsPage } from "../pages/AuctionDetailsPage.tsx";
 import { ItemDetailsPage } from "../pages/ItemDetailsPage.tsx";
 import {PastAuctionsPage} from "../pages/PastAuctionsPage.tsx";
 import {ProfilePage} from "../pages/ProfilePage.tsx";
+import {CookiePolicyPage} from "../pages/CookiePolicyPage";
 
 import { AdminRoute } from "../routes/AdminRoute";
 import { AdminLayout } from "../widgets/AdminLayout/AdminLayout";
@@ -34,6 +35,7 @@ export const AppRouter = () => {
                 <Route path="/register" element={<LoginPage />} />
                 <Route path="/sell-car" element={<SellCarPage />} />
                 <Route path="/verify" element={<VerifyPage />} />
+                <Route path="/cookie-policy" element={<CookiePolicyPage />} />
                 <Route
                     path="/profile"
                     element={

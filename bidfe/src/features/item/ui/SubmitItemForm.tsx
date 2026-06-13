@@ -3,7 +3,7 @@ import { ImageUploader } from "./ImageUploader";
 import { ConfirmDialog } from "../../../shared/ui/dialog/ConfirmDialog";
 import type { ItemCreateRequest, ItemImageDto, ConditionGrade, ImageCategory } from "../types";
 
-// --- Constants ---
+
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 100 }, (_, i) => ({
     value: (currentYear + 1 - i).toString(),
@@ -28,8 +28,8 @@ const STEPS = [
     { id: 1, title: "Identity" },
     { id: 2, title: "Specs" },
     { id: 3, title: "Condition & Details" },
-    { id: 4, title: "Pricing & Rules" }, // <-- New Step!
-    { id: 5, title: "Photos" }           // <-- Shifted to Step 5
+    { id: 4, title: "Pricing & Rules" }, 
+    { id: 5, title: "Photos" }           
 ];
 
 interface Props {
@@ -182,7 +182,7 @@ export const SubmitItemForm = ({
     const requestSubmit = () => {
         const { images, ...rawPayload } = formData;
 
-        // Clean out empty strings to prevent parsing errors on the backend
+        
         const cleanPayload = Object.fromEntries(
             Object.entries(rawPayload).map(([k, v]) => [k, v === "" ? undefined : v])
         );
@@ -212,7 +212,7 @@ export const SubmitItemForm = ({
     return (
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} style={{ width: '100%' }}>
 
-            {/* Progress Bar */}
+            {}
             <div style={styles.progressTrack}>
                 <div style={{ ...styles.progressBar, width: `${(currentStep / STEPS.length) * 100}%` }} />
             </div>
@@ -221,7 +221,7 @@ export const SubmitItemForm = ({
                 <h2 style={styles.stepTitle}>{STEPS[currentStep - 1].title}</h2>
             </div>
 
-            {/* Step Content */}
+            {}
             <div style={styles.contentArea}>
 
                 {currentStep === 1 && (
@@ -409,7 +409,7 @@ export const SubmitItemForm = ({
                 )}
             </div>
 
-            {/* Footer Actions */}
+            {}
             <div style={styles.footer}>
                 {currentStep > 1 ? (
                     <button type="button" onClick={handleBack} style={styles.backBtn}>Back</button>
@@ -450,7 +450,7 @@ export const SubmitItemForm = ({
     );
 };
 
-// --- Styles ---
+
 const styles = {
     progressTrack: { height: "4px", background: "var(--bg-input)", borderRadius: "2px", overflow: "hidden", marginBottom: "20px" },
     progressBar: { height: "100%", background: "var(--accent-color)", transition: "width 0.3s ease" },

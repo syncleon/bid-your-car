@@ -10,21 +10,17 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     
-    /* Center the dialog */
-    margin: auto;
+        margin: auto;
     
-    /* Base exit state */
-    opacity: 0;
+        opacity: 0;
     transform: scale(0.95) translateY(10px);
     
-    /* Top-layer transition properties */
-    transition-property: opacity, transform, display, overlay;
+        transition-property: opacity, transform, display, overlay;
     transition-duration: 0.4s;
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     transition-behavior: allow-discrete;
 }
 
-/* Open entry state */
 .app-dialog[open] {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -35,7 +31,6 @@
     }
 }
 
-/* Backdrop base state */
 .app-dialog::backdrop {
     background-color: rgba(0, 0, 0, 0);
     transition:
@@ -44,7 +39,6 @@
         background-color 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Backdrop open state */
 .app-dialog[open]::backdrop {
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(8px);
@@ -66,7 +60,6 @@
     }
 }
 
-/* Shared styles for Confirm/Prompt */
 .dialog-title {
     margin: 0 0 12px 0;
     font-size: 20px;
@@ -144,4 +137,18 @@
     padding: 10px 12px;
     border-radius: 6px;
     border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+@media (max-width: 480px) {
+    .app-dialog {
+        padding: 16px;
+        width: 95%;
+    }
+    .dialog-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .dialog-btn {
+        width: 100%;
+    }
 }

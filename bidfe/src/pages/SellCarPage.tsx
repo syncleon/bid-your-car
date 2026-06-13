@@ -17,7 +17,7 @@ export const SellCarPage = () => {
             color: "var(--text-primary)",
             overflow: "hidden"
         }}>
-            {/* Ambient background glow */}
+            {}
             <div style={{
                 position: "absolute",
                 top: "50%",

@@ -8,13 +8,13 @@ export const PrivateRoute = observer(
         const { authStore } = useStore();
         const location = useLocation();
 
-        // 1. Wait for the initial checkAuth() to complete
+        
         if (authStore.isInitializing) {
-            // You can replace this with a proper Spinner or Loading component
+            
             return <div>Loading...</div>;
         }
 
-        // 2. Redirect only if initialization is done and the user is still not authenticated
+        
         if (!authStore.isAuthenticated) {
             return (
                 <Navigate
@@ -26,7 +26,7 @@ export const PrivateRoute = observer(
             );
         }
 
-        // 3. Render the protected component
+        
         return <>{children}</>;
     }
 );

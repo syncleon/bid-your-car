@@ -5,9 +5,10 @@ interface AppDialogProps {
     isOpen: boolean;
     onClose: () => void;
     children: React.ReactNode;
+    disableLightDismiss?: boolean;
 }
 
-export const AppDialog: React.FC<AppDialogProps> = ({ isOpen, onClose, children }) => {
+export const AppDialog: React.FC<AppDialogProps> = ({ isOpen, onClose, children, disableLightDismiss }) => {
     const dialogRef = useRef<HTMLDialogElement>(null);
 
     useEffect(() => {
@@ -25,8 +26,9 @@ export const AppDialog: React.FC<AppDialogProps> = ({ isOpen, onClose, children 
         }
     }, [isOpen]);
 
-    // Close on backdrop click
+    
     const handleLightDismiss = (e: React.MouseEvent<HTMLDialogElement>) => {
+        if (disableLightDismiss) return;
         const dialog = dialogRef.current;
         if (!dialog) return;
         const rect = dialog.getBoundingClientRect();

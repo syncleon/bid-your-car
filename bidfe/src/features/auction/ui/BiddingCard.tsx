@@ -22,7 +22,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const isOwner = authStore.user?.id === auction.item.seller.id;
     const currentPrice = auction.currentPrice || auction.startPrice;
     const minBid = auction.bidCount === 0 ? auction.startPrice : currentPrice + auction.minBidIncrement;
-    const currentWinnerId = auction.winningBid?.bidder?.id;
+    const currentWinnerId = (auction as any).winningBid?.bidder?.id;
     const amIWinning = currentWinnerId === authStore.user?.id;
 
     useEffect(() => {

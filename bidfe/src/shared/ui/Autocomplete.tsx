@@ -7,14 +7,12 @@ interface Props {
     onChange: (val: string) => void;
     placeholder?: string;
     name?: string;
-    /** true = free-text + suggestions; false = strict dropdown (must pick from list) */
-    allowCustom?: boolean;
+        allowCustom?: boolean;
     label?: string;
     required?: boolean;
     disabled?: boolean;
 }
 
-/** Splits `text` around `query` and returns highlighted JSX */
 function HighlightMatch({ text, query }: { text: string; query: string }) {
     if (!query.trim()) return <>{text}</>;
     const idx = text.toLowerCase().indexOf(query.toLowerCase());
@@ -46,22 +44,22 @@ export function Autocomplete({
     const wrapperRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
 
-    // Sync external value → local
+    
     useEffect(() => { setInputValue(value); }, [value]);
 
-    // Close on outside click
+    
     useEffect(() => {
         function onDown(e: MouseEvent) {
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
                 setIsOpen(false);
-                if (!allowCustom) setInputValue(value); // revert if strict
+                if (!allowCustom) setInputValue(value); 
             }
         }
         document.addEventListener("mousedown", onDown);
         return () => document.removeEventListener("mousedown", onDown);
     }, [allowCustom, value]);
 
-    // Scroll highlighted item into view
+    
     useEffect(() => {
         if (highlightedIndex >= 0 && listRef.current) {
             const el = listRef.current.children[highlightedIndex] as HTMLElement;
@@ -126,7 +124,7 @@ export function Autocomplete({
         }
     };
 
-    // In strict mode, preview hovered option in the input
+    
     const displayValue = (!allowCustom && isOpen && highlightedIndex >= 0)
         ? filteredOptions[highlightedIndex]
         : inputValue;
@@ -157,7 +155,7 @@ export function Autocomplete({
                     className="ac-input modern-input"
                 />
 
-                {/* Clear button */}
+                {}
                 {inputValue && !disabled && (
                     <button type="button" className="ac-clear" onClick={handleClear} aria-label="Clear" tabIndex={-1}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -166,7 +164,7 @@ export function Autocomplete({
                     </button>
                 )}
 
-                {/* Chevron for strict dropdowns */}
+                {}
                 {!allowCustom && (
                     <span className={`ac-chevron${isOpen ? " ac-chevron--open" : ""}`} aria-hidden="true">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -176,7 +174,7 @@ export function Autocomplete({
                 )}
             </div>
 
-            {/* Dropdown list */}
+            {}
             {showDropdown && (
                 <ul ref={listRef} className="ac-menu" role="listbox">
                     {filteredOptions.map((option, index) => (

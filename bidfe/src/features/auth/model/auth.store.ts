@@ -6,8 +6,8 @@ import {
     verifyEmail as apiVerifyEmail,
     logoutUser as apiLogout
 } from "../api/auth.api";
-import { getProfile } from "../../profile/api/profile.api"; // Reused from Profile feature
-import { getErrorMessage } from "../../../shared/utils/error"; // Shared util
+import { getProfile } from "../../profile/api/profile.api"; 
+import { getErrorMessage } from "../../../shared/utils/error"; 
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -23,7 +23,11 @@ export const AuthUserModel = types.model("AuthUser", {
     username: types.string,
     profilePhotoUrl: types.maybeNull(types.string),
     roles: types.array(RoleModel),
-});
+}).actions(self => ({
+    setProfilePhotoUrl(url: string | null) {
+        self.profilePhotoUrl = url;
+    }
+}));
 
 export const AuthStore = types.model("AuthStore", {
     user: types.maybeNull(AuthUserModel),
@@ -55,7 +59,7 @@ export const AuthStore = types.model("AuthStore", {
 
         const checkAuth = flow(function* () {
             try {
-                // Now perfectly typed as UserDto without casting to 'any'
+                
                 const userData: UserDto = yield getProfile();
                 if (userData && userData.id) {
                     self.user = AuthUserModel.create({

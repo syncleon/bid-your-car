@@ -96,5 +96,5 @@ const styles = {
     date: { fontSize: "12px", color: "var(--text-muted)" },
 
     amount: { fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", fontVariantNumeric: "tabular-nums" },
-    amountWinner: { fontSize: "13px", fontWeight: 700, color: "#3b82f6", fontVariantNumeric: "tabular-nums" } // Using standard primary blue for the modern trend look as seen in screenshot
+    amountWinner: { fontSize: "13px", fontWeight: 700, color: "#3b82f6", fontVariantNumeric: "tabular-nums" } 
 };

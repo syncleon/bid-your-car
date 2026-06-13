@@ -4,6 +4,7 @@ import { Navbar } from "../widgets/Navbar/Navbar";
 import { useStore } from "../shared/hooks/useStore";
 import { AppRouter } from "./router";
 import { ThemeProvider } from "./providers/ThemeProvider";
+import { CookieConsent } from "../widgets/CookieConsent/CookieConsent";
 
 export const App = observer(() => {
     const { authStore } = useStore();
@@ -15,6 +16,7 @@ export const App = observer(() => {
                 isInitializing={authStore.isInitializing}
             />
             <AppRouter />
+            <CookieConsent />
         </ThemeProvider>
     );
 });

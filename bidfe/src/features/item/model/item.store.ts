@@ -88,7 +88,7 @@ export const ItemStore = types
         }
     }))
     .actions((self) => {
-        // Private helper to sync lists
+        
         const updateLocalCache = (itemData: ItemDto) => {
             const existingInMyItems = self.myItems.findIndex(i => i.id === itemData.id);
             if (existingInMyItems !== -1) self.myItems[existingInMyItems] = cast(itemData as any);
@@ -170,7 +170,7 @@ export const ItemStore = types
         const updateListing = flow(function* (
             id: string,
             data: ItemUpdateRequest,
-            newFilesWithCategories: { file: File, category: ImageCategory }[], // <-- New Signature
+            newFilesWithCategories: { file: File, category: ImageCategory }[], 
             deletedImageIds: string[]
         ) {
             self.isLoading = true;

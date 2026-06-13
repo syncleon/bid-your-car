@@ -17,12 +17,9 @@ interface BaseCardProps {
         bottomLeft?: ReactNode;
         bottomRight?: ReactNode;
     };
-    /** Extra metadata row rendered below the image (passed as children) */
-    children: ReactNode;
-    /** When true, applies the urgent pulse ring to signal imminent end */
-    isUrgent?: boolean;
-    /** Layout mode: grid (default) or list (horizontal) */
-    viewMode?: "grid" | "list";
+        children: ReactNode;
+        isUrgent?: boolean;
+        viewMode?: "grid" | "list";
 }
 
 export const BaseCard = ({ to, imageUrl, title, overlays, children, isUrgent, viewMode = "grid" }: BaseCardProps) => {

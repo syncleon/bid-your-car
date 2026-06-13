@@ -106,7 +106,7 @@ export const FormSection = ({ title, description, children }: { title: string; d
         </div>
         <div style={{
             display: "grid",
-            // Ensures columns don't get squashed below 280px
+            
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
             gap: "24px",
             width: "100%"

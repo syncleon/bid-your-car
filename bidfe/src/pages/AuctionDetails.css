@@ -20,6 +20,18 @@
     margin-top: 12px;
 }
 
+@media (max-width: 900px) {
+    .compact-container {
+        width: 100%;
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .details-left {
     display: flex;
     flex-direction: column;
@@ -34,7 +46,6 @@
     top: 20px;
 }
 
-/* --- Compact Banners --- */
 .compact-banner {
     padding: 12px;
     border-radius: 6px;
@@ -182,9 +193,6 @@
     border-radius: 20px;
 }
 
-/* =========================
-   Mobile / responsive fixes
-   ========================= */
 
 @media (max-width: 1024px) {
     .details-grid {
@@ -192,13 +200,11 @@
     }
 
     .details-right {
-        position: static; /* disable sticky on tablet+mobile */
-        top: auto;
+        position: static;         top: auto;
     }
 
     .history-wrapper {
-        max-height: none; /* allow natural height */
-    }
+        max-height: none;     }
 }
 
 @media (max-width: 768px) {
@@ -224,8 +230,7 @@
         border-radius: 10px;
     }
 
-    /* Prevent any accidental horizontal overflow */
-    .gallery-wrapper,
+        .gallery-wrapper,
     .details-left,
     .details-right,
     .compact-container {
@@ -246,8 +251,7 @@
         font-size: 11px;
     }
 
-    /* Lightbox: make controls phone-friendly */
-    .lightbox-close-btn {
+        .lightbox-close-btn {
         top: 12px;
         right: 12px;
         font-size: 1.6rem;
@@ -279,15 +283,11 @@
     }
 }
 
-/* iOS Safari: avoid 100vh jump; use dynamic viewport when supported */
 @supports (height: 100dvh) {
     .lightbox-overlay {
         height: 100dvh;
     }
 }
-/* =========================
-   Modernization 2025 Updates
-   ========================= */
 
 .main-img-hover:hover {
     opacity: 0.8;

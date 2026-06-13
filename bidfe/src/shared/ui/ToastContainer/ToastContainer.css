@@ -72,3 +72,19 @@
         transform: translateX(0) scale(1);
     }
 }
+
+@media (max-width: 480px) {
+    .toast-container {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        align-items: center;
+    }
+    
+    .toast {
+        min-width: 0;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+    }
+}

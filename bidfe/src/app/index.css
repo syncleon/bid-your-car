@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-/* Permanent Black Style (Dark Theme) */
 :root {
   color-scheme: dark;
 
@@ -8,37 +7,31 @@ html {
   scrollbar-gutter: stable;
 }
 
-  /* Backgrounds - Dark Gray */
-  --bg-base: #141414;
+    --bg-base: #141414;
   --bg-card: #141414;
   --bg-input: #262626;
   --bg-hover: #52525b;
   --bg-overlay: rgba(0, 0, 0, 0.85);
 
-  /* Text Colors - Soft whites for readability */
-  --text-primary: #f8fafc;
+    --text-primary: #f8fafc;
   --text-secondary: #e2e8f0;
   --text-muted: #94a3b8;
 
-  /* Borders */
-  --border-color: #3f3f46;
+    --border-color: #3f3f46;
   --border-light: #27272a;
 
-  /* Buttons - Blue & Grey Primary */
-  --btn-primary-bg: #2563eb;
+    --btn-primary-bg: #2563eb;
   --btn-primary-text: #ffffff;
   --btn-secondary-bg: #1e293b;
   --btn-secondary-text: #f8fafc;
   --btn-border: #334155;
   --btn-hover-border: #3b82f6;
 
-  /* Links & Accents */
-  --accent-color: #3b82f6;
+    --accent-color: #3b82f6;
   --accent-hover: #60a5fa;
   --color-primary: #2563eb;
 
-  /* Semantic Colors */
-  --color-success-bg: rgba(22, 101, 52, 0.25);
+    --color-success-bg: rgba(22, 101, 52, 0.25);
   --color-success-text: #4ade80;
   --color-success-border: rgba(74, 222, 128, 0.35);
 
@@ -51,7 +44,6 @@ html {
   --color-warning-border: rgba(250, 204, 21, 0.35);
 }
 
-/* Base body reset */
 body {
   margin: 0;
   min-width: 320px;
@@ -79,12 +71,10 @@ input:focus, textarea:focus, select:focus {
     background: #181818;
 }
 
-/* Ensure modern placeholder colors */
 input::placeholder, textarea::placeholder {
     color: var(--text-muted);
 }
 
-/* Hide number input arrows globally */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -95,15 +85,50 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* Make all interactive components dim on hover */
-button:not(:disabled):hover,
+button:not(:disabled):not(.profile-btn):hover,
 a:not(:disabled):not(.user-menu__trigger):hover,
 [role="button"]:not([aria-disabled="true"]):hover,
 .base-card:hover,
-.profile-card:hover,
 .custom-select__option:not([aria-disabled="true"]):hover,
 .sort-tab:not(.active):hover {
     opacity: 0.85 !important;
     filter: none !important;
     transition: opacity 0.2s ease !important;
+}
+
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--bg-input) 25%,
+        var(--bg-hover) 50%,
+        var(--bg-input) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+.page-container {
+    width: 80%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 0;
+}
+
+@media (max-width: 900px) {
+    .page-container {
+        width: 100%;
+        padding: 16px 24px;
+        box-sizing: border-box;
+    }
+}
+
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }

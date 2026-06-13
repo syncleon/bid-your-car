@@ -62,7 +62,7 @@ const styles = {
         transition: "color 0.3s ease",
     } as CSSProperties,
 
-    // Metadata & Footer
+    
     metaRow: {
         display: "flex",
         justifyContent: "space-between",

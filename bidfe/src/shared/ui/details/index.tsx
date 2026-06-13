@@ -3,7 +3,7 @@ import type { ItemDto } from "../../../features/item/types";
 import { useStore } from "../../hooks/useStore";
 
 export const DetailPageLayout = ({ children }: { children: React.ReactNode }) => (
-    <div style={styles.container}>{children}</div>
+    <div className="page-container" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" }}>{children}</div>
 );
 
 export const DetailHeader = ({ onBack, title }: { onBack: () => void, title?: string }) => (
@@ -80,7 +80,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
             {thumbnails.length > 0 && (
                 <div style={styles.thumbGrid}>
                     {thumbnails.map((img, idx) => {
-                        // Correctly find the index in the original array for the lightbox
+                        
                         const realIndex = images.findIndex(origImg => origImg.id === img.id);
                         const isLastAndOverflowing = idx === 5 && remainingCount > 0;
 
@@ -217,7 +217,7 @@ const styles = {
     headerRow: { marginBottom: 24, display: 'flex', justifyContent: 'space-between' },
     grid: { display: "grid", alignItems: "start" },
 
-    galleryContainer: { display: "grid", gridTemplateColumns: "1fr 35%", gap: "12px", marginBottom: "24px" },
+    galleryContainer: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "12px", marginBottom: "24px" },
     mainWrapper: { position: "relative" as const, width: "100%", height: "100%", aspectRatio: "16/10", borderRadius: "8px", overflow: "hidden", cursor: "zoom-in", backgroundColor: "var(--bg-input)", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "background-color 0.3s ease" },
     mainImg: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" as const, transition: "transform 0.3s ease", },
     hoverOverlay: { position: "absolute" as const, inset: 0, background: "rgba(0,0,0,0.2)", opacity: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: "14px", pointerEvents: "none" as const, },
@@ -245,3 +245,38 @@ const styles = {
     sectionTitleCB: { fontSize: "20px", fontWeight: 700, marginTop: "32px", marginBottom: "16px", color: "var(--text-primary)" },
     descriptionCB: { fontSize: "15px", lineHeight: 1.6, color: "var(--text-primary)", whiteSpace: "pre-wrap" as const },
 };
+
+export const DetailSkeleton = () => (
+    <DetailPageLayout>
+        <DetailHeader onBack={() => {}} title="Loading..." />
+        <ResponsiveGrid>
+            <div>
+                <div style={styles.galleryContainer}>
+                    <div style={{...styles.mainWrapper, backgroundColor: "var(--bg-input)"}} className="shimmer" />
+                    <div style={styles.thumbGrid}>
+                        {Array.from({length: 6}).map((_, i) => (
+                            <div key={i} style={{...styles.thumbWrapper, backgroundColor: "var(--bg-input)"}} className="shimmer" />
+                        ))}
+                    </div>
+                </div>
+                <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ height: 36, width: "60%", backgroundColor: "var(--bg-input)", borderRadius: 6 }} className="shimmer" />
+                    <div style={{ height: 20, width: "40%", backgroundColor: "var(--bg-input)", borderRadius: 6 }} className="shimmer" />
+                    <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 40px" }}>
+                        {Array.from({length: 10}).map((_, i) => (
+                            <div key={i} style={{ height: 24, backgroundColor: "var(--bg-input)", borderRadius: 4 }} className="shimmer" />
+                        ))}
+                    </div>
+                </div>
+            </div>
+            <div>
+                <SidebarCard>
+                    <div style={{ height: 20, width: "50%", backgroundColor: "var(--bg-input)", borderRadius: 4, marginBottom: 16 }} className="shimmer" />
+                    <div style={{ height: 60, width: "100%", backgroundColor: "var(--bg-input)", borderRadius: 6, marginBottom: 16 }} className="shimmer" />
+                    <div style={{ height: 48, width: "100%", backgroundColor: "var(--bg-input)", borderRadius: 6, marginBottom: 12 }} className="shimmer" />
+                    <div style={{ height: 48, width: "100%", backgroundColor: "var(--bg-input)", borderRadius: 6 }} className="shimmer" />
+                </SidebarCard>
+            </div>
+        </ResponsiveGrid>
+    </DetailPageLayout>
+);

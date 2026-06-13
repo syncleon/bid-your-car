@@ -6,7 +6,7 @@ import {
     changePassword,
     uploadProfilePhoto,
 } from "../api/profile.api";
-import { getErrorMessage } from "../../../shared/utils/error"; // Shared util
+import { getErrorMessage } from "../../../shared/utils/error"; 
 import type {
     DeleteAccountRequestDto,
     UpdatePasswordRequestDto,
@@ -79,7 +79,7 @@ export const ProfileStore = types.model("ProfileStore", {
                 self.successMessage = "Profile updated successfully!";
             } catch (error: unknown) {
                 self.error = getErrorMessage(error);
-                throw error; // Re-throw so the form can handle local UI state if needed
+                throw error; 
             } finally {
                 self.isLoading = false;
             }
@@ -128,10 +128,10 @@ export const ProfileStore = types.model("ProfileStore", {
                 }
                 self.successMessage = "Profile photo updated successfully!";
                 
-                // Keep authStore in sync
+                
                 const root = getRoot<any>(self);
                 if (root?.authStore?.user) {
-                    root.authStore.user.profilePhotoUrl = updated.profilePhotoUrl || null;
+                    root.authStore.user.setProfilePhotoUrl(updated.profilePhotoUrl || null);
                 }
             } catch (error: unknown) {
                 self.error = getErrorMessage(error);

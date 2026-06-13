@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../shared/hooks/useStore";
 import { Link } from "react-router-dom";
+import { Skeleton } from "../../shared/ui/Skeleton/Skeleton";
 
 export const AdminAuctionsPage = observer(() => {
     const { adminStore } = useStore();
@@ -41,10 +42,32 @@ export const AdminAuctionsPage = observer(() => {
             {adminStore.error && <p style={{ color: "red" }}>{adminStore.error}</p>}
             
             {adminStore.isLoadingAuctions ? (
-                <p>Loading auctions...</p>
+                <div className="table-responsive-wrapper">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                        <thead>
+                            <tr style={{ backgroundColor: 'var(--bg-card)', textAlign: 'left' }}>
+                                <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>ID</th>
+                                <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Title</th>
+                                <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Status</th>
+                                <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} style={{ backgroundColor: 'var(--bg-base)' }}>
+                                    <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}><Skeleton height="20px" width="80px" /></td>
+                                    <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}><Skeleton height="20px" width="200px" /></td>
+                                    <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}><Skeleton height="20px" width="100px" /></td>
+                                    <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}><Skeleton height="30px" width="120px" /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
+                <div className="table-responsive-wrapper">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                        <thead>
                         <tr style={{ backgroundColor: 'var(--bg-card)', textAlign: 'left' }}>
                             <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>ID</th>
                             <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Title</th>
@@ -91,6 +114,7 @@ export const AdminAuctionsPage = observer(() => {
                         )}
                     </tbody>
                 </table>
+                </div>
             )}
         </div>
     );

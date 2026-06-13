@@ -10,6 +10,7 @@ import { PromptDialog } from "../shared/ui/dialog/PromptDialog";
 import { Modal } from "../shared/ui/dialog/Modal";
 import { Loader } from "../shared/ui/Loader/Loader";
 import { Skeleton } from "../shared/ui/Skeleton/Skeleton";
+import { ImageCropModal } from "../features/profile/ui/ImageCropModal";
 import "./ProfilePage.css";
 
 export const ProfilePage = observer(() => {
@@ -20,6 +21,8 @@ export const ProfilePage = observer(() => {
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
     const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
+    const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+    const [isAvatarZoomed, setIsAvatarZoomed] = useState(false);
 
     const handleSetViewMode = (mode: 'view' | 'edit' | 'password') => {
         if (!document.startViewTransition) {
@@ -77,8 +80,26 @@ export const ProfilePage = observer(() => {
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            profileStore.uploadPhoto(e.target.files[0]);
+            const file = e.target.files[0];
+            const imageUrl = URL.createObjectURL(file);
+            setImageToCrop(imageUrl);
         }
+        e.target.value = "";
+    };
+
+    const handleCropComplete = (croppedFile: File) => {
+        profileStore.uploadPhoto(croppedFile);
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+        setImageToCrop(null);
+    };
+
+    const handleCropCancel = () => {
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+        setImageToCrop(null);
     };
 
     return (
@@ -96,7 +117,13 @@ export const ProfilePage = observer(() => {
                         <div className="profile-header-visual">
                             <div className="profile-avatar">
                                 {profileStore.profile.profilePhotoUrl ? (
-                                    <img src={profileStore.profile.profilePhotoUrl} alt="Avatar" className="profile-avatar-img" />
+                                    <img 
+                                        src={profileStore.profile.profilePhotoUrl} 
+                                        alt="Avatar" 
+                                        className="profile-avatar-img" 
+                                        onClick={() => setIsAvatarZoomed(true)}
+                                        style={{ cursor: 'zoom-in' }}
+                                    />
                                 ) : (
                                     initial
                                 )}
@@ -204,6 +231,43 @@ export const ProfilePage = observer(() => {
             <Modal isOpen={viewMode === 'password'} onClose={() => handleSetViewMode('view')} title="Update Password">
                 <ChangePasswordForm store={profileStore} onCancel={() => handleSetViewMode('view')} />
             </Modal>
+
+            <ImageCropModal
+                isOpen={!!imageToCrop}
+                imageSrc={imageToCrop}
+                onClose={handleCropCancel}
+                onCropCompleteAction={handleCropComplete}
+            />
+
+            {isAvatarZoomed && profileStore.profile.profilePhotoUrl && (
+                <div 
+                    className="avatar-zoom-overlay" 
+                    onClick={() => setIsAvatarZoomed(false)}
+                    style={{
+                        position: 'fixed',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'zoom-out',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
+                    <img 
+                        src={profileStore.profile.profilePhotoUrl} 
+                        alt="Zoomed Avatar" 
+                        style={{
+                            maxWidth: '90%',
+                            maxHeight: '90%',
+                            objectFit: 'contain',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+                        }} 
+                    />
+                </div>
+            )}
         </div>
     );
 });

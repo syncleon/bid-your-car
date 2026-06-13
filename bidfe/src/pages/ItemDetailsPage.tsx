@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../shared/hooks/useStore.ts";
-import { DetailPageLayout, DetailHeader, ImageGallery, VehicleInfo, ResponsiveGrid, SidebarCard } from "../shared/ui/details";
+import { DetailPageLayout, ImageGallery, VehicleInfo, ResponsiveGrid, SidebarCard, DetailSkeleton } from "../shared/ui/details";
 import { CreateAuctionModal } from "../features/auction/ui/CreateAuctionModal.tsx";
 import { EditItemModal } from "../features/item/ui/EditItemModal.tsx";
 import type { CreateAuctionDto } from "../features/auction/types.ts";
@@ -133,7 +133,7 @@ export const ItemDetailsPage = observer(() => {
     };
 
     if (itemStore.isLoading && !isDeleting) {
-        return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-primary)' }}>Loading item details...</div>;
+        return <DetailSkeleton />;
     }
 
     if (!itemStore.selectedItem) {

@@ -19,8 +19,8 @@ export const Button = ({
     
     if (variant === "primary") baseClass += " btn-primary";
     if (variant === "secondary") baseClass += " btn-secondary";
-    if (variant === "danger") baseClass += " btn-danger"; // we need to add this to index.css
-    if (variant === "ghost") baseClass += " btn-ghost";   // and this
+    if (variant === "danger") baseClass += " btn-danger"; 
+    if (variant === "ghost") baseClass += " btn-ghost";   
 
     if (fullWidth) baseClass += " w-full";
 

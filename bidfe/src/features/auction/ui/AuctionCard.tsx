@@ -56,12 +56,12 @@ const useAuctionTimer = (endTime: string) => {
     return { timeLeft, isEnded, isUrgent };
 };
 
-// ── Helper formatters ────────────────────────────────────────
+
 const formatPrice = (p: number) => `$${p.toLocaleString()}`;
 
 
 
-// ── Main component ────────────────────────────────────────────
+
 export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
     const { item, currentPrice, endTime, status, isNoReserve } = auction;
     const { timeLeft, isEnded, isUrgent } = useAuctionTimer(endTime);
@@ -73,7 +73,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
     const isPending = status === 'PENDING_APPROVAL';
     const isSold = status === 'SOLD';
 
-    // ── Timer badge (bottom-left overlay) ─────────────────────
+    
     const timerBadgeStyle: React.CSSProperties = {
         ...styles.badgeTimer,
         backgroundColor: isUrgent ? "rgba(239, 68, 68, 0.9)" : "rgba(17,17,17,0.75)",
@@ -171,7 +171,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
     );
 };
 
-// ── Icons & micro-components ────────────────────────────────
+
 const ClockIcon = () => (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />

@@ -1,6 +1,3 @@
-/* ============================================================
-   AUCTION LIST — 2025 Modern Design
-   ============================================================ */
 
 .auction-container {
     padding: 0 16px 40px;
@@ -10,7 +7,6 @@
     font-family: 'Inter', sans-serif;
 }
 
-/* ── Header ────────────────────────────────────────── */
 .auction-header {
     background: var(--bg-base);
     border-bottom: 1px solid var(--border-color);
@@ -48,7 +44,6 @@
     transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
-/* ── Search + Controls Bar ────────────────────────────────── */
 .controls-bar {
     display: flex;
     align-items: center;
@@ -56,7 +51,6 @@
     flex-wrap: nowrap;
 }
 
-/* Inline Sort Tabs */
 .sort-tabs {
     display: flex;
     align-items: center;
@@ -97,7 +91,6 @@
 
 
 
-/* ── Filter Selects ───────────────────────────────────────── */
 .filters-row {
     display: flex;
     gap: 8px;
@@ -105,7 +98,6 @@
     align-items: center;
 }
 
-/* ── Custom Dropdown ─────────────────────────────────────── */
 .custom-select {
     position: relative;
     flex-shrink: 0;
@@ -135,7 +127,6 @@
     opacity: 0.85;
 }
 
-/* Active = a real value is selected (not the placeholder label) */
 .custom-select__trigger--active {
     border-color: var(--text-primary);
     color: var(--text-primary);
@@ -156,7 +147,6 @@
     text-overflow: ellipsis;
 }
 
-/* Dropdown panel */
 .custom-select__dropdown {
     position: absolute;
     top: calc(100% + 6px);
@@ -178,11 +168,9 @@
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Scrollbar inside dropdown */
 .custom-select__dropdown::-webkit-scrollbar { width: 5px; }
 .custom-select__dropdown::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
-/* Option rows */
 .custom-select__option {
     width: 100%;
     display: flex;
@@ -215,7 +203,6 @@
 
 
 
-/* ── Active Filter Chips ──────────────────────────────────── */
 .active-chips {
     display: flex;
     gap: 6px;
@@ -268,7 +255,6 @@
     color: var(--text-primary);
 }
 
-/* ── Mobile toggle ───────────────────────────────────────── */
 .mobile-filter-toggle {
     display: none;
     width: 100%;
@@ -294,28 +280,24 @@
     gap: 8px;
 }
 
-/* ── Grid Layout ─────────────────────────────────────────── */
 .auction-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
 }
 
-/* 3 columns ≤ 1200px */
 @media (max-width: 1200px) {
     .auction-grid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
-/* 2 columns ≤ 860px */
 @media (max-width: 860px) {
     .auction-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-/* 1 column ≤ 560px */
 @media (max-width: 560px) {
     .auction-grid {
         grid-template-columns: 1fr;
@@ -325,7 +307,6 @@
 
 
 
-/* ── Fade-in animation ───────────────────────────────────── */
 .fade-in-item {
     animation: fadeInUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
     will-change: opacity, transform;
@@ -346,7 +327,6 @@
     }
 }
 
-/* ── States ──────────────────────────────────────────────── */
 .loading-state,
 .error-state {
     min-height: 50vh;
@@ -381,7 +361,6 @@
     font-size: 14px;
 }
 
-/* ── Skeleton Loader ─────────────────────────────────────── */
 .skeleton-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -442,7 +421,6 @@
     to   { background-position: -200% 0; }
 }
 
-/* ── Scroll loader ───────────────────────────────────────── */
 .scroll-loader {
     text-align: center;
     padding: 24px;
@@ -452,7 +430,6 @@
     transition: opacity 0.3s, color 0.3s ease;
 }
 
-/* ── Mobile ──────────────────────────────────────────────── */
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }

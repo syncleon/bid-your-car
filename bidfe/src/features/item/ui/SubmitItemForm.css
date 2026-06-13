@@ -1,10 +1,8 @@
-/* View Transitions for Form Steps */
 
 .form-step-container {
     view-transition-name: form-step;
 }
 
-/* Base animations */
 @keyframes slide-to-left {
     from { transform: translateX(0); opacity: 1; }
     to { transform: translateX(-30px); opacity: 0; }
@@ -25,7 +23,6 @@
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* Going Forward (Next) */
 html.going-forward::view-transition-old(form-step) {
     animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
 }
@@ -34,7 +31,6 @@ html.going-forward::view-transition-new(form-step) {
     animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
 }
 
-/* Going Backward (Back) */
 html.going-backward::view-transition-old(form-step) {
     animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-to-right;
 }
@@ -43,7 +39,6 @@ html.going-backward::view-transition-new(form-step) {
     animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both slide-from-left;
 }
 
-/* Form inputs styling */
 .modern-input {
     width: 100%;
     min-height: 48px;
@@ -80,7 +75,6 @@ html.going-backward::view-transition-new(form-step) {
     padding: 16px;
 }
 
-/* Progress Tracker */
 .progress-tracker {
     display: flex;
     justify-content: space-between;

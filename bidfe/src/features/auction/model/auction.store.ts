@@ -45,16 +45,16 @@ export class AuctionStore {
     }
 
     private getErrorMessage(error: any, defaultMessage: string): string {
-        // Check for custom backend message first, then fallback to the HTTP error string
+        
         if (error?.response?.data) {
             if (error.response.data.message) return error.response.data.message;
             if (error.response.data.error) return error.response.data.error;
         }
 
-        // Fallback for network errors (e.g., AxiosError "Network Error")
+        
         if (error instanceof Error) return error.message;
 
-        // Fallback if the throw was just a plain string
+        
         if (typeof error === "string") return error;
 
         return defaultMessage;
@@ -184,7 +184,7 @@ export class AuctionStore {
         }
     };
 
-    // --- Bidding Actions ---
+    
 
     submitBid = async (auctionId: string, amount: number) => {
         this.isBidding = true;
@@ -204,7 +204,7 @@ export class AuctionStore {
 
     submitQuickBid = async (auctionId: string) => {
         this.isBidding = true;
-        // Do NOT set this.error = null anymore
+        
         try {
             const newBid = await placeQuickBid(auctionId);
             await this.refreshAuctionStateLocally(auctionId, newBid);

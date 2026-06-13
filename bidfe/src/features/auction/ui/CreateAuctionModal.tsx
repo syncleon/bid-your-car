@@ -30,8 +30,8 @@ interface Props {
     error: string | null;
 }
 
-const MIN_SCHEDULE_OFFSET_MS = 30_000; // 30 seconds
-const ASAP_PREVIEW_OFFSET_MS = 60_000; // 1 minute
+const MIN_SCHEDULE_OFFSET_MS = 30_000; 
+const ASAP_PREVIEW_OFFSET_MS = 60_000; 
 
 const toLocalDateTimeInputValue = (date: Date): string => {
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -238,7 +238,7 @@ export const CreateAuctionModal = ({
                             transform: `translateX(-${(currentStep - 1) * (100 / STEPS.length)}%)`
                         }}
                     >
-                        {/* Step 1 */}
+                        {}
                         <div style={{ ...styles.slide, width: `${100 / STEPS.length}%` }}>
                             <div style={styles.heroImageContainer}>
                                 {mainImage ? (
@@ -397,7 +397,7 @@ export const CreateAuctionModal = ({
                             </div>
                         </div>
 
-                        {/* Step 3 */}
+                        {}
                         <div style={{ ...styles.slide, width: `${100 / STEPS.length}%` }}>
                             <div style={styles.summaryCard}>
                                 <SummaryRow label="Vehicle" value={`${item.year} ${item.make} ${item.model}`} />
