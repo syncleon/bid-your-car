@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { observer } from "mobx-react-lite";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useStore } from "../../../shared/hooks/useStore";
 import type { AuctionDto } from "../types";
 
 export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const { auctionStore, authStore } = useStore();
+    const navigate = useNavigate();
+    const location = useLocation();
     const [bidAmount, setBidAmount] = useState<string>("");
     const [timeLeft, setTimeLeft] = useState("");
     const [isEndingSoon, setIsEndingSoon] = useState(false);
@@ -24,6 +27,9 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const minBid = auction.bidCount === 0 ? auction.startPrice : currentPrice + auction.minBidIncrement;
     const currentWinnerId = (auction as any).winningBid?.bidder?.id;
     const amIWinning = currentWinnerId === authStore.user?.id;
+    const highestBid = auctionStore.bidHistory.length > 0 
+        ? auctionStore.bidHistory.reduce((prev, current) => (prev.amount > current.amount) ? prev : current) 
+        : null;
 
     useEffect(() => {
         if (auction.bidCount > 0) {
@@ -141,141 +147,178 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
                 input[type=number] { -moz-appearance: textfield; }
                 @keyframes flashBg {
-                    0% { background-color: var(--color-success-border); }
-                    100% { background-color: var(--bg-card); }
+                    0% { background-color: rgba(16, 185, 129, 0.2); }
+                    100% { background-color: transparent; }
                 }
+                .flash { animation: flashBg 0.6s ease-out; border-radius: 4px; padding: 0 4px; margin: 0 -4px; }
                 .metric-bar-inner.ending-soon {
                     position: relative;
                     overflow: hidden;
                 }
                 .ending-soon-text {
-                    color: #3b82f6 !important;
+                    color: #ef4444 !important;
+                    animation: pulse-text 2s infinite;
                 }
-                .metric-bar-container {
-                    display: flex;
-                    gap: 16px;
-                    align-items: stretch;
+                @keyframes pulse-text {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.6; }
+                    100% { opacity: 1; }
                 }
-                .metric-bar-inner {
+                .bid-bar {
                     display: flex;
+                    align-items: center;
+                    padding: 8px 0;
+                    margin-bottom: 16px;
+                    gap: 24px;
+                }
+                .bid-bar-metrics {
+                    display: flex;
+                    align-items: center;
+                    gap: 32px;
                     flex: 1;
-                    padding: 0 24px;
-                    height: 52px;
-                    border-radius: 8px;
-                    background-color: #111;
-                    align-items: center;
-                    justify-content: space-between;
+                    flex-wrap: nowrap;
                 }
-                .metric-item {
+                .bid-metric {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+                .bid-metric-label {
                     display: flex;
                     align-items: center;
-                    gap: 6px;
-                    color: var(--text-muted);
-                    font-size: 15px;
-                    white-space: nowrap;
-                    position: relative;
-                    z-index: 1;
-                }
-                .metric-item svg {
-                    flex-shrink: 0;
-                    opacity: 0.8;
-                }
-                .metric-item strong {
-                    color: var(--text-primary);
+                    font-family: 'Inter', sans-serif;
+                    font-size: 12px;
                     font-weight: 700;
-                    margin-left: 2px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    color: var(--text-muted);
+                }
+                .bid-metric-value {
+                    font-family: 'Inter', sans-serif;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    font-variant-numeric: tabular-nums;
+                }
+                .bid-metric-value.large {
+                    font-size: 24px;
+                    line-height: 1;
+                    letter-spacing: -0.5px;
+                }
+                .bid-bar-divider {
+                    display: none;
+                }
+                .bid-bar-actions {
+                    display: flex;
+                    gap: 12px;
+                    align-items: center;
+                    flex-shrink: 0;
                 }
                 .place-bid-btn {
-                    background-color: #3b82f6;
-                    color: #fff;
-                    padding: 0 32px;
-                    height: 52px;
+                    background: #2563eb;
+                    color: #ffffff;
+                    padding: 0 24px;
+                    height: 44px;
                     border-radius: 8px;
+                    font-family: 'Inter', sans-serif;
                     font-weight: 600;
-                    font-size: 16px;
+                    font-size: 15px;
                     border: none;
                     cursor: pointer;
                     transition: background-color 0.2s;
+                    white-space: nowrap;
                 }
-                .place-bid-btn:hover {
+                .place-bid-btn:hover { 
                     background-color: #2563eb;
                 }
                 .fast-bid-btn {
-                    background-color: transparent;
+                    background: transparent;
                     color: #3b82f6;
                     padding: 0 24px;
-                    height: 52px;
+                    height: 44px;
                     border-radius: 8px;
                     font-weight: 600;
-                    font-size: 16px;
-                    border: 2px solid #3b82f6;
+                    font-size: 14px;
+                    border: 1px solid #3b82f6;
                     cursor: pointer;
-                    transition: all 0.2s;
+                    transition: background-color 0.2s;
+                    white-space: nowrap;
                 }
-                .fast-bid-btn:hover:not(:disabled) {
-                    background-color: rgba(59, 130, 246, 0.1);
+                .fast-bid-btn:hover:not(:disabled) { 
+                    background: rgba(59, 130, 246, 0.1); 
                 }
                 .fast-bid-btn:disabled {
                     opacity: 0.5;
                     cursor: not-allowed;
-                    border-color: var(--text-muted);
+                    background: transparent;
+                    border-color: var(--border-color);
                     color: var(--text-muted);
+                }
+                @media (max-width: 760px) {
+                    .bid-bar { flex-direction: column; align-items: stretch; padding: 16px; }
+                    .bid-bar-actions { flex-direction: column; width: 100%; }
+                    .fast-bid-btn, .place-bid-btn { width: 100%; }
+                    .bid-bar-divider { display: none; }
+                    .bid-bar-metrics { justify-content: space-between; gap: 16px; }
                 }
             `}</style>
 
-            <div className="metric-bar-container">
-                <div className={`metric-bar-inner ${flash ? 'flash' : ''} ${isEndingSoon ? 'ending-soon' : ''}`}>
-                    {isEndingSoon && (
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            bottom: 0,
-                            left: 0,
-                            width: `${progress}%`,
-                            backgroundColor: 'rgba(59, 130, 246, 0.25)',
-                            transition: 'width 1s linear',
-                            zIndex: 0
-                        }} />
-                    )}
-                    <div className="metric-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        <span>Time Left</span>
-                        <strong className={isEndingSoon ? 'ending-soon-text' : ''} style={{ fontVariantNumeric: 'tabular-nums' }}>{timeLeft || 'N/A'}</strong>
+            <div className="bid-bar">
+                <div className="bid-bar-metrics">
+                    <div className="bid-metric">
+                        <span className="bid-metric-label">High Bid</span>
+                        <span className={`bid-metric-value large${flash ? ' flash' : ''}`}>${currentPrice.toLocaleString()}</span>
                     </div>
 
-                    <div className="metric-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                        <span>High Bid</span>
-                        <strong>${currentPrice.toLocaleString()}</strong>
+                    <div className="bid-metric">
+                        <span className="bid-metric-label">Bidder</span>
+                        <div className="bid-metric-value" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: "#3b82f6" }}>
+                            {highestBid && (
+                                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(highestBid.bidderName || 'A')}&background=3b82f6&color=fff&size=24`} alt="avatar" style={{ width: 20, height: 20, borderRadius: '50%' }} />
+                            )}
+                            <span>{highestBid ? (highestBid.bidderName || "Anonymous") : "No bids"}</span>
+                        </div>
                     </div>
 
-                    <div className="metric-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
-                        <span>Bids</span>
-                        <strong>{auction.bidCount}</strong>
+                    <div className="bid-metric">
+                        <span className="bid-metric-label">Time Left</span>
+                        <span className={`bid-metric-value${isEndingSoon ? ' ending-soon-text' : ''}`} style={{ fontVariantNumeric: 'tabular-nums' }}>{timeLeft || 'N/A'}</span>
+                    </div>
+
+                    <div className="bid-metric">
+                        <span className="bid-metric-label">Bids</span>
+                        <span className="bid-metric-value">{auction.bidCount}</span>
                     </div>
                 </div>
 
                 {isActive && !isEnded && !isOwner && (
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button
-                            type="button"
-                            onClick={handleOneClickQuickBid}
-                            disabled={isQuickBtnDisabled}
-                            className="fast-bid-btn"
-                        >
-                            {auctionStore.isBidding
-                                ? "Wait..."
-                                : isCoolingDown
-                                    ? `Wait ${cooldown}s`
-                                    : amIWinning 
-                                        ? `Winning`
-                                        : `Fast Bid $${minBid.toLocaleString()}`
-                            }
-                        </button>
-                        <button className="place-bid-btn" onClick={() => setShowBidForm(!showBidForm)}>
-                            {showBidForm ? "Close" : "Place Bid"}
-                        </button>
+                    <div className="bid-bar-actions">
+                        {!authStore.isAuthenticated ? (
+                            <button className="place-bid-btn" onClick={() => navigate('/login', { state: { backgroundLocation: location } })}>
+                                Place Bid
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleOneClickQuickBid}
+                                    disabled={isQuickBtnDisabled}
+                                    className="fast-bid-btn"
+                                >
+                                    {auctionStore.isBidding
+                                        ? "Wait..."
+                                        : isCoolingDown
+                                            ? `Wait ${cooldown}s`
+                                            : amIWinning
+                                                ? `Winning`
+                                                : `Fast Bid $${minBid.toLocaleString()}`
+                                    }
+                                </button>
+                                <button className="place-bid-btn" onClick={() => setShowBidForm(!showBidForm)}>
+                                    {showBidForm ? "Close" : "Place Bid"}
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>
@@ -290,19 +333,9 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                     borderRadius: "8px",
                     fontSize: "14px",
                     fontWeight: 600,
-                    textAlign: "center"
-                }}>
-                    ⚠️ {displayError}
-                </div>
+                }}>⚠️ {displayError}</div>
             )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                    Ending {format(new Date(auction.endTime), "MMMM do 'at' h:mm a")}
-                </div>
-            </div>
-
-            {showBidForm && isActive && !isEnded && !isOwner && (
+            {showBidForm && isActive && !isEnded && !isOwner && authStore.isAuthenticated && (
                 <div style={{
                     marginTop: '16px',
                     padding: '24px',

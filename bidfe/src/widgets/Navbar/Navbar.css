@@ -23,11 +23,12 @@ body {
 }
 
 .navbar__container {
-    width: 80%;
-    max-width: 1400px;
+    width: 92%;
+    max-width: var(--layout-max-width, 1400px);
     margin: 0 auto;
     height: 100%;
-    padding: 0 32px;
+    padding: 0 var(--layout-padding, 32px);
+    box-sizing: border-box;
     display: flex;
     justify-content: space-between;
     align-items: center;

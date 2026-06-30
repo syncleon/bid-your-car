@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../shared/hooks/useStore.ts";
 import { DetailPageLayout, ImageGallery, VehicleInfo, VehicleHeader, DetailSkeleton } from "../shared/ui/details";
 import { BiddingCard } from "../features/auction/ui/BiddingCard.tsx";
-import { BidHistory } from "../features/auction/ui/BidHistory.tsx";
+
 import { formatDistanceToNow } from "date-fns";
 import type { ItemImageDto } from "../features/item/types.ts";
 import "./AuctionDetails.css";
@@ -173,7 +173,7 @@ export const AuctionDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            <div className="compact-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="compact-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 
                 {}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -287,7 +287,11 @@ export const AuctionDetailsPage = observer(() => {
 
                 </div>
 
-                <VehicleHeader item={item} />
+                
+                
+                <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
+                    <VehicleHeader item={item} auctionEndTime={auction?.endTime} />
+                </div>
                 
                 <div className="gallery-wrapper">
                     <ImageGallery
@@ -305,9 +309,7 @@ export const AuctionDetailsPage = observer(() => {
 
                 <VehicleInfo item={item} hideHeader={true} />
                 
-                <div className="history-wrapper" style={{ marginTop: '24px' }}>
-                    <BidHistory bids={auctionStore.bidHistory} />
-                </div>
+
 
             </div>
 

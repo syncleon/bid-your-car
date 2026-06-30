@@ -112,17 +112,24 @@ a:not(:disabled):not(.user-menu__trigger):hover,
     to   { background-position: -200% 0; }
 }
 
+/* ── Layout width token — must match .navbar__container ── */
+:root {
+    --layout-max-width: 1400px;
+    --layout-padding: 32px;
+}
+
 .page-container {
-    width: 80%;
-    max-width: 1400px;
+    width: 92%;
+    max-width: var(--layout-max-width);
     margin: 0 auto;
-    padding: 24px 0;
+    padding: 0 var(--layout-padding) 24px;
+    box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
     .page-container {
         width: 100%;
-        padding: 16px 24px;
+        padding: 0 16px 16px;
         box-sizing: border-box;
     }
 }

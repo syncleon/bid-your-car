@@ -81,13 +81,14 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
         color: "#fff",
         fontWeight: 700,
         fontVariantNumeric: "tabular-nums",
-        fontSize: "12px",
-        padding: "4px 8px",
+        fontSize: "13px",
+        padding: "6px 10px",
         display: "flex",
         alignItems: "center",
-        gap: "4px",
-        borderRadius: "12px",
+        gap: "6px",
+        borderRadius: "14px",
         border: isUrgent ? "1px solid rgba(255,255,255,0.3)" : "none",
+        whiteSpace: "nowrap",
     };
 
     const soldBadgeStyle: React.CSSProperties = {
@@ -164,7 +165,11 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                 </div>
 
                 <div className="auction-card-location-text">
-                    {item.location}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.location}</span>
                 </div>
             </div>
         </BaseCard>
@@ -173,7 +178,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
 
 
 const ClockIcon = () => (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
     </svg>

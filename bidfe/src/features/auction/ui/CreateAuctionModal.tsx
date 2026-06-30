@@ -59,7 +59,7 @@ export const CreateAuctionModal = ({
                                    }: Props) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [startPrice, setStartPrice] = useState("");
-    const [bidIncrement, setBidIncrement] = useState<number>(50);
+
     const [durationMinutes, setDurationMinutes] = useState<number>(10080);
     const [selectedImgIdx, setSelectedImgIdx] = useState(0);
 
@@ -77,7 +77,7 @@ export const CreateAuctionModal = ({
         setSelectedImgIdx(0);
 
         setStartPrice("");
-        setBidIncrement(50);
+
         setDurationMinutes(10080);
         setStartMode("ASAP_AFTER_APPROVAL");
         const resetStart = new Date(Date.now() + 60 * 60 * 1000);
@@ -143,12 +143,11 @@ export const CreateAuctionModal = ({
 
     const startPriceNum = Number(startPrice);
     const isStartPriceValid = Number.isFinite(startPriceNum) && startPriceNum > 0;
-    const isBidIncrementValid = Number.isFinite(bidIncrement) && bidIncrement > 0;
+
 
     const isStep1Valid = true;
     const isStep2Valid =
         isStartPriceValid &&
-        isBidIncrementValid &&
         durationMinutes > 0 &&
         isScheduledStartValid;
 
@@ -185,7 +184,6 @@ export const CreateAuctionModal = ({
             startTime: start.toISOString(),
             endTime: end.toISOString(),
             startPrice: startPriceNum,
-            minBidIncrement: bidIncrement,
         };
 
         await onSubmit(payload);
@@ -204,10 +202,7 @@ export const CreateAuctionModal = ({
                 })
                 : "Invalid date/time";
 
-    const handleBidIncrementChange = (raw: string) => {
-        const parsed = Number(raw);
-        setBidIncrement(Number.isFinite(parsed) ? parsed : 0);
-    };
+
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="List Vehicle for Auction">
@@ -300,22 +295,7 @@ export const CreateAuctionModal = ({
                                 </p>
                             </div>
 
-                            <div style={{ ...styles.inputGroup, marginTop: 20 }}>
-                                <label style={styles.label}>Minimum Bid Increment</label>
-                                <div style={styles.moneyInputWrapper}>
-                                    <span style={styles.currency}>$</span>
-                                    <input
-                                        type="number"
-                                        value={Number.isFinite(bidIncrement) ? bidIncrement : ""}
-                                        onChange={(e) => handleBidIncrementChange(e.target.value)}
-                                        style={styles.moneyInput}
-                                        min={1}
-                                    />
-                                </div>
-                                <p style={styles.subtext}>
-                                    How much each subsequent bid must increase by.
-                                </p>
-                            </div>
+
 
                             <div style={{ ...styles.inputGroup, marginTop: 20 }}>
                                 <label style={styles.label}>Auction Start Time</label>
@@ -419,7 +399,7 @@ export const CreateAuctionModal = ({
 
                                 <div style={styles.divider} />
                                 <SummaryRow label="Starting Bid" value={`$${startPriceNum.toLocaleString()}`} />
-                                <SummaryRow label="Bid Increment" value={`$${bidIncrement.toLocaleString()}`} />
+
                                 <SummaryRow label="Start Time" value={startTimeSummary} />
                                 <SummaryRow label="Duration" value={durationLabel} />
                             </div>

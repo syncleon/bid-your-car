@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../shared/hooks/useStore.ts";
-import { DetailPageLayout, ImageGallery, VehicleInfo, ResponsiveGrid, SidebarCard, DetailSkeleton } from "../shared/ui/details";
+import { DetailPageLayout, ImageGallery, VehicleInfo, DetailSkeleton, VehicleHeader } from "../shared/ui/details";
 import { CreateAuctionModal } from "../features/auction/ui/CreateAuctionModal.tsx";
 import { EditItemModal } from "../features/item/ui/EditItemModal.tsx";
 import type { CreateAuctionDto } from "../features/auction/types.ts";
@@ -180,82 +180,90 @@ export const ItemDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            <ResponsiveGrid>
-                <div>
+            <div className="compact-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {itemStore.error && <div style={pageStyles.errorBox}>{itemStore.error}</div>}
+
+                    <div style={pageStyles.statusBox}>
+                        {isSold ? (
+                            <div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-danger-text)' }}>Vehicle Sold</div>
+                                {soldPrice !== undefined && (
+                                    <div style={{ fontSize: '15px', marginTop: '4px', fontWeight: 600 }}>
+                                        ${soldPrice.toLocaleString()}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            getStatusText()
+                        )}
+                    </div>
+                </div>
+
+                <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
+                    <VehicleHeader item={item} />
+                </div>
+
+                <div className="gallery-wrapper">
                     <ImageGallery item={item} statusLabel={statusBadge} onImageClick={(index) => setLightboxIndex(index)} />
-                    <VehicleInfo item={item} />
                 </div>
 
-                <div>
-                    <SidebarCard title="Inventory Status">
-                        {itemStore.error && <div style={pageStyles.errorBox}>{itemStore.error}</div>}
-
-                        <div style={pageStyles.statusBox}>
-                            {isSold ? (
-                                <div>
-                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-danger-text)' }}>Vehicle Sold</div>
-                                    {soldPrice !== undefined && (
-                                        <div style={{ fontSize: '15px', marginTop: '4px', fontWeight: 600 }}>
-                                            ${soldPrice.toLocaleString()}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                getStatusText()
-                            )}
+                <div style={pageStyles.pricingBox}>
+                    <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
+                    {item.isNoReserve ? (
+                        <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
+                    ) : (
+                        <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                            Reserve: {item.reservePrice ? `$${item.reservePrice.toLocaleString()}` : "Not set"}
                         </div>
-                       <div style={pageStyles.pricingBox}>
-                            <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
-                            {item.isNoReserve ? (
-                                <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
-                            ) : (
-                                <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                                    Reserve: {item.reservePrice ? `$${item.reservePrice.toLocaleString()}` : "Not set"}
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={{ marginTop: 24 }}>
-                            {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
-                                <button
-                                    onClick={() => {
-                                        const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
-                                        if (targetAuctionId) {
-                                            navigate(`/auctions/${targetAuctionId}`);
-                                        } else {
-                                            console.error("Auction ID is missing on the item:", item);
-                                        }
-                                    }}
-                                    style={{ ...pageStyles.btnPrimary, marginBottom: '12px' }}
-                                >
-                                    {isPending ? "View Submitted Auction" : "View Live Auction"}
-                                </button>
-                            )}
-                            {isOwner && canList && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                    <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>
-                                        List for Auction
-                                    </button>
-                                    <button onClick={() => setIsEditModalOpen(true)} style={pageStyles.btnSecondary}>
-                                        Edit Details & Specs
-                                    </button>
-                                    <button
-                                        onClick={handleDeleteItem}
-                                        disabled={isDeleting}
-                                        style={{
-                                            ...pageStyles.btnTextDestructive,
-                                            opacity: isDeleting ? 0.5 : 1,
-                                            cursor: isDeleting ? 'not-allowed' : 'pointer'
-                                        }}
-                                    >
-                                        {isDeleting ? "Deleting..." : "Delete Listing"}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </SidebarCard>
+                    )}
                 </div>
-            </ResponsiveGrid>
+
+                <div style={{ marginTop: 12 }}>
+                    {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
+                        <button
+                            onClick={() => {
+                                const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
+                                if (targetAuctionId) {
+                                    navigate(`/auctions/${targetAuctionId}`);
+                                } else {
+                                    console.error("Auction ID is missing on the item:", item);
+                                }
+                            }}
+                            style={{ ...pageStyles.btnPrimary, marginBottom: '12px' }}
+                        >
+                            {isPending ? "View Submitted Auction" : "View Live Auction"}
+                        </button>
+                    )}
+                    {isOwner && canList && (
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>
+                                List for Auction
+                            </button>
+                            <button onClick={() => setIsEditModalOpen(true)} style={pageStyles.btnSecondary}>
+                                Edit Details & Specs
+                            </button>
+                            <button
+                                onClick={handleDeleteItem}
+                                disabled={isDeleting}
+                                style={{
+                                    ...pageStyles.btnSecondary,
+                                    border: '1px solid var(--color-danger-border)',
+                                    color: 'var(--color-danger-text)',
+                                    background: 'transparent',
+                                    opacity: isDeleting ? 0.5 : 1,
+                                    cursor: isDeleting ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {isDeleting ? "Deleting..." : "Delete Listing"}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <VehicleInfo item={item} hideHeader={true} />
+            </div>
 
             <CreateAuctionModal
                 key={isListModalOpen ? "open" : "closed"}

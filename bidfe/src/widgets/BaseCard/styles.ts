@@ -4,13 +4,9 @@ const styles = {
 
     link: { textDecoration: "none", color: "inherit", display: "block" } as CSSProperties,
     container: {
-        background: "var(--bg-card)",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+        background: "transparent",
+        boxShadow: "none",
         border: "none",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderRadius: "4px",
-        overflow: "hidden",
         cursor: "pointer",
         transition: "transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease",
         height: "100%",
@@ -27,6 +23,7 @@ const styles = {
         background: "var(--bg-input)",
         position: "relative",
         overflow: "hidden",
+        borderRadius: "0",
         transition: "background-color 0.3s ease",
     } as CSSProperties,
     image: {
@@ -47,7 +44,7 @@ const styles = {
         transition: "color 0.3s ease",
     } as CSSProperties,
 
-    content: { padding: "12px", flexGrow: 1, display: "flex", flexDirection: "column" } as CSSProperties,
+    content: { padding: "16px 0 0 0", flexGrow: 1, display: "flex", flexDirection: "column" } as CSSProperties,
     title: {
         margin: "0 0 4px 0",
         fontSize: "18px",

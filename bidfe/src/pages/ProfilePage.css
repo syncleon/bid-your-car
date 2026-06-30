@@ -1,7 +1,9 @@
 .profile-container {
-    width: 80%;
+    width: 92%;
+    max-width: var(--layout-max-width, 1400px);
     margin: 0 auto;
-    padding: 40px 0;
+    padding: 40px var(--layout-padding, 32px);
+    box-sizing: border-box;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text-primary);
 }

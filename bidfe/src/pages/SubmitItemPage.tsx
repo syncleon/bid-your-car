@@ -21,7 +21,7 @@ export const SubmitItemPage = observer(() => {
 
     return (
         <div style={styles.pageWrapper}>
-            <div style={styles.container}>
+            <div className="page-container">
                 <div style={styles.header}>
                     <h1 style={styles.title}>Sell Your Car</h1>
                     <p style={styles.subtitle}>Tell us about your vehicle to get started.</p>
@@ -56,8 +56,7 @@ export const SubmitItemPage = observer(() => {
 });
 
 const styles = {
-    pageWrapper: { minHeight: "100vh", background: "var(--bg-base)", padding: "40px 20px", transition: "background-color 0.3s ease" },
-    container: { width: "100%", maxWidth: "1200px", margin: "0 auto" },
+    pageWrapper: { minHeight: "100vh", background: "var(--bg-base)", transition: "background-color 0.3s ease" },
     header: { textAlign: "center" as const, marginBottom: "32px" },
     title: { fontSize: "32px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px", transition: "color 0.3s ease" },
     subtitle: { fontSize: "16px", color: "var(--text-secondary)", transition: "color 0.3s ease" },

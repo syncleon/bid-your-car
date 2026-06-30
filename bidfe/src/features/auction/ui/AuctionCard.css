@@ -25,6 +25,9 @@
     color: var(--text-secondary);
     font-weight: 500;
     margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .badge-no-reserve {
