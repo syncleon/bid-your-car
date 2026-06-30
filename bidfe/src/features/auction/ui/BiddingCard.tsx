@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { format } from "date-fns";
 import { observer } from "mobx-react-lite";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useStore } from "../../../shared/hooks/useStore";
@@ -12,7 +11,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const [bidAmount, setBidAmount] = useState<string>("");
     const [timeLeft, setTimeLeft] = useState("");
     const [isEndingSoon, setIsEndingSoon] = useState(false);
-    const [progress, setProgress] = useState(0);
     const [localError, setLocalError] = useState<string | null>(null);
     const displayError = localError || auctionStore.error;
     const [cooldown, setCooldown] = useState(0);
@@ -46,15 +44,11 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
             const diff = end - now;
             if (diff <= 0) {
                 setIsEndingSoon(false);
-                setProgress(0);
                 return setTimeLeft("Ended");
             }
 
             const underAnHour = diff < 3600000;
             setIsEndingSoon(underAnHour);
-            if (underAnHour) {
-                setProgress((diff / 3600000) * 100);
-            }
 
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

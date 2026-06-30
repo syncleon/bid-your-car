@@ -42,7 +42,7 @@ class DataSeederTest {
                 item = item,
                 startPrice = startPrice,
                 currentPrice = startPrice,
-                minBidIncrement = BigDecimal("100.00"),
+                isNoReserve = item.isNoReserve,
                 reservePrice = null,
                 startTime = now.minus(1, ChronoUnit.DAYS),
                 endTime = now.plus(4, ChronoUnit.DAYS),

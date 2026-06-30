@@ -72,7 +72,7 @@ class AuctionSeederService(
             item = item,
             startPrice = startPrice,
             currentPrice = startPrice,
-            minBidIncrement = BigDecimal("100.00"),
+            isNoReserve = item.isNoReserve,
             reservePrice = reservePrice,
             startTime = startTime,
             endTime = endTime,

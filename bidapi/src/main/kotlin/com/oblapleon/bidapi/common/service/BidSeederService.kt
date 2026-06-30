@@ -65,7 +65,7 @@ class BidSeederService(
                             }
                             val currentAuction = auctionRepository.findById(targetAuction.id!!).orElse(null) ?: break
 
-                            val increment = currentAuction.minBidIncrement.multiply(
+                            val increment = com.oblapleon.bidapi.feature.auction.util.BidIncrementUtil.getDynamicBidIncrement(currentAuction.currentPrice).multiply(
                                 BigDecimal.valueOf(faker.number().randomDouble(1, 1, 2))
                             )
                             val bidAmount = currentAuction.currentPrice.add(increment)

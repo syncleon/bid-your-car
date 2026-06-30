@@ -10,9 +10,9 @@ import java.time.Duration
 class RateLimitingService(
     private val proxyManager: ProxyManager<ByteArray>
 ) {
-    // Pre-built once and reused for all users: 3 tokens capacity, refills 1 token/second
+    // Pre-built once and reused for all users: 20 tokens capacity, refills 2 tokens/second
     private val bucketConfiguration: BucketConfiguration = BucketConfiguration.builder()
-        .addLimit(Bandwidth.builder().capacity(3).refillGreedy(1, Duration.ofSeconds(1)).build())
+        .addLimit(Bandwidth.builder().capacity(20).refillGreedy(2, Duration.ofSeconds(1)).build())
         .build()
 
     fun resolveBucket(userId: Long): io.github.bucket4j.Bucket {

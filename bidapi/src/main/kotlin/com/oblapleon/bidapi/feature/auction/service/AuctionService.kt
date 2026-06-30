@@ -7,6 +7,7 @@ import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.event.BidPlacedEvent
 import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
+import com.oblapleon.bidapi.feature.auction.util.BidIncrementUtil
 import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
@@ -105,7 +106,6 @@ class AuctionService(
             currentPrice = request.startPrice,
             reservePrice = item.reservePrice,
             isNoReserve = item.isNoReserve,
-            minBidIncrement = request.minBidIncrement,
             startTime = request.startTime,
             endTime = request.endTime,
             status = AuctionStatus.PENDING_APPROVAL
@@ -213,7 +213,7 @@ class AuctionService(
         if (now.isBefore(auction.startTime)) throw BadRequestException("Auction has not started yet.")
         if (auction.item.seller.id == bidderId) throw ForbiddenException("You cannot bid on your own item.")
 
-        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(auction.minBidIncrement)
+        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(auction.currentPrice))
 
         val currentWinnerId = auction.winningBid?.bidder?.id
         val currentMax = auction.winningBid?.maxAmount ?: BigDecimal.ZERO
@@ -241,14 +241,14 @@ class AuctionService(
         if (maxAmount <= currentMax) {
             // New bidder is immediately outbid by current winner
             recordBid(auction, bidder, maxAmount, maxAmount, now)
-            val nextIncrement = maxAmount.add(auction.minBidIncrement)
+            val nextIncrement = maxAmount.add(BidIncrementUtil.getDynamicBidIncrement(maxAmount))
             val newPriceForA = if (currentMax >= nextIncrement) nextIncrement else currentMax
             return recordBid(auction, auction.winningBid!!.bidder, newPriceForA, currentMax, now.plusMillis(1))
         } else {
             // New bidder outbids current winner
             val prevWinner = auction.winningBid!!.bidder
             recordBid(auction, prevWinner, currentMax, currentMax, now)
-            val nextIncrement = currentMax.add(auction.minBidIncrement)
+            val nextIncrement = currentMax.add(BidIncrementUtil.getDynamicBidIncrement(currentMax))
             val newPriceForB = if (maxAmount >= nextIncrement) nextIncrement else maxAmount
             return recordBid(auction, bidder, newPriceForB, maxAmount, now.plusMillis(1))
         }
@@ -261,10 +261,14 @@ class AuctionService(
         val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
             .orElseThrow { NotFoundException("Auction not found.") }
 
+        if (auction.winningBid?.bidder?.id == currentUser.id) {
+            throw BadRequestException("You already hold the highest bid.")
+        }
+
         val exactAmountToBid = if (auction.bidCount == 0) {
             auction.startPrice
         } else {
-            auction.currentPrice.add(auction.minBidIncrement)
+            auction.currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(auction.currentPrice))
         }
 
         // Delegate to the main proxy bidding function

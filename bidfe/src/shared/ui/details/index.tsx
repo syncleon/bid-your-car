@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { format } from "date-fns";
 import type { ItemDto } from "../../../features/item/types";
-import { useStore } from "../../hooks/useStore";
 
 export const DetailPageLayout = ({ children }: { children: React.ReactNode }) => (
     <div className="page-container" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" }}>{children}</div>

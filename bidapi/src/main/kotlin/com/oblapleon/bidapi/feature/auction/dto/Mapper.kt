@@ -12,7 +12,7 @@ fun Auction.toDto(): AuctionDto {
         endTime = this.endTime,
         startPrice = this.startPrice,
         currentPrice = this.currentPrice,
-        minBidIncrement = this.minBidIncrement,
+        minBidIncrement = com.oblapleon.bidapi.feature.auction.util.BidIncrementUtil.getDynamicBidIncrement(this.currentPrice),
         isNoReserve = this.isNoReserve,
         isReserveMet = this.isReserveMet,
         bidCount = this.bidCount,
