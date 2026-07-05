@@ -23,5 +23,5 @@ jobs:
       - name: Deploy to Firebase Hosting Preview
         run: |
           npm install -g firebase-tools
-          firebase hosting:channel:deploy pr-${{ github.event.number }} --project bidyourcarapp
+          firebase hosting:channel:deploy pr-${{ github.event.number }} --project bidyourcarapp --non-interactive --debug
         working-directory: bidfe
