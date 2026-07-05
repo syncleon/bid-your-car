@@ -17,6 +17,7 @@ import com.oblapleon.bidapi.feature.user.repository.VerificationTokenRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.beans.factory.annotation.Value
 
 @Service
 class AuthService(
@@ -26,7 +27,9 @@ class AuthService(
     private val emailService: EmailService,
     private val passwordEncoder: PasswordEncoder,
     private val jwtTokenProvider: JwtTokenProvider,
-    private val userService: UserService // Injected to delegate restore logic
+    private val userService: UserService, // Injected to delegate restore logic
+    @Value("\${app.features.email-verification.enabled:true}")
+    private val isEmailVerificationEnabled: Boolean
 ) {
     companion object {
         private const val DUMMY_BCRYPT_HASH = "\$2a\$10\$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HCGFGL91Q1PdTzRjXWfJW"
@@ -53,16 +56,19 @@ class AuthService(
             password = passwordEncoder.encode(safePassword), // Now guaranteed non-null
             email = safeEmail,
             roles = mutableSetOf(userRole),
-            enabled = false
+            enabled = !isEmailVerificationEnabled
         )
 
         val savedUser = userRepository.save(user)
 
-        val token = VerificationToken(user = savedUser)
-        verificationTokenRepository.save(token)
-        emailService.sendVerificationEmail(savedUser.email, token.token)
-
-        return "Registration successful. Please check your email to verify your account."
+        if (isEmailVerificationEnabled) {
+            val token = VerificationToken(user = savedUser)
+            verificationTokenRepository.save(token)
+            emailService.sendVerificationEmail(savedUser.email, token.token)
+            return "Registration successful. Please check your email to verify your account."
+        } else {
+            return "Registration successful. You can now log in."
+        }
     }
 
     fun login(payload: LoginReqDto): AuthRespDto {

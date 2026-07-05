@@ -23,5 +23,6 @@ jobs:
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ steps.auth.outputs.credentials_file_path }}'
           projectId: bidyourcarapp
           entryPoint: bidfe

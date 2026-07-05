@@ -6,9 +6,13 @@ import com.oblapleon.bidapi.feature.item.dto.VinDecodeResult
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForObject
+import org.springframework.beans.factory.annotation.Value
 
 @Service
 class VinDecoderService {
+
+    @Value("\${app.nhtsa.api-url:https://vpic.nhtsa.dot.gov/api/vehicles/decodevin}")
+    private lateinit var nhtsaApiUrl: String
 
     private val restTemplate = RestTemplate()
 
@@ -17,7 +21,7 @@ class VinDecoderService {
             throw BadRequestException("VIN must be exactly 17 characters.")
         }
 
-        val url = "https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/$vin?format=json"
+        val url = "$nhtsaApiUrl/$vin?format=json"
 
         try {
             val response = restTemplate.getForObject<NhtsaResponse>(url)
