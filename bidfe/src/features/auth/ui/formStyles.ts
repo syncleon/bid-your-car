@@ -67,6 +67,47 @@ export const formStyles = {
         textAlign: "center"
     } as React.CSSProperties,
 
+    googleBtn: {
+        width: "100%",
+        padding: "12px",
+        fontSize: "14px",
+        fontWeight: "600",
+        color: "var(--text-primary)",
+        backgroundColor: "var(--bg-input)",
+        border: "1px solid var(--border-color)",
+        borderRadius: "8px",
+        cursor: "pointer",
+        marginTop: "16px",
+        transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+        boxSizing: "border-box"
+    } as React.CSSProperties,
+
+    divider: {
+        display: "flex",
+        alignItems: "center",
+        textAlign: "center",
+        margin: "24px 0",
+        color: "var(--text-secondary)",
+        fontSize: "12px",
+        fontWeight: "500",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px"
+    } as React.CSSProperties,
+
+    dividerLine: {
+        flex: 1,
+        borderBottom: "1px solid var(--border-color)",
+        transition: "border-color 0.3s ease"
+    } as React.CSSProperties,
+
+    dividerText: {
+        padding: "0 10px"
+    } as React.CSSProperties,
+
     restoreBtn: {
         width: "100%",
         padding: "10px",

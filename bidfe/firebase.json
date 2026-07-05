@@ -15,6 +15,20 @@
         }
       },
       {
+        "source": "/oauth2/**",
+        "run": {
+          "serviceId": "bidapi",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/login/oauth2/**",
+        "run": {
+          "serviceId": "bidapi",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
