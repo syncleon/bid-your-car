@@ -12,7 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci && npm run build
+      - name: Build
+        env:
+          VITE_API_URL: https://bidapi-7r2al76fma-uc.a.run.app/api/v1
+          VITE_WS_URL: wss://bidapi-7r2al76fma-uc.a.run.app/ws
+        run: npm ci && npm run build
         working-directory: bidfe
         
       - id: 'auth'
