@@ -3,6 +3,7 @@ package com.oblapleon.bidapi.common.config
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
 import com.oblapleon.bidapi.common.security.JwtTokenProvider
+import com.oblapleon.bidapi.feature.user.security.HttpCookieOAuth2AuthorizationRequestRepository
 import com.oblapleon.bidapi.feature.user.security.OAuth2LoginSuccessHandler
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -49,6 +50,7 @@ class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val jwtDecoder: JwtDecoder,
     private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler,
+    private val httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository,
     @Value("\${cors.allowed-origins:http://localhost:5174}") private val allowedOrigins: List<String>
 ) {
 
@@ -79,6 +81,9 @@ class SecurityConfig(
                     .anyRequest().authenticated()
             }
             .oauth2Login { oauth2 ->
+                oauth2.authorizationEndpoint {
+                    it.authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
+                }
                 oauth2.successHandler(oAuth2LoginSuccessHandler)
             }
             .oauth2ResourceServer { oauth2 ->
