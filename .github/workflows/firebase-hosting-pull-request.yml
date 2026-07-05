@@ -1,0 +1,27 @@
+name: Deploy to Firebase Hosting on PR
+'on': pull_request
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+jobs:
+  build_and_preview:
+    if: '${{ github.event.pull_request.head.repo.full_name == github.repository }}'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build
+        working-directory: bidfe
+        
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/521398647129/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'github-actions-firebase@bidyourcarapp.iam.gserviceaccount.com'
+          
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          projectId: bidyourcarapp
+          entryPoint: bidfe
