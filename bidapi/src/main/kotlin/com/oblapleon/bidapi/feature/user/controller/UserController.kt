@@ -33,9 +33,13 @@ class UserController(
 
     @Operation(summary = "Get My Profile", description = "Returns the profile of the currently logged-in user.")
     @GetMapping("/me")
-    fun getCurrentUser(): ResponseEntity<UserDto> {
-        val user = authorizationHelper.getCurrentUser()
-        return ResponseEntity.ok(user.toDto())
+    fun getCurrentUser(): ResponseEntity<UserDto?> {
+        return try {
+            val user = authorizationHelper.getCurrentUser()
+            ResponseEntity.ok(user.toDto())
+        } catch (e: Exception) {
+            ResponseEntity.ok().build()
+        }
     }
 
     @Operation(summary = "Update My Profile", description = "Update email or username.")

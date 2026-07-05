@@ -74,6 +74,7 @@ class SecurityConfig(
                     .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/auctions/**")).permitAll()
                     .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/bids/auction/**")).permitAll()
                     .requestMatchers(antMatcher("/favicon.ico")).permitAll()
+                    .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/users/me")).permitAll()
 
                     .anyRequest().authenticated()
             }
