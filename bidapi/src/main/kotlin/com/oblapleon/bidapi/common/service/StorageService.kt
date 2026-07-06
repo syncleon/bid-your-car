@@ -41,6 +41,14 @@ class StorageService(
         return constructImageKitUrl(fileName)
     }
 
+    fun getFileStream(fileName: String): software.amazon.awssdk.core.ResponseInputStream<software.amazon.awssdk.services.s3.model.GetObjectResponse> {
+        val request = software.amazon.awssdk.services.s3.model.GetObjectRequest.builder()
+            .bucket(bucketName)
+            .key(fileName)
+            .build()
+        return s3Client.getObject(request)
+    }
+
     fun deleteFile(fileUrl: String) {
         val key = extractKeyFromUrl(fileUrl)
         val deleteRequest = DeleteObjectRequest.builder()
