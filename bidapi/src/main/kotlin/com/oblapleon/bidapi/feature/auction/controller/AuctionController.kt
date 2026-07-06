@@ -21,6 +21,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.CacheEvict
 import java.util.UUID
 
 @RestController
@@ -54,6 +56,7 @@ class AuctionController(
     }
 
     @Operation(summary = "Get Auction Details")
+    @Cacheable(value = ["auctions"], key = "#id")
     @GetMapping("/{id}")
     fun getAuctionById(@PathVariable id: UUID): ResponseEntity<AuctionDto> {
         val auction = auctionService.findById(id)
@@ -70,6 +73,7 @@ class AuctionController(
     }
 
     @Operation(summary = "Place Custom Bid", description = "Submit a specific bid amount on an active auction.")
+    @CacheEvict(value = ["auctions"], key = "#id")
     @PostMapping("/{id}/bids")
     fun placeBid(
         @PathVariable id: UUID,
@@ -92,6 +96,7 @@ class AuctionController(
     }
 
     @Operation(summary = "Quick Bid", description = "Automatically places the next minimum required bid.")
+    @CacheEvict(value = ["auctions"], key = "#id")
     @PostMapping("/{id}/bids/quick")
     fun placeQuickBid(
         @PathVariable id: UUID
@@ -113,6 +118,7 @@ class AuctionController(
     }
 
     @Operation(summary = "Cancel Auction", description = "Cancel a listing. Restricted if bids exist.")
+    @CacheEvict(value = ["auctions"], key = "#id")
     @DeleteMapping("/{id}")
     fun cancelAuction(
         @PathVariable id: UUID
@@ -144,6 +150,7 @@ class AuctionController(
 
     @Operation(summary = "Approve Auction", description = "Admin: Activate a pending auction.")
     @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = ["auctions"], key = "#id")
     @PatchMapping("/{id}/approve")
     fun approveAuction(@PathVariable id: UUID): ResponseEntity<Map<String, String>> {
         auctionService.approveAuction(id)
@@ -152,6 +159,7 @@ class AuctionController(
 
     @Operation(summary = "Force Cancel", description = "Admin: Cancel an auction even if active or if bids exist.")
     @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = ["auctions"], key = "#id")
     @DeleteMapping("/admin/{id}/cancel")
     fun adminCancelAuction(
         @PathVariable id: UUID

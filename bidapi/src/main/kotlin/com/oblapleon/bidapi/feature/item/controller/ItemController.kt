@@ -17,6 +17,8 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.CacheEvict
 import java.util.UUID
 
 @RestController
@@ -38,6 +40,7 @@ class ItemController(
     }
 
     @Operation(summary = "Get Item Details", description = "Get details of a specific item. You must be the owner or an Admin.")
+    @Cacheable(value = ["items"], key = "#id")
     @GetMapping("/{id}")
     fun getItemById(@PathVariable id: UUID): ResponseEntity<ItemDto> {
         val item = itemService.findById(id)
@@ -54,6 +57,7 @@ class ItemController(
     }
 
     @Operation(summary = "Update Inventory Item", description = "Update details of an existing listing.")
+    @CacheEvict(value = ["items"], key = "#id")
     @PutMapping("/{id}")
     fun updateItem(
         @PathVariable id: UUID,
@@ -64,6 +68,7 @@ class ItemController(
     }
 
     @Operation(summary = "Delete Item", description = "Permanently remove an item and its images from inventory.")
+    @CacheEvict(value = ["items"], key = "#id")
     @DeleteMapping("/{id}")
     fun deleteItem(
         @PathVariable id: UUID
@@ -73,6 +78,7 @@ class ItemController(
     }
 
     @Operation(summary = "Upload Image", description = "Upload a categorized photo for a vehicle.")
+    @CacheEvict(value = ["items"], key = "#id")
     @PostMapping(
         value = ["/{id}/images"],
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE]
