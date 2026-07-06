@@ -22,19 +22,28 @@ class ImageController(
     @Operation(summary = "Get image proxy stream", description = "Proxies the image from R2 bucket")
     @GetMapping("/{fileName}")
     fun getImage(@PathVariable fileName: String): ResponseEntity<InputStreamResource> {
-        val s3ObjectStream = storageService.getFileStream(fileName)
-        val response = s3ObjectStream.response()
-        val resource = InputStreamResource(s3ObjectStream)
+        try {
+            val s3ObjectStream = storageService.getFileStream(fileName)
+            val response = s3ObjectStream.response()
+            val resource = InputStreamResource(s3ObjectStream)
 
-        val headers = HttpHeaders()
-        response.contentType()?.let { headers.contentType = MediaType.parseMediaType(it) }
-        response.contentLength()?.let { headers.contentLength = it }
-        
-        // Let it be cached by CDNs for 30 days
-        headers.setCacheControl("public, max-age=2592000, immutable")
+            val headers = HttpHeaders()
+            response.contentType()?.let { headers.contentType = MediaType.parseMediaType(it) }
+            response.contentLength()?.let { headers.contentLength = it }
+            
+            // Let it be cached by CDNs for 30 days
+            headers.setCacheControl("public, max-age=2592000, immutable")
 
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(resource)
+            return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource)
+        } catch (e: software.amazon.awssdk.services.s3.model.NoSuchKeyException) {
+            return ResponseEntity.notFound().build()
+        } catch (e: NullPointerException) {
+            // AWS SDK v2 throws NPE when reading the error stream of a 404 from R2 due to missing content length.
+            return ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            return ResponseEntity.internalServerError().build()
+        }
     }
 }
