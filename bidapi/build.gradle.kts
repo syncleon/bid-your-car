@@ -35,7 +35,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-cache")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
@@ -80,7 +79,6 @@ dependencies {
 
     // Bucket4j for Rate Limiting
     implementation("com.bucket4j:bucket4j-core:8.10.1")
-    implementation("com.bucket4j:bucket4j-redis:8.10.1")
 }
 
 kotlin {
