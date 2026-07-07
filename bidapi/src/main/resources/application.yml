@@ -51,6 +51,10 @@ server:
   address: 0.0.0.0
   port: 8080
   forward-headers-strategy: framework
+  tomcat:
+    remote-ip-header: x-forwarded-for
+    protocol-header: x-forwarded-proto
+    internal-proxies: .*
 
 jwt:
   secret:
