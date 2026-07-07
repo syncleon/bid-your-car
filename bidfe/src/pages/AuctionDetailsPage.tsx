@@ -13,7 +13,10 @@ import SockJS from "sockjs-client";
 import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
 
 const getWebSocketUrl = () => {
-    return import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
+    let url = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
+    if (url.startsWith('wss://')) url = url.replace('wss://', 'https://');
+    if (url.startsWith('ws://')) url = url.replace('ws://', 'http://');
+    return url;
 };
 
 const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {

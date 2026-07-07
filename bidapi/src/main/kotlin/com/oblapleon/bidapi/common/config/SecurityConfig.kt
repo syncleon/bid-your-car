@@ -73,6 +73,7 @@ class SecurityConfig(
                     .requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
                     .requestMatchers(antMatcher("/swagger-ui.html")).permitAll()
                     .requestMatchers(antMatcher("/error")).permitAll()
+                    .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/auctions")).permitAll()
                     .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/auctions/**")).permitAll()
                     .requestMatchers(antMatcher(HttpMethod.GET, "/api/v1/bids/auction/**")).permitAll()
                     .requestMatchers(antMatcher("/favicon.ico")).permitAll()
