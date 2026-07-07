@@ -99,9 +99,11 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                 </div>
 
                 <div className="navbar__right desktop-only">
-                    <Link to="#" className="navbar__link navbar__link--orange">
-                        Try Premium
-                    </Link>
+                    {isAuthenticated && (
+                        <Link to="#" className="navbar__link navbar__link--orange">
+                            Try Premium
+                        </Link>
+                    )}
 
                     <Link to="/sell-car" className="navbar__link">
                         Upload
