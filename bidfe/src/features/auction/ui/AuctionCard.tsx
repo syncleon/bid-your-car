@@ -106,6 +106,11 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
             overlays={{
                 topLeft: (
                     <>
+                        {isActive && !isEnded && (
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--color-danger-text)", display: "block", transition: "background-color 0.3s" }}></span> LIVE AUCTION
+                            </div>
+                        )}
                         {isPending && (
                             <div style={{ ...styles.badge, background: "#f59e0b", color: "#fff" }}>
                                 PENDING
