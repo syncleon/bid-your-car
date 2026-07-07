@@ -15,9 +15,11 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Component
+@Transactional
 class OAuth2LoginSuccessHandler(
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository,
