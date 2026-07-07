@@ -102,9 +102,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                     <Link to="#" className="navbar__link navbar__link--orange">
                         Try Premium
                     </Link>
-                    <Link to="#" className="navbar__link">
-                        Dashboard
-                    </Link>
+
                     <Link to="/sell-car" className="navbar__link">
                         Upload
                     </Link>
