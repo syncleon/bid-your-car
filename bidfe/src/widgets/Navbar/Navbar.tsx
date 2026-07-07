@@ -21,6 +21,7 @@ const SearchIcon = () => (
 
 export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Props) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const { authStore } = useStoreContext();
     const user = authStore.user;
 
@@ -73,12 +74,11 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         Home
                     </Link>
                     <Link to="/past-auctions" className={`navbar__link ${location.pathname === '/past-auctions' ? 'active' : ''}`}>
-                        Previous Auctions
+                        Past Auctions
                     </Link>
                     <Link to="/sell-car" className={`navbar__link ${location.pathname === '/sell-car' ? 'active' : ''}`}>
                         Add car
                     </Link>
-
                 </nav>
 
                 <div className="navbar__search desktop-only">
@@ -102,12 +102,6 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                 </div>
 
                 <div className="navbar__right desktop-only">
-                    {isAuthenticated && (
-                        <Link to="#" className="navbar__link navbar__link--orange">
-                            Try Premium
-                        </Link>
-                    )}
-
 
 
                     {isInitializing ? (
@@ -115,23 +109,53 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                             <div className="skeleton" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
                         </div>
                     ) : isAuthenticated ? (
-                        <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: '8px' }}>
-                            <Link to="/profile" className="user-menu__trigger" style={{ padding: 0, border: 'none', background: 'none' }}>
-                                <div className="user-avatar-placeholder" style={{ width: '28px', height: '28px' }}>
+                        <>
+                        <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px', position: 'relative' }}>
+                            <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="user-menu__trigger" style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div className="user-avatar-placeholder" style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>
                                     {user?.profilePhotoUrl ? (
-                                        <img src={user.profilePhotoUrl} alt="Avatar" className="user-avatar-image" />
+                                        <img src={user.profilePhotoUrl} alt="Avatar" className="user-avatar-image" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                     ) : user?.username ? (
                                         user.username.charAt(0).toUpperCase()
-                                    ) : (
-                                        <div style={{ width: '100%', height: '100%', background: '#ff7733', borderRadius: '50%' }}></div>
-                                    )}
+                                    ) : null}
                                 </div>
-                            </Link>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                            </button>
+                            
+                            {isProfileMenuOpen && (
+                                <>
+                                    <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setIsProfileMenuOpen(false)} />
+                                    <div className="profile-dropdown" style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        right: 0,
+                                        marginTop: '12px',
+                                        backgroundColor: 'var(--bg-card)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        padding: '8px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px',
+                                        minWidth: '160px',
+                                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                        zIndex: 100
+                                    }}>
+                                        <Link to="/profile" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '4px', display: 'block', fontSize: '14px', fontWeight: 600 }}>My Profile</Link>
+                                        {user?.role === 'ADMIN' && (
+                                            <Link to="/admin" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '4px', display: 'block', fontSize: '14px', fontWeight: 600 }}>Admin Dashboard</Link>
+                                        )}
+                                        <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
+                                        <button onClick={() => { setIsProfileMenuOpen(false); authStore.logout(); navigate('/'); }} style={{ padding: '8px 12px', color: 'var(--color-danger-text)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '4px', fontSize: '14px', fontWeight: 600, width: '100%' }}>Logout</button>
+                                    </div>
+                                </>
+                            )}
                         </div>
+                        {isAuthenticated && (
+                            <Link to="#" className="navbar__link navbar__link--orange" style={{ marginLeft: '12px' }}>
+                                Try Premium
+                            </Link>
+                        )}
+                        </>
                     ) : (
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                             <Link

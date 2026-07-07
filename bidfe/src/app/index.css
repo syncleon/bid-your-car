@@ -7,10 +7,10 @@ html {
   scrollbar-gutter: stable;
 }
 
-    --bg-base: #111111;
-  --bg-card: #1a1a1a;
-  --bg-input: #333333;
-  --bg-hover: #52525b;
+    --bg-base: #262626;
+  --bg-card: #2f2f2f;
+  --bg-input: #3a3a3a;
+  --bg-hover: #4a4a4a;
   --bg-overlay: rgba(0, 0, 0, 0.85);
 
     --text-primary: #ffffff;
@@ -18,18 +18,23 @@ html {
   --text-muted: #999999;
 
     --border-color: #333333;
-  --border-light: #27272a;
+  --border-light: #444444;
 
-    --btn-primary-bg: #ff5500;
-  --btn-primary-text: #ffffff;
-  --btn-secondary-bg: #222222;
-  --btn-secondary-text: #cccccc;
-  --btn-border: #333333;
-  --btn-hover-border: #555555;
+  /* Primary Orange */
+  --color-primary: #f97316; 
+  --accent-color: #ea580c;
+  --accent-hover: #c2410c;
 
-  --accent-color: #ff5500;
-  --accent-hover: #ff7733;
-  --color-primary: #ff5500;
+  /* Secondary Accent */
+  --color-secondary: #f59e0b;
+
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-text: #000000;
+  
+  --btn-secondary-bg: var(--color-secondary);
+  --btn-secondary-text: #000000;
+  --btn-border: transparent;
+  --btn-hover-border: transparent;
 
     --color-success-bg: rgba(22, 101, 52, 0.25);
   --color-success-text: #4ade80;
@@ -66,9 +71,31 @@ input[type="text"], input[type="password"], input[type="email"], input[type="num
 
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
     background: #181818;
+}
+
+/* --- Global Interactive Elements --- */
+button, a.btn {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;
+}
+
+button:active:not(:disabled), a.btn:active {
+    transform: scale(0.96) !important;
+}
+
+button:hover:not(:disabled), a.btn:hover {
+    /* removed translateY to stop the jumping effect */
+}
+
+.hover-lift {
+    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+    /* removed translateY to stop the jumping effect */
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
 }
 
 input::placeholder, textarea::placeholder {
@@ -85,9 +112,7 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-button:not(:disabled):not(.profile-btn):hover,
-a:not(:disabled):not(.user-menu__trigger):hover,
-[role="button"]:not([aria-disabled="true"]):hover,
+a:not([class]):hover,
 .custom-select__option:not([aria-disabled="true"]):hover,
 .sort-tab:not(.active):hover {
     color: #ffffff !important;
@@ -124,4 +149,12 @@ a:not(:disabled):not(.user-menu__trigger):hover,
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+
+
+.btn-primary {
+}
+
+.btn-primary:hover {
 }

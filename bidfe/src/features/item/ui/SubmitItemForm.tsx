@@ -471,7 +471,7 @@ const styles = {
 
     footer: { display: "flex", justifyContent: "space-between", marginTop: "40px", paddingTop: "24px", borderTop: "1px solid var(--border-color)" },
     backBtn: { background: "none", border: "none", color: "var(--text-secondary)", fontWeight: 600, cursor: "pointer", fontSize: "14px", transition: "color 0.2s" },
-    primaryBtn: { background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px", transition: "background-color 0.2s" },
-    disabledBtn: { background: "var(--bg-input)", color: "var(--text-muted)", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "not-allowed", fontSize: "14px" },
-    submitBtn: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "14px", transition: "background-color 0.2s" }
+    primaryBtn: { background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", padding: "0 24px", height: "44px", borderRadius: "4px", fontWeight: 700, cursor: "pointer", fontSize: "14px", transition: "background-color 0.2s" },
+    disabledBtn: { background: "var(--bg-input)", color: "var(--text-muted)", border: "none", padding: "0 24px", height: "44px", borderRadius: "4px", fontWeight: 700, cursor: "not-allowed", fontSize: "14px" },
+    submitBtn: { background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", padding: "0 24px", height: "44px", borderRadius: "4px", fontWeight: 700, cursor: "pointer", fontSize: "14px", transition: "background-color 0.2s" }
 };

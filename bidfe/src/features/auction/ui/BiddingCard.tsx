@@ -146,7 +146,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                     overflow: hidden;
                 }
                 .ending-soon-text {
-                    color: #ef4444 !important;
+                    color: var(--btn-secondary-bg) !important;
                 }
                 .bid-bar {
                     display: flex;
@@ -199,44 +199,21 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                     flex-shrink: 0;
                 }
                 .place-bid-btn {
-                    background: #2563eb;
-                    color: #ffffff;
+                    background-color: var(--color-primary);
+                    color: var(--btn-primary-text);
                     padding: 0 24px;
                     height: 44px;
-                    border-radius: 8px;
+                    border-radius: 4px;
                     font-family: 'Inter', sans-serif;
-                    font-weight: 600;
-                    font-size: 15px;
+                    font-weight: 700;
+                    font-size: 14px;
                     border: none;
                     cursor: pointer;
-                    transition: background-color 0.2s;
+                    transition: opacity 0.2s ease;
                     white-space: nowrap;
                 }
                 .place-bid-btn:hover { 
-                    background-color: #2563eb;
-                }
-                .fast-bid-btn {
-                    background: transparent;
-                    color: #3b82f6;
-                    padding: 0 24px;
-                    height: 44px;
-                    border-radius: 8px;
-                    font-weight: 600;
-                    font-size: 14px;
-                    border: 1px solid #3b82f6;
-                    cursor: pointer;
-                    transition: background-color 0.2s;
-                    white-space: nowrap;
-                }
-                .fast-bid-btn:hover:not(:disabled) { 
-                    background: rgba(59, 130, 246, 0.1); 
-                }
-                .fast-bid-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                    background: transparent;
-                    border-color: var(--border-color);
-                    color: var(--text-muted);
+                    opacity: 0.9;
                 }
                 @media (max-width: 760px) {
                     .bid-bar { flex-direction: column; align-items: stretch; padding: 16px; }
@@ -283,21 +260,6 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                             </button>
                         ) : (
                             <>
-                                <button
-                                    type="button"
-                                    onClick={handleOneClickQuickBid}
-                                    disabled={isQuickBtnDisabled}
-                                    className="fast-bid-btn"
-                                >
-                                    {auctionStore.isBidding
-                                        ? "Wait..."
-                                        : isCoolingDown
-                                            ? `Wait ${cooldown}s`
-                                            : amIWinning
-                                                ? `Winning`
-                                                : `Fast Bid $${minBid.toLocaleString()}`
-                                    }
-                                </button>
                                 <button className="place-bid-btn" onClick={() => setShowBidForm(!showBidForm)}>
                                     {showBidForm ? "Close" : "Place Bid"}
                                 </button>
@@ -310,108 +272,153 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
             {displayError && (
                 <div style={{
                     marginTop: '12px',
-                    backgroundColor: "var(--color-danger-bg)",
-                    color: "var(--color-danger-text)",
-                    border: "1px solid var(--color-danger-border)",
+                    backgroundColor: displayError.includes('highest bid') ? 'rgba(34, 197, 94, 0.1)' : "var(--color-danger-bg)",
+                    color: displayError.includes('highest bid') ? '#22c55e' : "var(--color-danger-text)",
+                    border: displayError.includes('highest bid') ? '1px solid rgba(34, 197, 94, 0.2)' : "1px solid var(--color-danger-border)",
                     padding: "12px 16px",
-                    borderRadius: "8px",
+                    borderRadius: "4px",
                     fontSize: "14px",
                     fontWeight: 600,
-                }}>⚠️ {displayError}</div>
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                }}>
+                    <span>{displayError.includes('highest bid') ? '🏆' : '⚠️'}</span>
+                    <span>{displayError}</span>
+                </div>
             )}
             {showBidForm && isActive && !isEnded && !isOwner && authStore.isAuthenticated && (
                 <div style={{
-                    marginTop: '16px',
-                    padding: '24px',
+                    marginTop: '8px',
+                    padding: '16px',
                     backgroundColor: 'var(--bg-card)',
                     border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    borderRadius: '4px',
                     animation: 'slideDown 0.2s ease-out'
                 }}>
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                        <button
-                            type="button"
-                            onClick={handleOneClickQuickBid}
-                            disabled={isQuickBtnDisabled}
-                            style={{
-                                flex: 1,
-                                height: '56px',
-                                backgroundColor: 'var(--color-primary)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontWeight: 700,
-                                fontSize: '16px',
-                                opacity: isQuickBtnDisabled ? 0.5 : 1,
-                                cursor: isQuickBtnDisabled ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            {auctionStore.isBidding
-                                ? "Wait..."
-                                : isCoolingDown
-                                    ? `Wait ${cooldown}s`
-                                    : amIWinning 
-                                        ? `Winning at $${currentPrice.toLocaleString()}`
-                                        : `Quick Bid $${minBid.toLocaleString()}`
-                            }
-                        </button>
-
-                        <span style={{ color: 'var(--text-muted)', fontWeight: 700, fontSize: '12px' }}>OR</span>
-
-                        <form onSubmit={handleManualBid} style={{ flex: 1.5, display: 'flex', gap: '8px', margin: 0 }}>
-                            <div style={{
-                                flex: 1,
-                                display: 'flex',
-                                alignItems: 'center',
-                                backgroundColor: 'var(--bg-input)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '8px',
-                                padding: '0 16px',
-                                height: '56px'
-                            }}>
-                                <span style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-muted)', marginRight: '8px' }}>$</span>
-                                <input
-                                    type="number"
-                                    value={bidAmount}
-                                    onChange={(e) => setBidAmount(e.target.value)}
-                                    placeholder={minBid.toString()}
-                                    min={amIWinning ? currentPrice : minBid}
-                                    style={{
-                                        flex: 1,
-                                        border: 'none',
-                                        background: 'transparent',
-                                        fontSize: '20px',
-                                        fontWeight: 700,
-                                        color: 'var(--text-primary)',
-                                        outline: 'none',
-                                        width: '100%'
-                                    }}
-                                />
-                            </div>
-
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'stretch' }}>
+                        
+                        {/* Quick Bid Column */}
+                        <div style={{ 
+                            flex: 1, 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            backgroundColor: 'var(--bg-input)', 
+                            padding: '16px', 
+                            borderRadius: '4px',
+                            border: '1px solid var(--border-color)'
+                        }}>
                             <button
-                                type="submit"
-                                disabled={isManualBtnDisabled}
+                                type="button"
+                                onClick={handleOneClickQuickBid}
+                                disabled={isQuickBtnDisabled}
                                 style={{
-                                    height: '56px',
-                                    padding: '0 24px',
-                                    backgroundColor: 'var(--text-primary)',
-                                    color: 'var(--bg-base)',
+                                    width: '100%',
+                                    height: '44px',
+                                    backgroundColor: 'var(--color-primary)',
+                                    color: 'var(--btn-primary-text)',
                                     border: 'none',
-                                    borderRadius: '8px',
+                                    borderRadius: '4px',
                                     fontWeight: 700,
-                                    fontSize: '16px',
-                                    opacity: isManualBtnDisabled ? 0.4 : 1,
-                                    cursor: isManualBtnDisabled ? 'not-allowed' : 'pointer'
+                                    fontSize: '14px',
+                                    opacity: isQuickBtnDisabled ? 0.5 : 1,
+                                    cursor: isQuickBtnDisabled ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                Max Bid
+                                {auctionStore.isBidding
+                                    ? "Wait..."
+                                    : isCoolingDown
+                                        ? `Wait ${cooldown}s`
+                                        : amIWinning 
+                                            ? `Winning at $${currentPrice.toLocaleString()}`
+                                            : `Quick Bid $${minBid.toLocaleString()}`
+                                }
                             </button>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', fontWeight: 500, marginTop: '8px' }}>
+                                Instantly places the minimum bid
+                            </span>
+                        </div>
+
+                        {/* Divider */}
+                        <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontWeight: 800, fontSize: '13px' }}>
+                            OR
+                        </div>
+
+                        {/* Custom Bid Column */}
+                        <form onSubmit={handleManualBid} style={{ 
+                            flex: 1, 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'var(--bg-input)', 
+                            padding: '16px', 
+                            borderRadius: '4px',
+                            border: '1px solid var(--border-color)',
+                            margin: 0
+                        }}>
+                            <div style={{ display: 'flex', gap: '12px', width: '100%', alignItems: 'center' }}>
+                                <div style={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    backgroundColor: 'var(--bg-base)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '4px',
+                                    padding: '0 12px',
+                                    height: '44px'
+                                }}>
+                                    <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-muted)', marginRight: '8px' }}>$</span>
+                                    <input
+                                        type="number"
+                                        value={bidAmount}
+                                        onChange={(e) => setBidAmount(e.target.value)}
+                                        placeholder={minBid.toString()}
+                                        min={amIWinning ? currentPrice : minBid}
+                                        style={{
+                                            flex: 1,
+                                            border: 'none',
+                                            background: 'transparent',
+                                            fontSize: '16px',
+                                            fontWeight: 700,
+                                            color: 'var(--text-primary)',
+                                            outline: 'none',
+                                            width: '100%'
+                                        }}
+                                    />
+                                </div>
+                                <div
+                                    title="Set a maximum limit and the system will bid automatically for you"
+                                    style={{ display: 'flex', cursor: isManualBtnDisabled ? 'not-allowed' : 'pointer' }}
+                                >
+                                    <button
+                                        type="submit"
+                                        disabled={isManualBtnDisabled}
+                                        style={{
+                                            height: '44px',
+                                            padding: '0 16px',
+                                            backgroundColor: 'var(--text-primary)',
+                                            color: 'var(--bg-base)',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            fontWeight: 700,
+                                            fontSize: '14px',
+                                            opacity: isManualBtnDisabled ? 0.4 : 1,
+                                            cursor: isManualBtnDisabled ? 'not-allowed' : 'pointer',
+                                            pointerEvents: isManualBtnDisabled ? 'none' : 'auto'
+                                        }}
+                                    >
+                                        Max Bid
+                                    </button>
+                                </div>
+                            </div>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '8px' }}>
+                                Minimum increment: ${auction.minBidIncrement.toLocaleString()}
+                            </span>
                         </form>
-                    </div>
-                    <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                        Min inc: ${auction.minBidIncrement.toLocaleString()}
+
                     </div>
                 </div>
             )}

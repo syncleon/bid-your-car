@@ -1,91 +1,92 @@
-import { useNavigate } from "react-router-dom";
-
-export const SellCarPage = () => {
+import { useNavigate, useLocation } from "react-router-dom";
+import { useStoreContext } from "../app/providers/useStoreContext";
+import { observer } from "mobx-react-lite";
+import "./SellCarPage.css";
+export const SellCarPage = observer(() => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { authStore } = useStoreContext();
 
     return (
         <div style={{
             position: "relative",
-            width: "100%",
-            minHeight: "80vh",
+            minHeight: "60vh",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            textAlign: "center",
             padding: "40px 24px",
             color: "var(--text-primary)",
             overflow: "hidden"
         }}>
-            {}
-            <div style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: "80vw",
-                height: "80vw",
-                maxWidth: "800px",
-                maxHeight: "800px",
-                background: "rgba(37, 99, 235, 0.05)",
-                borderRadius: "50%",
-                filter: "blur(100px)",
-                zIndex: 0,
-                pointerEvents: "none"
-            }} />
-
-            <div style={{ position: "relative", zIndex: 1, maxWidth: "800px" }}>
+            {/* Background effect removed as requested */}
+            <div style={{ position: "relative", zIndex: 1, maxWidth: "760px", textAlign: "center" }}>
                 <h1 style={{
-                    fontSize: "clamp(48px, 8vw, 84px)",
-                    fontWeight: 800,
-                    letterSpacing: "-2.5px",
-                    lineHeight: 1.1,
+                    fontSize: "clamp(36px, 6vw, 56px)",
+                    fontWeight: 700,
+                    letterSpacing: "-1.5px",
+                    lineHeight: 1.2,
                     marginBottom: "24px",
                     color: "var(--text-primary)"
                 }}>
-                    Curated. <br />
-                    Transparent. <br />
-                    Premium.
+                    The modern way to sell.
                 </h1>
                 
                 <p style={{
-                    fontSize: "clamp(18px, 2.5vw, 24px)",
+                    fontSize: "clamp(16px, 2vw, 20px)",
                     color: "var(--text-secondary)",
-                    maxWidth: "600px",
-                    margin: "0 auto 48px",
+                    margin: "0 auto 32px",
                     lineHeight: 1.6,
                     fontWeight: 400
                 }}>
-                    Submit your vehicle to the world's most modern enthusiast auction platform. Create a stunning listing in minutes.
+                    Submit your premium vehicle in minutes. Our team curates your listing, and our dedicated audience bids in a transparent, 7-day auction. Maximum value, zero hassle.
                 </p>
+
+                <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: "16px",
+                    marginBottom: "48px",
+                    textAlign: "left"
+                }}>
+                    {[
+                        { title: "1. Submit", desc: "Share photos and vehicle details easily." },
+                        { title: "2. Curated", desc: "Our specialists review and refine your listing." },
+                        { title: "3. Auction", desc: "Go live with 7 days of transparent bidding." }
+                    ].map((step, idx) => (
+                        <div key={idx} className="feature-card">
+                            <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}>{step.title}</h3>
+                            <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.5 }}>{step.desc}</p>
+                        </div>
+                    ))}
+                </div>
                 
                 <button
-                    onClick={() => navigate("/sell-car/submit")}
+                    onClick={() => {
+                        if (authStore.user) {
+                            navigate("/sell-car/submit");
+                        } else {
+                            navigate("/login", { state: { backgroundLocation: location } });
+                        }
+                    }}
                     style={{
-                        background: "var(--btn-primary-bg, #2563eb)",
-                        color: "#ffffff",
-                        padding: "18px 48px",
-                        borderRadius: "50px",
+                        backgroundColor: "var(--btn-primary-bg)",
+                        color: "var(--btn-primary-text)",
                         border: "none",
-                        fontSize: "18px",
+                        borderRadius: "4px",
+                        padding: "0 32px",
+                        height: "48px",
+                        fontSize: "16px",
                         fontWeight: 700,
-                        letterSpacing: "0.5px",
                         cursor: "pointer",
-                        boxShadow: "0 8px 30px rgba(37, 99, 235, 0.4)",
-                        transition: "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
-                        e.currentTarget.style.boxShadow = "0 12px 40px rgba(37, 99, 235, 0.6)";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow = "0 8px 30px rgba(37, 99, 235, 0.4)";
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
                 >
-                    Start Your Listing
+                    Start listing
                 </button>
             </div>
         </div>
     );
-};
+});

@@ -157,7 +157,7 @@ export const VehicleInfo = ({ item, hideHeader = false }: { item: ItemDto, hideH
                                     <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--bg-input)' }} />
                                 )}
                                 <span>{item.seller?.username || "Unknown"}</span>
-                                <span style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(34, 197, 94, 0.1)', color: 'rgb(34, 197, 94)', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>Contact</span>
+                                <span style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(249, 115, 22, 0.1)', color: 'var(--color-primary)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>Contact</span>
                             </div>
                         } 
                     />
@@ -266,7 +266,7 @@ const styles = {
     galleryContainer: { display: "grid", gridTemplateColumns: "65fr 35fr", gap: "8px", margin: 0, padding: 0 },
     mainWrapper: { position: "relative" as const, width: "100%", height: "100%", aspectRatio: "16/10", borderRadius: 0, overflow: "hidden", cursor: "zoom-in", backgroundColor: "var(--bg-input)", padding: 0, margin: 0 },
     mainImg: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" as const, transition: "transform 0.3s ease", display: "block" },
-    hoverOverlay: { position: "absolute" as const, inset: 0, background: "rgba(0,0,0,0.2)", opacity: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: "14px", pointerEvents: "none" as const, },
+    hoverOverlay: { position: "absolute" as const, inset: 0, background: "rgba(249, 115, 22, 0.15)", opacity: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: "14px", pointerEvents: "none" as const, backdropFilter: "blur(2px)" },
     statusOverlay: { position: "absolute" as const, top: 16, left: 16, zIndex: 10 },
     thumbGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: 0, margin: 0 },
     thumbWrapper: { position: "relative" as const, aspectRatio: "16/10", borderRadius: 0, overflow: "hidden", cursor: "pointer", backgroundColor: "var(--bg-input)", padding: 0, margin: 0 },
@@ -276,7 +276,7 @@ const styles = {
     title: { fontSize: "32px", fontWeight: 800, color: "var(--text-primary)", margin: "0 0 6px 0", letterSpacing: "-0.03em", lineHeight: 1.1 },
     subtitle: { fontSize: "15px", color: "#9ca3af", margin: 0, fontWeight: 500, letterSpacing: "0.01em" },
     tagsContainer: { display: "flex", gap: "8px", marginTop: "16px" },
-    tag: { padding: "4px 10px", backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-color)", borderRadius: "16px", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
+    tag: { padding: "4px 10px", backgroundColor: "rgba(249, 115, 22, 0.1)", border: "1px solid var(--border-color)", borderRadius: "16px", fontSize: "12px", fontWeight: 600, color: "var(--color-primary)", transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
 
     specsContainer: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 40px", marginTop: "24px", padding: "24px 0", borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)", transition: "border-color 0.3s ease" },
     specItem: { display: "flex", justifyContent: "space-between", alignItems: "baseline" },

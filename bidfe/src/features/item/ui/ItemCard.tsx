@@ -83,8 +83,8 @@ export const ItemCard = ({ item }: ItemCardProps) => {
         >
             <div style={styles.metaRow}>
                 <div style={{ display: "flex", flexDirection: "column", gap: '4px' }}>
-                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                        Condition: <span style={{ color: '#111' }}>{item.condition.replace('_', ' ')}</span>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                        Condition: <span style={{ color: 'var(--text-primary)' }}>{item.condition.replace('_', ' ')}</span>
                     </div>
                 </div>
                 <div style={styles.locationText}>{item.location}</div>

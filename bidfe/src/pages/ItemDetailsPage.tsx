@@ -8,7 +8,7 @@ import { EditItemModal } from "../features/item/ui/EditItemModal.tsx";
 import type { CreateAuctionDto } from "../features/auction/types.ts";
 import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../features/item/types.ts";
 import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
-
+import "./AuctionDetails.css";
 const badges = {
     live: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
     sold: { background: "var(--color-danger-bg)", color: "var(--color-danger-text)", border: "1px solid var(--color-danger-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
@@ -18,8 +18,8 @@ const badges = {
 
 const pageStyles = {
     statusBox: { background: "var(--bg-input)", padding: 16, borderRadius: 6, textAlign: "center" as const, color: "var(--text-secondary)", fontWeight: 500, transition: "background-color 0.3s ease, color 0.3s ease" },
-    pricingBox: { marginTop: 16, padding: 12, background: "var(--bg-card)", borderRadius: 6, border: "1px solid var(--border-color)", transition: "background-color 0.3s ease, border-color 0.3s ease" },
-    pricingLabel: { fontSize: 12, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" as const, marginBottom: 4, transition: "color 0.3s ease" },
+    pricingBox: { marginTop: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-card)", borderRadius: 6, border: "1px solid var(--border-color)", transition: "all 0.3s ease" },
+    pricingLabel: { fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, margin: 0, transition: "color 0.3s ease" },
     btnPrimary: { width: "100%", padding: "12px", background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
     btnSecondary: { width: "100%", padding: "12px", background: "var(--btn-secondary-bg)", color: "var(--btn-secondary-text)", border: "1px solid var(--border-color)", borderRadius: 6, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
     btnTextDestructive: { width: "100%", padding: "8px", background: "transparent", border: "none", color: "var(--color-danger-text)", cursor: "pointer", fontSize: 13, transition: "color 0.3s ease" },
@@ -209,57 +209,61 @@ export const ItemDetailsPage = observer(() => {
                     <ImageGallery item={item} statusLabel={statusBadge} onImageClick={(index) => setLightboxIndex(index)} />
                 </div>
 
-                <div style={pageStyles.pricingBox}>
-                    <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
-                    {item.isNoReserve ? (
-                        <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
-                    ) : (
-                        <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                            Reserve: {item.reservePrice ? `$${item.reservePrice.toLocaleString()}` : "Not set"}
+                <div style={{ display: 'grid', gridTemplateColumns: '65fr 35fr', gap: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={pageStyles.pricingBox}>
+                            <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
+                            {item.isNoReserve ? (
+                                <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
+                            ) : (
+                                <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                                    Reserve: {item.reservePrice ? `$${item.reservePrice.toLocaleString()}` : "Not set"}
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
 
-                <div style={{ marginTop: 12 }}>
-                    {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
-                        <button
-                            onClick={() => {
-                                const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
-                                if (targetAuctionId) {
-                                    navigate(`/auctions/${targetAuctionId}`);
-                                } else {
-                                    console.error("Auction ID is missing on the item:", item);
-                                }
-                            }}
-                            style={{ ...pageStyles.btnPrimary, marginBottom: '12px' }}
-                        >
-                            {isPending ? "View Submitted Auction" : "View Live Auction"}
-                        </button>
-                    )}
-                    {isOwner && canList && (
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>
-                                List for Auction
-                            </button>
-                            <button onClick={() => setIsEditModalOpen(true)} style={pageStyles.btnSecondary}>
-                                Edit Details & Specs
-                            </button>
+                        {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
                             <button
-                                onClick={handleDeleteItem}
-                                disabled={isDeleting}
-                                style={{
-                                    ...pageStyles.btnSecondary,
-                                    border: '1px solid var(--color-danger-border)',
-                                    color: 'var(--color-danger-text)',
-                                    background: 'transparent',
-                                    opacity: isDeleting ? 0.5 : 1,
-                                    cursor: isDeleting ? 'not-allowed' : 'pointer'
+                                onClick={() => {
+                                    const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
+                                    if (targetAuctionId) {
+                                        navigate(`/auctions/${targetAuctionId}`);
+                                    } else {
+                                        console.error("Auction ID is missing on the item:", item);
+                                    }
                                 }}
+                                style={{ ...pageStyles.btnPrimary }}
                             >
-                                {isDeleting ? "Deleting..." : "Delete Listing"}
+                                {isPending ? "View Submitted Auction" : "View Live Auction"}
                             </button>
-                        </div>
-                    )}
+                        )}
+
+                        {isOwner && canList && (
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>
+                                    List for Auction
+                                </button>
+                                <button onClick={() => setIsEditModalOpen(true)} style={pageStyles.btnSecondary}>
+                                    Edit Details & Specs
+                                </button>
+                                <button
+                                    onClick={handleDeleteItem}
+                                    disabled={isDeleting}
+                                    style={{
+                                        ...pageStyles.btnSecondary,
+                                        border: '1px solid var(--color-danger-border)',
+                                        color: 'var(--color-danger-text)',
+                                        background: 'transparent',
+                                        opacity: isDeleting ? 0.5 : 1,
+                                        cursor: isDeleting ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    {isDeleting ? "Deleting..." : "Delete Listing"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <div></div>
                 </div>
 
                 <VehicleInfo item={item} hideHeader={true} />
