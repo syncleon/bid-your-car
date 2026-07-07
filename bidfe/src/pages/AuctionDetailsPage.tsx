@@ -242,8 +242,11 @@ export const AuctionDetailsPage = observer(() => {
                 </div>
 
                 {isActive && (
-                    <div className="bidding-wrapper">
-                        <BiddingCard auction={auction} />
+                    <div className="details-grid-new">
+                        <div className="bidding-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <BiddingCard auction={auction} />
+                        </div>
+                        <div></div>
                     </div>
                 )}
 
