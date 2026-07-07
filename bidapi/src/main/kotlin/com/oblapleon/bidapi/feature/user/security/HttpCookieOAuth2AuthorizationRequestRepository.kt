@@ -45,7 +45,7 @@ class HttpCookieOAuth2AuthorizationRequestRepository : AuthorizationRequestRepos
 
         val baos = ByteArrayOutputStream()
         ObjectOutputStream(baos).use { it.writeObject(authorizationRequest) }
-        val cookie = Cookie(OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, Base64.getUrlEncoder().encodeToString(baos.toByteArray()))
+        val cookie = Cookie(OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, Base64.getUrlEncoder().withoutPadding().encodeToString(baos.toByteArray()))
         cookie.path = "/"
         cookie.maxAge = COOKIE_EXPIRE_SECONDS
         cookie.secure = true
