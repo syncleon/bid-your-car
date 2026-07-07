@@ -146,6 +146,41 @@
 .banner-pending { background: rgba(249, 115, 22, 0.1); color: var(--color-primary); border: 1px solid rgba(249, 115, 22, 0.2); }
 .banner-rejected { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
 
+.details-grid-new {
+    display: grid;
+    grid-template-columns: 65fr 35fr;
+    gap: 8px;
+}
+.gallery-container-new {
+    display: grid;
+    grid-template-columns: 65fr 35fr;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+.gallery-container-new.no-thumbs {
+    grid-template-columns: 1fr;
+}
+.thumb-grid-new {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .details-grid-new {
+        grid-template-columns: 1fr;
+    }
+    .gallery-container-new {
+        grid-template-columns: 1fr;
+    }
+    .thumb-grid-new {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
 .compact-card {
     padding: 16px;
     border-radius: 8px;

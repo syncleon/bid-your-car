@@ -209,7 +209,7 @@ export const ItemDetailsPage = observer(() => {
                     <ImageGallery item={item} statusLabel={statusBadge} onImageClick={(index) => setLightboxIndex(index)} />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '65fr 35fr', gap: '8px' }}>
+                <div className="details-grid-new">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <div style={pageStyles.pricingBox}>
                             <div style={pageStyles.pricingLabel}>Pricing Strategy</div>

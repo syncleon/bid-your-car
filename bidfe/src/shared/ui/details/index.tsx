@@ -84,7 +84,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
     }
 
     return (
-        <div style={styles.galleryContainer}>
+        <div className={`gallery-container-new ${thumbnails.length === 0 ? 'no-thumbs' : ''}`}>
             <div
                 style={styles.mainWrapper}
                 onClick={() => onImageClick?.(0)}
@@ -95,7 +95,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
             </div>
 
             {thumbnails.length > 0 && (
-                <div style={styles.thumbGrid}>
+                <div className="thumb-grid-new">
                     {thumbnails.map((img, idx) => {
                         
                         const realIndex = images.findIndex(origImg => origImg.id === img.id);
@@ -297,9 +297,9 @@ export const DetailSkeleton = () => (
         <DetailHeader onBack={() => {}} title="Loading..." />
         <ResponsiveGrid>
             <div>
-                <div style={styles.galleryContainer}>
+                <div className="gallery-container-new">
                     <div style={{...styles.mainWrapper, backgroundColor: "var(--bg-input)"}} className="shimmer" />
-                    <div style={styles.thumbGrid}>
+                    <div className="thumb-grid-new">
                         {Array.from({length: 6}).map((_, i) => (
                             <div key={i} style={{...styles.thumbWrapper, backgroundColor: "var(--bg-input)"}} className="shimmer" />
                         ))}
