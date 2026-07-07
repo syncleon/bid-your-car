@@ -82,6 +82,9 @@ export const ItemDetailsPage = observer(() => {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
         if (id) itemStore.loadItemDetails(id);
@@ -120,6 +123,38 @@ export const ItemDetailsPage = observer(() => {
         setDeleteDialogOpen(true);
     };
 
+    const handleApprove = async () => {
+        setApproveDialogOpen(true);
+    };
+
+    const confirmApprove = async () => {
+        const targetAuctionId = itemStore.selectedItem?.auctionId || itemStore.selectedItem?.auction?.id || auctionStore.currentAuction?.id;
+        if (!targetAuctionId) return;
+        setApproveDialogOpen(false);
+        setActionLoading(true);
+        const success = await auctionStore.approveAuction(targetAuctionId);
+        setActionLoading(false);
+        if (success) {
+            navigate('/admin');
+        }
+    };
+
+    const handleReject = async () => {
+        setRejectDialogOpen(true);
+    };
+
+    const confirmReject = async () => {
+        const targetAuctionId = itemStore.selectedItem?.auctionId || itemStore.selectedItem?.auction?.id || auctionStore.currentAuction?.id;
+        if (!targetAuctionId) return;
+        setRejectDialogOpen(false);
+        setActionLoading(true);
+        const success = await auctionStore.adminCancelAuction(targetAuctionId);
+        setActionLoading(false);
+        if (success) {
+            navigate('/admin');
+        }
+    };
+
     const confirmDeleteItem = async () => {
         if (!id) return;
         setDeleteDialogOpen(false);
@@ -149,6 +184,7 @@ export const ItemDetailsPage = observer(() => {
 
     const item = itemStore.selectedItem;
     const isOwner = authStore.user?.id?.toString() === item.seller?.id?.toString();
+    const isAdmin = authStore.user?.roles?.some((r: any) => r.name === 'ADMIN');
     const isDraft = item.status === 'DRAFT';
     const isUnsold = item.status === 'UNSOLD';
     const isPending = item.status === 'PENDING_AUCTION';
@@ -199,6 +235,20 @@ export const ItemDetailsPage = observer(() => {
                             getStatusText()
                         )}
                     </div>
+
+                    {isAdmin && isPending && !isGhostPending && (
+                        <div className="admin-panel-2025 compact-card" style={{ padding: '20px' }}>
+                            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: 'var(--text-primary)', fontWeight: 700, letterSpacing: '0.5px' }}>⚡ ADMIN REVIEW REQUIRED</h4>
+                            <div className="admin-btn-group" style={{ display: 'flex', gap: '12px' }}>
+                                <button onClick={handleApprove} disabled={actionLoading} className="btn-approve-2025" style={{ flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
+                                    {actionLoading ? "Processing..." : "✓ Approve Listing"}
+                                </button>
+                                <button onClick={handleReject} disabled={actionLoading} className="btn-reject-2025" style={{ flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
+                                    {actionLoading ? "Processing..." : "✗ Reject Listing"}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
@@ -298,6 +348,26 @@ export const ItemDetailsPage = observer(() => {
                 onConfirm={confirmDeleteItem}
                 onCancel={() => setDeleteDialogOpen(false)}
                 confirmLabel="Delete"
+                isDestructive={true}
+            />
+
+            <ConfirmDialog
+                isOpen={approveDialogOpen}
+                title="Approve Listing"
+                message="Are you sure you want to approve this listing? It will immediately become active and public for bidding."
+                onConfirm={confirmApprove}
+                onCancel={() => setApproveDialogOpen(false)}
+                confirmLabel="Approve Listing"
+                isDestructive={false}
+            />
+
+            <ConfirmDialog
+                isOpen={rejectDialogOpen}
+                title="Reject Listing"
+                message="Are you sure you want to completely reject and cancel this listing? This action cannot be undone."
+                onConfirm={confirmReject}
+                onCancel={() => setRejectDialogOpen(false)}
+                confirmLabel="Reject Listing"
                 isDestructive={true}
             />
         </DetailPageLayout>
