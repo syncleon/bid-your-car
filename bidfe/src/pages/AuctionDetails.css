@@ -498,23 +498,20 @@
 /* pulse-red keyframes removed */
 
 .btn-pill-primary {
-    background: var(--text-primary);
-    color: var(--bg-base);
+    background: #111111;
+    color: #a3a3a3;
     border: none;
     border-radius: 8px;
     font-weight: 700;
     font-size: 16px;
     padding: 18px 24px;
     cursor: pointer;
-    transition: box-shadow 0.3s ease, background 0.3s ease;
+    transition: color 0.2s ease;
 }
 .btn-pill-primary:hover:not(:disabled) {
-    /* transform removed */
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    background: var(--text-secondary);
+    color: #ffffff;
 }
 .btn-pill-primary:active:not(:disabled) {
-    /* No movement */
 }
 .btn-pill-primary:disabled {
     opacity: 0.5;
@@ -522,24 +519,19 @@
 }
 
 .btn-quick-bid {
-    background: var(--btn-primary-bg, #2563eb);
-    color: #ffffff;
+    background: #222222;
+    color: #a3a3a3;
     border: none;
     border-radius: 8px;
     font-weight: 700;
     padding: 18px 24px;
     cursor: pointer;
-    transition: box-shadow 0.3s ease, filter 0.3s ease;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    transition: color 0.2s ease;
 }
 .btn-quick-bid:hover:not(:disabled) {
-    /* transform removed */
-    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
-    filter: brightness(1.1);
+    color: #ffffff;
 }
 .btn-quick-bid:active:not(:disabled) {
-    /* No movement */
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
 }
 
 .row-winner-modern {
@@ -572,78 +564,30 @@
 }
 
 .btn-approve-2025 {
-    background: #10b981;
-    color: #fff;
+    background: #111111;
+    color: #a3a3a3;
     border: none;
     border-radius: 8px;
     padding: 18px 24px;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.2s ease;
 }
 .btn-approve-2025:hover:not(:disabled) {
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-    filter: brightness(1.1);
+    color: #ffffff;
 }
 
 .btn-reject-2025 {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: transparent;
+    color: #a3a3a3;
+    border: 1px solid #333333;
     border-radius: 8px;
     padding: 18px 24px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.2s ease;
 }
 .btn-reject-2025:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.4);
-    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
-}
-
-/* 2025 Admin Panel Trends */
-.admin-panel-2025 {
-    background: var(--bg-card);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    position: relative;
-    overflow: hidden;
-}
-.admin-panel-2025::after {
-    content: "";
-    position: absolute;
-    top: 0; right: 0; left: 0;
-    height: 3px;
-    background: var(--color-primary);
-}
-
-.btn-approve-2025 {
-    background: #10b981;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 18px 24px;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.btn-approve-2025:hover:not(:disabled) {
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-    filter: brightness(1.1);
-}
-
-.btn-reject-2025 {
-    background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: 8px;
-    padding: 18px 24px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.btn-reject-2025:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.4);
-    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
-}
+
+
 
 /* Bento Grid Layout */
 .bento-grid {

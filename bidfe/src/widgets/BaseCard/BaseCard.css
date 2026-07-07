@@ -23,9 +23,7 @@
     transition: opacity 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.base-card-image-wrapper:hover .base-card-image {
-    opacity: 0.8;
-}
+
 
 .base-card-title-row {
     display: flex;

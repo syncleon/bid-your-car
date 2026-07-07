@@ -91,27 +91,32 @@
 
 .dialog-btn-cancel {
     background: transparent;
-    color: var(--text-primary);
+    color: #a3a3a3;
     border: 1px solid var(--border-color);
+    transition: color 0.2s ease;
 }
 .dialog-btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
 }
 
 .dialog-btn-confirm {
     background: var(--btn-primary-bg);
     color: var(--btn-primary-text);
+    border: none;
+    transition: color 0.2s ease;
 }
 .dialog-btn-confirm:hover {
-    background: var(--accent-hover);
+    color: #ffffff;
 }
 
 .dialog-btn-destructive {
-    background: #dc2626;
-    color: #fff;
+    background: #111111;
+    color: #ef4444;
+    border: 1px solid #333333;
+    transition: color 0.2s ease;
 }
 .dialog-btn-destructive:hover {
-    background: #b91c1c;
+    color: #f87171;
 }
 
 .dialog-input {
