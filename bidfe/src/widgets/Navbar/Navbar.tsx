@@ -74,9 +74,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                     <Link to="/past-auctions" className={`navbar__link ${location.pathname === '/past-auctions' ? 'active' : ''}`}>
                         Previous Auctions
                     </Link>
-                    <Link to="/profile" className={`navbar__link ${location.pathname === '/profile' ? 'active' : ''}`}>
-                        Library
-                    </Link>
+
                 </nav>
 
                 <div className="navbar__search desktop-only">
