@@ -249,6 +249,34 @@ export const ItemDetailsPage = observer(() => {
                             </div>
                         </div>
                     )}
+
+                    {isAdmin && isPending && isGhostPending && (
+                        <div className="admin-panel-2025 compact-card" style={{ padding: '20px' }}>
+                            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: 'var(--color-danger-text)', fontWeight: 700 }}>⚠️ GHOST PENDING DETECTED</h4>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>This item is marked as in review, but no actual auction record exists in the database. You must reset it to draft so the user can submit it again.</p>
+                            <button 
+                                onClick={async () => {
+                                    if (window.confirm("Are you sure you want to reset this item to DRAFT?")) {
+                                        setActionLoading(true);
+                                        try {
+                                            const { adminApi } = await import('../features/admin/api/admin.api');
+                                            await adminApi.resetGhostItem(item.id);
+                                            await itemStore.loadItemDetails(item.id);
+                                        } catch (e) {
+                                            console.error("Failed to reset ghost item", e);
+                                        } finally {
+                                            setActionLoading(false);
+                                        }
+                                    }
+                                }} 
+                                disabled={actionLoading} 
+                                className="btn-reject-2025" 
+                                style={{ padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px', width: '100%' }}
+                            >
+                                {actionLoading ? "Processing..." : "Reset to Draft"}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>

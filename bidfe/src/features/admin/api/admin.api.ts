@@ -33,5 +33,8 @@ export const adminApi = {
     },
     forceCancelAuction: (auctionId: string) => {
         return http<{ message: string }>(`/auctions/admin/${auctionId}/cancel`, { method: "DELETE" });
+    },
+    resetGhostItem: (itemId: string) => {
+        return http<{ message: string }>(`/items/admin/${itemId}/reset`, { method: "PATCH" });
     }
 };

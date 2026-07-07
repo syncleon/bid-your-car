@@ -77,6 +77,16 @@ class ItemController(
         return ResponseEntity.ok(mapOf("message" to "Item deleted successfully"))
     }
 
+    @Operation(summary = "Admin Reset Item Status", description = "Force reset an item to DRAFT if it is stuck.")
+    @CacheEvict(value = ["items"], key = "#id")
+    @PatchMapping("/admin/{id}/reset")
+    fun adminResetItemStatus(
+        @PathVariable id: UUID
+    ): ResponseEntity<ItemDto> {
+        val item = itemService.adminResetStatus(id)
+        return ResponseEntity.ok(item.toDto())
+    }
+
     @Operation(summary = "Upload Image", description = "Upload a categorized photo for a vehicle.")
     @CacheEvict(value = ["items"], key = "#id")
     @PostMapping(

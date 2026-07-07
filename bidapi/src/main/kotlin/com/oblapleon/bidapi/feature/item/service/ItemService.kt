@@ -144,6 +144,18 @@ class ItemService(
     }
 
     @Transactional
+    fun adminResetStatus(id: UUID): Item {
+        val currentUser = authorizationHelper.getCurrentUser()
+        if (currentUser.roles.none { it.name == ERole.ADMIN }) {
+            throw com.oblapleon.bidapi.common.exception.ForbiddenException("Only admins can reset item status.")
+        }
+        val item = findById(id)
+        item.status = ItemStatus.DRAFT
+        item.auctionId = null
+        return itemRepository.save(item)
+    }
+
+    @Transactional
     fun delete(id: UUID) {
         val item = findById(id)
         val currentUser = authorizationHelper.getCurrentUser()
