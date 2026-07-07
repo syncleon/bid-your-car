@@ -614,11 +614,11 @@
     position: absolute;
     top: 0; right: 0; left: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--color-primary), #10b981, #3b82f6);
+    background: var(--color-primary);
 }
 
 .btn-approve-2025 {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: #10b981;
     color: #fff;
     border: none;
     border-radius: 8px;

@@ -98,12 +98,6 @@ a:not(:disabled):not(.user-menu__trigger):hover,
 
 .shimmer {
     background: var(--bg-hover);
-    animation: pulse-opacity 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-opacity {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
 }
 
 /* ── Layout width token — must match .navbar__container ── */

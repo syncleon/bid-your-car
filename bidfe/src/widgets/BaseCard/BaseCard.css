@@ -75,22 +75,11 @@
 }
 
 .base-card--urgent {
-    border-color: #ef4444 !important;
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
-    animation: urgentPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    border-color: rgba(239, 68, 68, 0.4) !important;
 }
 
 .base-card--urgent:hover {
     border-color: #ef4444 !important;
-}
-
-@keyframes urgentPulse {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
-    }
-    50% {
-        box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
-    }
 }
 
 @container garage (max-width: 360px) {

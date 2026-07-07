@@ -140,23 +140,13 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                 input[type=number]::-webkit-inner-spin-button, 
                 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
                 input[type=number] { -moz-appearance: textfield; }
-                @keyframes flashBg {
-                    0% { background-color: rgba(16, 185, 129, 0.2); }
-                    100% { background-color: transparent; }
-                }
-                .flash { animation: flashBg 0.6s ease-out; border-radius: 4px; padding: 0 4px; margin: 0 -4px; }
+                .flash { border-radius: 4px; padding: 0 4px; margin: 0 -4px; background-color: transparent; }
                 .metric-bar-inner.ending-soon {
                     position: relative;
                     overflow: hidden;
                 }
                 .ending-soon-text {
                     color: #ef4444 !important;
-                    animation: pulse-text 2s infinite;
-                }
-                @keyframes pulse-text {
-                    0% { opacity: 1; }
-                    50% { opacity: 0.6; }
-                    100% { opacity: 1; }
                 }
                 .bid-bar {
                     display: flex;
