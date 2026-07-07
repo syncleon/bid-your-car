@@ -216,11 +216,16 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                     opacity: 0.9;
                 }
                 @media (max-width: 760px) {
-                    .bid-bar { flex-direction: column; align-items: stretch; padding: 16px; }
+                    .bid-bar { flex-direction: column; align-items: stretch; padding: 16px 0; gap: 20px; }
                     .bid-bar-actions { flex-direction: column; width: 100%; }
                     .fast-bid-btn, .place-bid-btn { width: 100%; }
                     .bid-bar-divider { display: none; }
-                    .bid-bar-metrics { justify-content: space-between; gap: 16px; }
+                    .bid-bar-metrics { 
+                        display: grid; 
+                        grid-template-columns: 1fr 1fr; 
+                        gap: 16px 12px; 
+                        justify-content: start;
+                    }
                 }
             `}</style>
 
