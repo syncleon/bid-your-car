@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Skeleton } from "../../shared/ui/Skeleton/Skeleton";
 
 export const AdminAuctionsPage = observer(() => {
-    const { adminStore } = useStore();
+    const { adminStore, auctionStore } = useStore();
     const [statusFilter, setStatusFilter] = useState<string>("");
 
     useEffect(() => {
@@ -89,12 +89,36 @@ export const AdminAuctionsPage = observer(() => {
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>{auction.status}</td>
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>
                                     {auction.status === 'PENDING_APPROVAL' && (
-                                        <Link 
-                                            to={`/auctions/${auction.id}`}
-                                            style={{ display: 'inline-block', padding: '5px 10px', cursor: 'pointer', marginRight: '10px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', textDecoration: 'none', fontSize: '14px' }}
-                                        >
-                                            Review Listing
-                                        </Link>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button 
+                                                onClick={async () => {
+                                                    if (window.confirm("Approve this auction? It will become active immediately.")) {
+                                                        const success = await auctionStore.approveAuction(auction.id);
+                                                        if (success) adminStore.fetchAuctions(statusFilter);
+                                                    }
+                                                }}
+                                                style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', fontSize: '14px', fontWeight: 600 }}
+                                            >
+                                                Approve
+                                            </button>
+                                            <button 
+                                                onClick={async () => {
+                                                    if (window.confirm("Reject this listing? This will cancel the auction and cannot be undone.")) {
+                                                        const success = await auctionStore.adminCancelAuction(auction.id);
+                                                        if (success) adminStore.fetchAuctions(statusFilter);
+                                                    }
+                                                }}
+                                                style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)', borderRadius: '4px', fontSize: '14px', fontWeight: 600 }}
+                                            >
+                                                Reject
+                                            </button>
+                                            <Link 
+                                                to={`/auctions/${auction.id}`}
+                                                style={{ display: 'inline-block', padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', textDecoration: 'none', fontSize: '14px' }}
+                                            >
+                                                Review
+                                            </Link>
+                                        </div>
                                     )}
                                     {auction.status === 'ACTIVE' && (
                                         <button 
