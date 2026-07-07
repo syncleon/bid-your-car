@@ -21,6 +21,9 @@ interface UserRepository : BaseRepository<User, Long> {
     @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
     fun findAnyByUsername(@Param("username") username: String): User?
 
+    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+    fun findAnyByEmail(@Param("email") email: String): User?
+
     @EntityGraph(attributePaths = ["roles"])
     fun findByEmail(email: String): User?
 

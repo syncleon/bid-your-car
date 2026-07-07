@@ -37,7 +37,7 @@ class OAuth2LoginSuccessHandler(
         val email = oauthUser.attributes["email"] as String
         val name = (oauthUser.attributes["name"] as String?)?.replace(" ", "") ?: email.substringBefore("@")
 
-        var user = userRepository.findByEmail(email)
+        var user = userRepository.findAnyByEmail(email)
 
         if (user == null) {
             val userRole = roleRepository.findByName(ERole.USER)
@@ -50,6 +50,9 @@ class OAuth2LoginSuccessHandler(
                 roles = mutableSetOf(userRole),
                 enabled = true
             )
+            user = userRepository.save(user)
+        } else if (user.deletedAt != null) {
+            user.deletedAt = null
             user = userRepository.save(user)
         }
 
