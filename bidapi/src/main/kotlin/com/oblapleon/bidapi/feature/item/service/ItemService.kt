@@ -54,11 +54,13 @@ class ItemService(
         return item
     }
 
+    @Transactional(readOnly = true)
     fun findAllBySellerId(sellerId: Long, pageable: Pageable): Page<Item> {
         authorizationHelper.checkOwnerOrAdmin(sellerId)
         return itemRepository.findAllBySellerId(sellerId, pageable)
     }
 
+    @Transactional(readOnly = true)
     fun findReadyForAuction(pageable: Pageable): Page<Item> {
         return itemRepository.findReadyForAuction(pageable)
     }
