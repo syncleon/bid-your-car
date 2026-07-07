@@ -140,6 +140,29 @@ export const AdminAuctionsPage = observer(() => {
                 </table>
                 </div>
             )}
+
+            {/* Pagination Controls */}
+            {adminStore.totalPagesAuctions > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px', alignItems: 'center' }}>
+                    <button 
+                        onClick={() => adminStore.fetchAuctions(statusFilter, adminStore.currentPageAuctions - 1)}
+                        disabled={adminStore.currentPageAuctions === 0 || adminStore.isLoadingAuctions}
+                        style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', cursor: adminStore.currentPageAuctions === 0 ? 'not-allowed' : 'pointer', opacity: adminStore.currentPageAuctions === 0 ? 0.5 : 1 }}
+                    >
+                        Previous
+                    </button>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500 }}>
+                        Page {adminStore.currentPageAuctions + 1} of {adminStore.totalPagesAuctions}
+                    </span>
+                    <button 
+                        onClick={() => adminStore.fetchAuctions(statusFilter, adminStore.currentPageAuctions + 1)}
+                        disabled={adminStore.currentPageAuctions >= adminStore.totalPagesAuctions - 1 || adminStore.isLoadingAuctions}
+                        style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', cursor: adminStore.currentPageAuctions >= adminStore.totalPagesAuctions - 1 ? 'not-allowed' : 'pointer', opacity: adminStore.currentPageAuctions >= adminStore.totalPagesAuctions - 1 ? 0.5 : 1 }}
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
         </div>
     );
 });

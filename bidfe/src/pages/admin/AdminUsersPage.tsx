@@ -87,6 +87,29 @@ export const AdminUsersPage = observer(() => {
                 </table>
                 </div>
             )}
+
+            {/* Pagination Controls */}
+            {adminStore.totalPagesUsers > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px', alignItems: 'center' }}>
+                    <button 
+                        onClick={() => adminStore.fetchUsers(adminStore.currentPageUsers - 1)}
+                        disabled={adminStore.currentPageUsers === 0 || adminStore.isLoadingUsers}
+                        style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', cursor: adminStore.currentPageUsers === 0 ? 'not-allowed' : 'pointer', opacity: adminStore.currentPageUsers === 0 ? 0.5 : 1 }}
+                    >
+                        Previous
+                    </button>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500 }}>
+                        Page {adminStore.currentPageUsers + 1} of {adminStore.totalPagesUsers}
+                    </span>
+                    <button 
+                        onClick={() => adminStore.fetchUsers(adminStore.currentPageUsers + 1)}
+                        disabled={adminStore.currentPageUsers >= adminStore.totalPagesUsers - 1 || adminStore.isLoadingUsers}
+                        style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', cursor: adminStore.currentPageUsers >= adminStore.totalPagesUsers - 1 ? 'not-allowed' : 'pointer', opacity: adminStore.currentPageUsers >= adminStore.totalPagesUsers - 1 ? 0.5 : 1 }}
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
         </div>
     );
 });

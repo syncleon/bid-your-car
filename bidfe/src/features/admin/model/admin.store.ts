@@ -30,6 +30,10 @@ export const AdminStore = types.model("AdminStore", {
     isLoadingUsers: false,
     isLoadingAuctions: false,
     error: types.maybeNull(types.string),
+    totalPagesUsers: 0,
+    currentPageUsers: 0,
+    totalPagesAuctions: 0,
+    currentPageAuctions: 0,
 }).views((self) => ({
     get sortedAuctions() {
         return self.auctions.slice().sort((a, b) => {
@@ -47,6 +51,8 @@ export const AdminStore = types.model("AdminStore", {
                 ? yield adminApi.searchUsers(query, page)
                 : yield adminApi.getUsers(page);
             self.users.replace(response.content);
+            self.totalPagesUsers = response.totalPages || 0;
+            self.currentPageUsers = response.number || 0;
         } catch (error: any) {
             self.error = error.message;
         } finally {
@@ -57,7 +63,7 @@ export const AdminStore = types.model("AdminStore", {
     const deactivateUser = flow(function* (userId: number) {
         try {
             yield adminApi.deactivateUser(userId);
-            yield fetchUsers(); 
+            yield fetchUsers(self.currentPageUsers); 
         } catch (error: any) {
             self.error = error.message;
         }
@@ -69,6 +75,8 @@ export const AdminStore = types.model("AdminStore", {
         try {
             const response = yield adminApi.getAuctions(status, page);
             self.auctions.replace(response.content);
+            self.totalPagesAuctions = response.totalPages || 0;
+            self.currentPageAuctions = response.number || 0;
         } catch (error: any) {
             self.error = error.message;
         } finally {
@@ -79,7 +87,7 @@ export const AdminStore = types.model("AdminStore", {
     const approveAuction = flow(function* (auctionId: string, status?: string) {
         try {
             yield adminApi.approveAuction(auctionId);
-            yield fetchAuctions(status);
+            yield fetchAuctions(status, self.currentPageAuctions);
         } catch (error: any) {
             self.error = error.message;
         }
@@ -88,7 +96,7 @@ export const AdminStore = types.model("AdminStore", {
     const forceCancelAuction = flow(function* (auctionId: string, status?: string) {
         try {
             yield adminApi.forceCancelAuction(auctionId);
-            yield fetchAuctions(status);
+            yield fetchAuctions(status, self.currentPageAuctions);
         } catch (error: any) {
             self.error = error.message;
         }
