@@ -505,7 +505,7 @@
 }
 
 .bidding-wrapper {
-    width: calc(65% - 5.2px); /* Matches the 65fr main image column width */
+    width: 100%;
 }
 
 .bidding-card-active {
