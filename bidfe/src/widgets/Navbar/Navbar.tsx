@@ -75,6 +75,9 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                     <Link to="/past-auctions" className={`navbar__link ${location.pathname === '/past-auctions' ? 'active' : ''}`}>
                         Previous Auctions
                     </Link>
+                    <Link to="/sell-car" className={`navbar__link ${location.pathname === '/sell-car' ? 'active' : ''}`}>
+                        Add car
+                    </Link>
 
                 </nav>
 
@@ -105,9 +108,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         </Link>
                     )}
 
-                    <Link to="/sell-car" className="navbar__link">
-                        Upload
-                    </Link>
+
 
                     {isInitializing ? (
                         <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
