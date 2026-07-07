@@ -16,9 +16,7 @@
     font-weight: 800;
     letter-spacing: -1.5px;
     margin: 0 0 12px;
-    background: linear-gradient(135deg, var(--text-primary) 30%, var(--text-muted) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-primary);
 }
 
 .cookie-policy-updated {

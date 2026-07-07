@@ -543,7 +543,8 @@ const styles: StyleMap = {
         bottom: 0,
         left: 0,
         right: 0,
-        background: "linear-gradient(transparent, rgba(0,0,0,0.9))",
+        background: "rgba(0, 0, 0, 0.4)",
+        backdropFilter: "blur(8px)",
         padding: "20px",
         color: "#fff"
     },

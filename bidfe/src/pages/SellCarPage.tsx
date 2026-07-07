@@ -27,7 +27,9 @@ export const SellCarPage = () => {
                 height: "80vw",
                 maxWidth: "800px",
                 maxHeight: "800px",
-                background: "radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 60%)",
+                background: "rgba(37, 99, 235, 0.05)",
+                borderRadius: "50%",
+                filter: "blur(100px)",
                 zIndex: 0,
                 pointerEvents: "none"
             }} />
@@ -39,9 +41,7 @@ export const SellCarPage = () => {
                     letterSpacing: "-2.5px",
                     lineHeight: 1.1,
                     marginBottom: "24px",
-                    background: "linear-gradient(135deg, var(--text-primary) 30%, var(--text-muted) 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent"
+                    color: "var(--text-primary)"
                 }}>
                     Curated. <br />
                     Transparent. <br />
@@ -62,7 +62,7 @@ export const SellCarPage = () => {
                 <button
                     onClick={() => navigate("/sell-car/submit")}
                     style={{
-                        background: "linear-gradient(135deg, var(--color-primary) 0%, #475569 100%)",
+                        background: "var(--btn-primary-bg, #2563eb)",
                         color: "#ffffff",
                         padding: "18px 48px",
                         borderRadius: "50px",

@@ -482,7 +482,7 @@
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, var(--color-primary), #475569, #a1a1aa);
+    background: var(--color-primary, #2563eb);
 }
 
 .pulse-dot {
@@ -492,14 +492,10 @@
     border-radius: 50%;
     background-color: #ef4444;
     margin-right: 8px;
-    animation: pulse-red 1.5s infinite;
+    /* animation removed per 2025 guidelines */
 }
 
-@keyframes pulse-red {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
+/* pulse-red keyframes removed */
 
 .btn-pill-primary {
     background: var(--text-primary);
@@ -526,7 +522,7 @@
 }
 
 .btn-quick-bid {
-    background: linear-gradient(135deg, var(--color-primary) 0%, #475569 100%);
+    background: var(--btn-primary-bg, #2563eb);
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -547,7 +543,7 @@
 }
 
 .row-winner-modern {
-    background: linear-gradient(90deg, rgba(234, 179, 8, 0.1), transparent);
+    background: rgba(234, 179, 8, 0.05);
     border-left: 4px solid #eab308;
 }
 
@@ -572,11 +568,11 @@
     position: absolute;
     top: 0; right: 0; left: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--color-primary), #10b981, #3b82f6);
+    background: var(--color-primary, #2563eb);
 }
 
 .btn-approve-2025 {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: #10b981;
     color: #fff;
     border: none;
     border-radius: 8px;

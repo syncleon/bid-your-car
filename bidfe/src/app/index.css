@@ -97,19 +97,13 @@ a:not(:disabled):not(.user-menu__trigger):hover,
 }
 
 .shimmer {
-    background: linear-gradient(
-        90deg,
-        var(--bg-input) 25%,
-        var(--bg-hover) 50%,
-        var(--bg-input) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    background: var(--bg-hover);
+    animation: pulse-opacity 1.5s ease-in-out infinite;
 }
 
-@keyframes shimmer {
-    from { background-position: 200% 0; }
-    to   { background-position: -200% 0; }
+@keyframes pulse-opacity {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
 }
 
 /* ── Layout width token — must match .navbar__container ── */

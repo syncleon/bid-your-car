@@ -128,7 +128,7 @@
 }
 
 .ac-option--active {
-    background: linear-gradient(135deg, var(--color-primary, #2563eb), #334155) !important;
+    background: var(--color-primary, #2563eb) !important;
     color: #ffffff !important;
 }
 

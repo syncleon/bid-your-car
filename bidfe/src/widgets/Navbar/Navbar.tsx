@@ -99,7 +99,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                 <div className="navbar__right desktop-only">
                     {isInitializing ? (
                         <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                            <div className="skeleton" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
                         </div>
                     ) : isAuthenticated ? (
                         <div className="user-menu">
