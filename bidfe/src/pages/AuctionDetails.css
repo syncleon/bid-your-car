@@ -498,18 +498,18 @@
 /* pulse-red keyframes removed */
 
 .btn-pill-primary {
-    background: #111111;
-    color: #a3a3a3;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
     border: none;
     border-radius: 8px;
     font-weight: 700;
     font-size: 16px;
     padding: 18px 24px;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: background-color 0.3s ease;
 }
 .btn-pill-primary:hover:not(:disabled) {
-    color: #ffffff;
+    background: var(--accent-hover);
 }
 .btn-pill-primary:active:not(:disabled) {
 }
@@ -519,17 +519,17 @@
 }
 
 .btn-quick-bid {
-    background: #222222;
-    color: #a3a3a3;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
     border: none;
     border-radius: 8px;
     font-weight: 700;
     padding: 18px 24px;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: background-color 0.3s ease;
 }
 .btn-quick-bid:hover:not(:disabled) {
-    color: #ffffff;
+    background: var(--accent-hover);
 }
 .btn-quick-bid:active:not(:disabled) {
 }
@@ -564,27 +564,27 @@
 }
 
 .btn-approve-2025 {
-    background: #111111;
-    color: #a3a3a3;
+    background: #10b981;
+    color: #fff;
     border: none;
     border-radius: 8px;
     padding: 18px 24px;
-    transition: color 0.2s ease;
+    transition: background-color 0.3s ease;
 }
 .btn-approve-2025:hover:not(:disabled) {
-    color: #ffffff;
+    background: #059669;
 }
 
 .btn-reject-2025 {
-    background: transparent;
-    color: #a3a3a3;
-    border: 1px solid #333333;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
     border-radius: 8px;
     padding: 18px 24px;
-    transition: color 0.2s ease;
+    transition: background-color 0.3s ease;
 }
 .btn-reject-2025:hover:not(:disabled) {
-    color: #ef4444;
+    background: rgba(239, 68, 68, 0.2);
 }
 
 

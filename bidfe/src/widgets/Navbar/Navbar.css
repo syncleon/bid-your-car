@@ -98,14 +98,13 @@ body {
     border-radius: 99px;
     border: none;
     background: var(--btn-primary-bg, #2563eb);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
 }
 
 .navbar__login-btn:hover {
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
     transform: translateY(-1px);
     opacity: 0.95;
+    background-color: var(--accent-hover);
 }
 
 .navbar__cta:hover {

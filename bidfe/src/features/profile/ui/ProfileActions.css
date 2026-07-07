@@ -63,23 +63,25 @@
 }
 
 .modern-btn--primary {
-    background: var(--btn-primary-bg, #111);
-    color: var(--btn-primary-text, #a3a3a3);
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
     border: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .modern-btn--primary:hover:not(:disabled) {
-    color: #ffffff;
+    background: var(--accent-hover);
 }
 
 .modern-btn--secondary {
-    background: var(--btn-secondary-bg, #222);
-    color: var(--btn-secondary-text, #a3a3a3);
-    border: 1px solid var(--btn-border, #333);
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
 }
 
 .modern-btn--secondary:hover:not(:disabled) {
-    color: #ffffff;
+    background: var(--bg-hover);
 }
 
 .modern-btn:disabled {
