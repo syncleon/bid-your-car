@@ -138,9 +138,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                             >
                                 Sign In
                             </Link>
-                            <Link to="/sell-car" className="navbar__login-btn" style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
-                                Create account
-                            </Link>
+
                         </div>
                     )}
                 </div>
