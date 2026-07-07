@@ -222,70 +222,7 @@ export const AuctionDetailsPage = observer(() => {
                         </div>
                     )}
 
-                    {isOwner && !isEnded && (
-                        <div className="owner-panel compact-card">
-                            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#666' }}>Owner Actions</h4>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <div
-                                    style={{ position: "relative" }}
-                                    onMouseEnter={() => {
-                                        if (cannotCancelReason) setShowCancelTooltip(true);
-                                    }}
-                                    onMouseLeave={() => setShowCancelTooltip(false)}
-                                >
-                                    <div style={{
-                                        position: "absolute",
-                                        bottom: "100%",
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
-                                        marginBottom: "8px",
-                                        backgroundColor: "#ef4444",
-                                        color: "white",
-                                        padding: "8px 12px",
-                                        borderRadius: "6px",
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        whiteSpace: "nowrap",
-                                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                                        zIndex: 10,
-                                        pointerEvents: "none",
-                                        opacity: showCancelTooltip ? 1 : 0,
-                                        visibility: showCancelTooltip ? "visible" : "hidden",
-                                        transition: "opacity 0.2s ease-in-out, visibility 0.2s"
-                                    }}>
-                                        {cannotCancelReason ?? ""}
-                                        <div style={{
-                                            position: "absolute",
-                                            top: "100%",
-                                            left: "50%",
-                                            transform: "translateX(-50%)",
-                                            borderWidth: "5px",
-                                            borderStyle: "solid",
-                                            borderColor: "#ef4444 transparent transparent transparent"
-                                        }} />
-                                    </div>
 
-                                    <button
-                                        onClick={handleCancelAuction}
-                                        disabled={isCancelDisabled}
-                                        style={{
-                                            padding: "8px 16px",
-                                            background: "transparent",
-                                            border: "1px solid #dc2626",
-                                            borderRadius: "6px",
-                                            color: "#dc2626",
-                                            fontWeight: 600,
-                                            cursor: isCancelDisabled ? "not-allowed" : "pointer",
-                                            opacity: isCancelDisabled ? 0.5 : 1,
-                                            pointerEvents: isCancelDisabled ? "none" : "auto"
-                                        }}
-                                    >
-                                        {isCanceling ? "Canceling..." : "Cancel Auction"}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
 
                 </div>
@@ -312,6 +249,67 @@ export const AuctionDetailsPage = observer(() => {
 
                 <VehicleInfo item={item} hideHeader={true} />
                 
+                {isOwner && !isEnded && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color, #333)' }}>
+                        <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Owner Actions</span>
+                        <div
+                            style={{ position: "relative" }}
+                            onMouseEnter={() => {
+                                if (cannotCancelReason) setShowCancelTooltip(true);
+                            }}
+                            onMouseLeave={() => setShowCancelTooltip(false)}
+                        >
+                            <div style={{
+                                position: "absolute",
+                                bottom: "100%",
+                                right: 0,
+                                marginBottom: "8px",
+                                backgroundColor: "#ef4444",
+                                color: "white",
+                                padding: "8px 12px",
+                                borderRadius: "6px",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                whiteSpace: "nowrap",
+                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                zIndex: 10,
+                                pointerEvents: "none",
+                                opacity: showCancelTooltip ? 1 : 0,
+                                visibility: showCancelTooltip ? "visible" : "hidden",
+                                transition: "opacity 0.2s ease-in-out, visibility 0.2s"
+                            }}>
+                                {cannotCancelReason ?? ""}
+                                <div style={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    right: "16px",
+                                    borderWidth: "5px",
+                                    borderStyle: "solid",
+                                    borderColor: "#ef4444 transparent transparent transparent"
+                                }} />
+                            </div>
+
+                            <button
+                                onClick={handleCancelAuction}
+                                disabled={isCancelDisabled}
+                                style={{
+                                    padding: "6px 14px",
+                                    background: "transparent",
+                                    border: "1px solid #dc2626",
+                                    borderRadius: "6px",
+                                    color: "#dc2626",
+                                    fontWeight: 600,
+                                    fontSize: "13px",
+                                    cursor: isCancelDisabled ? "not-allowed" : "pointer",
+                                    opacity: isCancelDisabled ? 0.5 : 1,
+                                    pointerEvents: isCancelDisabled ? "none" : "auto"
+                                }}
+                            >
+                                {isCanceling ? "Canceling..." : "Cancel Auction"}
+                            </button>
+                        </div>
+                    </div>
+                )}
 
 
             </div>
