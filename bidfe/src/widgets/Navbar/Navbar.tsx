@@ -29,23 +29,43 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const searchQuery = searchParams.get("q") || "";
+    const [inputValue, setInputValue] = useState(searchQuery);
+
+    useEffect(() => {
+        setInputValue(searchQuery);
+    }, [searchQuery]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
-        if (location.pathname !== "/" && location.pathname !== "/past-auctions") {
-            navigate(`/?q=${encodeURIComponent(val)}`);
-            return;
-        }
+        setInputValue(val);
         
-        setSearchParams(prev => {
-            if (val) prev.set("q", val);
-            else prev.delete("q");
-            return prev;
-        }, { replace: true });
+        if (location.pathname === "/" || location.pathname === "/past-auctions") {
+            setSearchParams(prev => {
+                if (val) prev.set("q", val);
+                else prev.delete("q");
+                return prev;
+            }, { replace: true });
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            if (location.pathname !== "/" && location.pathname !== "/past-auctions") {
+                navigate(`/?q=${encodeURIComponent(inputValue)}`);
+            }
+        }
     };
 
     const handleClearSearch = () => {
-        handleSearchChange({ target: { value: "" } } as any);
+        setInputValue("");
+        if (location.pathname === "/" || location.pathname === "/past-auctions") {
+            setSearchParams(prev => {
+                prev.delete("q");
+                return prev;
+            }, { replace: true });
+        } else {
+            navigate(location.pathname);
+        }
     };
 
     useEffect(() => {
@@ -86,15 +106,16 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         className="navbar__search-input"
                         type="search"
                         name="q"
-                        autoComplete="off"
+                        autoComplete="new-password"
                         autoCorrect="off"
                         spellCheck="false"
                         placeholder="Search"
-                        value={searchQuery}
+                        value={inputValue}
                         onChange={handleSearchChange}
+                        onKeyDown={handleKeyDown}
                     />
                     <span className="navbar__search-icon"><SearchIcon /></span>
-                    {searchQuery && (
+                    {inputValue && (
                         <button className="navbar__search-clear" onClick={handleClearSearch}>
                             ×
                         </button>
