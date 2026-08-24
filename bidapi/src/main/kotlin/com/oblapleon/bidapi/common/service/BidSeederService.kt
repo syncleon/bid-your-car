@@ -2,22 +2,25 @@ package com.oblapleon.bidapi.common.service
 
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
-import com.oblapleon.bidapi.feature.auction.service.AuctionService
+import com.oblapleon.bidapi.feature.bid.service.BiddingService
 import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import net.datafaker.Faker
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicInteger
 
 @Service
+@Profile("!prod")
 class BidSeederService(
     private val auctionRepository: AuctionRepository,
     private val userRepository: UserRepository,
-    private val auctionService: AuctionService,
+    private val biddingService: BiddingService,
     private val rateLimitingService: RateLimitingService
 ) {
     private val faker = Faker()
@@ -71,7 +74,7 @@ class BidSeederService(
                             val bidAmount = currentAuction.currentPrice.add(increment)
 
                             try {
-                                auctionService.placeBidAsUser(currentAuction.id!!, bidder.id!!, bidAmount)
+                                biddingService.placeBidAsUser(currentAuction.id!!, bidder.id!!, bidAmount)
                                 success = true
                                 successCount.incrementAndGet()
                                 logger.debug(

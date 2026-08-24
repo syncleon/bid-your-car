@@ -20,7 +20,7 @@ function isRecord(obj: unknown): obj is Record<string, unknown> {
     return typeof obj === "object" && obj !== null;
 }
 
-export async function http<T>(
+async function _http<T>(
     path: string,
     options: HttpOptions = {}
 ): Promise<T> {
@@ -94,5 +94,42 @@ export async function http<T>(
             throw new ApiError(408, "Server timeout exceeded. Please check your internet connection.");
         }
         throw error;
+    }
+}
+
+export async function http<T>(
+    path: string,
+    options: HttpOptions = {}
+): Promise<T> {
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (true) {
+        try {
+            return await _http<T>(path, options);
+        } catch (error) {
+            attempt++;
+            
+            // Check if we should retry
+            let shouldRetry = false;
+            
+            if (error instanceof TypeError) {
+                // TypeError usually means network failure in fetch
+                shouldRetry = true;
+            } else if (error instanceof ApiError) {
+                // Retry on 5xx server errors or 408 timeout
+                if (error.status >= 500 || error.status === 408) {
+                    shouldRetry = true;
+                }
+            }
+            
+            if (!shouldRetry || attempt >= maxRetries) {
+                throw error;
+            }
+            
+            // Exponential backoff: 1000ms, 2000ms, 4000ms...
+            const delay = Math.pow(2, attempt - 1) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
 }

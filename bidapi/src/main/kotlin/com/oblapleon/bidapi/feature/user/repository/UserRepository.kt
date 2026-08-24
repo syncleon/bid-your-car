@@ -18,11 +18,11 @@ interface UserRepository : BaseRepository<User, Long> {
     @EntityGraph(attributePaths = ["roles"])
     fun findByUsername(username: String): Optional<User>
 
-    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
-    fun findAnyByUsername(@Param("username") username: String): User?
+    @Query(value = "SELECT deleted_at FROM users WHERE username = :username", nativeQuery = true)
+    fun findDeletedAtByUsername(@Param("username") username: String): Instant?
 
-    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
-    fun findAnyByEmail(@Param("email") email: String): User?
+    @Query(value = "SELECT password FROM users WHERE username = :username", nativeQuery = true)
+    fun findPasswordByUsername(@Param("username") username: String): String?
 
     @EntityGraph(attributePaths = ["roles"])
     fun findByEmail(email: String): User?
@@ -33,10 +33,18 @@ interface UserRepository : BaseRepository<User, Long> {
     fun findByEmailContainingIgnoreCase(query: String, pageable: Pageable): Page<User>
 
     @Query(
-        value = "SELECT * FROM users WHERE deleted_at IS NOT NULL AND deleted_at < :cutoffDate",
+        value = "SELECT id, username, email FROM users WHERE deleted_at IS NOT NULL AND deleted_at < :cutoffDate",
         nativeQuery = true
     )
-    fun findSoftDeletedUsersOlderThan(cutoffDate: Instant): List<User>
+    fun findSoftDeletedUsersOlderThan(cutoffDate: Instant): List<Map<String, Any>>
+
+    @Modifying
+    @Query(value = "UPDATE users SET deleted_at = NULL WHERE username = :username", nativeQuery = true)
+    fun restoreUserByUsername(@Param("username") username: String)
+
+    @Modifying
+    @Query(value = "UPDATE users SET deleted_at = NULL WHERE email = :email", nativeQuery = true)
+    fun restoreUserByEmail(@Param("email") email: String)
 
     @Modifying
     @Query(value = "DELETE FROM users WHERE id = :id", nativeQuery = true)

@@ -31,6 +31,11 @@ class UserController(
     private val authorizationHelper: AuthorizationHelper
 ) {
 
+    /**
+     * Retrieves the profile information of the currently authenticated user.
+     *
+     * @return The [UserDto] of the current user.
+     */
     @Operation(summary = "Get My Profile", description = "Returns the profile of the currently logged-in user.")
     @GetMapping("/me")
     fun getCurrentUser(): ResponseEntity<UserDto?> {
@@ -42,6 +47,12 @@ class UserController(
         }
     }
 
+    /**
+     * Updates the profile information of the currently authenticated user.
+     *
+     * @param request The details to update.
+     * @return The updated [UserDto].
+     */
     @Operation(summary = "Update My Profile", description = "Update email or username.")
     @PatchMapping("/me")
     fun updateCurrentUser(
@@ -59,6 +70,12 @@ class UserController(
         return ResponseEntity.ok(updatedUser.toDto())
     }
 
+    /**
+     * Uploads and sets a profile photo for the current user.
+     *
+     * @param file The image file to upload.
+     * @return The updated [UserDto].
+     */
     @Operation(summary = "Upload Profile Photo", description = "Uploads an avatar for the current user.")
     @PostMapping(value = ["/me/photo"], consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun uploadProfilePhoto(
@@ -69,6 +86,12 @@ class UserController(
         return ResponseEntity.ok(updatedUser.toDto())
     }
 
+    /**
+     * Changes the password of the currently authenticated user.
+     *
+     * @param request The password update request containing the old and new passwords.
+     * @return A success message.
+     */
     @Operation(summary = "Change Password", description = "Update login password.")
     @PutMapping("/me/password")
     fun changePassword(
@@ -79,6 +102,12 @@ class UserController(
         return ResponseEntity.ok(mapOf("message" to "Password updated successfully"))
     }
 
+    /**
+     * Retrieves all items listed by the currently authenticated user.
+     *
+     * @param pageable Pagination information.
+     * @return A paginated list of [ItemDto].
+     */
     @Operation(summary = "My Items", description = "Get items listed by the current user.")
     @GetMapping("/me/items")
     fun getCurrentUserItems(
@@ -89,6 +118,12 @@ class UserController(
         return ResponseEntity.ok(items.map { it.toDto() })
     }
 
+    /**
+     * Soft deletes the current user's account. Requires password confirmation.
+     *
+     * @param request The request containing the user's password.
+     * @return A success message.
+     */
     @Operation(summary = "Delete My Account", description = "Soft-delete account. Requires password confirmation.")
     @DeleteMapping("/me")
     fun deleteMyAccount(
@@ -99,6 +134,12 @@ class UserController(
         return ResponseEntity.ok(mapOf("message" to "Account deleted successfully"))
     }
 
+    /**
+     * Admin endpoint to retrieve all users in a paginated list.
+     *
+     * @param pageable Pagination information.
+     * @return A paginated list of [UserDto].
+     */
     @Operation(summary = "List All Users", description = "Admin only. Returns paginated list of users.")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
@@ -107,6 +148,12 @@ class UserController(
         return ResponseEntity.ok(users.map { it.toDto() })
     }
 
+    /**
+     * Admin endpoint to retrieve a specific user by their ID.
+     *
+     * @param id The ID of the user.
+     * @return The [UserDto] of the requested user.
+     */
     @Operation(summary = "Get User by ID", description = "Admin only.")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
@@ -115,6 +162,13 @@ class UserController(
         return ResponseEntity.ok(user.toDto())
     }
 
+    /**
+     * Admin endpoint to forcefully update a user's details.
+     *
+     * @param id The ID of the user to update.
+     * @param request The updated details.
+     * @return The updated [UserDto].
+     */
     @Operation(summary = "Update User (Admin)", description = "Admin force update.")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
@@ -126,6 +180,12 @@ class UserController(
         return ResponseEntity.ok(updatedUser.toDto())
     }
 
+    /**
+     * Admin endpoint to soft delete or ban a user.
+     *
+     * @param id The ID of the user to deactivate.
+     * @return A success message.
+     */
     @Operation(summary = "Ban/Deactivate User", description = "Admin soft-delete without password.")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
@@ -134,6 +194,13 @@ class UserController(
         return ResponseEntity.ok(mapOf("message" to "User deactivated successfully"))
     }
 
+    /**
+     * Admin endpoint to search for users by their username or email.
+     *
+     * @param query The search string.
+     * @param pageable Pagination information.
+     * @return A paginated list of matching [UserDto].
+     */
     @Operation(summary = "Search Users", description = "Admin search by username or email.")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")

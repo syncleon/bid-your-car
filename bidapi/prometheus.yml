@@ -1,8 +1,0 @@
-global:
-  scrape_interval: 5s # Scrape data every 5 seconds (good for live testing)
-
-scrape_configs:
-  - job_name: 'bidapi-backend'
-    metrics_path: '/actuator/prometheus' # Change to '/api/v1/actuator/prometheus' if you prefix everything
-    static_configs:
-      - targets: ['backend:8080'] # Points to your Spring Boot container name

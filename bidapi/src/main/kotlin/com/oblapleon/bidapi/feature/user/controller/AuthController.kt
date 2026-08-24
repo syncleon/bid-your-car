@@ -27,6 +27,12 @@ class AuthController(
     @Value("\${app.frontend-url}") private val frontendUrl: String
 ) {
 
+    /**
+     * Authenticates a user and sets a JWT token in an HTTP-only cookie.
+     *
+     * @param payload The login request containing credentials.
+     * @return A success message upon valid authentication.
+     */
     @Operation(summary = "User Login")
     @PostMapping("/login")
     fun login(
@@ -46,6 +52,11 @@ class AuthController(
             .body(mapOf("message" to "Login successful"))
     }
 
+    /**
+     * Logs out the current user by clearing the JWT authentication cookie.
+     *
+     * @return A success message.
+     */
     @Operation(summary = "User Logout")
     @PostMapping("/logout")
     fun logout(): ResponseEntity<Map<String, String>> {
@@ -62,6 +73,13 @@ class AuthController(
             .body(mapOf("message" to "Logged out successfully"))
     }
 
+    /**
+     * Registers a new user account.
+     * May trigger an email verification flow depending on configuration.
+     *
+     * @param payload The registration request data.
+     * @return A message indicating registration success or next steps.
+     */
     @Operation(summary = "Register User", description = "Creates a new account and sends a verification email.")
     @ApiResponses(
         value = [
@@ -76,6 +94,12 @@ class AuthController(
         return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to message))
     }
 
+    /**
+     * Verifies a user's email address using a token.
+     * Redirects the user to the frontend login page upon successful verification.
+     *
+     * @param token The verification token from the email link.
+     */
     @Operation(summary = "Verify Email", description = "Validates the token sent via email and redirects to the frontend login page.")
     @GetMapping("/verify")
     fun verify(@RequestParam token: String): ResponseEntity<Void> { // <-- Changed return type
@@ -89,6 +113,13 @@ class AuthController(
             .build()
     }
 
+    /**
+     * Restores a previously deactivated/soft-deleted account.
+     * Requires valid login credentials.
+     *
+     * @param payload The login credentials for the account to be restored.
+     * @return A success message.
+     */
     @Operation(summary = "Restore Account", description = "Reactivates a soft-deleted account using valid credentials.")
     @PostMapping("/restore")
     fun restore(@Valid @RequestBody payload: LoginReqDto): ResponseEntity<Map<String, String>> {

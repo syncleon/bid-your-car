@@ -5,6 +5,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMa
 import com.oblapleon.bidapi.common.security.JwtTokenProvider
 import com.oblapleon.bidapi.feature.user.security.HttpCookieOAuth2AuthorizationRequestRepository
 import com.oblapleon.bidapi.feature.user.security.OAuth2LoginSuccessHandler
+import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -29,20 +30,7 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
-class CookieBearerTokenResolver : BearerTokenResolver {
-    private val defaultResolver = DefaultBearerTokenResolver()
-
-    override fun resolve(request: HttpServletRequest): String? {
-        val jwtCookie = request.cookies?.firstOrNull { it.name == "__session" }
-
-        if (jwtCookie != null && jwtCookie.value.isNotBlank()) {
-            return jwtCookie.value
-        }
-
-        return defaultResolver.resolve(request)
-    }
-}
-
+// CookieBearerTokenResolver removed since API is fully stateless and relies on Authorization header.
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -51,6 +39,7 @@ class SecurityConfig(
     private val jwtDecoder: JwtDecoder,
     private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler,
     private val httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository,
+    private val userRepository: UserRepository,
     @Value("\${cors.allowed-origins:http://localhost:5174}") private val allowedOrigins: List<String>
 ) {
 
@@ -89,7 +78,6 @@ class SecurityConfig(
                 oauth2.successHandler(oAuth2LoginSuccessHandler)
             }
             .oauth2ResourceServer { oauth2 ->
-                oauth2.bearerTokenResolver(CookieBearerTokenResolver())
                 oauth2.jwt { jwt ->
                     jwt.decoder(jwtDecoder)
                     jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())

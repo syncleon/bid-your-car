@@ -1,43 +1,32 @@
 package com.oblapleon.bidapi.common.config
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.EnableCaching
-import org.springframework.cache.caffeine.CaffeineCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.util.concurrent.TimeUnit
+import org.springframework.data.redis.cache.RedisCacheConfiguration
+import org.springframework.data.redis.cache.RedisCacheManager
+import org.springframework.data.redis.connection.RedisConnectionFactory
+import java.time.Duration
 
 @Configuration
 @EnableCaching
 class CacheConfig {
 
     @Bean
-    fun cacheManager(): CacheManager {
-        val cacheManager = CaffeineCacheManager()
+    fun cacheManager(connectionFactory: RedisConnectionFactory): CacheManager {
+        val defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofMinutes(10))
+            .disableCachingNullValues()
 
-        // Default configuration (10 mins)
-        cacheManager.setCaffeine(
-            Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .maximumSize(1000)
+        val cacheConfigurations = mapOf(
+            "auctions" to RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(5)),
+            "items" to RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30))
         )
 
-        // Custom configurations
-        cacheManager.registerCustomCache("auctions",
-            Caffeine.newBuilder()
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .maximumSize(500)
-                .build()
-        )
-        
-        cacheManager.registerCustomCache("items",
-            Caffeine.newBuilder()
-                .expireAfterWrite(30, TimeUnit.MINUTES)
-                .maximumSize(2000)
-                .build()
-        )
-
-        return cacheManager
+        return RedisCacheManager.builder(connectionFactory)
+            .cacheDefaults(defaultConfig)
+            .withInitialCacheConfigurations(cacheConfigurations)
+            .build()
     }
 }

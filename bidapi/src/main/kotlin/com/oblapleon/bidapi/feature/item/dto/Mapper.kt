@@ -37,7 +37,7 @@ fun Item.toDto(): ItemDto {
         recentServiceHistory = this.recentServiceHistory,
         otherItemsIncluded = this.otherItemsIncluded,
         images = this.images.map { it.toDto() }.sortedBy { it.sortOrder },
-        auctionId = this.auctionId ?: this.auctions.firstOrNull { it.status != com.oblapleon.bidapi.feature.auction.entity.AuctionStatus.CANCELLED }?.id
+        auctionId = this.auctionId
     )
 }
 

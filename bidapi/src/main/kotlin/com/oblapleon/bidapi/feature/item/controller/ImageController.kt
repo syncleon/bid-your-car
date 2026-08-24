@@ -19,6 +19,13 @@ class ImageController(
     private val storageService: StorageService
 ) {
 
+    /**
+     * Proxies an image file from the backend storage bucket to the client.
+     * Sets appropriate cache headers for CDN distribution.
+     *
+     * @param fileName The name of the file to retrieve.
+     * @return A stream of the requested image.
+     */
     @Operation(summary = "Get image proxy stream", description = "Proxies the image from R2 bucket")
     @GetMapping("/{fileName}")
     fun getImage(@PathVariable fileName: String): ResponseEntity<InputStreamResource> {

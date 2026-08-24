@@ -1,7 +1,6 @@
 package com.oblapleon.bidapi.feature.auction.service
 
 import com.oblapleon.bidapi.common.exception.*
-import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
@@ -26,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.CacheEvict
 import java.util.*
 
 @Service
@@ -35,18 +36,32 @@ class AuctionService(
     private val userRepository: UserRepository,
     private val bidRepository: BidRepository,
     private val eventPublisher: ApplicationEventPublisher,
-    private val meterRegistry: MeterRegistry,
-    private val authorizationHelper: AuthorizationHelper,
-    private val auctionFinalizationService: AuctionFinalizationService
+    private val meterRegistry: MeterRegistry
 ) {
 
     private val logger = LoggerFactory.getLogger(AuctionService::class.java)
 
+    /**
+     * Retrieves an auction by its ID.
+     *
+     * @param id The UUID of the auction.
+     * @return The found [Auction].
+     * @throws NotFoundException if the auction is not found.
+     */
+    @Cacheable(value = ["auctions"], key = "#id")
     fun findById(id: UUID): Auction {
         return auctionRepository.findById(id)
             .orElseThrow { NotFoundException("Auction not found.") }
     }
 
+    /**
+     * Finds auctions matching specific status and filter criteria.
+     *
+     * @param status The target [AuctionStatus]. Defaults to ACTIVE if null.
+     * @param filterType Sorting logic (e.g., "ending_soon", "just_listed").
+     * @param pageable Pagination and sorting information.
+     * @return A [Page] of [Auction] objects.
+     */
     fun findAuctionsByCriteria(
         status: AuctionStatus?,
         filterType: String?,
@@ -66,26 +81,44 @@ class AuctionService(
         }
     }
 
+    /**
+     * Retrieves a paginated list of recently sold auctions.
+     */
     fun findSoldAuctionsRecentlyAdded(pageable: Pageable): Page<Auction> {
         return auctionRepository.findByStatusOrderByEndTimeDesc(AuctionStatus.SOLD, pageable)
     }
 
+    /**
+     * Retrieves all auctions created by a specific seller.
+     */
     fun findBySeller(sellerId: Long, pageable: Pageable): Page<Auction> {
-        authorizationHelper.checkOwnerOrAdmin(sellerId) // <-- Enforce ownership/admin access
         return auctionRepository.findAllBySellerId(sellerId, pageable)
     }
 
+    /**
+     * Retrieves all auctions won by a specific user.
+     */
     fun findWonByUser(userId: Long, pageable: Pageable): Page<Auction> {
-        authorizationHelper.checkOwnerOrAdmin(userId) // <-- Enforce ownership/admin access
         return auctionRepository.findAllWonByUserId(userId, pageable)
     }
 
+    /**
+     * Creates a new auction for an item in DRAFT or UNSOLD status.
+     * Sets the auction to PENDING_APPROVAL status.
+     *
+     * @param request The data for creating the auction.
+     * @return The created [Auction].
+     * @throws ConflictException if the item cannot be auctioned.
+     * @throws BadRequestException if the end time is before the start time.
+     */
     @Transactional
-    fun createAuction(request: CreateAuctionDto): Auction {
+    fun createAuction(request: CreateAuctionDto, creatorId: Long): Auction {
         val item = itemRepository.findById(request.itemId)
             .orElseThrow { NotFoundException("Item not found") }
 
-        authorizationHelper.checkOwnerOrAdmin(item.seller.id!!)
+        if (item.seller.id != creatorId) {
+            throw ForbiddenException("You do not own this item.")
+        }
 
         if (item.status != ItemStatus.DRAFT && item.status != ItemStatus.UNSOLD) {
             throw ConflictException("Item is not available for a new auction.")
@@ -119,7 +152,15 @@ class AuctionService(
         return savedAuction
     }
 
+    /**
+     * Approves an auction to go live or be scheduled.
+     * Only admins can perform this action.
+     *
+     * @param auctionId The UUID of the auction.
+     * @throws ConflictException if the auction is not pending approval.
+     */
     @Transactional
+    @CacheEvict(value = ["auctions"], key = "#auctionId")
     fun approveAuction(auctionId: UUID) {
         // Admin role already enforced by @PreAuthorize on the controller
         val auction = findById(auctionId)
@@ -151,17 +192,25 @@ class AuctionService(
             auction.status = AuctionStatus.SCHEDULED
             auction.item.status = ItemStatus.LISTED_AUCTION
         }
-
-        itemRepository.save(auction.item)
-        auctionRepository.save(auction)
     }
 
+    /**
+     * Cancels an auction, reverting the item back to DRAFT.
+     * Restricts cancellation if the auction is ACTIVE or has bids, unless performed by an admin.
+     *
+     * @param id The UUID of the auction to cancel.
+     * @param requestedById The ID of the user requesting the cancellation.
+     * @param isAdmin Whether the user is an admin.
+     * @throws ConflictException if cancellation rules are violated.
+     */
     @Transactional
-    fun cancelAuction(id: UUID) {
+    @CacheEvict(value = ["auctions"], key = "#id")
+    fun cancelAuction(id: UUID, requestedById: Long, isAdmin: Boolean) {
         val auction = findById(id)
 
-        val currentUser = authorizationHelper.checkOwnerOrAdmin(auction.item.seller.id!!)
-        val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
+        if (auction.item.seller.id != requestedById && !isAdmin) {
+            throw ForbiddenException("You can only cancel your own auctions.")
+        }
 
         if (auction.status == AuctionStatus.ACTIVE && !isAdmin) {
             throw ConflictException("Cannot cancel an active auction. Contact support.")
@@ -174,9 +223,6 @@ class AuctionService(
         auction.status = AuctionStatus.CANCELLED
         auction.item.status = ItemStatus.DRAFT
         auction.item.auctionId = null
-
-        itemRepository.save(auction.item)
-        auctionRepository.save(auction)
     }
 
     /**
@@ -184,6 +230,7 @@ class AuctionService(
      * The controller must enforce @PreAuthorize("hasRole('ADMIN')") before calling this.
      */
     @Transactional
+    @CacheEvict(value = ["auctions"], key = "#id")
     fun adminForceCancelAuction(id: UUID) {
         val auction = findById(id)
 
@@ -191,149 +238,10 @@ class AuctionService(
         auction.item.status = ItemStatus.DRAFT
         auction.item.auctionId = null
 
-        itemRepository.save(auction.item)
-        auctionRepository.save(auction)
         logger.info("Admin force-cancelled auction ${auction.id}")
     }
 
-    @Transactional
-    fun placeBid(auctionId: UUID, amount: BigDecimal): Bid {
-        val currentUser = authorizationHelper.getCurrentUser()
-        return placeBidAsUser(auctionId, currentUser.id!!, amount)
-    }
 
-    @Transactional
-    fun placeBidAsUser(auctionId: UUID, bidderId: Long, maxAmount: BigDecimal): Bid {
-        val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
-            .orElseThrow { NotFoundException("Auction not found.") }
 
-        val now = Instant.now()
-        if (auction.status != AuctionStatus.ACTIVE) throw BadRequestException("Auction is not active.")
-        if (now.isAfter(auction.endTime)) throw BadRequestException("Auction has ended.")
-        if (now.isBefore(auction.startTime)) throw BadRequestException("Auction has not started yet.")
-        if (auction.item.seller.id == bidderId) throw ForbiddenException("You cannot bid on your own item.")
 
-        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(auction.currentPrice))
-
-        val currentWinnerId = auction.winningBid?.bidder?.id
-        val currentMax = auction.winningBid?.maxAmount ?: BigDecimal.ZERO
-
-        if (currentWinnerId == bidderId) {
-            if (maxAmount <= currentMax) {
-                throw BadRequestException("Your new max bid must be higher than your current max bid ($currentMax).")
-            }
-            val bidder = userRepository.findById(bidderId).orElseThrow { NotFoundException("User not found") }
-            return recordBid(auction, bidder, auction.currentPrice, maxAmount, now)
-        }
-
-        if (maxAmount < minRequired) {
-             throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
-        }
-
-        // Allow any bid >= minRequired. Proxy bidding handles the rest.
-
-        val bidder = userRepository.findById(bidderId).orElseThrow { NotFoundException("User not found") }
-
-        if (auction.bidCount == 0) {
-            return recordBid(auction, bidder, auction.startPrice, maxAmount, now)
-        }
-
-        if (maxAmount <= currentMax) {
-            // New bidder is immediately outbid by current winner
-            recordBid(auction, bidder, maxAmount, maxAmount, now)
-            val nextIncrement = maxAmount.add(BidIncrementUtil.getDynamicBidIncrement(maxAmount))
-            val newPriceForA = if (currentMax >= nextIncrement) nextIncrement else currentMax
-            return recordBid(auction, auction.winningBid!!.bidder, newPriceForA, currentMax, now.plusMillis(1))
-        } else {
-            // New bidder outbids current winner
-            val prevWinner = auction.winningBid!!.bidder
-            recordBid(auction, prevWinner, currentMax, currentMax, now)
-            val nextIncrement = currentMax.add(BidIncrementUtil.getDynamicBidIncrement(currentMax))
-            val newPriceForB = if (maxAmount >= nextIncrement) nextIncrement else maxAmount
-            return recordBid(auction, bidder, newPriceForB, maxAmount, now.plusMillis(1))
-        }
-    }
-
-    @Transactional
-    fun placeNextMinimumBid(auctionId: UUID): Bid {
-        val currentUser = authorizationHelper.getCurrentUser()
-
-        val auction = auctionRepository.findByIdWithPessimisticWriteLock(auctionId)
-            .orElseThrow { NotFoundException("Auction not found.") }
-
-        if (auction.winningBid?.bidder?.id == currentUser.id) {
-            throw BadRequestException("You already hold the highest bid.")
-        }
-
-        val exactAmountToBid = if (auction.bidCount == 0) {
-            auction.startPrice
-        } else {
-            auction.currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(auction.currentPrice))
-        }
-
-        // Delegate to the main proxy bidding function
-        return placeBidAsUser(auctionId, currentUser.id!!, exactAmountToBid)
-    }
-
-    private fun recordBid(auction: Auction, bidder: User, amount: BigDecimal, maxAmount: BigDecimal, now: Instant): Bid {
-        val secondsRemaining = ChronoUnit.SECONDS.between(now, auction.endTime)
-        if (secondsRemaining < 120) auction.endTime = now.plus(120, ChronoUnit.SECONDS)
-
-        val bid = Bid(
-            auction = auction,
-            bidder = bidder,
-            amount = amount,
-            bidTime = now,
-            maxAmount = maxAmount
-        )
-        val savedBid = bidRepository.save(bid)
-
-        auction.currentPrice = amount
-        auction.bidCount += 1
-        auction.winningBid = savedBid
-
-        auctionRepository.save(auction)
-        meterRegistry.counter("auction.bids.placed", "status", "success").increment()
-
-        eventPublisher.publishEvent(BidPlacedEvent(auction, savedBid, bidder.username))
-
-        return savedBid
-    }
-
-    fun processEndedAuctions() {
-        val now = Instant.now()
-        val pageRequest = PageRequest.of(0, 50)
-        val expiredAuctions = auctionRepository.findAllByStatusAndEndTimeBefore(
-            AuctionStatus.ACTIVE,
-            now,
-            pageRequest
-        )
-
-        expiredAuctions.forEach { auction ->
-            try {
-                auctionFinalizationService.finalizeAuction(auction.id!!)
-            } catch (e: Exception) {
-                logger.error("Failed to finalize auction ${auction.id}: ${e.message}", e)
-            }
-        }
-    }
-
-    fun processScheduledAuctions() {
-        val now = Instant.now()
-        val pageRequest = PageRequest.of(0, 50)
-
-        val dueAuctions = auctionRepository.findAllByStatusAndStartTimeBefore(
-            AuctionStatus.SCHEDULED,
-            now,
-            pageRequest
-        )
-
-        dueAuctions.forEach { auction ->
-            try {
-                auctionFinalizationService.activateScheduledAuction(auction.id!!)
-            } catch (e: Exception) {
-                logger.error("Failed to activate scheduled auction ${auction.id}: ${e.message}", e)
-            }
-        }
-    }
 }

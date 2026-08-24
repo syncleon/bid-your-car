@@ -10,6 +10,9 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import java.net.URI
 import java.util.UUID
 
+/**
+ * Service responsible for handling file uploads and deletions using AWS S3 (or Cloudflare R2).
+ */
 @Service
 class StorageService(
     private val s3Client: S3Client
@@ -21,10 +24,28 @@ class StorageService(
     @Value("\${imagekit.url-endpoint}")
     lateinit var imageKitUrl: String
 
+    /**
+     * Uploads a multipart file to the configured S3-compatible storage bucket.
+     * Validates that the file is an image and generates a unique UUID filename.
+     *
+     * @param file The file to upload.
+     * @return The public URL (via ImageKit) of the uploaded file.
+     * @throws com.oblapleon.bidapi.common.exception.BadRequestException if file type is invalid.
+     */
     fun uploadFile(file: MultipartFile): String {
-        val extension = file.originalFilename
-            ?.substringAfterLast(".", "jpg")
-            ?: "jpg"
+        val tika = org.apache.tika.Tika()
+        val detectedType = tika.detect(file.inputStream)
+
+        if (!detectedType.startsWith("image/")) {
+            throw com.oblapleon.bidapi.common.exception.BadRequestException("Invalid file content. Only images are allowed.")
+        }
+
+        val extension = when (detectedType) {
+            "image/jpeg" -> "jpg"
+            "image/png" -> "png"
+            "image/webp" -> "webp"
+            else -> throw com.oblapleon.bidapi.common.exception.BadRequestException("Invalid file type. Only JPEG, PNG, and WebP images are allowed.")
+        }
 
         val fileName = "${UUID.randomUUID()}.$extension"
 
@@ -41,6 +62,12 @@ class StorageService(
         return constructImageKitUrl(fileName)
     }
 
+    /**
+     * Retrieves an input stream for a specific file stored in the bucket.
+     *
+     * @param fileName The name (key) of the file in the bucket.
+     * @return A [software.amazon.awssdk.core.ResponseInputStream] for the file.
+     */
     fun getFileStream(fileName: String): software.amazon.awssdk.core.ResponseInputStream<software.amazon.awssdk.services.s3.model.GetObjectResponse> {
         val request = software.amazon.awssdk.services.s3.model.GetObjectRequest.builder()
             .bucket(bucketName)
@@ -49,6 +76,11 @@ class StorageService(
         return s3Client.getObject(request)
     }
 
+    /**
+     * Deletes a file from the storage bucket given its public URL.
+     *
+     * @param fileUrl The public URL of the file to delete.
+     */
     fun deleteFile(fileUrl: String) {
         val key = extractKeyFromUrl(fileUrl)
         val deleteRequest = DeleteObjectRequest.builder()
@@ -59,11 +91,23 @@ class StorageService(
         s3Client.deleteObject(deleteRequest)
     }
 
+    /**
+     * Constructs the ImageKit CDN URL for a given file name.
+     *
+     * @param fileName The key of the file in the bucket.
+     * @return The full public URL.
+     */
     private fun constructImageKitUrl(fileName: String): String {
         val baseUrl = imageKitUrl.removeSuffix("/")
         return "$baseUrl/$fileName"
     }
 
+    /**
+     * Extracts the bucket object key from a full public URL.
+     *
+     * @param fileUrl The full public URL.
+     * @return The extracted key (filename).
+     */
     private fun extractKeyFromUrl(fileUrl: String): String {
         val uri = URI(fileUrl)
         return uri.path.substringAfterLast("/")

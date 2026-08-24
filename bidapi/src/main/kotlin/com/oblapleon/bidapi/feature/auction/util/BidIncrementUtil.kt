@@ -2,7 +2,16 @@ package com.oblapleon.bidapi.feature.auction.util
 
 import java.math.BigDecimal
 
+/**
+ * Utility for calculating standard auction bid increments based on the current price.
+ */
 object BidIncrementUtil {
+    /**
+     * Determines the next required bid increment amount dynamically based on the current price tier.
+     *
+     * @param currentPrice The current highest bid or starting price.
+     * @return The required increment amount to add for the next valid bid.
+     */
     fun getDynamicBidIncrement(currentPrice: BigDecimal): BigDecimal {
         val price = currentPrice.toDouble()
         return when {

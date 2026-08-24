@@ -8,7 +8,10 @@ import jakarta.persistence.*
 import org.hibernate.annotations.BatchSize
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.*
+import com.oblapleon.bidapi.common.exception.BadRequestException
+import com.oblapleon.bidapi.feature.auction.util.BidIncrementUtil
 
 @Entity
 @Table(
@@ -86,4 +89,58 @@ class Auction(
         get() = status == AuctionStatus.ACTIVE &&
                 Instant.now().isAfter(startTime) &&
                 Instant.now().isBefore(endTime)
+
+    fun processBidRequest(bidder: User, maxAmount: BigDecimal, now: Instant): List<Bid> {
+        val minRequired = if (bidCount == 0) startPrice else currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(currentPrice))
+        val currentWinnerId = winningBid?.bidder?.id
+        val currentMax = winningBid?.maxAmount ?: BigDecimal.ZERO
+
+        if (currentWinnerId == bidder.id) {
+            if (maxAmount <= currentMax) {
+                throw BadRequestException("Your new max bid must be higher than your current max bid ($currentMax).")
+            }
+            return listOf(recordBidInternal(bidder, currentPrice, maxAmount, now))
+        }
+
+        if (maxAmount < minRequired) {
+            throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
+        }
+
+        if (bidCount == 0) {
+            return listOf(recordBidInternal(bidder, startPrice, maxAmount, now))
+        }
+
+        if (maxAmount <= currentMax) {
+            val prevWinner = winningBid!!.bidder
+            val bobBid = recordBidInternal(bidder, maxAmount, maxAmount, now)
+            val nextIncrement = maxAmount.add(BidIncrementUtil.getDynamicBidIncrement(maxAmount))
+            val newPriceForA = if (currentMax >= nextIncrement) nextIncrement else currentMax
+            val aliceBid = recordBidInternal(prevWinner, newPriceForA, currentMax, now.plusMillis(1))
+            return listOf(bobBid, aliceBid)
+        } else {
+            val prevWinner = winningBid!!.bidder
+            val bobBid = recordBidInternal(prevWinner, currentMax, currentMax, now)
+            val nextIncrement = currentMax.add(BidIncrementUtil.getDynamicBidIncrement(currentMax))
+            val newPriceForB = if (maxAmount >= nextIncrement) nextIncrement else maxAmount
+            val aliceBid = recordBidInternal(bidder, newPriceForB, maxAmount, now.plusMillis(1))
+            return listOf(bobBid, aliceBid)
+        }
+    }
+
+    private fun recordBidInternal(bidder: User, amount: BigDecimal, maxAmount: BigDecimal, now: Instant): Bid {
+        val secondsRemaining = ChronoUnit.SECONDS.between(now, endTime)
+        if (secondsRemaining < 120) endTime = now.plus(120, ChronoUnit.SECONDS)
+
+        val bid = Bid(
+            auction = this,
+            bidder = bidder,
+            amount = amount,
+            bidTime = now,
+            maxAmount = maxAmount
+        )
+        currentPrice = amount
+        bidCount += 1
+        winningBid = bid
+        return bid
+    }
 }

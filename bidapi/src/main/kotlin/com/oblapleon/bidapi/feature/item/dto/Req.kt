@@ -30,7 +30,35 @@ data class ItemCreateRequest(
     @field:Size(max = 5000, message = "Description is too long")
     val description: String? = null,
 
+    val isModified: Boolean = false,
+    val hasServiceHistory: Boolean = false,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val titleStatus: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
     val fuelType: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val engine: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val drivetrain: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val transmission: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val bodyStyle: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val exteriorColor: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val interiorColor: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val sellerType: String? = null,
 
     @field:Min(value = 0, message = "Horsepower cannot be negative")
     val horsepower: Int? = null,
@@ -38,22 +66,11 @@ data class ItemCreateRequest(
     @field:NotNull(message = "Condition grade is required")
     val condition: ConditionGrade,
 
-    val titleStatus: String? = null,
-    val isModified: Boolean = false,
-    val hasServiceHistory: Boolean = false,
-
     @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
     val reservePrice: BigDecimal? = null,
 
     val isNoReserve: Boolean = false,
 
-    val engine: String? = null,
-    val drivetrain: String? = null,
-    val transmission: String? = null,
-    val bodyStyle: String? = null,
-    val exteriorColor: String? = null,
-    val interiorColor: String? = null,
-    val sellerType: String? = null,
     @field:Size(max = 5000, message = "Highlights is too long")
     val highlights: String? = null,
     @field:Size(max = 5000, message = "Known flaws is too long")
@@ -74,23 +91,45 @@ data class ItemUpdateRequest(
     val mileage: Int? = null,
     @field:Size(max = 5000, message = "Description is too long")
     val description: String? = null,
-    val fuelType: String? = null,
-    @field:Min(value = 0, message = "Horsepower cannot be negative")
-    val horsepower: Int? = null,
-    val condition: ConditionGrade? = null,
-    val titleStatus: String? = null,
     val isModified: Boolean? = null,
     val hasServiceHistory: Boolean? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val titleStatus: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val fuelType: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val engine: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val drivetrain: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val transmission: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val bodyStyle: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val exteriorColor: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val interiorColor: String? = null,
+
+    @field:Size(max = 255, message = "Value is too long")
+    val sellerType: String? = null,
+
+    @field:Min(value = 0, message = "Horsepower cannot be negative")
+    val horsepower: Int? = null,
+
+    val condition: ConditionGrade? = null,
+
     @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
     val reservePrice: BigDecimal? = null,
     val isNoReserve: Boolean? = null,
-    val engine: String? = null,
-    val drivetrain: String? = null,
-    val transmission: String? = null,
-    val bodyStyle: String? = null,
-    val exteriorColor: String? = null,
-    val interiorColor: String? = null,
-    val sellerType: String? = null,
+
     @field:Size(max = 5000, message = "Highlights is too long")
     val highlights: String? = null,
     @field:Size(max = 5000, message = "Known flaws is too long")

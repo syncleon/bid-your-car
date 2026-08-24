@@ -7,8 +7,10 @@ import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
 import com.oblapleon.bidapi.feature.auction.dto.toDto
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.service.AuctionService
+import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.bid.dto.BidRequest
 import com.oblapleon.bidapi.feature.bid.dto.toDto
+import com.oblapleon.bidapi.feature.bid.service.BiddingService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -21,8 +23,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import org.springframework.cache.annotation.Cacheable
-import org.springframework.cache.annotation.CacheEvict
 import java.util.UUID
 
 @RestController
@@ -30,10 +30,20 @@ import java.util.UUID
 @Tag(name = "Auctions", description = "Public auction browsing and management")
 class AuctionController(
     private val auctionService: AuctionService,
+    private val biddingService: BiddingService,
     private val rateLimitingService: RateLimitingService,
     private val authorizationHelper: AuthorizationHelper
 ) {
 
+    /**
+     * Retrieves a paginated list of active auctions available to the public.
+     * Allows filtering by status and sorting logic (e.g., ending soon).
+     *
+     * @param status Optional filter by [AuctionStatus].
+     * @param filter Optional pre-defined sorting/filtering strategy.
+     * @param pageable Pagination configuration.
+     * @return A paginated list of [AuctionDto].
+     */
     @Operation(summary = "Browse Auctions", description = "Public feed of active auctions.")
     @GetMapping
     fun getPublicAuctions(
@@ -46,6 +56,12 @@ class AuctionController(
         return ResponseEntity.ok(page.map { it.toDto() })
     }
 
+    /**
+     * Retrieves a paginated list of recently sold auctions.
+     *
+     * @param pageable Pagination configuration.
+     * @return A paginated list of [AuctionDto].
+     */
     @Operation(summary = "Recently Sold Auctions", description = "Shows the most recent successful sales.")
     @GetMapping("/sold")
     fun getRecentlySold(
@@ -55,79 +71,97 @@ class AuctionController(
         return ResponseEntity.ok(soldAuctions.map { it.toDto() })
     }
 
+    /**
+     * Retrieves the details of a specific auction.
+     * Results are cached to optimize reads.
+     *
+     * @param id The UUID of the auction.
+     * @return The [AuctionDto] detailing the auction.
+     */
     @Operation(summary = "Get Auction Details")
-    @Cacheable(value = ["auctions"], key = "#id")
     @GetMapping("/{id}")
     fun getAuctionById(@PathVariable id: UUID): ResponseEntity<AuctionDto> {
         val auction = auctionService.findById(id)
         return ResponseEntity.ok(auction.toDto())
     }
 
+    /**
+     * Submits a request to create a new auction for an item.
+     * The new auction is placed in PENDING_APPROVAL status.
+     *
+     * @param dto The auction configuration parameters.
+     * @return The created [AuctionDto].
+     */
     @Operation(summary = "Create Auction", description = "List an item for auction (Pending Approval).")
     @PostMapping
     fun createAuction(
         @Valid @RequestBody dto: CreateAuctionDto
     ): ResponseEntity<AuctionDto> {
-        val auction = auctionService.createAuction(dto)
+        val currentUser = authorizationHelper.getCurrentUser()
+        val auction = auctionService.createAuction(dto, currentUser.id!!)
         return ResponseEntity.status(HttpStatus.CREATED).body(auction.toDto())
     }
 
+    /**
+     * Places a specific maximum bid on an active auction.
+     * Subject to rate limiting to prevent spam.
+     *
+     * @param id The UUID of the auction.
+     * @param request The bid amount requested.
+     * @return The outcome of the bid (which might be immediately outbid due to proxy bidding).
+     */
     @Operation(summary = "Place Custom Bid", description = "Submit a specific bid amount on an active auction.")
-    @CacheEvict(value = ["auctions"], key = "#id")
     @PostMapping("/{id}/bids")
     fun placeBid(
         @PathVariable id: UUID,
         @Valid @RequestBody request: BidRequest
     ): ResponseEntity<Any> {
         val currentUser = authorizationHelper.getCurrentUser()
-
-        val bucket = rateLimitingService.resolveBucket(currentUser.id!!)
-        val probe = bucket.tryConsumeAndReturnRemaining(1)
-
-        if (!probe.isConsumed) {
-            val waitForSeconds = probe.nanosToWaitForRefill / 1_000_000_000
-            return ResponseEntity
-                .status(HttpStatus.TOO_MANY_REQUESTS)
-                .header("X-Rate-Limit-Retry-After-Seconds", waitForSeconds.toString())
-                .body(mapOf("error" to "You are bidding too fast! Please wait $waitForSeconds seconds."))
-        }
-        val bid = auctionService.placeBid(id, request.amount)
+        val bid = biddingService.placeBid(id, currentUser.id!!, request.amount)
         return ResponseEntity.status(HttpStatus.CREATED).body(bid.toDto())
     }
 
+    /**
+     * Submits a bid at the exact minimum required amount.
+     * Subject to rate limiting.
+     *
+     * @param id The UUID of the auction.
+     * @return The outcome of the quick bid.
+     */
     @Operation(summary = "Quick Bid", description = "Automatically places the next minimum required bid.")
-    @CacheEvict(value = ["auctions"], key = "#id")
     @PostMapping("/{id}/bids/quick")
     fun placeQuickBid(
         @PathVariable id: UUID
     ): ResponseEntity<Any> {
         val currentUser = authorizationHelper.getCurrentUser()
-        val bucket = rateLimitingService.resolveBucket(currentUser.id!!)
-        val probe = bucket.tryConsumeAndReturnRemaining(1)
-
-        if (!probe.isConsumed) {
-            val waitForSeconds = probe.nanosToWaitForRefill / 1_000_000_000
-            return ResponseEntity
-                .status(HttpStatus.TOO_MANY_REQUESTS)
-                .header("X-Rate-Limit-Retry-After-Seconds", waitForSeconds.toString())
-                .body(mapOf("error" to "You are bidding too fast! Please wait $waitForSeconds seconds."))
-        }
-
-        val bid = auctionService.placeNextMinimumBid(id)
+        val bid = biddingService.placeNextMinimumBid(id, currentUser.id!!)
         return ResponseEntity.status(HttpStatus.CREATED).body(bid.toDto())
     }
 
+    /**
+     * Cancels an auction, provided it has no bids or is not already active
+     * (unless performed by an admin).
+     *
+     * @param id The UUID of the auction.
+     * @return A success message.
+     */
     @Operation(summary = "Cancel Auction", description = "Cancel a listing. Restricted if bids exist.")
-    @CacheEvict(value = ["auctions"], key = "#id")
     @DeleteMapping("/{id}")
     fun cancelAuction(
         @PathVariable id: UUID
     ): ResponseEntity<Map<String, String>> {
-        // Service internally verifies if the user is the owner or an Admin
-        auctionService.cancelAuction(id)
+        val currentUser = authorizationHelper.getCurrentUser()
+        val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
+        auctionService.cancelAuction(id, currentUser.id!!, isAdmin)
         return ResponseEntity.ok(mapOf("message" to "Auction cancelled successfully"))
     }
 
+    /**
+     * Retrieves all auctions that the current user has successfully won.
+     *
+     * @param pageable Pagination configuration.
+     * @return A paginated list of [AuctionDto].
+     */
     @Operation(summary = "My Wins", description = "Auctions won by the current user.")
     @GetMapping("/me/wins")
     fun getMyWins(
@@ -138,6 +172,12 @@ class AuctionController(
         return ResponseEntity.ok(page.map { it.toDto() })
     }
 
+    /**
+     * Retrieves all auctions listed by the current user.
+     *
+     * @param pageable Pagination configuration.
+     * @return A paginated list of [AuctionDto].
+     */
     @Operation(summary = "My Listings", description = "Auctions created by the current user.")
     @GetMapping("/me/listings")
     fun getMyListings(
@@ -148,18 +188,28 @@ class AuctionController(
         return ResponseEntity.ok(page.map { it.toDto() })
     }
 
+    /**
+     * Admin action to approve a pending auction and make it ACTIVE or SCHEDULED.
+     *
+     * @param id The UUID of the auction.
+     * @return A success message.
+     */
     @Operation(summary = "Approve Auction", description = "Admin: Activate a pending auction.")
     @PreAuthorize("hasRole('ADMIN')")
-    @CacheEvict(value = ["auctions"], key = "#id")
     @PatchMapping("/{id}/approve")
     fun approveAuction(@PathVariable id: UUID): ResponseEntity<Map<String, String>> {
         auctionService.approveAuction(id)
         return ResponseEntity.ok(mapOf("message" to "Auction approved successfully."))
     }
 
+    /**
+     * Admin action to forcefully cancel an auction regardless of its current state or bid count.
+     *
+     * @param id The UUID of the auction.
+     * @return A success message.
+     */
     @Operation(summary = "Force Cancel", description = "Admin: Cancel an auction even if active or if bids exist.")
     @PreAuthorize("hasRole('ADMIN')")
-    @CacheEvict(value = ["auctions"], key = "#id")
     @DeleteMapping("/admin/{id}/cancel")
     fun adminCancelAuction(
         @PathVariable id: UUID

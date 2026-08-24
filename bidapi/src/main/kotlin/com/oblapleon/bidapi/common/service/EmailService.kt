@@ -6,12 +6,22 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Service
 
+/**
+ * Service responsible for sending outbound emails, such as account verification.
+ */
 @Service
 class EmailService(
     private val mailSender: JavaMailSender,
     @Value("\${app.base-url:http://localhost:8080}")
     private val baseUrl: String
 ) {
+    /**
+     * Sends an HTML verification email to a newly registered user.
+     *
+     * @param toEmail The recipient's email address.
+     * @param token The unique verification token to include in the link.
+     */
+    @org.springframework.scheduling.annotation.Async
     fun sendVerificationEmail(toEmail: String, token: String) {
         val message: MimeMessage = mailSender.createMimeMessage()
 

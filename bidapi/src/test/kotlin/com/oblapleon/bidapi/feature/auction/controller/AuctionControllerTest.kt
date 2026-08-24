@@ -8,10 +8,13 @@ import com.oblapleon.bidapi.common.service.RateLimitingService
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.service.AuctionService
+import com.oblapleon.bidapi.feature.bid.service.BiddingService
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.user.entity.User
+import com.oblapleon.bidapi.feature.user.security.HttpCookieOAuth2AuthorizationRequestRepository
 import com.oblapleon.bidapi.feature.user.security.OAuth2LoginSuccessHandler
+import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
@@ -38,11 +41,17 @@ class AuctionControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    @MockBean
+    lateinit var userRepository: UserRepository
+
     @Autowired
     lateinit var objectMapper: ObjectMapper
 
     @MockBean
     lateinit var auctionService: AuctionService
+
+    @MockBean
+    lateinit var biddingService: BiddingService
 
     @MockBean
     lateinit var rateLimitingService: RateLimitingService
@@ -58,6 +67,9 @@ class AuctionControllerTest {
 
     @MockBean
     lateinit var oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
+
+    @MockBean
+    lateinit var httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository
 
     @Test
     fun `getPublicAuctions should return paginated list of auctions`() {

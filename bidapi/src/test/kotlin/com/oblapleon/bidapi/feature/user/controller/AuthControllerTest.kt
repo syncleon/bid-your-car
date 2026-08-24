@@ -6,8 +6,12 @@ import com.oblapleon.bidapi.common.security.JwtTokenProvider
 import com.oblapleon.bidapi.feature.user.dto.AuthRespDto
 import com.oblapleon.bidapi.feature.user.dto.LoginReqDto
 import com.oblapleon.bidapi.feature.user.dto.RegisterReqDto
+import com.oblapleon.bidapi.feature.user.security.HttpCookieOAuth2AuthorizationRequestRepository
 import com.oblapleon.bidapi.feature.user.security.OAuth2LoginSuccessHandler
 import com.oblapleon.bidapi.feature.user.service.AuthService
+import com.oblapleon.bidapi.feature.user.repository.UserRepository
+import com.oblapleon.bidapi.common.service.RateLimitingService
+import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
@@ -28,6 +32,15 @@ class AuthControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    @MockBean
+    lateinit var authorizationHelper: AuthorizationHelper
+
+    @MockBean
+    lateinit var rateLimitingService: RateLimitingService
+
+    @MockBean
+    lateinit var userRepository: UserRepository
+
     @Autowired
     lateinit var objectMapper: ObjectMapper
 
@@ -42,6 +55,9 @@ class AuthControllerTest {
 
     @MockBean
     lateinit var oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
+
+    @MockBean
+    lateinit var httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository
 
     @Test
     fun `login should return success and set cookie on valid credentials`() {

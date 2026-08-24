@@ -7,8 +7,10 @@ import com.oblapleon.bidapi.common.security.JwtTokenProvider
 import com.oblapleon.bidapi.common.service.RateLimitingService
 import com.oblapleon.bidapi.feature.item.service.ItemService
 import com.oblapleon.bidapi.feature.user.entity.User
+import com.oblapleon.bidapi.feature.user.security.HttpCookieOAuth2AuthorizationRequestRepository
 import com.oblapleon.bidapi.feature.user.security.OAuth2LoginSuccessHandler
 import com.oblapleon.bidapi.feature.user.service.UserService
+import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
@@ -29,6 +31,9 @@ class UserControllerTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @MockBean
+    lateinit var userRepository: UserRepository
 
     @Autowired
     lateinit var objectMapper: ObjectMapper
@@ -53,6 +58,9 @@ class UserControllerTest {
 
     @MockBean
     lateinit var oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
+
+    @MockBean
+    lateinit var httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository
 
     @Test
     @org.springframework.security.test.context.support.WithMockUser

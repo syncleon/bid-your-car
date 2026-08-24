@@ -120,7 +120,7 @@ class Item(
     @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OrderBy("sortOrder ASC")
     @BatchSize(size = 20)
-    var images: MutableSet<ItemImage> = mutableSetOf(),
+    var images: MutableList<ItemImage> = mutableListOf(),
 
     @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
     var auctions: MutableSet<Auction> = mutableSetOf(),

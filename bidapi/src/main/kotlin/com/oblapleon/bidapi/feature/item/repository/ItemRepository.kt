@@ -11,14 +11,22 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
+import org.springframework.data.jpa.repository.EntityGraph
+
 @Repository
 interface ItemRepository : BaseRepository<Item, UUID> {
 
+    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
     fun findAllByStatus(status: ItemStatus, pageable: Pageable): Page<Item>
+
+    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
     fun findAllBySellerId(sellerId: Long, pageable: Pageable): Page<Item>
+
+    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
     fun findAllBySellerIdAndStatus(sellerId: Long, status: ItemStatus, pageable: Pageable): Page<Item>
     fun existsByVin(vin: String): Boolean
 
+    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
     @Query("SELECT i FROM Item i WHERE i.status = 'DRAFT' AND i.auctions IS EMPTY")
     fun findReadyForAuction(pageable: Pageable): Page<Item>
 
@@ -29,7 +37,12 @@ interface ItemRepository : BaseRepository<Item, UUID> {
     fun searchModels(@Param("make") make: String, @Param("query") query: String): List<String>
     fun countBySellerIdAndStatus(sellerId: Long, status: ItemStatus): Long
 
+    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
     fun findAllByConditionAndStatus(condition: ConditionGrade, status: ItemStatus, pageable: Pageable): Page<Item>
+
+    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
     fun findAllByFuelTypeAndStatus(fuelType: String, status: ItemStatus, pageable: Pageable): Page<Item>
+
+    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
     fun findAllByIsNoReserveTrueAndStatusIn(statuses: List<ItemStatus>, pageable: Pageable): Page<Item>
 }

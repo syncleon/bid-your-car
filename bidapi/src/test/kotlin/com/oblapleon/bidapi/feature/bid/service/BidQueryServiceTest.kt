@@ -21,13 +21,13 @@ import java.time.Instant
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class BidServiceTest {
+class BidQueryServiceTest {
 
     @Mock
     private lateinit var bidRepository: BidRepository
 
     @InjectMocks
-    private lateinit var bidService: BidService
+    private lateinit var bidQueryService: BidQueryService
 
     private fun mockBid(
         id: UUID = UUID.randomUUID(),
@@ -51,7 +51,7 @@ class BidServiceTest {
 
         `when`(bidRepository.findById(id)).thenReturn(Optional.of(bid))
 
-        val result = bidService.findById(id)
+        val result = bidQueryService.findById(id)
 
         assertNotNull(result)
         assertEquals(id, result.id)
@@ -63,7 +63,7 @@ class BidServiceTest {
         `when`(bidRepository.findById(id)).thenReturn(Optional.empty())
 
         assertThrows<NotFoundException> {
-            bidService.findById(id)
+            bidQueryService.findById(id)
         }
     }
 
@@ -79,7 +79,7 @@ class BidServiceTest {
 
         `when`(bidRepository.findAllByAuctionIdOrderByAmountDesc(auctionId, pageable)).thenReturn(expectedPage)
 
-        val result = bidService.findHistoryByAuctionId(auctionId, pageable)
+        val result = bidQueryService.findHistoryByAuctionId(auctionId, pageable)
 
         assertNotNull(result)
         assertEquals(2, result.content.size)
@@ -90,7 +90,7 @@ class BidServiceTest {
         val userId = 1L
         `when`(bidRepository.countDistinctAuctionsByBidderId(userId)).thenReturn(5L)
 
-        val result = bidService.countAuctionsParticipated(userId)
+        val result = bidQueryService.countAuctionsParticipated(userId)
 
         assertEquals(5L, result)
     }

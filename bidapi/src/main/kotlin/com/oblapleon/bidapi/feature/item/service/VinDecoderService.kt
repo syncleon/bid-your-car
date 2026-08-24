@@ -16,6 +16,13 @@ class VinDecoderService {
 
     private val restTemplate = RestTemplate()
 
+    /**
+     * Decodes a VIN (Vehicle Identification Number) using the NHTSA API.
+     *
+     * @param vin The 17-character VIN to decode.
+     * @return A [VinDecodeResult] containing parsed vehicle details.
+     * @throws BadRequestException if the VIN length is invalid or decoding fails.
+     */
     fun decodeVin(vin: String): VinDecodeResult {
         if (vin.length != 17) {
             throw BadRequestException("VIN must be exactly 17 characters.")

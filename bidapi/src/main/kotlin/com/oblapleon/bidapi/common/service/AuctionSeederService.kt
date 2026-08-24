@@ -11,13 +11,16 @@ import com.oblapleon.bidapi.feature.user.entity.User
 import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import net.datafaker.Faker
 import org.springframework.data.domain.PageRequest
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 @Service
+@Profile("!prod")
 class AuctionSeederService(
     private val auctionRepository: AuctionRepository,
     private val itemRepository: ItemRepository,
@@ -45,17 +48,28 @@ class AuctionSeederService(
     }
 
     private fun createRandomAuction(item: Item, allUsers: List<User>) {
-        val status = faker.options().option(AuctionStatus::class.java)
-        val startPrice = BigDecimal(faker.number().numberBetween(5000, 50000))
-        val hasReserve = faker.bool().bool()
-        val reservePrice = if (hasReserve) startPrice.multiply(BigDecimal("1.2")) else null
+        val status = faker.options().option(
+            AuctionStatus.ACTIVE,
+            AuctionStatus.ACTIVE,
+            AuctionStatus.ACTIVE,
+            AuctionStatus.SCHEDULED,
+            AuctionStatus.SOLD,
+            AuctionStatus.UNSOLD
+        )
+
+        val basePrice = item.reservePrice ?: BigDecimal("50000")
+        val startPriceRatio = BigDecimal(faker.number().numberBetween(50, 70)).divide(BigDecimal("100"))
+        val startPrice = basePrice.multiply(startPriceRatio).setScale(0, RoundingMode.HALF_UP)
+
+        val hasReserve = !item.isNoReserve
+        val reservePrice = if (hasReserve) basePrice else null
         val now = Instant.now()
         var startTime = now
         var endTime = now.plus(7, ChronoUnit.DAYS)
         when (status) {
             AuctionStatus.ACTIVE -> {
-                startTime = now.minus(faker.number().numberBetween(1L, 3L), ChronoUnit.DAYS)
-                endTime = now.plus(faker.number().numberBetween(1L, 4L), ChronoUnit.DAYS)
+                startTime = now.minus(faker.number().numberBetween(1L, 4L), ChronoUnit.DAYS)
+                endTime = now.plus(faker.number().numberBetween(1L, 5L), ChronoUnit.DAYS)
             }
             AuctionStatus.SOLD, AuctionStatus.UNSOLD -> {
                 startTime = now.minus(10, ChronoUnit.DAYS)
@@ -91,7 +105,7 @@ class AuctionSeederService(
             auction.status = AuctionStatus.UNSOLD
             auctionRepository.save(auction)
         }
-        
+
         when (auction.status) {
             AuctionStatus.ACTIVE -> item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.ACTIVE_AUCTION
             AuctionStatus.SOLD -> item.status = com.oblapleon.bidapi.feature.item.entity.ItemStatus.SOLD
@@ -106,7 +120,7 @@ class AuctionSeederService(
     private fun simulateBiddingWar(auction: Auction, allUsers: List<User>) {
         val eligibleBidders = allUsers.filter { it.id != auction.item.seller.id }
         if (eligibleBidders.isEmpty()) return
-        val bidCount = faker.number().numberBetween(3, 15)
+        val bidCount = faker.number().numberBetween(4, 18)
         var currentPrice = auction.startPrice
         val durationSeconds = ChronoUnit.SECONDS.between(auction.startTime,
             if(auction.endTime.isBefore(Instant.now())) auction.endTime else Instant.now()
@@ -117,7 +131,7 @@ class AuctionSeederService(
 
         for (i in 1..bidCount) {
             val bidder = eligibleBidders.random()
-            val increment = BigDecimal(faker.number().numberBetween(100, 500))
+            val increment = BigDecimal(faker.number().numberBetween(250, 1500))
             currentPrice = currentPrice.add(increment)
             val bidTime = auction.startTime.plusSeconds(timeStep * i)
             val bid = Bid(

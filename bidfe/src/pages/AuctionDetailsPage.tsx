@@ -19,7 +19,10 @@ const getWebSocketUrl = () => {
     return url;
 };
 
-const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
+const Lightbox = ({ images, initialIndex, onClose }: {
+    images: ItemImageDto[],
+    initialIndex: number,
+    onClose: () => void }) => {
     const [index, setIndex] = useState(initialIndex)
     const handleNext = (e: React.MouseEvent) => {
         e.stopPropagation();

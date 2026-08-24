@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.util.UriComponentsBuilder
 import java.util.UUID
 
 @Component
@@ -25,9 +26,7 @@ class OAuth2LoginSuccessHandler(
     private val roleRepository: RoleRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val passwordEncoder: PasswordEncoder,
-    @Value("\${app.frontend-url:http://localhost:5173}") private val frontendUrl: String,
-    @Value("\${app.cookie.secure:false}") private val secureCookie: Boolean,
-    @Value("\${app.cookie.same-site:Lax}") private val sameSiteCookie: String
+    @Value("\${app.frontend-url:http://localhost:5173}") private val frontendUrl: String
 ) : SimpleUrlAuthenticationSuccessHandler() {
 
     override fun onAuthenticationSuccess(
@@ -39,7 +38,8 @@ class OAuth2LoginSuccessHandler(
         val email = oauthUser.attributes["email"] as String
         val name = (oauthUser.attributes["name"] as String?)?.replace(" ", "") ?: email.substringBefore("@")
 
-        var user = userRepository.findAnyByEmail(email)
+        userRepository.restoreUserByEmail(email)
+        var user = userRepository.findByEmail(email)
 
         if (user == null) {
             val userRole = roleRepository.findByName(ERole.USER)
@@ -53,26 +53,14 @@ class OAuth2LoginSuccessHandler(
                 enabled = true
             )
             user = userRepository.save(user)
-        } else if (user.deletedAt != null) {
-            user.deletedAt = null
-            user = userRepository.save(user)
         }
 
         val token = jwtTokenProvider.createToken(user)
 
-        // 1. Create the cookie using Spring's ResponseCookie to support SameSite
-        val jwtCookie = ResponseCookie.from("__session", token)
-            .httpOnly(true)
-            .secure(secureCookie)
-            .path("/")
-            .maxAge((30 * 24 * 60 * 60).toLong())
-            .sameSite(sameSiteCookie)
-            .build()
+        val targetUrl = UriComponentsBuilder.fromUriString("$frontendUrl/oauth2/redirect")
+            .queryParam("token", token)
+            .build().toUriString()
 
-        // 2. Add it to the HttpServletResponse headers
-        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-
-        // 3. Redirect to frontend WITHOUT exposing the token in the URL
-        redirectStrategy.sendRedirect(request, response, "$frontendUrl/")
+        redirectStrategy.sendRedirect(request, response, targetUrl)
     }
 }

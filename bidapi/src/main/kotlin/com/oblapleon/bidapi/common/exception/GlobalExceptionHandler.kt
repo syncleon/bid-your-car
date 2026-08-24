@@ -3,6 +3,8 @@ package com.oblapleon.bidapi.common.exception
 import org.springframework.data.mapping.PropertyReferenceException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.orm.ObjectOptimisticLockingFailureException
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -49,6 +51,15 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(ConflictException::class) // Support both naming styles
     fun handleConflictAlt(ex: ConflictException) = buildResponse(HttpStatus.CONFLICT, ex.message)
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException::class)
+    fun handleOptimisticLockingFailure(ex: ObjectOptimisticLockingFailureException): ResponseEntity<Map<String, Any>> {
+        logger.warn("Optimistic locking failure: {}", ex.message)
+        return buildResponse(
+            HttpStatus.CONFLICT,
+            "You were outbid. Please refresh the page and try again."
+        )
+    }
 
     @ExceptionHandler(NotFoundException::class)
     fun handleNotFound(ex: NotFoundException) = buildResponse(HttpStatus.NOT_FOUND, ex.message)

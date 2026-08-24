@@ -3,11 +3,11 @@ package com.oblapleon.bidapi.feature.auction.service
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.repository.AuctionRepository
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
-import com.oblapleon.bidapi.feature.item.entity.ItemStatus
-import com.oblapleon.bidapi.feature.item.repository.ItemRepository
+import com.oblapleon.bidapi.common.event.AuctionEndedEvent
+import com.oblapleon.bidapi.common.event.AuctionStartedEvent
+import org.springframework.context.ApplicationEventPublisher
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import java.time.Instant
@@ -18,12 +18,18 @@ import java.util.UUID
 @Service
 class AuctionFinalizationService(
     private val auctionRepository: AuctionRepository,
-    private val itemRepository: ItemRepository,
     private val bidRepository: BidRepository,
-    private val messagingTemplate: SimpMessagingTemplate
+    private val eventPublisher: ApplicationEventPublisher
 ) {
     private val logger = LoggerFactory.getLogger(AuctionFinalizationService::class.java)
 
+    /**
+     * Finalizes an auction by determining if the reserve was met, updating status
+     * to SOLD or UNSOLD, and sending out real-time websocket notifications.
+     * Runs in its own transaction (REQUIRES_NEW) to prevent blocking batch jobs.
+     *
+     * @param auctionId The UUID of the auction to finalize.
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun finalizeAuction(auctionId: UUID) {
         val auction = auctionRepository.findById(auctionId).orElse(null) ?: return
@@ -36,32 +42,17 @@ class AuctionFinalizationService(
             if (auction.isReserveMet) {
                 auction.status = AuctionStatus.SOLD
                 auction.winnerUser = highestBid?.bidder
-                auction.item.status = ItemStatus.SOLD
+                eventPublisher.publishEvent(AuctionEndedEvent(auction.id!!, auction.item.id!!, true, auction.winnerUser?.id))
             } else {
                 auction.status = AuctionStatus.UNSOLD
-                auction.item.status = ItemStatus.UNSOLD
-                auction.item.auctionId = null
+                eventPublisher.publishEvent(AuctionEndedEvent(auction.id!!, auction.item.id!!, false, null))
             }
         } else {
             auction.status = AuctionStatus.UNSOLD
-            auction.item.status = ItemStatus.UNSOLD
-            auction.item.auctionId = null
+            eventPublisher.publishEvent(AuctionEndedEvent(auction.id!!, auction.item.id!!, false, null))
         }
 
-        itemRepository.save(auction.item)
         auctionRepository.save(auction)
-
-        try {
-            val finalNotification = mapOf(
-                "auctionId" to auction.id.toString(),
-                "status" to auction.status.name,
-                "finalPrice" to auction.currentPrice,
-                "winner" to (auction.winnerUser?.username ?: "No Winner")
-            )
-            messagingTemplate.convertAndSend("/topic/auctions/${auction.id}", finalNotification)
-        } catch (e: Exception) {
-            logger.error("Failed to send auction closed notification for auction ${auction.id}: ${e.message}", e)
-        }
     }
 
     /**
@@ -86,9 +77,8 @@ class AuctionFinalizationService(
         }
 
         auction.status = AuctionStatus.ACTIVE
-        auction.item.status = ItemStatus.ACTIVE_AUCTION
+        eventPublisher.publishEvent(AuctionStartedEvent(auction.id!!, auction.item.id!!))
 
-        itemRepository.save(auction.item)
         auctionRepository.save(auction)
         logger.info("Activated scheduled auction ${auction.id}")
     }

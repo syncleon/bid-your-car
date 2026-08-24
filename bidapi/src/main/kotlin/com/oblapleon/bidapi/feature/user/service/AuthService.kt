@@ -35,6 +35,16 @@ class AuthService(
         private const val DUMMY_BCRYPT_HASH = "\$2a\$10\$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HCGFGL91Q1PdTzRjXWfJW"
     }
 
+    /**
+     * Registers a new user account.
+     * Checks for username and email uniqueness before creating the user.
+     * If email verification is enabled, sends a verification email.
+     *
+     * @param payload The registration request containing username, email, and password.
+     * @return A success message.
+     * @throws BadRequestException if required fields are missing.
+     * @throws AlreadyExistsException if username or email is already taken.
+     */
     @Transactional
     fun register(payload: RegisterReqDto): String {
         val safeUsername = payload.username ?: throw BadRequestException("Username is required")
@@ -71,11 +81,25 @@ class AuthService(
         }
     }
 
+    /**
+     * Authenticates a user and generates a JWT token.
+     * Verifies that the account is active and verified.
+     *
+     * @param payload The login request containing username and password.
+     * @return An [AuthRespDto] containing the JWT token.
+     * @throws UnauthorizedException if credentials are invalid, account is deleted, or unverified.
+     */
     fun login(payload: LoginReqDto): AuthRespDto {
         val safeUsername = payload.username ?: throw BadRequestException("Username required")
         val safePassword = payload.password ?: throw BadRequestException("Password required")
 
-        val user = userRepository.findAnyByUsername(safeUsername)
+        // First check if user is deleted using native query
+        val deletedAt = userRepository.findDeletedAtByUsername(safeUsername)
+        if (deletedAt != null) {
+            throw UnauthorizedException("Account deleted. You can restore it by clicking 'Restore Account'.")
+        }
+
+        val user = userRepository.findByUsername(safeUsername).orElse(null)
 
         if (user == null) {
             passwordEncoder.matches(safePassword, DUMMY_BCRYPT_HASH)
@@ -86,10 +110,6 @@ class AuthService(
             throw UnauthorizedException("Invalid credentials.")
         }
 
-        if (user.deletedAt != null) {
-            throw UnauthorizedException("Account deleted. You can restore it by clicking 'Restore Account'.")
-        }
-
         if (!user.enabled) {
             throw UnauthorizedException("Account not verified. Please verify via the email sent to you.")
         }
@@ -97,6 +117,12 @@ class AuthService(
         return AuthRespDto(token = jwtTokenProvider.createToken(user))
     }
 
+    /**
+     * Verifies a user's email account using the provided token.
+     *
+     * @param tokenString The verification token from the email link.
+     * @throws BadRequestException if the token is invalid or expired.
+     */
     @Transactional
     fun verifyAccount(tokenString: String) { // <-- Removed the : String return type
         val verificationToken = verificationTokenRepository.findByToken(tokenString)
@@ -116,6 +142,12 @@ class AuthService(
         verificationTokenRepository.delete(verificationToken)
     }
 
+    /**
+     * Restores a previously soft-deleted user account.
+     *
+     * @param payload The login credentials of the account to restore.
+     * @return A success message.
+     */
     @Transactional
     fun restoreAccount(payload: LoginReqDto): String {
         userService.restoreUser(payload)

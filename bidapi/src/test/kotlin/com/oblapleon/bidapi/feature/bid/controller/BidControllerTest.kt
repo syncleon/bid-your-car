@@ -7,11 +7,13 @@ import com.oblapleon.bidapi.common.security.JwtTokenProvider
 import com.oblapleon.bidapi.common.service.RateLimitingService
 import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.bid.entity.BidStatus
-import com.oblapleon.bidapi.feature.bid.service.BidService
+import com.oblapleon.bidapi.feature.bid.service.BidQueryService
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.user.entity.User
+import com.oblapleon.bidapi.feature.user.security.HttpCookieOAuth2AuthorizationRequestRepository
 import com.oblapleon.bidapi.feature.user.security.OAuth2LoginSuccessHandler
+import com.oblapleon.bidapi.feature.user.repository.UserRepository
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
@@ -37,11 +39,14 @@ class BidControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    @MockBean
+    lateinit var userRepository: UserRepository
+
     @Autowired
     lateinit var objectMapper: ObjectMapper
 
     @MockBean
-    lateinit var bidService: BidService
+    lateinit var bidQueryService: BidQueryService
 
     @MockBean
     lateinit var rateLimitingService: RateLimitingService
@@ -57,6 +62,9 @@ class BidControllerTest {
 
     @MockBean
     lateinit var oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
+
+    @MockBean
+    lateinit var httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository
 
     @Test
     @org.springframework.security.test.context.support.WithMockUser
@@ -82,7 +90,7 @@ class BidControllerTest {
 
         val page = PageImpl(listOf(bid))
 
-        whenever(bidService.findHistoryByAuctionId(org.mockito.kotlin.eq(auctionId), any())).thenReturn(page)
+        whenever(bidQueryService.findHistoryByAuctionId(org.mockito.kotlin.eq(auctionId), any())).thenReturn(page)
 
         mockMvc.perform(
             get("/api/v1/bids/auction/{auctionId}", auctionId)
