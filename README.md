@@ -6,7 +6,7 @@ BidYourCar web app is real-time car auctioning platform.
   * media uploading and delivering;
   * auction and bidding ecosystem;
 
-[https://bidyourcar.web.app](https://bidyourcar.web.app) *(Hosted on Google Cloud)*
+[https://bidyourcar.web.app](https://bidyourcar.web.app)
 
 ---
 
@@ -17,8 +17,8 @@ BidYourCar web app is real-time car auctioning platform.
   * db: postgres:15-alpine;
   * caching: redis:7-alpine;
   * backend: car-auction-backend (eclipse-temurin:21-jre-alpine)
-* **Hosting:** Google Cloud.
-* **CI/CD:** GitHub Actions, Google Cloud Build.
+* **Hosting:** Local / Self-hosted
+* **CI/CD:** GitHub Actions
 
 #### Backend (`bidapi`)
 
