@@ -43,10 +43,12 @@ test.describe('Navbar Component', () => {
     // Verify User Menu Trigger is visible
     const userMenu = page.locator('.user-menu__trigger');
     await expect(userMenu).toBeVisible();
-    await expect(userMenu).toContainText('testuser'); // Username should be displayed
+    await expect(userMenu).toContainText('T'); // Username initial should be displayed
 
-    // Click User Menu to go to profile
+    // Click User Menu to open dropdown
     await userMenu.click();
+    // Click My Profile
+    await page.getByRole('link', { name: 'My Profile' }).click();
     await expect(page).toHaveURL(/.*\/profile/);
   });
 });

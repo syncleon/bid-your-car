@@ -23,6 +23,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const isOwner = authStore.user?.id === auction.item.seller.id;
     const currentPrice = auction.currentPrice || auction.startPrice;
     const minBid = auction.bidCount === 0 ? auction.startPrice : currentPrice + auction.minBidIncrement;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentWinnerId = (auction as any).winningBid?.bidder?.id;
     const amIWinning = currentWinnerId === authStore.user?.id;
     const highestBid = auctionStore.bidHistory.length > 0 

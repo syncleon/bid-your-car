@@ -93,15 +93,17 @@ class AuthService(
         val safeUsername = payload.username ?: throw BadRequestException("Username required")
         val safePassword = payload.password ?: throw BadRequestException("Password required")
 
-        // First check if user is deleted using native query
-        val deletedAt = userRepository.findDeletedAtByUsername(safeUsername)
-        if (deletedAt != null) {
-            throw UnauthorizedException("Account deleted. You can restore it by clicking 'Restore Account'.")
-        }
-
+        // First check if user is deleted. Instead of returning nullable Instant which has quirks, 
+        // we use a native query that returns a count of deleted users or something, or we can just fetch the user bypassing the deleted_at IS NULL restriction.
+        // For simplicity, we can fetch deleted_at as a String or just check if they exist in DB at all.
         val user = userRepository.findByUsername(safeUsername).orElse(null)
 
         if (user == null) {
+            // Check if they exist but are deleted
+            val isDeleted = userRepository.isAccountDeleted(safeUsername) ?: false
+            if (isDeleted) {
+                throw UnauthorizedException("Account deleted. You can restore it by clicking 'Restore Account'.")
+            }
             passwordEncoder.matches(safePassword, DUMMY_BCRYPT_HASH)
             throw UnauthorizedException("Invalid credentials.")
         }

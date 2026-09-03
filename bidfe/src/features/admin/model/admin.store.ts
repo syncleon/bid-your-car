@@ -53,8 +53,8 @@ export const AdminStore = types.model("AdminStore", {
             self.users.replace(response.content);
             self.totalPagesUsers = response.totalPages || 0;
             self.currentPageUsers = response.number || 0;
-        } catch (error: any) {
-            self.error = error.message;
+        } catch (error: unknown) {
+            self.error = error instanceof Error ? error.message : "An error occurred";
         } finally {
             self.isLoadingUsers = false;
         }
@@ -64,8 +64,8 @@ export const AdminStore = types.model("AdminStore", {
         try {
             yield adminApi.deactivateUser(userId);
             yield fetchUsers(self.currentPageUsers); 
-        } catch (error: any) {
-            self.error = error.message;
+        } catch (error: unknown) {
+            self.error = error instanceof Error ? error.message : "An error occurred";
         }
     });
 
@@ -77,8 +77,8 @@ export const AdminStore = types.model("AdminStore", {
             self.auctions.replace(response.content);
             self.totalPagesAuctions = response.totalPages || 0;
             self.currentPageAuctions = response.number || 0;
-        } catch (error: any) {
-            self.error = error.message;
+        } catch (error: unknown) {
+            self.error = error instanceof Error ? error.message : "An error occurred";
         } finally {
             self.isLoadingAuctions = false;
         }
@@ -88,8 +88,8 @@ export const AdminStore = types.model("AdminStore", {
         try {
             yield adminApi.approveAuction(auctionId);
             yield fetchAuctions(status, self.currentPageAuctions);
-        } catch (error: any) {
-            self.error = error.message;
+        } catch (error: unknown) {
+            self.error = error instanceof Error ? error.message : "An error occurred";
         }
     });
 
@@ -97,8 +97,8 @@ export const AdminStore = types.model("AdminStore", {
         try {
             yield adminApi.forceCancelAuction(auctionId);
             yield fetchAuctions(status, self.currentPageAuctions);
-        } catch (error: any) {
-            self.error = error.message;
+        } catch (error: unknown) {
+            self.error = error instanceof Error ? error.message : "An error occurred";
         }
     });
 

@@ -9,13 +9,12 @@ import { formatDistanceToNow } from "date-fns";
 import type { ItemImageDto } from "../features/item/types.ts";
 import "./AuctionDetails.css";
 import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
 
 const getWebSocketUrl = () => {
-    let url = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
-    if (url.startsWith('wss://')) url = url.replace('wss://', 'https://');
-    if (url.startsWith('ws://')) url = url.replace('ws://', 'http://');
+    let url = import.meta.env.VITE_WS_URL || "ws://localhost:8080/ws";
+    if (url.startsWith('https://')) url = url.replace('https://', 'wss://');
+    if (url.startsWith('http://')) url = url.replace('http://', 'ws://');
     return url;
 };
 
@@ -63,7 +62,7 @@ const Lightbox = ({ images, initialIndex, onClose }: {
             )}
 
             <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-                <img src={url} alt="" className="lightbox-image" />
+                <img src={url} alt="" className="lightbox-image" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found'; }} />
             </div>
         </div>
     );
@@ -88,8 +87,7 @@ export const AuctionDetailsPage = observer(() => {
         auctionStore.loadAuctionDetails(id);
 
         const stompClient = new Client({
-            
-            webSocketFactory: () => new SockJS(getWebSocketUrl()),
+            brokerURL: getWebSocketUrl(),
             reconnectDelay: 5000,
             onConnect: () => {
                 stompClient.subscribe(`/topic/auctions/${id}`, (message) => {

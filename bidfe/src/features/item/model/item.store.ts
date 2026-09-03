@@ -91,6 +91,7 @@ export const ItemStore = types
         
         const updateLocalCache = (itemData: ItemDto) => {
             const existingInMyItems = self.myItems.findIndex(i => i.id === itemData.id);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (existingInMyItems !== -1) self.myItems[existingInMyItems] = cast(itemData as any);
         };
 
@@ -103,6 +104,7 @@ export const ItemStore = types
 
                 const exists = self.myItems.find(i => i.id === id);
                 if (!exists) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     self.myItems.push(cast(itemData as any));
                 }
 
@@ -144,18 +146,27 @@ export const ItemStore = types
                 const newItem: ItemDto = yield submitItem(data);
 
                 if (filesWithCategories.length > 0) {
-                    for (let i = 0; i < filesWithCategories.length; i++) {
-                        const item = filesWithCategories[i];
-                        self.uploadProgress = `Uploading image ${i + 1} of ${filesWithCategories.length}...`;
-                        yield uploadItemImage(newItem.id, item.file, item.category);
+                    try {
+                        for (let i = 0; i < filesWithCategories.length; i++) {
+                            const item = filesWithCategories[i];
+                            self.uploadProgress = `Uploading image ${i + 1} of ${filesWithCategories.length}...`;
+                            yield uploadItemImage(newItem.id, item.file, item.category);
+                        }
+                    } catch (uploadErr) {
+                        // Rollback: delete the partially created item if image upload fails
+                        self.uploadProgress = "Rolling back due to image upload error...";
+                        yield deleteItem(newItem.id);
+                        throw uploadErr;
                     }
 
                     const finalItem: ItemDto = yield getItemById(newItem.id);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     self.myItems.unshift(cast(finalItem as any));
                     self.selectedItem = finalItem.id as unknown as Instance<typeof ItemModel>;
                     return finalItem;
                 }
-                self.myItems.unshift(cast(newItem) as any);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                self.myItems.unshift(cast(newItem as any));
                 self.selectedItem = newItem.id as unknown as Instance<typeof ItemModel>;
                 return newItem;
             } catch (err) {

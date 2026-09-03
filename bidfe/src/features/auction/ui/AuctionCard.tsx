@@ -9,13 +9,19 @@ interface Props {
     viewMode?: "grid" | "list";
 }
 
-const useAuctionTimer = (endTime: string) => {
+const useAuctionTimer = (endTime?: string) => {
     const [timeLeft, setTimeLeft] = useState<string | null>(null);
     const [isEnded, setIsEnded] = useState(false);
     const [isUrgent, setIsUrgent] = useState(false);
 
     useEffect(() => {
         const calculate = () => {
+            if (!endTime) {
+                setIsEnded(true);
+                setTimeLeft("N/A");
+                setIsUrgent(false);
+                return;
+            }
             const end = new Date(endTime).getTime();
             const now = Date.now();
             const diff = end - now;

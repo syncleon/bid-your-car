@@ -23,7 +23,6 @@ fun Item.toDto(): ItemDto {
         titleStatus = this.titleStatus,
         isModified = this.isModified,
         hasServiceHistory = this.hasServiceHistory,
-        reservePrice = this.reservePrice,
         isNoReserve = this.isNoReserve,
         engine = this.engine,
         drivetrain = this.drivetrain,

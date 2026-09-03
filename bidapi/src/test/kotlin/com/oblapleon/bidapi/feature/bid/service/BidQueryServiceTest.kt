@@ -33,15 +33,21 @@ class BidQueryServiceTest {
         id: UUID = UUID.randomUUID(),
         amount: BigDecimal = BigDecimal("100.00")
     ): Bid {
-        val auction = mock(Auction::class.java)
-        val bidder = mock(User::class.java)
+        val bidder = User(username = "bidder", email = "b@b.com", password = "pw").apply { this.id = 1L }
+        val auction = Auction(
+            item = com.oblapleon.bidapi.feature.item.entity.Item(seller = bidder, year = 2020, make = "A", model = "B", vin = "123", location = "X", mileage = 10, description = "D"),
+            startPrice = BigDecimal("100"),
+            currentPrice = BigDecimal("100"),
+            startTime = Instant.now(),
+            endTime = Instant.now().plusSeconds(100)
+        ).apply { this.id = UUID.randomUUID() }
+
         return Bid(
-            id = id,
             auction = auction,
             bidder = bidder,
             amount = amount,
             bidTime = Instant.now()
-        )
+        ).apply { this.id = id }
     }
 
     @Test

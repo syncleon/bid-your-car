@@ -3,6 +3,8 @@ package com.oblapleon.bidapi.feature.bid.service
 import com.oblapleon.bidapi.common.exception.NotFoundException
 import com.oblapleon.bidapi.feature.bid.entity.Bid
 import com.oblapleon.bidapi.feature.bid.repository.BidRepository
+import com.oblapleon.bidapi.feature.bid.dto.BidDto
+import com.oblapleon.bidapi.feature.bid.dto.toDto
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -22,10 +24,10 @@ class BidQueryService(
      * @return The found [Bid].
      * @throws NotFoundException if no bid with the given ID exists.
      */
-    fun findById(id: UUID): Bid {
+    fun findById(id: UUID): BidDto {
         return bidRepository.findById(id).orElseThrow {
             NotFoundException("Bid with id $id not found.")
-        }
+        }.toDto()
     }
 
     /**
@@ -36,8 +38,8 @@ class BidQueryService(
      * @param pageable Pagination and sorting information.
      * @return A [Page] of [Bid] objects.
      */
-    fun findHistoryByAuctionId(auctionId: UUID, pageable: Pageable): Page<Bid> {
-        return bidRepository.findAllByAuctionIdOrderByAmountDesc(auctionId, pageable)
+    fun findHistoryByAuctionId(auctionId: UUID, pageable: Pageable): Page<BidDto> {
+        return bidRepository.findAllByAuctionIdOrderByAmountDesc(auctionId, pageable).map { it.toDto() }
     }
 
     /**
@@ -48,8 +50,8 @@ class BidQueryService(
      * @param pageable Pagination and sorting information.
      * @return A [Page] of [Bid] objects.
      */
-    fun findHistoryByUserId(userId: Long, pageable: Pageable): Page<Bid> {
-        return bidRepository.findAllByBidderIdOrderByBidTimeDesc(userId, pageable)
+    fun findHistoryByUserId(userId: Long, pageable: Pageable): Page<BidDto> {
+        return bidRepository.findAllByBidderIdOrderByBidTimeDesc(userId, pageable).map { it.toDto() }
     }
 
     /**

@@ -10,7 +10,7 @@ class AuctionScheduler(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(fixedRate = 15000)
+    @Scheduled(fixedRate = 1000)
     fun processAuctionLifecycle() {
         try {
             auctionProcessorService.processScheduledAuctions()

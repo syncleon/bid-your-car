@@ -30,8 +30,6 @@ cloudflare:
     bucket: "test-bucket"
     access-key: "test"
     secret-key: "test"
-    endpoint: "https://test.com"
+    endpoint: "http://localhost:9000"
     region: "auto"
-
-imagekit:
-  url-endpoint: "https://ik.imagekit.io/test"
+    public-url: "http://localhost:9000/test"

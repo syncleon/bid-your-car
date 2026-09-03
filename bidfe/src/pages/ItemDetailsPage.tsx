@@ -8,6 +8,7 @@ import { EditItemModal } from "../features/item/ui/EditItemModal.tsx";
 import type { CreateAuctionDto } from "../features/auction/types.ts";
 import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../features/item/types.ts";
 import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
+import { adminApi } from "../features/admin/api/admin.api";
 import "./AuctionDetails.css";
 const badges = {
     live: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
@@ -66,7 +67,7 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
                 </>
             )}
             <div style={lightboxStyles.content} onClick={(e) => e.stopPropagation()}>
-                {images[index]?.url && <img src={images[index].url} alt="Vehicle" style={lightboxStyles.image} />}
+                {images[index]?.url && <img src={images[index].url} alt="Vehicle" style={lightboxStyles.image} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found'; }} />}
             </div>
         </div>
     );
@@ -184,7 +185,7 @@ export const ItemDetailsPage = observer(() => {
 
     const item = itemStore.selectedItem;
     const isOwner = authStore.user?.id?.toString() === item.seller?.id?.toString();
-    const isAdmin = authStore.user?.roles?.some((r: any) => r.name === 'ADMIN');
+    const isAdmin = authStore.user?.roles?.some((r: { name: string }) => r.name === 'ADMIN');
     const isDraft = item.status === 'DRAFT';
     const isUnsold = item.status === 'UNSOLD';
     const isPending = item.status === 'PENDING_AUCTION';
@@ -259,7 +260,6 @@ export const ItemDetailsPage = observer(() => {
                                     if (window.confirm("Are you sure you want to reset this item to DRAFT?")) {
                                         setActionLoading(true);
                                         try {
-                                            const { adminApi } = await import('../features/admin/api/admin.api');
                                             await adminApi.resetGhostItem(item.id);
                                             await itemStore.loadItemDetails(item.id);
                                         } catch (e) {

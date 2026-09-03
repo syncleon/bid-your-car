@@ -207,6 +207,7 @@ export const AuctionListTemplate = observer(({
         if (status === 'SOLD') {
             auctionStore.loadRecentlySold(0, pageSize);
         } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             auctionStore.loadAuctions(undefined, status as any, 0, pageSize);
         }
     }, [status, pageSize, defaultSort, auctionStore]);
@@ -242,14 +243,16 @@ export const AuctionListTemplate = observer(({
             );
         }
 
+        result = result.filter(a => !!a);
+
         result.sort((a, b) => {
             let diff = 0;
             switch (sortBy) {
                 case "newly_sold":
-                    diff = new Date(b.endTime).getTime() - new Date(a.endTime).getTime();
+                    diff = new Date(b?.endTime || 0).getTime() - new Date(a?.endTime || 0).getTime();
                     break;
                 case "newly_listed":
-                    diff = new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+                    diff = new Date(b?.startTime || 0).getTime() - new Date(a?.startTime || 0).getTime();
                     break;
                 case "price_low":
                     diff = a.currentPrice - b.currentPrice;
@@ -262,7 +265,7 @@ export const AuctionListTemplate = observer(({
                     break;
                 case "ending_soon":
                 default:
-                    diff = new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+                    diff = new Date(a?.endTime || 0).getTime() - new Date(b?.endTime || 0).getTime();
                     break;
             }
             return diff !== 0 ? diff : a.id.localeCompare(b.id);
@@ -296,6 +299,7 @@ export const AuctionListTemplate = observer(({
             if (status === 'SOLD') {
                 auctionStore.loadRecentlySold(0, pageSize);
             } else {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 auctionStore.loadAuctions(undefined, status as any, 0, pageSize);
             }
         }, 15000);
@@ -335,6 +339,7 @@ export const AuctionListTemplate = observer(({
                     <div className="controls-bar">
                         <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                         <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         <FilterSelect label="Transmission" value={filterTransmission} options={transmissions as any} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                         <FilterSelect 
                             label="Condition" 
@@ -347,7 +352,7 @@ export const AuctionListTemplate = observer(({
                         />
                         
                         <div className="sort-tabs">
-                            {sortOptions.map((opt: any) => (
+                            {sortOptions.map((opt: { label: string; value: string }) => (
                                 <button
                                     key={opt.value}
                                     className={`sort-tab ${sortBy === opt.value ? 'active' : ''}`}

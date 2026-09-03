@@ -94,7 +94,8 @@ test.describe('Full Creation Flow', () => {
     // Verify that the uploaded image is rendered
     const mainImage = page.locator('img.main-img-hover');
     await expect(mainImage).toBeVisible();
-    await expect(mainImage).toHaveAttribute('src', 'http://example.com/mock.jpg');
+    // The browser will attempt to load the mock URL, fail, and the onError handler will replace it
+    await expect(mainImage).toHaveAttribute('src', 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found');
     
     // Now verify we see "List for Auction" button since status is DRAFT
     console.log("WAITING FOR LIST BUTTON, HTML IS:");

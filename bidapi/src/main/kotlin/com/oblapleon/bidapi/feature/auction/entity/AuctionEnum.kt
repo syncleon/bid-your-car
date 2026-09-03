@@ -6,5 +6,6 @@ enum class AuctionStatus {
     ACTIVE,           // Live bidding is open
     SOLD,             // Winner declared and reserve met
     UNSOLD,           // Time up, no bids or reserve not met
-    CANCELLED         // Administratively removed
+    CANCELLED,        // Administratively removed
+    FINALIZATION_FAILED // System error during finalization
 }

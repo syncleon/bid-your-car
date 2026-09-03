@@ -51,4 +51,15 @@ class RateLimitingService(
         val key = "rate_limit:user:$userId".toByteArray()
         return proxyManager.builder().build(key, configuration)
     }
+
+    /**
+     * Resolves and returns a Bucket4j bucket for the specified IP address.
+     * 
+     * @param ip The IP address to get the rate limit bucket for.
+     * @return The rate limiting bucket associated with the IP.
+     */
+    fun resolveBucketByIp(ip: String): Bucket {
+        val key = "rate_limit:ip:$ip".toByteArray()
+        return proxyManager.builder().build(key, configuration)
+    }
 }

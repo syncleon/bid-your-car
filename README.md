@@ -27,7 +27,7 @@ BidYourCar web app is real-time car auctioning platform.
 * **Caching & Throttling:** Redis 7, Spring Cache, Bucket4j
 * **Security:** Spring Security, Custom JWT Provider
 * **Real-time Bidding:** Spring Boot WebSocket
-* **Cloud & Storage:** Cloudflare R2, ImageKit
+* **Cloud & Storage:** Cloudflare R2
 * **Documentation:** Springdoc OpenAPI (Swagger UI)
 
 #### Frontend (`bidfe`)

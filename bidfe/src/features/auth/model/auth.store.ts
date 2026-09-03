@@ -71,7 +71,7 @@ export const AuthStore = types.model("AuthStore", {
                 } else {
                     self.user = null;
                 }
-            } catch (error) {
+            } catch {
                 self.user = null;
             } finally {
                 self.isInitializing = false;

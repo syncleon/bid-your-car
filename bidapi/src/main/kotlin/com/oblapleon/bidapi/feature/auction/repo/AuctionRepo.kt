@@ -19,25 +19,34 @@ import org.springframework.data.jpa.repository.Lock
 @Repository
 interface AuctionRepository : BaseRepository<Auction, UUID> {
 
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
+    @Query("SELECT a FROM Auction a WHERE a.id = :id")
+    fun findByIdWithItemAndSeller(@Param("id") id: UUID): Optional<Auction>
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
+    @Query("SELECT a FROM Auction a WHERE a.id = :id")
+    fun findByIdWithItemAndSellerPessimistic(@Param("id") id: UUID): Optional<Auction>
+
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     fun findByStatusAndEndTimeAfterOrderByEndTimeAsc(
         status: AuctionStatus,
         now: Instant,
         pageable: Pageable
     ): Page<Auction>
 
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     fun findByStatusAndStartTimeBeforeOrderByStartTimeDesc(
         status: AuctionStatus,
         now: Instant,
         pageable: Pageable
     ): Page<Auction>
 
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     @Query("SELECT a FROM Auction a WHERE a.item.seller.id = :sellerId")
     fun findAllBySellerId(@Param("sellerId") sellerId: Long, pageable: Pageable): Page<Auction>
 
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     @Query("SELECT a FROM Auction a WHERE a.winnerUser.id = :userId")
     fun findAllWonByUserId(@Param("userId") userId: Long, pageable: Pageable): Page<Auction>
 
@@ -58,7 +67,7 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
     )
     fun existsBySellerIdAndStatusAndBidsIsNotEmpty(@Param("sellerId") sellerId: Long): Boolean
 
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     fun findAllByStatusAndEndTimeBefore(
         status: AuctionStatus,
         now: Instant,
@@ -66,7 +75,7 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
     ): List<Auction>
 
     // ✅ NEW for scheduled activation
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     fun findAllByStatusAndStartTimeBefore(
         status: AuctionStatus,
         now: Instant,
@@ -90,10 +99,10 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
     fun cancelAllActiveAuctionsBySellerId(@Param("sellerId") sellerId: Long)
 
 
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     fun findByStatus(status: AuctionStatus, pageable: Pageable): Page<Auction>
 
-    @EntityGraph(attributePaths = ["item", "item.seller", "item.images"])
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
     fun findByStatusOrderByEndTimeDesc(status: AuctionStatus, pageable: Pageable): Page<Auction>
 
     @Query("SELECT COUNT(a) > 0 FROM Auction a WHERE a.item.seller.id = :sellerId AND a.status = 'ACTIVE'")

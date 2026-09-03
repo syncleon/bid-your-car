@@ -2,7 +2,6 @@ package com.oblapleon.bidapi.feature.bid.controller
 
 import com.oblapleon.bidapi.common.helpers.AuthorizationHelper
 import com.oblapleon.bidapi.feature.bid.dto.BidDto
-import com.oblapleon.bidapi.feature.bid.dto.toDto
 import com.oblapleon.bidapi.feature.bid.service.BidQueryService
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import io.swagger.v3.oas.annotations.Operation
@@ -40,7 +39,7 @@ class BidController(
         @PageableDefault(size = 20, sort = ["amount"], direction = Sort.Direction.DESC) pageable: Pageable
     ): ResponseEntity<Page<BidDto>> {
         val page = bidQueryService.findHistoryByAuctionId(auctionId, pageable)
-        return ResponseEntity.ok(page.map { it.toDto() })
+        return ResponseEntity.ok(page)
     }
 
     /**
@@ -56,7 +55,7 @@ class BidController(
     ): ResponseEntity<Page<BidDto>> {
         val user = authorizationHelper.getCurrentUser()
         val page = bidQueryService.findHistoryByUserId(user.id!!, pageable)
-        return ResponseEntity.ok(page.map { it.toDto() })
+        return ResponseEntity.ok(page)
     }
 
     /**
@@ -71,11 +70,11 @@ class BidController(
     fun getBidDetails(@PathVariable id: UUID): ResponseEntity<BidDto> {
         val bid = bidQueryService.findById(id)
         val currentUser = authorizationHelper.getCurrentUser()
-        val isOwner = bid.bidder.id == currentUser.id
+        val isOwner = bid.bidderId == currentUser.id
         val isAdmin = currentUser.roles.any { it.name == ERole.ADMIN }
         if (!isOwner && !isAdmin) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        return ResponseEntity.ok(bid.toDto())
+        return ResponseEntity.ok(bid)
     }
 }

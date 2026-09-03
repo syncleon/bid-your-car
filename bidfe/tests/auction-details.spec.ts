@@ -55,8 +55,11 @@ test.describe('Auction Details & Bidding', () => {
     await expect(page.locator('text=High Bid')).toBeVisible();
     await expect(page.locator('text=$155,000')).toBeVisible();
 
+    // Click 'Place Bid' to reveal the bidding form
+    await page.locator('button', { hasText: 'Place Bid' }).click();
+
     // Verify Quick Bid button is visible (since user is not seller)
-    const quickBidBtn = page.locator('button', { hasText: /Fast Bid/ });
+    const quickBidBtn = page.locator('button', { hasText: /Quick Bid/ });
     await expect(quickBidBtn).toBeVisible();
 
     // Setup an alert handler to catch the JS alert or handle toast if it exists
@@ -65,8 +68,8 @@ test.describe('Auction Details & Bidding', () => {
     // Click Quick Bid
     await quickBidBtn.click();
     
-    // Wait for the cooldown state to indicate successful bid submission
-    await expect(page.locator('text=/Wait \\ds/').first()).toBeVisible();
+    // The form closes automatically upon successful quick bid, reverting the toggle button to "Place Bid"
+    await expect(page.locator('button', { hasText: 'Place Bid', exact: true })).toBeVisible();
   });
 
   test('shows owner controls when user is the seller', async ({ page }) => {
@@ -91,7 +94,7 @@ test.describe('Auction Details & Bidding', () => {
     await expect(page.locator('h1', { hasText: '2024 Porsche 911 GT3' })).toBeVisible();
 
     // Verify Owner panel is visible
-    await expect(page.locator('h4', { hasText: 'Owner Actions' })).toBeVisible();
+    await expect(page.locator('span', { hasText: 'Owner Actions' })).toBeVisible();
     
     // Verify Cancel button is visible
     const cancelBtn = page.locator('button:has-text("Cancel Auction"):not(.dialog-btn)');

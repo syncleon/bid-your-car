@@ -59,7 +59,7 @@ export const ProfilePage = observer(() => {
         try {
             await profileStore.deleteAccount({ password });
             setDeleteAccountDialogOpen(false);
-        } catch (error: any) {
+        } catch {
             setDeleteAccountError(profileStore.error || "Failed to delete account");
             profileStore.clearMessages();
         }

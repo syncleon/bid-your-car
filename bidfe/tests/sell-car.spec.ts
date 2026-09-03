@@ -98,7 +98,7 @@ test.describe('Sell a Car Flow', () => {
     await page.goto('/sell-car');
     
     // Click Start Your Listing
-    await page.click('button:has-text("Start Your Listing")');
+    await page.click('button:has-text("Start listing")');
 
     // Wait for the form page to render
     await expect(page.locator('h1', { hasText: 'Sell Your Car' })).toBeVisible();

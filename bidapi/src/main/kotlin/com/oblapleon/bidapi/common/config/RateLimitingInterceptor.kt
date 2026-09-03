@@ -15,24 +15,48 @@ class RateLimitingInterceptor(
 ) : HandlerInterceptor {
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
-        try {
-            val user = authorizationHelper.getCurrentUser()
-            val userId = user.id ?: return true
-
-            val bucket = rateLimitingService.resolveBucket(userId)
-            val probe = bucket.tryConsumeAndReturnRemaining(1)
-
-            if (!probe.isConsumed) {
-                val waitForSeconds = probe.nanosToWaitForRefill / 1_000_000_000
-                response.status = HttpStatus.TOO_MANY_REQUESTS.value()
-                response.addHeader("X-Rate-Limit-Retry-After-Seconds", waitForSeconds.toString())
-                response.contentType = "application/json"
-                response.writer.write("{\"error\": \"You are bidding too fast! Please wait \$waitForSeconds seconds.\"}")
-                return false
+        val bucket = try {
+            val auth = org.springframework.security.core.context.SecurityContextHolder.getContext().authentication
+            var userId: Long? = null
+            
+            if (auth != null && auth.isAuthenticated && auth !is org.springframework.security.authentication.AnonymousAuthenticationToken) {
+                val principal = auth.principal
+                if (principal is com.oblapleon.bidapi.feature.user.entity.User) {
+                    userId = principal.id
+                } else if (principal is org.springframework.security.oauth2.jwt.Jwt) {
+                    userId = principal.claims["uid"]?.toString()?.toLongOrNull()
+                } else if (principal is String) {
+                    userId = principal.toLongOrNull()
+                }
+            }
+            
+            if (userId != null) {
+                rateLimitingService.resolveBucket(userId)
+            } else {
+                getIpBucket(request)
             }
         } catch (e: Exception) {
-            // If user is not authenticated or other error, let it pass (security config handles auth)
+            // If error during extraction, fallback to IP rate limiting
+            getIpBucket(request)
+        }
+
+        val probe = bucket.tryConsumeAndReturnRemaining(1)
+
+        if (!probe.isConsumed) {
+            val waitForSeconds = probe.nanosToWaitForRefill / 1_000_000_000
+            response.status = HttpStatus.TOO_MANY_REQUESTS.value()
+            response.addHeader("X-Rate-Limit-Retry-After-Seconds", waitForSeconds.toString())
+            response.contentType = "application/json"
+            response.writer.write("{\"error\": \"Too many requests! Please wait \$waitForSeconds seconds.\"}")
+            return false
         }
         return true
+    }
+
+    private fun getIpBucket(request: HttpServletRequest): io.github.bucket4j.Bucket {
+        val ip = request.getHeader("X-Forwarded-For")?.split(",")?.firstOrNull()?.trim() 
+            ?: request.remoteAddr 
+            ?: "unknown"
+        return rateLimitingService.resolveBucketByIp(ip)
     }
 }

@@ -28,7 +28,6 @@ data class ItemDto(
     val titleStatus: String?,
     val isModified: Boolean,
     val hasServiceHistory: Boolean,
-    val reservePrice: BigDecimal?,
     val isNoReserve: Boolean,
     val engine: String?,
     val drivetrain: String?,

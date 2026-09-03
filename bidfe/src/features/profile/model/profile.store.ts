@@ -17,6 +17,9 @@ import type {
 interface IRootStoreShape {
     authStore?: {
         logout: () => void;
+        user?: {
+            setProfilePhotoUrl: (url: string | null) => void;
+        } | null;
     };
 }
 
@@ -129,7 +132,7 @@ export const ProfileStore = types.model("ProfileStore", {
                 self.successMessage = "Profile photo updated successfully!";
                 
                 
-                const root = getRoot<any>(self);
+                const root = getRoot<IRootStoreShape>(self);
                 if (root?.authStore?.user) {
                     root.authStore.user.setProfilePhotoUrl(updated.profilePhotoUrl || null);
                 }

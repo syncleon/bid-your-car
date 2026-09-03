@@ -88,9 +88,18 @@ class BidControllerTest {
         )
         bid.id = UUID.randomUUID()
 
-        val page = PageImpl(listOf(bid))
+        val bidDto = com.oblapleon.bidapi.feature.bid.dto.BidDto(
+            id = bid.id!!,
+            auctionId = bid.auction.id!!,
+            bidderId = bidder.id!!,
+            bidderName = bidder.username,
+            amount = bid.amount,
+            bidTime = bid.bidTime
+        )
 
-        whenever(bidQueryService.findHistoryByAuctionId(org.mockito.kotlin.eq(auctionId), any())).thenReturn(page)
+        val page = PageImpl(listOf(bidDto))
+
+        whenever(bidQueryService.findHistoryByAuctionId(org.mockito.kotlin.eq(auctionId), any())).thenReturn(page as org.springframework.data.domain.Page<com.oblapleon.bidapi.feature.bid.dto.BidDto>)
 
         mockMvc.perform(
             get("/api/v1/bids/auction/{auctionId}", auctionId)

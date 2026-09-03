@@ -11,6 +11,11 @@ class WebConfig(
 
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(rateLimitingInterceptor)
-            .addPathPatterns("/api/v1/auctions/*/bids", "/api/v1/auctions/*/bids/quick")
+            .addPathPatterns(
+                "/api/v1/auctions/*/bids",
+                "/api/v1/auctions/*/bids/quick",
+                "/api/v1/auth/**",
+                "/login/oauth2/**"
+            )
     }
 }

@@ -8,7 +8,7 @@ import com.oblapleon.bidapi.common.service.RateLimitingService
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.service.AuctionService
-import com.oblapleon.bidapi.feature.bid.service.BiddingService
+import com.oblapleon.bidapi.feature.bid.service.BidQueueProducer
 import com.oblapleon.bidapi.feature.item.entity.Item
 import com.oblapleon.bidapi.feature.item.entity.ItemStatus
 import com.oblapleon.bidapi.feature.user.entity.User
@@ -51,7 +51,7 @@ class AuctionControllerTest {
     lateinit var auctionService: AuctionService
 
     @MockBean
-    lateinit var biddingService: BiddingService
+    private lateinit var bidQueueProducer: BidQueueProducer
 
     @MockBean
     lateinit var rateLimitingService: RateLimitingService

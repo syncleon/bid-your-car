@@ -20,8 +20,9 @@ class ItemAuctionEventListener(
      * Updates the item status when an auction starts.
      * Uses REQUIRES_NEW because the auction activation happens in its own transaction.
      */
-    @EventListener
+    @org.springframework.transaction.event.TransactionalEventListener(phase = org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @org.springframework.cache.annotation.CacheEvict(value = ["items"], key = "#event.itemId")
     fun onAuctionStarted(event: AuctionStartedEvent) {
         val item = itemRepository.findById(event.itemId).orElse(null) ?: return
         item.status = ItemStatus.ACTIVE_AUCTION
@@ -33,8 +34,9 @@ class ItemAuctionEventListener(
      * Updates the item status when an auction ends (SOLD or UNSOLD).
      * Uses REQUIRES_NEW because the auction finalization happens in its own transaction.
      */
-    @EventListener
+    @org.springframework.transaction.event.TransactionalEventListener(phase = org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @org.springframework.cache.annotation.CacheEvict(value = ["items"], key = "#event.itemId")
     fun onAuctionEnded(event: AuctionEndedEvent) {
         val item = itemRepository.findById(event.itemId).orElse(null) ?: return
         if (event.isSold) {

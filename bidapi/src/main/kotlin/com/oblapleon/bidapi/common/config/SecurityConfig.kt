@@ -52,7 +52,6 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers(antMatcher("/actuator/health/**")).permitAll()
-                    .requestMatchers(antMatcher("/actuator/prometheus")).permitAll()
                     .requestMatchers(antMatcher("/actuator/**")).hasAuthority("ADMIN")
                     .requestMatchers(antMatcher("/ws/**")).permitAll()
                     .requestMatchers(antMatcher("/api/v1/auth/**")).permitAll()
@@ -78,12 +77,30 @@ class SecurityConfig(
                 oauth2.successHandler(oAuth2LoginSuccessHandler)
             }
             .oauth2ResourceServer { oauth2 ->
+                oauth2.bearerTokenResolver(cookieBearerTokenResolver())
                 oauth2.jwt { jwt ->
                     jwt.decoder(jwtDecoder)
                     jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 }
             }
             .build()
+    }
+
+    private fun cookieBearerTokenResolver(): BearerTokenResolver {
+        return BearerTokenResolver { request ->
+            var token: String? = null
+            
+            val authorizationHeader = request.getHeader("Authorization")
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                token = authorizationHeader.substring(7)
+            }
+            
+            if (token == null && request.cookies != null) {
+                token = request.cookies.firstOrNull { it.name == "__session" }?.value
+            }
+            
+            token
+        }
     }
 
     private fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> {

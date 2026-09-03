@@ -12,12 +12,14 @@ interface ImageCropModalProps {
 }
 
 export const ImageCropModal = ({ isOpen, imageSrc, onClose, onCropCompleteAction }: ImageCropModalProps) => {
+type Area = { width: number; height: number; x: number; y: number };
+
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
         setCroppedAreaPixels(croppedAreaPixels);
     }, []);
 

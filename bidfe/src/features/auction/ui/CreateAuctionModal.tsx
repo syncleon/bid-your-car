@@ -73,6 +73,7 @@ export const CreateAuctionModal = ({
     useEffect(() => {
         if (!isOpen) return;
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentStep(1);
         setSelectedImgIdx(0);
 
@@ -93,7 +94,7 @@ export const CreateAuctionModal = ({
         [scheduledStartLocal]
     );
 
-    const nowMs = Date.now();
+    const [nowMs] = useState(() => Date.now());
     const minAllowedScheduledStartMs = nowMs + MIN_SCHEDULE_OFFSET_MS;
     const scheduledStartMs = scheduledStartDate?.getTime() ?? null;
 
@@ -112,8 +113,8 @@ export const CreateAuctionModal = ({
 
     const startDateForPreview = useMemo(() => {
         if (startMode === "SCHEDULED" && scheduledStartDate) return scheduledStartDate;
-        return new Date(Date.now() + ASAP_PREVIEW_OFFSET_MS);
-    }, [startMode, scheduledStartDate]);
+        return new Date(nowMs + ASAP_PREVIEW_OFFSET_MS);
+    }, [startMode, scheduledStartDate, nowMs]);
 
     const projectedEndDate = useMemo(() => {
         const d = new Date(startDateForPreview);

@@ -10,7 +10,6 @@ import com.oblapleon.bidapi.feature.auction.service.AuctionService
 import com.oblapleon.bidapi.feature.user.entity.ERole
 import com.oblapleon.bidapi.feature.bid.dto.BidRequest
 import com.oblapleon.bidapi.feature.bid.dto.toDto
-import com.oblapleon.bidapi.feature.bid.service.BiddingService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -30,7 +29,7 @@ import java.util.UUID
 @Tag(name = "Auctions", description = "Public auction browsing and management")
 class AuctionController(
     private val auctionService: AuctionService,
-    private val biddingService: BiddingService,
+    private val bidQueueProducer: com.oblapleon.bidapi.feature.bid.service.BidQueueProducer,
     private val rateLimitingService: RateLimitingService,
     private val authorizationHelper: AuthorizationHelper
 ) {
@@ -117,8 +116,8 @@ class AuctionController(
         @Valid @RequestBody request: BidRequest
     ): ResponseEntity<Any> {
         val currentUser = authorizationHelper.getCurrentUser()
-        val bid = biddingService.placeBid(id, currentUser.id!!, request.amount)
-        return ResponseEntity.status(HttpStatus.CREATED).body(bid.toDto())
+        bidQueueProducer.enqueueBid(id, currentUser.id!!, request.amount)
+        return ResponseEntity.accepted().build()
     }
 
     /**
@@ -134,8 +133,8 @@ class AuctionController(
         @PathVariable id: UUID
     ): ResponseEntity<Any> {
         val currentUser = authorizationHelper.getCurrentUser()
-        val bid = biddingService.placeNextMinimumBid(id, currentUser.id!!)
-        return ResponseEntity.status(HttpStatus.CREATED).body(bid.toDto())
+        bidQueueProducer.enqueueQuickBid(id, currentUser.id!!)
+        return ResponseEntity.accepted().build()
     }
 
     /**

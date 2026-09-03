@@ -3,63 +3,63 @@ package com.oblapleon.bidapi.feature.auction.listener
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.oblapleon.bidapi.feature.auction.event.BidPlacedEvent
 import com.oblapleon.bidapi.feature.bid.dto.BidNotificationDto
+import com.oblapleon.bidapi.common.event.AuctionEndedEvent
+import com.oblapleon.bidapi.common.event.AuctionStartedEvent
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.StringRedisTemplate
+import org.springframework.messaging.simp.SimpMessagingTemplate
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
-import org.springframework.scheduling.annotation.Async
-import org.springframework.messaging.simp.SimpMessagingTemplate
-import com.oblapleon.bidapi.common.event.AuctionEndedEvent
-import com.oblapleon.bidapi.common.event.AuctionStartedEvent
-
-import org.springframework.cache.CacheManager
 
 @Component
 class AuctionNotificationListener(
     private val redisTemplate: StringRedisTemplate,
     private val objectMapper: ObjectMapper,
-    private val messagingTemplate: SimpMessagingTemplate,
-    private val cacheManager: CacheManager
+    private val messagingTemplate: SimpMessagingTemplate
 ) {
     private val logger = LoggerFactory.getLogger(AuctionNotificationListener::class.java)
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    fun updateAuctionCache(event: BidPlacedEvent) {
-        cacheManager.getCache("auctions")?.put(event.auction.id!!, event.auction)
-    }
-
+    /**
+     * Publishes a bid notification to Redis Pub/Sub after the transaction commits.
+     *
+     * Uses the scalar snapshot in [BidPlacedEvent] — no JPA entity access here,
+     * so no [org.hibernate.LazyInitializationException] risk.
+     *
+     * Cache invalidation is intentionally removed: the [BidPlacedEvent] no longer carries
+     * a live JPA entity, so we cannot put a stale entity into the Redis cache.
+     * The cache entry for this auction will expire naturally (TTL = 5 min) or be evicted
+     * on status changes (approve/cancel) via [@CacheEvict] in [AuctionService].
+     */
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun handleBidPlacedEvent(event: BidPlacedEvent) {
         try {
-            val auction = event.auction
-            val savedBid = event.savedBid
-            val bidderUsername = event.bidderUsername
-
             val notification = BidNotificationDto(
-                auctionId = auction.id!!,
-                newPrice = auction.currentPrice,
-                bidCount = auction.bidCount,
-                bidderUsername = bidderUsername,
-                bidTime = savedBid.bidTime,
-                newEndTime = auction.endTime
+                auctionId = event.auctionId,
+                newPrice = event.auctionCurrentPrice,
+                bidCount = event.auctionBidCount,
+                bidderUsername = event.bidderUsername,
+                bidTime = event.bidTime,
+                newEndTime = event.auctionEndTime
             )
-            
+
             val notificationJson = objectMapper.writeValueAsString(notification)
             redisTemplate.convertAndSend("auction-bids-topic", notificationJson)
 
             val globalFeedItem = mapOf(
-                "auctionId" to auction.id.toString(),
-                "carName" to "${auction.item.year} ${auction.item.make} ${auction.item.model}",
-                "newPrice" to auction.currentPrice,
-                "bidder" to bidderUsername,
-                "timestamp" to savedBid.bidTime.toString()
+                "auctionId" to event.auctionId.toString(),
+                "carName" to "${event.itemYear} ${event.itemMake} ${event.itemModel}",
+                "newPrice" to event.auctionCurrentPrice,
+                "bidder" to event.bidderUsername,
+                "timestamp" to event.bidTime.toString()
             )
             val globalFeedJson = objectMapper.writeValueAsString(globalFeedItem)
             redisTemplate.convertAndSend("admin-bids-topic", globalFeedJson)
+
         } catch (e: Exception) {
-            logger.error("Failed to send Redis notification: ${e.message}", e)
+            logger.error("Failed to send Redis bid notification for auction ${event.auctionId}: ${e.message}", e)
         }
     }
 

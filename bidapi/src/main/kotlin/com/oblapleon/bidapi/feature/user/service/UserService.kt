@@ -155,9 +155,9 @@ class UserService(
         eventPublisher.publishEvent(UserDeletionRequestedEvent(user))
         user.deletedAt = Instant.now()
         
-        // Scramble username and email to comply with GDPR and free up unique constraints
+        // Scramble email to comply with GDPR and free up unique constraints
+        // We keep username unchanged so they can restore their account
         val suffix = UUID.randomUUID().toString().take(8)
-        user.username = "deleted_${suffix}_${user.username}"
         user.email = "deleted_${suffix}_${user.email}"
         
         userRepository.save(user)
@@ -175,8 +175,8 @@ class UserService(
         val safeUsername = payload.username
         val safePassword = payload.password
 
-        val deletedAt = userRepository.findDeletedAtByUsername(safeUsername!!)
-        if (deletedAt == null) {
+        val isDeleted = userRepository.isAccountDeleted(safeUsername!!)
+        if (!isDeleted) {
             // Verify if user exists at all and is active
             if (userRepository.findByUsername(safeUsername).isPresent) {
                  throw BadRequestException("Account is already active.")

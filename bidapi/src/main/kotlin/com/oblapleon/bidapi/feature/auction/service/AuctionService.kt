@@ -36,7 +36,8 @@ class AuctionService(
     private val userRepository: UserRepository,
     private val bidRepository: BidRepository,
     private val eventPublisher: ApplicationEventPublisher,
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
+    private val cacheManager: org.springframework.cache.CacheManager
 ) {
 
     private val logger = LoggerFactory.getLogger(AuctionService::class.java)
@@ -113,7 +114,7 @@ class AuctionService(
      */
     @Transactional
     fun createAuction(request: CreateAuctionDto, creatorId: Long): Auction {
-        val item = itemRepository.findById(request.itemId)
+        val item = itemRepository.findByIdWithLock(request.itemId)
             .orElseThrow { NotFoundException("Item not found") }
 
         if (item.seller.id != creatorId) {
@@ -148,6 +149,7 @@ class AuctionService(
         item.status = ItemStatus.PENDING_AUCTION
         item.auctionId = savedAuction.id
         itemRepository.save(item)
+        cacheManager.getCache("items")?.evict(item.id!!)
 
         return savedAuction
     }
@@ -176,6 +178,10 @@ class AuctionService(
         if (originalDurationSeconds <= 0) {
             throw BadRequestException("Auction duration must be greater than zero.")
         }
+        val maxDurationSeconds = 30L * 24 * 60 * 60 // 30 days
+        if (originalDurationSeconds > maxDurationSeconds) {
+            throw BadRequestException("Auction duration cannot exceed 30 days.")
+        }
 
         // Small tolerance to avoid edge cases when approval happens "at start time"
         val activationToleranceSeconds = 5L
@@ -192,6 +198,8 @@ class AuctionService(
             auction.status = AuctionStatus.SCHEDULED
             auction.item.status = ItemStatus.LISTED_AUCTION
         }
+        
+        auctionRepository.save(auction)
     }
 
     /**
@@ -223,6 +231,7 @@ class AuctionService(
         auction.status = AuctionStatus.CANCELLED
         auction.item.status = ItemStatus.DRAFT
         auction.item.auctionId = null
+        cacheManager.getCache("items")?.evict(auction.item.id!!)
     }
 
     /**
@@ -237,6 +246,7 @@ class AuctionService(
         auction.status = AuctionStatus.CANCELLED
         auction.item.status = ItemStatus.DRAFT
         auction.item.auctionId = null
+        cacheManager.getCache("items")?.evict(auction.item.id!!)
 
         logger.info("Admin force-cancelled auction ${auction.id}")
     }

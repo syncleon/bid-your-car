@@ -12,21 +12,28 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.data.jpa.repository.Lock
+import jakarta.persistence.LockModeType
+import java.util.Optional
 
 @Repository
 interface ItemRepository : BaseRepository<Item, UUID> {
 
-    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT i FROM Item i WHERE i.id = :id")
+    fun findByIdWithLock(@Param("id") id: UUID): Optional<Item>
+
+    @EntityGraph(attributePaths = ["seller"])
     fun findAllByStatus(status: ItemStatus, pageable: Pageable): Page<Item>
 
-    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
+    @EntityGraph(attributePaths = ["seller"])
     fun findAllBySellerId(sellerId: Long, pageable: Pageable): Page<Item>
 
-    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
+    @EntityGraph(attributePaths = ["seller"])
     fun findAllBySellerIdAndStatus(sellerId: Long, status: ItemStatus, pageable: Pageable): Page<Item>
     fun existsByVin(vin: String): Boolean
 
-    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
+    @EntityGraph(attributePaths = ["seller"])
     @Query("SELECT i FROM Item i WHERE i.status = 'DRAFT' AND i.auctions IS EMPTY")
     fun findReadyForAuction(pageable: Pageable): Page<Item>
 
@@ -37,12 +44,12 @@ interface ItemRepository : BaseRepository<Item, UUID> {
     fun searchModels(@Param("make") make: String, @Param("query") query: String): List<String>
     fun countBySellerIdAndStatus(sellerId: Long, status: ItemStatus): Long
 
-    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
+    @EntityGraph(attributePaths = ["seller"])
     fun findAllByConditionAndStatus(condition: ConditionGrade, status: ItemStatus, pageable: Pageable): Page<Item>
 
-    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
+    @EntityGraph(attributePaths = ["seller"])
     fun findAllByFuelTypeAndStatus(fuelType: String, status: ItemStatus, pageable: Pageable): Page<Item>
 
-    @EntityGraph(attributePaths = ["seller", "images", "auctions"])
+    @EntityGraph(attributePaths = ["seller"])
     fun findAllByIsNoReserveTrueAndStatusIn(statuses: List<ItemStatus>, pageable: Pageable): Page<Item>
 }

@@ -1,9 +1,11 @@
 plugins {
-    kotlin("jvm") version "2.0.0"  // Updated to latest stable
-    kotlin("plugin.spring") version "2.0.0"
-    kotlin("plugin.jpa") version "2.0.0"
+    kotlin("jvm") version "2.0.10"  // Updated to latest stable
+    kotlin("plugin.spring") version "2.0.10"
+    kotlin("plugin.jpa") version "2.0.10"
     id("org.springframework.boot") version "3.3.4"  // Correct Spring Boot version
     id("io.spring.dependency-management") version "1.1.6"
+    id("io.gitlab.arturbosch.detekt") version "1.23.7"
+    id("com.github.ben-manes.versions") version "0.51.0"
 }
 
 group = "com.oblapleon"
@@ -49,7 +51,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
-    implementation("com.google.cloud.sql:postgres-socket-factory:1.28.2")
+    implementation("com.google.cloud.sql:postgres-socket-factory:1.30.0")
 
     // Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
@@ -61,7 +63,7 @@ dependencies {
     implementation("org.apache.tika:tika-core:2.9.0")
 
     // Data generation
-    implementation("net.datafaker:datafaker:2.1.0")
+    implementation("net.datafaker:datafaker:2.7.0")
 
     // Development
     developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -101,4 +103,10 @@ kotlin {
 tasks.withType<Test> {
     useJUnitPlatform()
     systemProperty("spring.profiles.active", "test")
+}
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(file("detekt.yml"))
+    ignoreFailures = true
 }

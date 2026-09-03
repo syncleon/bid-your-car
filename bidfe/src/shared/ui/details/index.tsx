@@ -89,7 +89,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
                 style={styles.mainWrapper}
                 onClick={() => onImageClick?.(0)}
             >
-                <img src={mainImage} alt={item.model} style={styles.mainImg} className="main-img-hover" />
+                <img src={mainImage} alt={item.model} style={styles.mainImg} className="main-img-hover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found'; }} />
                 {statusLabel && <div style={styles.statusOverlay}>{statusLabel}</div>}
                 <div style={styles.hoverOverlay}><span>View Fullscreen</span></div>
             </div>
@@ -107,7 +107,7 @@ export const ImageGallery = ({ item, statusLabel, onImageClick }: GalleryProps) 
                                 style={styles.thumbWrapper}
                                 onClick={() => onImageClick?.(realIndex)}
                             >
-                                <img src={img.url} alt={`View ${realIndex}`} style={styles.thumbImg} className="thumb-inactive" />
+                                <img src={img.url} alt={`View ${realIndex}`} style={styles.thumbImg} className="thumb-inactive" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/150x150/eeeeee/999999?text=X'; }} />
                                 {isLastAndOverflowing && (
                                     <div style={styles.moreOverlay}>All Photos ({images.length})</div>
                                 )}

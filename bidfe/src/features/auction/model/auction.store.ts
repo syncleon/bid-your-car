@@ -44,6 +44,7 @@ export class AuctionStore {
         return this.root.authStore.user;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getErrorMessage(error: any, defaultMessage: string): string {
         
         if (error?.response?.data) {
@@ -230,7 +231,7 @@ export class AuctionStore {
 
                 this.isBidding = false;
             });
-        } catch (error) {
+        } catch {
             runInAction(() => { this.isBidding = false; });
         }
     }

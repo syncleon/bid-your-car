@@ -27,6 +27,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @WebMvcTest(AuthController::class)
 @Import(SecurityConfig::class)
+@org.springframework.test.context.TestPropertySource(properties = [
+    "app.cookie.secure=false",
+    "app.cookie.same-site=Lax",
+    "app.frontend-url=http://localhost:3000"
+])
 class AuthControllerTest {
 
     @Autowired
@@ -61,6 +66,10 @@ class AuthControllerTest {
 
     @Test
     fun `login should return success and set cookie on valid credentials`() {
+        val fakeBucket = io.github.bucket4j.Bucket.builder().addLimit(io.github.bucket4j.Bandwidth.classic(10, io.github.bucket4j.Refill.greedy(10, java.time.Duration.ofMinutes(1)))).build()
+        whenever(rateLimitingService.resolveBucketByIp(any())).thenReturn(fakeBucket)
+        whenever(rateLimitingService.resolveBucket(any())).thenReturn(fakeBucket)
+        
         val reqDto = LoginReqDto("testuser", "password123")
         val tokenResponse = AuthRespDto("fake-jwt-token")
 
@@ -79,6 +88,10 @@ class AuthControllerTest {
 
     @Test
     fun `register should return created status on valid payload`() {
+        val fakeBucket = io.github.bucket4j.Bucket.builder().addLimit(io.github.bucket4j.Bandwidth.classic(10, io.github.bucket4j.Refill.greedy(10, java.time.Duration.ofMinutes(1)))).build()
+        whenever(rateLimitingService.resolveBucketByIp(any())).thenReturn(fakeBucket)
+        whenever(rateLimitingService.resolveBucket(any())).thenReturn(fakeBucket)
+        
         val reqDto = RegisterReqDto("testuser", "password123", "test@test.com")
         
         whenever(authService.register(any())).thenReturn("Registration successful.")
@@ -94,6 +107,10 @@ class AuthControllerTest {
 
     @Test
     fun `login should fail on validation error`() {
+        val fakeBucket = io.github.bucket4j.Bucket.builder().addLimit(io.github.bucket4j.Bandwidth.classic(10, io.github.bucket4j.Refill.greedy(10, java.time.Duration.ofMinutes(1)))).build()
+        whenever(rateLimitingService.resolveBucketByIp(any())).thenReturn(fakeBucket)
+        whenever(rateLimitingService.resolveBucket(any())).thenReturn(fakeBucket)
+        
         val reqDto = LoginReqDto("", "") // Invalid: empty fields
 
         mockMvc.perform(

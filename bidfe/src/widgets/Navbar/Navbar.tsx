@@ -162,7 +162,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                                         zIndex: 100
                                     }}>
                                         <Link to="/profile" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '4px', display: 'block', fontSize: '14px', fontWeight: 600 }}>My Profile</Link>
-                                        {user?.roles?.some((r: any) => r.name === 'ADMIN') && (
+                                        {user?.roles?.some((r: { name: string }) => r.name === 'ADMIN') && (
                                             <Link to="/admin" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '4px', display: 'block', fontSize: '14px', fontWeight: 600 }}>Admin Dashboard</Link>
                                         )}
                                         <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />

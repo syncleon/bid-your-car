@@ -1,16 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import "./CookieConsent.css";
 
 export const CookieConsent = () => {
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const consent = localStorage.getItem("cookieConsent");
-        if (!consent) {
-            setIsVisible(true);
-        }
-    }, []);
+    const [isVisible, setIsVisible] = useState(() => !localStorage.getItem("cookieConsent"));
 
     const handleAccept = () => {
         localStorage.setItem("cookieConsent", "accepted");

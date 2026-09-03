@@ -12,7 +12,7 @@ import java.time.Instant
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
-abstract class BaseEntity<ID : Serializable> {
+abstract class BaseEntity<ID : Serializable> : Serializable {
 
     abstract var id: ID?
 

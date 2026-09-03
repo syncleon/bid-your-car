@@ -75,11 +75,6 @@ class Auction(
     @JoinColumn(name = "winner_id")
     var winnerUser: User? = null,
 
-    @OneToMany(mappedBy = "auction", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @BatchSize(size = 20)
-    @OrderBy("amount DESC")
-    var bids: MutableList<Bid> = mutableListOf()
-
 ) : BaseEntity<UUID>() {
 
     val isReserveMet: Boolean
@@ -129,7 +124,12 @@ class Auction(
 
     private fun recordBidInternal(bidder: User, amount: BigDecimal, maxAmount: BigDecimal, now: Instant): Bid {
         val secondsRemaining = ChronoUnit.SECONDS.between(now, endTime)
-        if (secondsRemaining < 120) endTime = now.plus(120, ChronoUnit.SECONDS)
+        if (secondsRemaining in 0..119) {
+            val newEndTime = now.plus(120, ChronoUnit.SECONDS)
+            if (newEndTime.isAfter(endTime)) {
+                endTime = newEndTime
+            }
+        }
 
         val bid = Bid(
             auction = this,

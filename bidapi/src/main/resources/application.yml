@@ -28,9 +28,15 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
     show-sql: true
     properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
       jdbc:
         time_zone: UTC
   mail:
@@ -72,11 +78,10 @@ cloudflare:
     bucket: ${R2_BUCKET_NAME}
     access-key: ${R2_ACCESS_KEY}
     secret-key: ${R2_SECRET_KEY}
-    endpoint: "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    endpoint: ${CLOUDFLARE_R2_ENDPOINT:https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com}
     region: "auto"
+    public-url: ${R2_PUBLIC_URL}
 
-imagekit:
-  url-endpoint: ${IMAGEKIT_URL_ENDPOINT}
 
 management:
   endpoints:
@@ -110,4 +115,4 @@ app:
 
   features:
     email-verification:
-      enabled: ${APP_FEATURES_EMAIL_VERIFICATION_ENABLED:true}
+      enabled: ${APP_FEATURES_EMAIL_VERIFICATION_ENABLED:false}

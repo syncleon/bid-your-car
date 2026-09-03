@@ -62,6 +62,11 @@ class ItemService(
             throw NotFoundException("Item not found")
         }
 
+        // Initialize lazy-loaded collections before caching/returning
+        org.hibernate.Hibernate.initialize(item.images)
+        org.hibernate.Hibernate.initialize(item.seller)
+        org.hibernate.Hibernate.initialize(item.seller.roles)
+        
         return item
     }
 
@@ -250,6 +255,8 @@ class ItemService(
         category: ImageCategory = ImageCategory.OTHER
     ): ItemImage {
         val item = findById(itemId)
+        
+        val imageUrl = storageService.uploadFile(file)
 
         if (category == ImageCategory.MAIN) {
             val oldMainImage = itemImageRepository.findFirstByItemIdAndCategory(itemId, ImageCategory.MAIN)
@@ -259,7 +266,6 @@ class ItemService(
             }
         }
 
-        val imageUrl = storageService.uploadFile(file)
         val image = ItemImage(url = imageUrl, item = item, category = category, sortOrder = item.images.size)
         item.addImage(image)
 

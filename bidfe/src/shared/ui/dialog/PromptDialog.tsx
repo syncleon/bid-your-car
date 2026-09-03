@@ -31,6 +31,7 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({
 
     useEffect(() => {
         if (isOpen) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setValue("");
             // slight delay to ensure dialog is rendered
             setTimeout(() => inputRef.current?.focus(), 50);

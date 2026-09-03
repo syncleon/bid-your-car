@@ -45,6 +45,10 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children, isUrgent, vi
                             className="base-card-image"
                             style={styles.image}
                             loading="lazy"
+                            onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found';
+                            }}
                         />
                     ) : (
                         <div style={styles.placeholder}>No Photos</div>

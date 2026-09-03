@@ -16,7 +16,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.util.UriComponentsBuilder
 import java.util.UUID
 
 @Component
@@ -26,7 +25,10 @@ class OAuth2LoginSuccessHandler(
     private val roleRepository: RoleRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val passwordEncoder: PasswordEncoder,
-    @Value("\${app.frontend-url:http://localhost:5173}") private val frontendUrl: String
+    @Value("\${app.frontend-url:http://localhost:5173}") private val frontendUrl: String,
+    @Value("\${app.cookie.secure:true}") private val cookieSecure: Boolean,
+    @Value("\${app.cookie.same-site:Lax}") private val cookieSameSite: String,
+    @Value("\${app.cookie.max-age-seconds:2592000}") private val cookieMaxAge: Long
 ) : SimpleUrlAuthenticationSuccessHandler() {
 
     override fun onAuthenticationSuccess(
@@ -57,10 +59,22 @@ class OAuth2LoginSuccessHandler(
 
         val token = jwtTokenProvider.createToken(user)
 
-        val targetUrl = UriComponentsBuilder.fromUriString("$frontendUrl/oauth2/redirect")
-            .queryParam("token", token)
-            .build().toUriString()
+        // Set the JWT in an httpOnly, Secure cookie — matching the login() endpoint behaviour.
+        // This prevents the token from being exposed in:
+        //   - browser history
+        //   - server-side access logs
+        //   - Referer headers sent to third-party resources
+        val cookie = ResponseCookie.from("__session", token)
+            .httpOnly(true)
+            .secure(cookieSecure)
+            .path("/")
+            .maxAge(cookieMaxAge)
+            .sameSite(cookieSameSite)
+            .build()
 
-        redirectStrategy.sendRedirect(request, response, targetUrl)
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString())
+
+        // Redirect to the frontend OAuth2 callback page WITHOUT the token in the URL.
+        redirectStrategy.sendRedirect(request, response, "$frontendUrl/oauth2/redirect")
     }
 }

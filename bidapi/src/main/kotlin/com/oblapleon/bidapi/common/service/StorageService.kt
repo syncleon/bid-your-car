@@ -21,15 +21,15 @@ class StorageService(
     @Value("\${cloudflare.r2.bucket}")
     lateinit var bucketName: String
 
-    @Value("\${imagekit.url-endpoint}")
-    lateinit var imageKitUrl: String
+    @Value("\${cloudflare.r2.public-url}")
+    lateinit var publicUrl: String
 
     /**
      * Uploads a multipart file to the configured S3-compatible storage bucket.
      * Validates that the file is an image and generates a unique UUID filename.
      *
      * @param file The file to upload.
-     * @return The public URL (via ImageKit) of the uploaded file.
+     * @return The public URL of the uploaded file.
      * @throws com.oblapleon.bidapi.common.exception.BadRequestException if file type is invalid.
      */
     fun uploadFile(file: MultipartFile): String {
@@ -44,7 +44,8 @@ class StorageService(
             "image/jpeg" -> "jpg"
             "image/png" -> "png"
             "image/webp" -> "webp"
-            else -> throw com.oblapleon.bidapi.common.exception.BadRequestException("Invalid file type. Only JPEG, PNG, and WebP images are allowed.")
+            "image/avif" -> "avif"
+            else -> throw com.oblapleon.bidapi.common.exception.BadRequestException("Invalid file type. Only JPEG, PNG, WebP, and AVIF images are allowed.")
         }
 
         val fileName = "${UUID.randomUUID()}.$extension"
@@ -59,7 +60,7 @@ class StorageService(
             request,
             RequestBody.fromInputStream(file.inputStream, file.size)
         )
-        return constructImageKitUrl(fileName)
+        return constructPublicUrl(fileName)
     }
 
     /**
@@ -92,13 +93,13 @@ class StorageService(
     }
 
     /**
-     * Constructs the ImageKit CDN URL for a given file name.
+     * Constructs the public CDN URL for a given file name.
      *
      * @param fileName The key of the file in the bucket.
      * @return The full public URL.
      */
-    private fun constructImageKitUrl(fileName: String): String {
-        val baseUrl = imageKitUrl.removeSuffix("/")
+    private fun constructPublicUrl(fileName: String): String {
+        val baseUrl = publicUrl.removeSuffix("/")
         return "$baseUrl/$fileName"
     }
 

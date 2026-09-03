@@ -41,6 +41,9 @@ class WebSocketConfig(
         
         registry.addEndpoint("/ws")
             .setAllowedOriginPatterns(*safeOrigins)
+        
+        registry.addEndpoint("/ws/sockjs")
+            .setAllowedOriginPatterns(*safeOrigins)
             .withSockJS()
     }
 
@@ -58,6 +61,13 @@ class WebSocketConfig(
                         val bearer = authHeaders[0]
                         if (bearer.startsWith("Bearer ")) {
                             token = bearer.substring(7)
+                        }
+                    }
+                    
+                    if (token == null) {
+                        val tokenHeaders = accessor.getNativeHeader("token")
+                        if (!tokenHeaders.isNullOrEmpty()) {
+                            token = tokenHeaders[0]
                         }
                     }
 

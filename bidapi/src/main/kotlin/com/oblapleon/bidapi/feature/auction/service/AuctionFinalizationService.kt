@@ -13,7 +13,8 @@ import org.springframework.transaction.annotation.Propagation
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.retry.annotation.Retryable
 
 @Service
 class AuctionFinalizationService(
@@ -30,7 +31,13 @@ class AuctionFinalizationService(
      *
      * @param auctionId The UUID of the auction to finalize.
      */
+    @Retryable(
+        value = [org.springframework.orm.ObjectOptimisticLockingFailureException::class],
+        maxAttempts = 3,
+        backoff = org.springframework.retry.annotation.Backoff(delay = 100, maxDelay = 500)
+    )
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @CacheEvict(value = ["auctions"], key = "#auctionId")
     fun finalizeAuction(auctionId: UUID) {
         val auction = auctionRepository.findById(auctionId).orElse(null) ?: return
 
@@ -60,6 +67,11 @@ class AuctionFinalizationService(
      * matching the isolation pattern of finalizeAuction so one failure doesn't
      * roll back the entire scheduler batch.
      */
+    @Retryable(
+        value = [org.springframework.orm.ObjectOptimisticLockingFailureException::class],
+        maxAttempts = 3,
+        backoff = org.springframework.retry.annotation.Backoff(delay = 100, maxDelay = 500)
+    )
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun activateScheduledAuction(auctionId: UUID) {
         val auction = auctionRepository.findById(auctionId).orElse(null) ?: return
@@ -81,5 +93,18 @@ class AuctionFinalizationService(
 
         auctionRepository.save(auction)
         logger.info("Activated scheduled auction ${auction.id}")
+    }
+
+    /**
+     * Marks an auction as FINALIZATION_FAILED in a separate transaction.
+     * This acts as a circuit breaker for poison pill auctions that throw errors
+     * during finalization, preventing them from repeatedly breaking the scheduler.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun markAsFailed(auctionId: UUID) {
+        val auction = auctionRepository.findById(auctionId).orElse(null) ?: return
+        auction.status = AuctionStatus.FINALIZATION_FAILED
+        auctionRepository.save(auction)
+        logger.error("Auction ${auction.id} was marked as FINALIZATION_FAILED due to processing errors.")
     }
 }
