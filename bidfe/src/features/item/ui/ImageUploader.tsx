@@ -1,4 +1,4 @@
-import { type ChangeEvent } from "react";
+import { type ChangeEvent, useState } from "react";
 import type { ItemImageDto } from "../types";
 
 interface Props {
@@ -17,6 +17,27 @@ export const ImageUploader = ({
                                   onRemoveNew
                               }: Props) => {
 
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const fakeEvent = { target: { files: e.dataTransfer.files } } as unknown as ChangeEvent<HTMLInputElement>;
+            onAddFiles(fakeEvent);
+        }
+    };
+
     const totalImages = existingImages.length + newPreviews.length;
     const hasImages = totalImages > 0;
     const hasMainInExisting = existingImages.some(img => img.category === "MAIN");
@@ -24,13 +45,14 @@ export const ImageUploader = ({
     return (
         <div className="image-uploader-wrapper">
             <style>{`
-                .upload-zone { border: 2px dashed #e2e8f0; background: #f8fafc; transition: all 0.2s ease; }
-                .upload-zone:hover { border-color: #52525b; background: #f4f4f5; }
-                .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 24px; width: 100%; }
-                .gallery-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s; background: #e2e8f0; width: 100%; aspect-ratio: 16/9; }
+                .upload-zone { border: 2px dashed rgba(255,255,255,0.2); background: rgba(255,255,255,0.03); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); backdrop-filter: blur(8px); }
+                .upload-zone.dragging { border-color: var(--accent-color, #ff5e00); background: rgba(255,94,0,0.1); transform: scale(1.02); }
+                .upload-zone:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.08); }
+                .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; width: 100%; }
+                .gallery-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); transition: transform 0.2s; background: rgba(255,255,255,0.05); width: 100%; aspect-ratio: 16/9; }
                 .gallery-img { width: 100%; height: 100%; object-fit: cover; }
-                .delete-btn { opacity: 1; transition: all 0.2s ease; }
-                .gallery-item:hover .delete-btn { background-color: #ef4444; color: white; }
+                .delete-btn { opacity: 0; transition: all 0.2s ease; transform: scale(0.8); }
+                .gallery-item:hover .delete-btn { opacity: 1; transform: scale(1); background-color: #ef4444; color: white; }
                 .mini-upload-bar { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 20px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
             `}</style>
 
@@ -81,18 +103,29 @@ export const ImageUploader = ({
             </div>
 
             {hasImages ? (
-                <label className="upload-zone mini-upload-bar">
+                <label 
+                    className={`upload-zone mini-upload-bar ${isDragging ? 'dragging' : ''}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
                     <input type="file" multiple accept="image/*" onChange={onAddFiles} style={{ display: "none" }} />
                     <PlusIcon />
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: "#64748b" }}>Add More Photos</span>
+                    <span style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Drop more photos here or click to add</span>
                 </label>
             ) : (
-                <label className="upload-zone" style={styles.bigDropZone}>
+                <label 
+                    className={`upload-zone ${isDragging ? 'dragging' : ''}`} 
+                    style={styles.bigDropZone}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
                     <input type="file" multiple accept="image/*" onChange={onAddFiles} style={{ display: "none" }} />
                     <div style={styles.iconCircle}><CameraIcon /></div>
                     <div style={{ textAlign: "center" }}>
-                        <span style={styles.uploadTitle}>Click to upload photos</span>
-                        <span style={styles.uploadSubtitle}>Supports JPG, PNG, WEBP • Max 10MB</span>
+                        <span style={styles.uploadTitle}>Drag & drop photos here, or click to browse</span>
+                        <span style={styles.uploadSubtitle}>High-res JPG, PNG, WEBP • Max 10MB</span>
                     </div>
                 </label>
             )}
@@ -102,15 +135,15 @@ export const ImageUploader = ({
 
 const styles = {
     header: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "16px" },
-    title: { fontSize: "16px", fontWeight: 700, color: "#1e293b", marginRight: "12px" },
-    counter: { fontSize: "13px", fontWeight: 500, color: "#64748b", backgroundColor: "#f1f5f9", padding: "2px 10px", borderRadius: "12px" },
-    bigDropZone: { display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: "16px", padding: "40px", borderRadius: "16px", cursor: "pointer" },
-    iconCircle: { width: "56px", height: "56px", borderRadius: "50%", backgroundColor: "#fff", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)" },
-    uploadTitle: { display: "block", fontSize: "16px", fontWeight: 600, color: "#1e293b", marginBottom: "4px" },
-    uploadSubtitle: { fontSize: "14px", color: "#64748b" },
-    mainBadge: { position: "absolute" as const, top: "16px", left: "16px", backgroundColor: "rgba(0, 0, 0, 0.75)", backdropFilter: "blur(4px)", color: "#fbbf24", fontSize: "12px", fontWeight: 700, padding: "8px 12px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none" as const, border: "1px solid rgba(251,191,36,0.3)" },
-    categoryBadge: { position: "absolute" as const, top: "16px", left: "16px", backgroundColor: "rgba(255, 255, 255, 0.9)", color: "#334155", fontSize: "11px", fontWeight: 700, letterSpacing: "0.5px", padding: "6px 10px", borderRadius: "20px", pointerEvents: "none" as const, boxShadow: "0 2px 4px rgba(0,0,0,0.1)" },
-    deleteBtn: { position: "absolute" as const, top: "16px", right: "16px", width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "white", color: "#ef4444", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }
+    title: { fontSize: "18px", fontWeight: 700, color: "white", marginRight: "12px" },
+    counter: { fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.8)", backgroundColor: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: "12px" },
+    bigDropZone: { display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px", borderRadius: "24px", cursor: "pointer" },
+    iconCircle: { width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" },
+    uploadTitle: { display: "block", fontSize: "18px", fontWeight: 600, color: "white", marginBottom: "8px" },
+    uploadSubtitle: { fontSize: "14px", color: "rgba(255,255,255,0.5)" },
+    mainBadge: { position: "absolute" as const, top: "12px", left: "12px", backgroundColor: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(8px)", color: "#fbbf24", fontSize: "11px", fontWeight: 700, padding: "6px 10px", borderRadius: "16px", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none" as const, border: "1px solid rgba(251,191,36,0.3)" },
+    categoryBadge: { position: "absolute" as const, top: "12px", left: "12px", backgroundColor: "rgba(0, 0, 0, 0.5)", backdropFilter: "blur(8px)", color: "white", fontSize: "11px", fontWeight: 600, letterSpacing: "0.5px", padding: "6px 10px", borderRadius: "16px", pointerEvents: "none" as const, border: "1px solid rgba(255,255,255,0.2)" },
+    deleteBtn: { position: "absolute" as const, top: "12px", right: "12px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", color: "white", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }
 };
 
 const CameraIcon = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>);
