@@ -1,0 +1,172 @@
+.submit-page-wrapper {
+    position: relative;
+    height: calc(100vh - 60px); /* strictly fixed to prevent window scroll */
+    background: #000;
+    overflow: hidden;
+}
+
+/* --- Immersive Background --- */
+.immersive-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.immersive-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.05);
+    animation: slowPan 30s ease-out forwards;
+    opacity: 0.8;
+}
+
+@keyframes slowPan {
+    0% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.immersive-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.95) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* --- Glass Modal --- */
+.glass-modal-scroll-area {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.glass-modal-container {
+    margin: 40px auto auto auto;
+    width: 100%;
+    max-width: 1100px;
+    perspective: 1000px;
+}
+
+.glass-modal {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    animation: floatIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (max-width: 767px) {
+    .glass-modal {
+        padding: 0;
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+    }
+}
+
+@keyframes floatIn {
+    0% { opacity: 0; transform: translateY(20px) rotateX(2deg); }
+    100% { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+/* --- Utilities --- */
+.error-banner {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    font-weight: 600;
+}
+
+.progress-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.progress-card {
+    background: var(--bg-card);
+    padding: 32px 48px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.progress-card p {
+    margin-top: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.progress-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(249, 115, 22, 0.2);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --- Modern Layout for Submit Page --- */
+.submit-form-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    width: 100%;
+}
+
+.submit-form-card {
+    flex: 1 1 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 480px;
+    padding: 32px;
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.submit-preview-container {
+    flex: 0 0 420px;
+    position: sticky;
+    top: 24px;
+}
+
+@media (max-width: 1024px) {
+    .submit-form-layout {
+        gap: 32px;
+    }
+    .submit-form-card {
+        flex: 1 1 100%;
+        padding: 24px;
+    }
+    .submit-preview-container {
+        flex: 1 1 100%;
+        position: static;
+        max-width: 100%;
+    }
+}
