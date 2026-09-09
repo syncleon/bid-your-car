@@ -74,12 +74,6 @@ class Item(
     @Column(name = "has_service_records", nullable = false)
     var hasServiceHistory: Boolean = false,
 
-    @Column(name = "reserve_price", precision = 19, scale = 2)
-    var reservePrice: java.math.BigDecimal? = null,
-
-    @Column(name = "is_no_reserve")
-    var isNoReserve: Boolean = false,
-
     @Column(length = 50)
     var engine: String? = null,
 

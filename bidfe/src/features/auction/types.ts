@@ -42,6 +42,8 @@ export interface CreateAuctionDto {
     endTime: string;
     startPrice: number;
     minBidIncrement?: number;
+    reservePrice?: number | null;
+    isNoReserve: boolean;
 }
 
 export interface PlaceBidReq {

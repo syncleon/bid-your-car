@@ -48,8 +48,6 @@ export const ItemModel = types.model("Item", {
     titleStatus: types.maybeNull(types.string),
     isModified: types.boolean,
     hasServiceHistory: types.boolean,
-    reservePrice: types.maybeNull(types.number),
-    isNoReserve: types.boolean,
     engine: types.maybeNull(types.string),
     drivetrain: types.maybeNull(types.string),
     transmission: types.maybeNull(types.string),

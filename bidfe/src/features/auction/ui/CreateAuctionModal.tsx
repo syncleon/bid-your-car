@@ -59,6 +59,8 @@ export const CreateAuctionModal = ({
                                    }: Props) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [startPrice, setStartPrice] = useState("");
+    const [isNoReserve, setIsNoReserve] = useState(false);
+    const [reservePrice, setReservePrice] = useState("");
 
     const [durationMinutes, setDurationMinutes] = useState<number>(10080);
     const [selectedImgIdx, setSelectedImgIdx] = useState(0);
@@ -78,6 +80,8 @@ export const CreateAuctionModal = ({
         setSelectedImgIdx(0);
 
         setStartPrice("");
+        setIsNoReserve(false);
+        setReservePrice("");
 
         setDurationMinutes(10080);
         setStartMode("ASAP_AFTER_APPROVAL");
@@ -144,11 +148,14 @@ export const CreateAuctionModal = ({
 
     const startPriceNum = Number(startPrice);
     const isStartPriceValid = Number.isFinite(startPriceNum) && startPriceNum > 0;
+    const reservePriceNum = Number(reservePrice);
+    const isReserveValid = isNoReserve || (Number.isFinite(reservePriceNum) && reservePriceNum > 0);
 
 
     const isStep1Valid = true;
     const isStep2Valid =
         isStartPriceValid &&
+        isReserveValid &&
         durationMinutes > 0 &&
         isScheduledStartValid;
 
@@ -185,6 +192,8 @@ export const CreateAuctionModal = ({
             startTime: start.toISOString(),
             endTime: end.toISOString(),
             startPrice: startPriceNum,
+            isNoReserve,
+            reservePrice: isNoReserve ? null : reservePriceNum,
         };
 
         await onSubmit(payload);
@@ -296,6 +305,33 @@ export const CreateAuctionModal = ({
                                 </p>
                             </div>
 
+                            <div style={{ ...styles.inputGroup, marginTop: 20 }}>
+                                <label style={styles.label}>Reserve Strategy</label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '8px' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={isNoReserve}
+                                        onChange={(e) => setIsNoReserve(e.target.checked)}
+                                        style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)' }}
+                                    />
+                                    Sell with No Reserve
+                                </label>
+
+                                {!isNoReserve && (
+                                    <div style={styles.moneyInputWrapper}>
+                                        <span style={styles.currency}>$</span>
+                                        <input
+                                            type="number"
+                                            style={styles.moneyInput}
+                                            value={reservePrice}
+                                            onChange={(e) => setReservePrice(e.target.value)}
+                                            placeholder="Enter Reserve Price"
+                                            min={1}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
 
 
                             <div style={{ ...styles.inputGroup, marginTop: 20 }}>
@@ -387,14 +423,14 @@ export const CreateAuctionModal = ({
 
                                 <SummaryRow
                                     label="Pricing Strategy"
-                                    value={item.isNoReserve ? "No Reserve" : "Reserve Set"}
-                                    highlight={item.isNoReserve}
+                                    value={isNoReserve ? "No Reserve" : "Reserve Set"}
+                                    highlight={isNoReserve}
                                 />
 
-                                {!item.isNoReserve && (
+                                {!isNoReserve && (
                                     <SummaryRow
                                         label="Reserve Target"
-                                        value={`$${item.reservePrice?.toLocaleString() || "Not Set"}`}
+                                        value={`$${reservePriceNum.toLocaleString()}`}
                                     />
                                 )}
 

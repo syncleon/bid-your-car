@@ -52,7 +52,7 @@ const toTitleCase = (str: string) => {
     );
 };
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 8;
 
 const COMMON_MAKES = new Set([
     "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Bugatti", 
@@ -151,8 +151,6 @@ export const SubmitItemForm = ({
         titleStatus: "Clean",
         isModified: false,
         hasServiceHistory: false,
-        reservePrice: "" as number | "",
-        isNoReserve: false,
         images: initialData?.images || [],
         ...initialData,
     });
@@ -215,7 +213,7 @@ export const SubmitItemForm = ({
         }
     }, [formData.make, formData.year]);
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement> | { target: { name: string; value: string; type?: string; } }) => {
         const { name, value, type } = e.target;
         const isCheckbox = type === 'checkbox';
         const checked = isCheckbox ? (e.target as HTMLInputElement).checked : false;
@@ -224,7 +222,7 @@ export const SubmitItemForm = ({
             let parsedValue: string | number | boolean = value;
             if (isCheckbox) {
                 parsedValue = checked;
-            } else if (["mileage", "year", "horsepower", "reservePrice"].includes(name)) {
+            } else if (["mileage", "year", "horsepower"].includes(name)) {
                 parsedValue = value === "" ? "" : Number(value);
             } else if (name === "vin") {
                 parsedValue = value.toUpperCase().replace(/[IOQ]/g, '');
@@ -277,8 +275,7 @@ export const SubmitItemForm = ({
         if (currentStep === 4) return !!(formData.bodyStyle && formData.exteriorColor && formData.interiorColor);
         if (currentStep === 5) return !!(formData.condition && formData.titleStatus);
         if (currentStep === 6) return !!(formData.mileage !== "" && formData.location);
-        if (currentStep === 7) return true;
-        if (currentStep === 8) return !!(formData.isNoReserve || (formData.reservePrice !== "" && Number(formData.reservePrice) > 0));
+        if (currentStep === 8) return true;
         return true;
     };
 
@@ -501,25 +498,6 @@ export const SubmitItemForm = ({
                 )}
 
                 {currentStep === 8 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Set Your Reserve</h3>
-                            <label className="modern-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontSize: '18px', fontWeight: 500 }}>
-                                <input type="checkbox" name="isNoReserve" checked={formData.isNoReserve} onChange={handleChange} style={{ width: '20px', height: '20px', accentColor: 'var(--accent-color)' }} />
-                                Sell with No Reserve (Recommended)
-                            </label>
-                            
-                            {!formData.isNoReserve && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-                                    <FormLabel title="Minimum Reserve Price ($)" desc="The lowest price you are willing to accept. If the auction doesn't reach this price, the car won't sell." />
-                                    <input type="number" name="reservePrice" value={formData.reservePrice} onChange={handleChange} className="modern-input standard-input" placeholder="e.g. 50000" min="0" />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {currentStep === 9 && (
                     <div style={{ width: '100%' }}>
                         <ImageUploader
                             existingImages={formData.images}

@@ -289,16 +289,18 @@ export const ItemDetailsPage = observer(() => {
 
                 <div className="details-grid-new">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div style={pageStyles.pricingBox}>
-                            <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
-                            {item.isNoReserve ? (
-                                <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
-                            ) : (
-                                <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                                    Reserve: {item.reservePrice ? `$${item.reservePrice.toLocaleString()}` : "Not set"}
-                                </div>
-                            )}
-                        </div>
+                        {item.auction && (
+                            <div style={pageStyles.pricingBox}>
+                                <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
+                                {item.auction.isNoReserve ? (
+                                    <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
+                                ) : (
+                                    <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                                        Reserve: {item.auction.reservePrice ? `$${item.auction.reservePrice.toLocaleString()}` : "Not set"}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
                             <button

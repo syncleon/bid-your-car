@@ -127,8 +127,6 @@ class ItemService(
             titleStatus = request.titleStatus,
             isModified = request.isModified,
             hasServiceHistory = request.hasServiceHistory,
-            reservePrice = request.reservePrice,
-            isNoReserve = request.isNoReserve,
             engine = request.engine,
             drivetrain = request.drivetrain,
             transmission = request.transmission,
@@ -170,8 +168,6 @@ class ItemService(
         request.titleStatus?.let { item.titleStatus = it }
         request.isModified?.let { item.isModified = it }
         request.hasServiceHistory?.let { item.hasServiceHistory = it }
-        request.reservePrice?.let { item.reservePrice = it }
-        request.isNoReserve?.let { item.isNoReserve = it }
         request.engine?.let { item.engine = it }
         request.drivetrain?.let { item.drivetrain = it }
         request.transmission?.let { item.transmission = it }

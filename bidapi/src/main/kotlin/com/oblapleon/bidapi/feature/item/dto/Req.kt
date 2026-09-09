@@ -66,11 +66,6 @@ data class ItemCreateRequest(
     @field:NotNull(message = "Condition grade is required")
     val condition: ConditionGrade,
 
-    @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
-    val reservePrice: BigDecimal? = null,
-
-    val isNoReserve: Boolean = false,
-
     @field:Size(max = 5000, message = "Highlights is too long")
     val highlights: String? = null,
     @field:Size(max = 5000, message = "Known flaws is too long")
@@ -125,10 +120,6 @@ data class ItemUpdateRequest(
     val horsepower: Int? = null,
 
     val condition: ConditionGrade? = null,
-
-    @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
-    val reservePrice: BigDecimal? = null,
-    val isNoReserve: Boolean? = null,
 
     @field:Size(max = 5000, message = "Highlights is too long")
     val highlights: String? = null,

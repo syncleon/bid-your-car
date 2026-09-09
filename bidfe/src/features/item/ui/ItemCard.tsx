@@ -68,7 +68,7 @@ export const ItemCard = ({ item }: ItemCardProps) => {
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
                 topLeft: statusBadge,
-                topRight: item.isNoReserve ? (
+                topRight: item.auction?.isNoReserve ? (
                     <div style={{ ...styles.badgeDark, backgroundColor: '#16a34a' }}>
                         NO RESERVE
                     </div>

@@ -20,8 +20,6 @@ interface LiveListingPreviewProps {
         interiorColor: string;
         titleStatus: string;
         description: string;
-        isNoReserve: boolean;
-        reservePrice: number | string;
     };
     previewImage: string | null;
 }
@@ -81,11 +79,6 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                         </div>
                     )}
 
-                    {formData.isNoReserve && (
-                        <div style={{ position: 'absolute', top: '12px', right: '12px', background: '#16a34a', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 800, zIndex: 10, letterSpacing: '0.5px' }}>
-                            NO RESERVE
-                        </div>
-                    )}
 
                     {formData.mileage !== "" && (
                         <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(0,0,0,0.7)', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, backdropFilter: 'blur(8px)', zIndex: 10 }}>

@@ -44,8 +44,6 @@ export const EditItemModal = ({
         titleStatus: item.titleStatus || "Clean",
         isModified: item.isModified,
         hasServiceHistory: item.hasServiceHistory,
-        reservePrice: item.reservePrice ?? ("" as unknown as number),
-        isNoReserve: item.isNoReserve,
         images: item.images
     };
 

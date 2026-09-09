@@ -138,8 +138,8 @@ class AuctionService(
             item = item,
             startPrice = request.startPrice,
             currentPrice = request.startPrice,
-            reservePrice = item.reservePrice,
-            isNoReserve = item.isNoReserve,
+            reservePrice = request.reservePrice,
+            isNoReserve = request.isNoReserve,
             startTime = request.startTime,
             endTime = request.endTime,
             status = AuctionStatus.PENDING_APPROVAL

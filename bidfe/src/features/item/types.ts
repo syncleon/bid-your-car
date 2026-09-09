@@ -71,8 +71,6 @@ export interface ItemDto {
     titleStatus: string | null;
     isModified: boolean;
     hasServiceHistory: boolean;
-    reservePrice: number | null;
-    isNoReserve: boolean;
     engine: string | null;
     drivetrain: string | null;
     transmission: string | null;
@@ -103,8 +101,6 @@ export interface ItemCreateRequest {
     titleStatus?: string;
     isModified: boolean;
     hasServiceHistory: boolean;
-    reservePrice?: number;
-    isNoReserve: boolean;
     engine?: string;
     drivetrain?: string;
     transmission?: string;
@@ -131,8 +127,6 @@ export interface ItemUpdateRequest {
     titleStatus?: string;
     isModified?: boolean;
     hasServiceHistory?: boolean;
-    reservePrice?: number;
-    isNoReserve?: boolean;
     engine?: string;
     drivetrain?: string;
     transmission?: string;
