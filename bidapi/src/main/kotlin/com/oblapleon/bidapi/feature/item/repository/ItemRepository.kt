@@ -50,6 +50,5 @@ interface ItemRepository : BaseRepository<Item, UUID> {
     @EntityGraph(attributePaths = ["seller"])
     fun findAllByFuelTypeAndStatus(fuelType: String, status: ItemStatus, pageable: Pageable): Page<Item>
 
-    @EntityGraph(attributePaths = ["seller"])
-    fun findAllByIsNoReserveTrueAndStatusIn(statuses: List<ItemStatus>, pageable: Pageable): Page<Item>
+
 }

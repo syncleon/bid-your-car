@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../shared/hooks/useStore.ts";
-import { DetailPageLayout, ImageGallery, VehicleInfo, DetailSkeleton, VehicleHeader } from "../shared/ui/details";
+import { DetailPageLayout, DetailSkeleton, VehicleHeader, ResponsiveGrid, SidebarCard, DetailHeader } from "../shared/ui/details";
 import { CreateAuctionModal } from "../features/auction/ui/CreateAuctionModal.tsx";
 import { EditItemModal } from "../features/item/ui/EditItemModal.tsx";
 import type { CreateAuctionDto } from "../features/auction/types.ts";
@@ -10,16 +10,12 @@ import type { ItemUpdateRequest, ItemImageDto, ImageCategory } from "../features
 import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
 import { adminApi } from "../features/admin/api/admin.api";
 import "./AuctionDetails.css";
-const badges = {
-    live: { background: "var(--color-success-bg)", color: "var(--color-success-text)", border: "1px solid var(--color-success-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
-    sold: { background: "var(--color-danger-bg)", color: "var(--color-danger-text)", border: "1px solid var(--color-danger-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
-    pending: { background: "var(--color-warning-bg)", color: "var(--color-warning-text)", border: "1px solid var(--color-warning-border)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 },
-    scheduled: { background: "var(--bg-input)", color: "var(--accent-color)", border: "1px solid var(--border-color)", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700 }
-};
+
+
 
 const pageStyles = {
     statusBox: { background: "var(--bg-input)", padding: 16, borderRadius: 6, textAlign: "center" as const, color: "var(--text-secondary)", fontWeight: 500, transition: "background-color 0.3s ease, color 0.3s ease" },
-    pricingBox: { marginTop: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-card)", borderRadius: 6, border: "1px solid var(--border-color)", transition: "all 0.3s ease" },
+    pricingBox: { marginTop: 16, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-card)", borderRadius: 6, border: "1px solid var(--border-color)", transition: "all 0.3s ease" },
     pricingLabel: { fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, margin: 0, transition: "color 0.3s ease" },
     btnPrimary: { width: "100%", padding: "12px", background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
     btnSecondary: { width: "100%", padding: "12px", background: "var(--btn-secondary-bg)", color: "var(--btn-secondary-text)", border: "1px solid var(--border-color)", borderRadius: 6, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
@@ -69,6 +65,90 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
             <div style={lightboxStyles.content} onClick={(e) => e.stopPropagation()}>
                 {images[index]?.url && <img src={images[index].url} alt="Vehicle" style={lightboxStyles.image} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found'; }} />}
             </div>
+        </div>
+    );
+};
+
+const ReviewGallery = ({ item, onImageClick }: { item: any, onImageClick?: (index: number) => void }) => {
+    const images = item.images || [];
+    if (!images.length) return <div style={{ height: 300, background: 'var(--bg-input)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>No Photos Available</div>;
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+            {images.map((img: any, idx: number) => (
+                <div 
+                    key={img.id} 
+                    onClick={() => onImageClick?.(idx)}
+                    style={{ position: 'relative', aspectRatio: '16/9', borderRadius: '12px', overflow: 'hidden', backgroundColor: 'var(--bg-input)', cursor: 'zoom-in', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                >
+                    <img 
+                        src={img.url} 
+                        alt={`Review Photo ${idx + 1}`} 
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} 
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found'; }}
+                    />
+                    <div style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600 }}>
+                        {idx + 1} / {images.length}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const ReviewSection = ({ title, content, isWarning }: { title: string, content: React.ReactNode, isWarning?: boolean }) => {
+    if (!content) return null;
+    return (
+        <div style={{ 
+            background: isWarning ? 'rgba(239, 68, 68, 0.05)' : 'var(--bg-card)', 
+            border: `1px solid ${isWarning ? 'rgba(239, 68, 68, 0.2)' : 'var(--border-color)'}`,
+            borderRadius: '12px', 
+            padding: '24px', 
+            marginBottom: '24px' 
+        }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: isWarning ? 'var(--color-danger-text)' : 'var(--text-primary)' }}>{title}</h3>
+            <div style={{ fontSize: '16px', lineHeight: 1.6, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{content}</div>
+        </div>
+    );
+};
+
+const ReviewVehicleInfo = ({ item }: { item: any }) => {
+    const specGroups = [
+        { label: "VIN", value: item.vin },
+        { label: "Mileage", value: item.mileage?.toLocaleString() + " miles" },
+        { label: "Title Status", value: item.titleStatus || "Clean" },
+        { label: "Location", value: item.location },
+        { label: "Engine", value: item.engine },
+        { label: "Transmission", value: item.transmission },
+        { label: "Drivetrain", value: item.drivetrain },
+        { label: "Body Style", value: item.bodyStyle },
+        { label: "Exterior Color", value: item.exteriorColor },
+        { label: "Interior Color", value: item.interiorColor },
+        { label: "Seller Type", value: item.sellerType || "Private Party" },
+    ];
+
+    return (
+        <div style={{ marginTop: '32px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '24px', color: 'var(--text-primary)' }}>Vehicle Details & Specs</h2>
+            
+            <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                gap: '16px', 
+                marginBottom: '32px' 
+            }}>
+                {specGroups.map((spec, i) => (
+                    <div key={i} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px' }}>
+                        <div style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '4px' }}>{spec.label}</div>
+                        <div style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600 }}>{spec.value || "—"}</div>
+                    </div>
+                ))}
+            </div>
+
+            <ReviewSection title="Highlights" content={item.highlights} />
+            <ReviewSection title="Known Flaws" content={item.knownFlaws} isWarning={true} />
+            <ReviewSection title="Recent Service History" content={item.recentServiceHistory} />
+            <ReviewSection title="Other Items Included" content={item.otherItemsIncluded} />
+            <ReviewSection title="Seller Notes" content={item.description} />
         </div>
     );
 };
@@ -200,12 +280,6 @@ export const ItemDetailsPage = observer(() => {
 
     const soldPrice = item.auction?.currentPrice;
 
-    let statusBadge = null;
-    if (isActiveAuction) statusBadge = <span style={badges.live}>LIVE AUCTION</span>;
-    else if (isScheduled) statusBadge = <span style={badges.scheduled}>SCHEDULED</span>;
-    else if (isPending) statusBadge = <span style={badges.pending}>IN REVIEW</span>;
-    else if (isSold) statusBadge = <span style={badges.sold}>SOLD</span>;
-
     const getStatusText = () => {
         if (isActiveAuction) return "Active Auction";
         if (isScheduled) return "Scheduled for Auction";
@@ -217,43 +291,72 @@ export const ItemDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            <div className="compact-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <DetailHeader onBack={() => navigate(-1)} title="Back to previous page" />
+            
+            <ResponsiveGrid>
+                {/* Left Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
+                        <VehicleHeader item={item} />
+                    </div>
+
+                    <div className="gallery-wrapper">
+                        <ReviewGallery item={item} onImageClick={(index) => setLightboxIndex(index)} />
+                    </div>
+
+                    <ReviewVehicleInfo item={item} />
+                </div>
+
+                {/* Right Column (Sidebar) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'sticky', top: '24px', alignSelf: 'start' }}>
                     {itemStore.error && <div style={pageStyles.errorBox}>{itemStore.error}</div>}
 
-                    <div style={pageStyles.statusBox}>
-                        {isSold ? (
-                            <div>
-                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-danger-text)' }}>Vehicle Sold</div>
-                                {soldPrice !== undefined && (
-                                    <div style={{ fontSize: '15px', marginTop: '4px', fontWeight: 600 }}>
-                                        ${soldPrice.toLocaleString()}
+                    <SidebarCard title="Listing Status">
+                        <div style={pageStyles.statusBox}>
+                            {isSold ? (
+                                <div>
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-danger-text)' }}>Vehicle Sold</div>
+                                    {soldPrice !== undefined && (
+                                        <div style={{ fontSize: '15px', marginTop: '4px', fontWeight: 600 }}>
+                                            ${soldPrice.toLocaleString()}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: '16px', fontWeight: 600 }}>
+                                    {getStatusText()}
+                                </div>
+                            )}
+                        </div>
+                        {item.auction && (
+                            <div style={pageStyles.pricingBox}>
+                                <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
+                                {item.auction.isNoReserve ? (
+                                    <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
+                                ) : (
+                                    <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                                        Reserve: {item.auction.reservePrice ? `$${item.auction.reservePrice.toLocaleString()}` : "Not set"}
                                     </div>
                                 )}
                             </div>
-                        ) : (
-                            getStatusText()
                         )}
-                    </div>
+                    </SidebarCard>
 
                     {isAdmin && isPending && !isGhostPending && (
-                        <div className="admin-panel-2025 compact-card" style={{ padding: '20px' }}>
-                            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: 'var(--text-primary)', fontWeight: 700, letterSpacing: '0.5px' }}>⚡ ADMIN REVIEW REQUIRED</h4>
-                            <div className="admin-btn-group" style={{ display: 'flex', gap: '12px' }}>
-                                <button onClick={handleApprove} disabled={actionLoading} className="btn-approve-2025" style={{ flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
+                        <SidebarCard title="⚡ ADMIN REVIEW REQUIRED">
+                            <div className="admin-btn-group" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <button onClick={handleApprove} disabled={actionLoading} className="btn-approve-2025" style={{ width: '100%', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
                                     {actionLoading ? "Processing..." : "✓ Approve Listing"}
                                 </button>
-                                <button onClick={handleReject} disabled={actionLoading} className="btn-reject-2025" style={{ flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
+                                <button onClick={handleReject} disabled={actionLoading} className="btn-reject-2025" style={{ width: '100%', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
                                     {actionLoading ? "Processing..." : "✗ Reject Listing"}
                                 </button>
                             </div>
-                        </div>
+                        </SidebarCard>
                     )}
 
                     {isAdmin && isPending && isGhostPending && (
-                        <div className="admin-panel-2025 compact-card" style={{ padding: '20px' }}>
-                            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: 'var(--color-danger-text)', fontWeight: 700 }}>⚠️ GHOST PENDING DETECTED</h4>
+                        <SidebarCard title="⚠️ GHOST PENDING DETECTED">
                             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>This item is marked as in review, but no actual auction record exists in the database. You must reset it to draft so the user can submit it again.</p>
                             <button 
                                 onClick={async () => {
@@ -275,79 +378,55 @@ export const ItemDetailsPage = observer(() => {
                             >
                                 {actionLoading ? "Processing..." : "Reset to Draft"}
                             </button>
-                        </div>
+                        </SidebarCard>
                     )}
-                </div>
 
-                <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
-                    <VehicleHeader item={item} />
-                </div>
-
-                <div className="gallery-wrapper">
-                    <ImageGallery item={item} statusLabel={statusBadge} onImageClick={(index) => setLightboxIndex(index)} />
-                </div>
-
-                <div className="details-grid-new">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {item.auction && (
-                            <div style={pageStyles.pricingBox}>
-                                <div style={pageStyles.pricingLabel}>Pricing Strategy</div>
-                                {item.auction.isNoReserve ? (
-                                    <div style={{ color: 'var(--color-success-text)', fontWeight: 700 }}>No Reserve</div>
-                                ) : (
-                                    <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                                        Reserve: {item.auction.reservePrice ? `$${item.auction.reservePrice.toLocaleString()}` : "Not set"}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
-                            <button
-                                onClick={() => {
-                                    const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
-                                    if (targetAuctionId) {
-                                        navigate(`/auctions/${targetAuctionId}`);
-                                    } else {
-                                        console.error("Auction ID is missing on the item:", item);
-                                    }
-                                }}
-                                style={{ ...pageStyles.btnPrimary }}
-                            >
-                                {isPending ? "View Submitted Auction" : "View Live Auction"}
-                            </button>
-                        )}
-
-                        {isOwner && canList && (
-                            <div style={{ display: 'flex', gap: 10 }}>
-                                <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>
-                                    List for Auction
-                                </button>
-                                <button onClick={() => setIsEditModalOpen(true)} style={pageStyles.btnSecondary}>
-                                    Edit Details & Specs
-                                </button>
+                    <SidebarCard title="Manage Listing">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
                                 <button
-                                    onClick={handleDeleteItem}
-                                    disabled={isDeleting}
-                                    style={{
-                                        ...pageStyles.btnSecondary,
-                                        border: '1px solid var(--color-danger-border)',
-                                        color: 'var(--color-danger-text)',
-                                        background: 'transparent',
-                                        opacity: isDeleting ? 0.5 : 1,
-                                        cursor: isDeleting ? 'not-allowed' : 'pointer'
+                                    onClick={() => {
+                                        const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
+                                        if (targetAuctionId) {
+                                            navigate(`/auctions/${targetAuctionId}`);
+                                        } else {
+                                            console.error("Auction ID is missing on the item:", item);
+                                        }
                                     }}
+                                    style={{ ...pageStyles.btnPrimary }}
                                 >
-                                    {isDeleting ? "Deleting..." : "Delete Listing"}
+                                    {isPending ? "View Submitted Auction" : "View Live Auction"}
                                 </button>
-                            </div>
-                        )}
-                    </div>
-                    <div></div>
+                            )}
+                            
+                            {isOwner && canList && (
+                                <>
+                                    <button onClick={() => setIsListModalOpen(true)} style={pageStyles.btnPrimary}>
+                                        List for Auction
+                                    </button>
+                                    <button onClick={() => setIsEditModalOpen(true)} style={pageStyles.btnSecondary}>
+                                        Edit Details & Specs
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteItem}
+                                        disabled={isDeleting}
+                                        style={{
+                                            ...pageStyles.btnSecondary,
+                                            border: '1px solid var(--color-danger-border)',
+                                            color: 'var(--color-danger-text)',
+                                            background: 'transparent',
+                                            opacity: isDeleting ? 0.5 : 1,
+                                            cursor: isDeleting ? 'not-allowed' : 'pointer'
+                                        }}
+                                    >
+                                        {isDeleting ? "Deleting..." : "Delete Listing"}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </SidebarCard>
                 </div>
-
-                <VehicleInfo item={item} hideHeader={true} />
-            </div>
+            </ResponsiveGrid>
 
             <CreateAuctionModal
                 key={isListModalOpen ? "open" : "closed"}
