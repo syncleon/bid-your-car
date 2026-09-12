@@ -72,6 +72,16 @@ body {
   letter-spacing: -0.01em;
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root > *:not(nav):not(footer):not(.cookie-consent-banner) {
+  flex: 1;
+}
+
 input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="tel"], textarea, select {
     background: var(--bg-input);
     border: 1px solid var(--border-color);
