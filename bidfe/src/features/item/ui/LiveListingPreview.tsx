@@ -30,7 +30,7 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
         <div className="live-preview-container">
             <div className="demo-auction-card">
                 <div className="demo-card-image-wrapper">
-                    <img src={previewImage || "/placeholder-car.jpg"} alt="Preview" className="demo-card-image" />
+                    <img src={previewImage || "/premium-hero-car.jpg"} alt="Preview" className="demo-card-image" />
                     <div className="demo-card-badges">
                         <span className="demo-badge badge-live">
                             <span className="live-dot-small"></span> LIVE AUCTION
