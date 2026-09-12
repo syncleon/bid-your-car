@@ -183,7 +183,7 @@
 /* Only the outgoing elements get a smooth transition */
 .hero-text-block,
 .hero-interactive-block {
-    transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease;
+    transition: none;
 }
 
 /* Incoming elements appear instantly — no transition, no blink */
