@@ -166,19 +166,66 @@
     display: contents;
 }
 
+/* Grid Cell Overlap & Transitions */
+.hero-text-block,
 .hero-content-wrapper .submit-form-card {
     grid-column: 1;
-    animation: slide-from-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    grid-row: 1;
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
 }
 
+.hero-interactive-block,
 .hero-content-wrapper .submit-preview-container {
     grid-column: 2;
+    grid-row: 1;
+    transition: opacity 0.4s ease;
+}
+
+/* Base States */
+.hero-text-block, .hero-interactive-block {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    filter: blur(0px);
+}
+.hero-content-wrapper .submit-form-card {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+    pointer-events: none;
+    filter: blur(4px);
+}
+.hero-content-wrapper .submit-preview-container {
+    opacity: 0;
+    pointer-events: none;
     flex: none;
     width: 100%;
     max-width: 100%;
     position: relative;
     top: 0;
     z-index: 2;
+}
+
+/* Submitting States */
+.hero-content-wrapper.is-submitting .hero-text-block {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.98);
+    pointer-events: none;
+    filter: blur(4px);
+}
+.hero-content-wrapper.is-submitting .hero-interactive-block {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.hero-content-wrapper.is-submitting .submit-form-card {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    filter: blur(0px);
+}
+.hero-content-wrapper.is-submitting .submit-preview-container {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 @media (max-width: 1024px) {

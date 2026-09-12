@@ -45,8 +45,7 @@ export const SellCarPage = observer(() => {
             {/* Hero Section */}
             <section className="modern-hero-section">
                 <div className={`hero-content-wrapper ${isSubmitting ? 'is-submitting' : ''}`}>
-                    <div style={{ display: isSubmitting ? 'none' : 'contents' }}>
-                        <div className="hero-text-block fade-in-up">
+                        <div className="hero-text-block">
                             <h1 className="hero-title">
                                 Sell your car to a <br className="hidden-mobile" />
                                 <span className="text-gradient">community</span> that <br className="hidden-mobile" />
@@ -68,7 +67,7 @@ export const SellCarPage = observer(() => {
                             </div>
                         </div>
 
-                        <div className="hero-interactive-block fade-in-up">
+                        <div className="hero-interactive-block">
                             <div className="demo-auction-card">
                                 <div className="demo-card-image-wrapper">
                                     <img src="/premium-hero-car.jpg" alt="Premium sports car" className="demo-card-image" />
@@ -85,16 +84,13 @@ export const SellCarPage = observer(() => {
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div style={{ display: isSubmitting ? 'contents' : 'none' }}>
                         <SubmitItemForm 
                             onSubmit={handleFormSubmit}
                             onCancel={() => setIsSubmitting(false)}
                             submitLabel="Create Listing"
                             isLoading={itemStore.isLoading}
                         />
-                    </div>
                 </div>
             </section>
         </div>
