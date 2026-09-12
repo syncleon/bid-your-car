@@ -123,7 +123,7 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 32px;
-    align-items: center;
+    align-items: flex-start;
 }
 
 @media (min-width: 1024px) {
@@ -161,9 +161,6 @@
 }
 
 /* Inline Submit Form overrides */
-.hero-content-wrapper.is-submitting {
-    align-items: flex-start;
-}
 
 .hero-content-wrapper .submit-form-layout {
     display: contents;
