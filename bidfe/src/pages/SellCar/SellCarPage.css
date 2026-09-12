@@ -172,38 +172,33 @@
 .hero-content-wrapper .submit-form-card {
     grid-column: 1;
     grid-row: 1;
+    transition: opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease;
 }
 
 .hero-interactive-block,
 .hero-content-wrapper .submit-preview-container {
     grid-column: 2;
     grid-row: 1;
-}
-
-/* Only the outgoing elements get a smooth transition */
-.hero-text-block,
-.hero-interactive-block {
-    transition: none;
-}
-
-/* Incoming elements appear instantly — no transition, no blink */
-.hero-content-wrapper .submit-form-card,
-.hero-content-wrapper .submit-preview-container {
+    /* Right column: NO transition — instant swap, zero blink */
     transition: none;
 }
 
 /* Base States */
-.hero-text-block, .hero-interactive-block {
+.hero-text-block {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
     pointer-events: auto;
     filter: blur(0px);
 }
+.hero-interactive-block {
+    opacity: 1;
+    pointer-events: auto;
+}
 .hero-content-wrapper .submit-form-card {
     opacity: 0;
-    transform: translateY(0) scale(1);
+    transform: translateY(16px);
     pointer-events: none;
-    filter: none;
+    filter: blur(2px);
     height: 680px !important;
     overflow-y: auto;
     box-sizing: border-box;
@@ -225,22 +220,23 @@
     z-index: 2;
 }
 
-/* Submitting States */
+/* Submitting States — left column animates, right column snaps */
 .hero-content-wrapper.is-submitting .hero-text-block {
     opacity: 0;
-    transform: translateY(-20px) scale(0.98);
+    transform: translateY(-16px);
     pointer-events: none;
-    filter: blur(4px);
+    filter: blur(2px);
 }
 .hero-content-wrapper.is-submitting .hero-interactive-block {
     opacity: 0;
     pointer-events: none;
 }
 
-/* Form + preview snap in instantly */
 .hero-content-wrapper.is-submitting .submit-form-card {
     opacity: 1;
+    transform: translateY(0);
     pointer-events: auto;
+    filter: blur(0px);
 }
 .hero-content-wrapper.is-submitting .submit-preview-container {
     opacity: 1;
