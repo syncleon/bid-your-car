@@ -486,17 +486,17 @@ export const SubmitItemForm = ({
 
     return (
         <div className="submit-form-layout">
-        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="submit-form-card">
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="submit-form-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             
             {/* Modern Attractive Progress Bar */}
-            <div className="modern-progress-container">
+            <div className="modern-progress-container" style={{ flexShrink: 0 }}>
                 <div 
                     className="modern-progress-fill" 
                     style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
                 />
             </div>
 
-            <div className="form-step-container" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div className="form-step-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', minHeight: 0 }}>
                 <div style={{ textAlign: 'left', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
                     <h2 className="step-title" style={{ margin: 0 }}>{getStepTitle()}</h2>
                 </div>
@@ -668,7 +668,7 @@ export const SubmitItemForm = ({
                 )}
             </div>
 
-            <div style={{ display: "flex", gap: "12px", marginTop: "auto", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display: "flex", gap: "12px", flexShrink: 0, paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 {currentStep > 1 ? (
                     <button type="button" onClick={handleBack} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "16px", height: "48px", padding: "0 24px", borderRadius: "6px", transition: "all 0.3s ease", backdropFilter: "blur(8px)" }}>Back</button>
                 ) : (
