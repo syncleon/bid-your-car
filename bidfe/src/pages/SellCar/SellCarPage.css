@@ -194,6 +194,8 @@
     transform: translateY(20px) scale(0.98);
     pointer-events: none;
     filter: blur(4px);
+    height: 680px;
+    overflow-y: auto;
 }
 .hero-content-wrapper .submit-preview-container {
     opacity: 0;
@@ -285,6 +287,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 680px;
 }
 
 /* Hero Interactive Block (Image + Card) */
