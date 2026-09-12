@@ -96,6 +96,17 @@ class ItemService(
     }
 
     /**
+     * Checks if an item with the given VIN already exists.
+     *
+     * @param vin The VIN to check.
+     * @return true if the VIN exists, false otherwise.
+     */
+    @Transactional(readOnly = true)
+    fun checkVinExists(vin: String): Boolean {
+        return itemRepository.existsByVin(vin)
+    }
+
+    /**
      * Creates a new item (vehicle listing) in DRAFT status.
      * Checks if an item with the same VIN already exists.
      *
@@ -152,7 +163,7 @@ class ItemService(
     fun update(id: UUID, request: ItemUpdateRequest): Item {
         val item = findById(id)
         
-        if (item.status != ItemStatus.DRAFT) {
+        if (item.status != ItemStatus.DRAFT && item.status != ItemStatus.REJECTED && item.status != ItemStatus.UNSOLD) {
             throw ConflictException("Cannot edit a vehicle that is already submitted or in an active auction.")
         }
 
@@ -182,9 +193,19 @@ class ItemService(
             imagesToRemove.forEach { safelyDeleteFile(it.url) }
             itemImageRepository.deleteAll(imagesToRemove)
 
-            if (imagesToRemove.any { it.url == item.thumbnailUrl }) {
-                item.thumbnailUrl = item.getMainImage()?.url ?: item.images.sortedBy { it.sortOrder }.firstOrNull()?.url
+            item.images.forEach { img ->
+                val newOrder = keepIds.indexOf(img.id)
+                if (newOrder != -1) {
+                    img.sortOrder = newOrder
+                    if (newOrder == 0) {
+                        img.category = com.oblapleon.bidapi.feature.item.entity.ImageCategory.MAIN
+                    } else if (img.category == com.oblapleon.bidapi.feature.item.entity.ImageCategory.MAIN) {
+                        img.category = com.oblapleon.bidapi.feature.item.entity.ImageCategory.EXTERIOR
+                    }
+                }
             }
+
+            item.thumbnailUrl = item.images.sortedBy { it.sortOrder }.firstOrNull()?.url
         }
 
         return itemRepository.save(item)

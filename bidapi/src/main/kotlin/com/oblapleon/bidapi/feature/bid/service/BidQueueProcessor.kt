@@ -75,6 +75,7 @@ class BidQueueProcessor(
             var loopCount = 0
             while (hasMore && loopCount < 10) {
                 loopCount++
+                @Suppress("UNCHECKED_CAST")
                 val rawBids = redisTemplate.execute(popBatchScript, listOf(queueKey, processingKey), "100") as? List<String>
                 
                 if (rawBids.isNullOrEmpty()) {

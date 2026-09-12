@@ -35,7 +35,8 @@ fun Item.toDto(): ItemDto {
         recentServiceHistory = this.recentServiceHistory,
         otherItemsIncluded = this.otherItemsIncluded,
         images = this.images.map { it.toDto() }.sortedBy { it.sortOrder },
-        auctionId = this.auctionId
+        auctionId = this.auctionId,
+        rejectionReason = this.rejectionReason
     )
 }
 

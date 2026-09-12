@@ -25,7 +25,7 @@
     padding-top: 0;
 }
 
-.vehicle-info-editorial {
+.vehicle-info {
     display: flex;
     flex-direction: column;
     width: calc(65% - 5.2px);
@@ -81,24 +81,24 @@
 }
 .spec-column-left {
 }
-.spec-row-new {
+.spec-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
     border-bottom: 1px solid var(--border-color);
 }
-.spec-row-new:last-child {
+.spec-row:last-child {
     border-bottom: none;
 }
-.spec-row-label-new {
+.spec-row-label {
     flex-shrink: 0;
     font-family: 'Inter', sans-serif;
     font-weight: 500;
     color: var(--text-secondary);
     font-size: 14px;
 }
-.spec-row-value-new {
+.spec-row-value {
     flex-grow: 1;
     text-align: right;
     font-family: 'Inter', sans-serif;
@@ -116,7 +116,7 @@
         border-right: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .spec-column-left .spec-row-new:last-child {
+    .spec-column-left .spec-row:last-child {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 }
@@ -146,22 +146,22 @@
 .banner-pending { background: rgba(249, 115, 22, 0.1); color: var(--color-primary); border: 1px solid rgba(249, 115, 22, 0.2); }
 .banner-rejected { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid var(--color-danger-border); }
 
-.details-grid-new {
+.details-grid {
     display: grid;
     grid-template-columns: 70fr 30fr;
     gap: 8px;
 }
-.gallery-container-new {
+.gallery-container {
     display: grid;
     grid-template-columns: 70fr 30fr;
     gap: 8px;
     margin: 0;
     padding: 0;
 }
-.gallery-container-new.no-thumbs {
+.gallery-container.no-thumbs {
     grid-template-columns: 1fr;
 }
-.thumb-grid-new {
+.thumb-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
@@ -170,13 +170,13 @@
 }
 
 @media (max-width: 768px) {
-    .details-grid-new {
+    .details-grid {
         grid-template-columns: 1fr;
     }
-    .gallery-container-new {
+    .gallery-container {
         grid-template-columns: 1fr;
     }
-    .thumb-grid-new {
+    .thumb-grid {
         grid-template-columns: repeat(4, 1fr);
     }
 }
@@ -347,7 +347,7 @@
 
     .details-body,
     .vehicle-header-wrapper,
-    .vehicle-info-editorial,
+    .vehicle-info,
     .bidding-wrapper {
         width: 100%;
         margin-top: 16px;
@@ -461,7 +461,7 @@
     background-color: rgba(0, 0, 0, 0.7);
 }
 
-.spec-grid-modern {
+.spec-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     column-gap: 24px;
@@ -471,7 +471,7 @@
 }
 
 @media (max-width: 600px) {
-    .spec-grid-modern {
+    .spec-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -568,19 +568,19 @@
 .btn-quick-bid:active:not(:disabled) {
 }
 
-.row-winner-modern {
+.row-winner {
     background: rgba(234, 179, 8, 0.05);
     border-left: 4px solid #eab308;
 }
 
 /* Ensure history list looks modern */
-.history-list-modern::-webkit-scrollbar { width: 6px; }
-.history-list-modern::-webkit-scrollbar-track { background: transparent; }
-.history-list-modern::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-.history-list-modern::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+.history-list::-webkit-scrollbar { width: 6px; }
+.history-list::-webkit-scrollbar-track { background: transparent; }
+.history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+.history-list::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* 2025 Admin Panel Trends */
-.admin-panel-2025 {
+.admin-panel {
     background: var(--bg-card);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -589,7 +589,7 @@
     position: relative;
     overflow: hidden;
 }
-.admin-panel-2025::after {
+.admin-panel::after {
     content: "";
     position: absolute;
     top: 0; right: 0; left: 0;
@@ -597,7 +597,7 @@
     background: var(--color-primary);
 }
 
-.btn-approve-2025 {
+.btn-approve {
     background: var(--btn-primary-bg);
     color: var(--btn-primary-text);
     border: none;
@@ -605,11 +605,11 @@
     padding: 18px 24px;
     transition: background-color 0.3s ease;
 }
-.btn-approve-2025:hover:not(:disabled) {
+.btn-approve:hover:not(:disabled) {
     background: var(--accent-hover);
 }
 
-.btn-reject-2025 {
+.btn-reject {
     background: transparent;
     color: var(--color-primary);
     border: 1px solid var(--color-primary);
@@ -617,7 +617,7 @@
     padding: 18px 24px;
     transition: background-color 0.3s ease;
 }
-.btn-reject-2025:hover:not(:disabled) {
+.btn-reject:hover:not(:disabled) {
     background: rgba(249, 115, 22, 0.1);
 }
 
@@ -706,4 +706,314 @@
     .bento-card.span-2 {
         grid-column: 1 / -1;
     }
+}
+
+/* Modern Editorial Layout (2025/2026) */
+/* Cars & Bids Style Layout */
+.cars-and-bids-layout {
+    width: 100%;
+    max-width: var(--layout-max-width, 1400px);
+    margin: 0 auto;
+    padding-top: 12px;
+    padding-bottom: 32px;
+}
+
+.auction-layout-container {
+    display: grid;
+    grid-template-columns: minmax(0, 68%) minmax(0, 32%);
+    gap: 24px;
+    margin-top: 12px;
+}
+
+.gallery-section {
+    grid-column: 1;
+}
+
+.auction-main-content {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auction-sidebar {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 16px;
+    height: fit-content;
+}
+
+/* Sidebar Components Container - Minimalistic */
+.sidebar-card-base {
+    background: transparent;
+    border: none;
+    padding: 0 0 16px 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-card-base:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 1024px) {
+    .auction-layout-container {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .auction-sidebar {
+        position: static;
+        order: unset;
+    }
+}
+
+/* Accordion Styles - Minimalistic */
+.info-accordion {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: transparent;
+}
+.info-accordion:last-child {
+    border-bottom: none;
+}
+.info-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+.info-accordion-content {
+    padding: 0 0 12px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.flaws-accordion .info-accordion-header {
+    color: #ef4444;
+}
+
+.minimal-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 24px;
+}
+@media (max-width: 600px) {
+    .minimal-spec-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 2025 Cinematic Bento Gallery */
+.auction-hero-gallery {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-bottom: 40px;
+    background: #000;
+}
+
+.auction-gallery {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 60vh;
+    min-height: 400px;
+    max-height: 700px;
+}
+
+.gallery-main {
+    grid-row: 1 / -1;
+    grid-column: 1 / 2;
+    position: relative;
+    overflow: hidden;
+    cursor: zoom-in;
+}
+
+.gallery-thumb {
+    position: relative;
+    overflow: hidden;
+    cursor: zoom-in;
+}
+
+.gallery-main img, .gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gallery-main:hover img, .gallery-thumb:hover img {
+    transform: scale(1.03);
+}
+
+.gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    backdrop-filter: blur(2px);
+}
+
+.gallery-thumb:hover .gallery-overlay, .gallery-main:hover .gallery-overlay {
+    opacity: 1;
+}
+
+.gallery-more {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 20px;
+    backdrop-filter: blur(4px);
+}
+
+@media (max-width: 768px) {
+    .auction-gallery {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        height: 40vh;
+        scroll-snap-type: x mandatory;
+        gap: 0;
+    }
+    .gallery-main, .gallery-thumb {
+        flex: 0 0 100vw;
+        scroll-snap-align: start;
+    }
+    .gallery-main img, .gallery-thumb img {
+        object-fit: cover;
+    }
+}
+
+/* 2025 Editorial Details Layout */
+.info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.info-heading {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+}
+
+.info-body {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 2025 Bento Spec Grid */
+.spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.spec-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.spec-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.spec-icon {
+    font-size: 20px;
+}
+
+.spec-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.spec-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.spec-val {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.minimal-spec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.min-spec-row {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.min-spec-row:last-child {
+    border-bottom: none;
+}
+
+.min-spec-row .lbl {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.min-spec-row .val {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Add padding to body so sticky bar doesn't overlap content */
+.auction-layout-container {
+    padding-bottom: 120px;
 }

@@ -37,7 +37,7 @@ class User(
     @Column(columnDefinition = "TEXT")
     var bio: String? = null,
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
         joinColumns = [JoinColumn(name = "user_id")],

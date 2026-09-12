@@ -71,7 +71,7 @@ export const AdminUsersPage = observer(() => {
                                     <button 
                                         onClick={() => handleDeactivate(user.id)}
                                         disabled={!user.enabled}
-                                        style={{ padding: '5px 10px', cursor: user.enabled ? 'pointer' : 'not-allowed', backgroundColor: user.enabled ? 'var(--color-danger-bg)' : 'var(--bg-input)', color: user.enabled ? 'var(--color-danger-text)' : 'var(--text-muted)', border: '1px solid ' + (user.enabled ? 'var(--color-danger-border)' : 'var(--border-color)'), borderRadius: '4px' }}
+                                        style={{ padding: '5px 10px', cursor: user.enabled ? 'pointer' : 'not-allowed', backgroundColor: user.enabled ? 'var(--color-danger-bg)' : 'var(--bg-input)', color: user.enabled ? 'var(--color-danger-text)' : 'var(--text-muted)', border: '1px solid ' + (user.enabled ? 'var(--color-danger-border)' : 'var(--border-color)'), borderRadius: '6px' }}
                                     >
                                         Deactivate
                                     </button>

@@ -33,7 +33,7 @@ class Auction(
     @Version
     var version: Long = 0L,
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "item_id", nullable = false)
     var item: Item,
 

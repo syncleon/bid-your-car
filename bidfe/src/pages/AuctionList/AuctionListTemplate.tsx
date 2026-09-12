@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { observer } from "mobx-react-lite";
-import { useStore } from "../shared/hooks/useStore.ts";
-import { AuctionCard } from "../features/auction/ui/AuctionCard.tsx";
+import { useStore } from "../../shared/hooks/useStore.ts";
+import { AuctionCard } from "../../features/auction/ui/AuctionCard.tsx";
 import "./AuctionList.css";
 
 const ITEMS_PER_BATCH = 20;

@@ -107,11 +107,11 @@ class Item(
     @Column(name = "other_items_included", columnDefinition = "TEXT")
     var otherItemsIncluded: String? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "seller_id", nullable = false)
     var seller: User,
 
-    @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("sortOrder ASC")
     @BatchSize(size = 20)
     var images: MutableList<ItemImage> = mutableListOf(),
@@ -120,7 +120,11 @@ class Item(
     var auctions: MutableSet<Auction> = mutableSetOf(),
 
     @Column(name = "auction_id")
-    var auctionId: UUID? = null
+    var auctionId: UUID? = null,
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    var rejectionReason: String? = null
+
 
 ) : BaseEntity<UUID>() {
 
@@ -151,7 +155,8 @@ enum class ItemStatus {
     ACTIVE_AUCTION, // Currently live in an auction
     SOLD,           // Payment pending/complete
     UNSOLD,         // Auction ended without reserve met
-    ARCHIVED        // Soft deleted or very old
+    ARCHIVED,       // Soft deleted or very old
+    REJECTED        // Rejected by admin
 }
 
 enum class ConditionGrade {

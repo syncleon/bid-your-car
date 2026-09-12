@@ -10,7 +10,7 @@
     width: 100%;
     height: 300px;
     background: var(--bg-card);
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
 }
 

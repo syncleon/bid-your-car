@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @RestController
@@ -45,6 +46,7 @@ class AuctionController(
      */
     @Operation(summary = "Browse Auctions", description = "Public feed of active auctions.")
     @GetMapping
+    @Transactional(readOnly = true)
     fun getPublicAuctions(
         @RequestParam(required = false) status: AuctionStatus?,
         @Parameter(description = "Filter type: 'ending_soon', 'just_listed'")
@@ -77,11 +79,10 @@ class AuctionController(
      * @param id The UUID of the auction.
      * @return The [AuctionDto] detailing the auction.
      */
-    @Operation(summary = "Get Auction Details")
+    @Operation(summary = "Get Auction", description = "Get details of a specific auction.")
     @GetMapping("/{id}")
     fun getAuctionById(@PathVariable id: UUID): ResponseEntity<AuctionDto> {
-        val auction = auctionService.findById(id)
-        return ResponseEntity.ok(auction.toDto())
+        return ResponseEntity.ok(auctionService.getAuctionDtoById(id))
     }
 
     /**
@@ -211,9 +212,48 @@ class AuctionController(
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/{id}/cancel")
     fun adminCancelAuction(
-        @PathVariable id: UUID
+        @PathVariable id: UUID,
+        @RequestParam(required = false) rejectionReason: String?
     ): ResponseEntity<Map<String, String>> {
-        auctionService.adminForceCancelAuction(id)
+        auctionService.adminForceCancelAuction(id, rejectionReason)
         return ResponseEntity.ok(mapOf("message" to "Auction force-cancelled by admin."))
+    }
+
+    /**
+     * Admin action to update a pending auction before approval.
+     *
+     * @param id The UUID of the auction.
+     * @param dto The updated auction details.
+     * @return The updated [AuctionDto].
+     */
+    @Operation(summary = "Admin Update Auction", description = "Admin: Edit a submitted auction before approval.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/admin/{id}")
+    fun adminUpdateAuction(
+        @PathVariable id: UUID,
+        @Valid @RequestBody dto: com.oblapleon.bidapi.feature.auction.dto.UpdateAuctionDto
+    ): ResponseEntity<AuctionDto> {
+        val updatedAuction = auctionService.adminUpdateAuction(id, dto)
+        return ResponseEntity.ok(updatedAuction.toDto())
+    }
+
+    /**
+     * Retrieves a paginated list of all auctions for admins.
+     * Unlike the public endpoint, this does not default to ACTIVE.
+     *
+     * @param status Optional filter by [AuctionStatus].
+     * @param pageable Pagination configuration.
+     * @return A paginated list of [AuctionDto].
+     */
+    @Operation(summary = "Admin Browse Auctions", description = "Admin: View all auctions regardless of status.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    @Transactional(readOnly = true)
+    fun getAdminAuctions(
+        @RequestParam(required = false) status: AuctionStatus?,
+        @PageableDefault(size = 20) pageable: Pageable
+    ): ResponseEntity<Page<AuctionDto>> {
+        val page = auctionService.findAdminAuctionsByCriteria(status, pageable)
+        return ResponseEntity.ok(page.map { it.toDto() })
     }
 }

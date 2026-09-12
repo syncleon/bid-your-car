@@ -2,6 +2,7 @@ package com.oblapleon.bidapi.feature.auction.service
 
 import com.oblapleon.bidapi.common.exception.*
 import com.oblapleon.bidapi.feature.auction.dto.CreateAuctionDto
+import com.oblapleon.bidapi.feature.auction.dto.toDto
 import com.oblapleon.bidapi.feature.auction.entity.Auction
 import com.oblapleon.bidapi.feature.auction.entity.AuctionStatus
 import com.oblapleon.bidapi.feature.auction.event.BidPlacedEvent
@@ -55,6 +56,12 @@ class AuctionService(
             .orElseThrow { NotFoundException("Auction not found.") }
     }
 
+    @Transactional(readOnly = true)
+    fun getAuctionDtoById(id: UUID): com.oblapleon.bidapi.feature.auction.dto.AuctionDto {
+        val auction = findById(id)
+        return auction.toDto()
+    }
+
     /**
      * Finds auctions matching specific status and filter criteria.
      *
@@ -63,6 +70,11 @@ class AuctionService(
      * @param pageable Pagination and sorting information.
      * @return A [Page] of [Auction] objects.
      */
+    @Transactional(readOnly = true)
+    fun getPublicAuctionsDto(status: AuctionStatus?, filterType: String?, pageable: Pageable): Page<com.oblapleon.bidapi.feature.auction.dto.AuctionDto> {
+        return findAuctionsByCriteria(status, filterType, pageable).map { it.toDto() }
+    }
+
     fun findAuctionsByCriteria(
         status: AuctionStatus?,
         filterType: String?,
@@ -79,6 +91,17 @@ class AuctionService(
             "ending_soon" -> auctionRepository.findByStatusAndEndTimeAfterOrderByEndTimeAsc(targetStatus, now, pageable)
             "just_listed" -> auctionRepository.findByStatusAndStartTimeBeforeOrderByStartTimeDesc(targetStatus, now, pageable)
             else -> auctionRepository.findByStatusOrderByEndTimeDesc(targetStatus, pageable)
+        }
+    }
+
+    fun findAdminAuctionsByCriteria(
+        status: AuctionStatus?,
+        pageable: Pageable
+    ): Page<Auction> {
+        return if (status != null) {
+            auctionRepository.findByStatusOrderByEndTimeDesc(status, pageable)
+        } else {
+            auctionRepository.findAllByOrderByEndTimeDesc(pageable) 
         }
     }
 
@@ -121,7 +144,7 @@ class AuctionService(
             throw ForbiddenException("You do not own this item.")
         }
 
-        if (item.status != ItemStatus.DRAFT && item.status != ItemStatus.UNSOLD) {
+        if (item.status != ItemStatus.DRAFT && item.status != ItemStatus.UNSOLD && item.status != ItemStatus.REJECTED) {
             throw ConflictException("Item is not available for a new auction.")
         }
 
@@ -240,15 +263,79 @@ class AuctionService(
      */
     @Transactional
     @CacheEvict(value = ["auctions"], key = "#id")
-    fun adminForceCancelAuction(id: UUID) {
+    fun adminForceCancelAuction(id: UUID, rejectionReason: String? = null) {
         val auction = findById(id)
 
         auction.status = AuctionStatus.CANCELLED
-        auction.item.status = ItemStatus.DRAFT
+        auction.item.status = ItemStatus.REJECTED
         auction.item.auctionId = null
+        auction.item.rejectionReason = rejectionReason
         cacheManager.getCache("items")?.evict(auction.item.id!!)
 
         logger.info("Admin force-cancelled auction ${auction.id}")
+    }
+
+    @Transactional
+    @CacheEvict(value = ["auctions"], key = "#id")
+    fun adminUpdateAuction(id: UUID, dto: com.oblapleon.bidapi.feature.auction.dto.UpdateAuctionDto): Auction {
+        val auction = findById(id)
+
+        if (auction.status != AuctionStatus.PENDING_APPROVAL) {
+            throw ConflictException("Can only edit auctions that are pending approval.")
+        }
+
+        dto.startTime?.let { auction.startTime = it }
+        dto.endTime?.let { auction.endTime = it }
+        
+        if (auction.endTime.isBefore(auction.startTime)) {
+            throw BadRequestException("End time must be after start time.")
+        }
+        if (auction.endTime.isBefore(Instant.now())) {
+            throw BadRequestException("End time must be in the future.")
+        }
+
+        dto.startPrice?.let { 
+            auction.startPrice = it 
+            auction.currentPrice = it // Reset currentPrice if startPrice changes while pending
+        }
+        
+        dto.isNoReserve?.let { auction.isNoReserve = it }
+        
+        if (dto.reservePrice != null) {
+            auction.reservePrice = dto.reservePrice
+        } else if (dto.isNoReserve == true) {
+            auction.reservePrice = null
+        }
+
+        dto.itemUpdates?.let { itemUpdates ->
+            val item = auction.item
+            itemUpdates.year?.let { item.year = it }
+            itemUpdates.make?.let { item.make = it }
+            itemUpdates.model?.let { item.model = it }
+            itemUpdates.vin?.let { item.vin = it }
+            itemUpdates.location?.let { item.location = it }
+            itemUpdates.mileage?.let { item.mileage = it }
+            itemUpdates.description?.let { item.description = it }
+            itemUpdates.isModified?.let { item.isModified = it }
+            itemUpdates.hasServiceHistory?.let { item.hasServiceHistory = it }
+            itemUpdates.titleStatus?.let { item.titleStatus = it }
+            itemUpdates.fuelType?.let { item.fuelType = it }
+            itemUpdates.engine?.let { item.engine = it }
+            itemUpdates.drivetrain?.let { item.drivetrain = it }
+            itemUpdates.transmission?.let { item.transmission = it }
+            itemUpdates.bodyStyle?.let { item.bodyStyle = it }
+            itemUpdates.exteriorColor?.let { item.exteriorColor = it }
+            itemUpdates.interiorColor?.let { item.interiorColor = it }
+            itemUpdates.sellerType?.let { item.sellerType = it }
+            itemUpdates.horsepower?.let { item.horsepower = it }
+            itemUpdates.condition?.let { item.condition = it }
+            itemUpdates.highlights?.let { item.highlights = it }
+            itemUpdates.knownFlaws?.let { item.knownFlaws = it }
+            itemUpdates.recentServiceHistory?.let { item.recentServiceHistory = it }
+            itemUpdates.otherItemsIncluded?.let { item.otherItemsIncluded = it }
+        }
+
+        return auctionRepository.save(auction)
     }
 
 

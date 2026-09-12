@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { observer } from "mobx-react-lite";
-import { useStore } from "../shared/hooks/useStore";
-import { Modal } from "../shared/ui/Modal";
+import { useStore } from "../../shared/hooks/useStore";
+import { Modal } from "../../shared/ui/Modal";
 
 export const VerifyPage = observer(() => {
     const [searchParams] = useSearchParams();

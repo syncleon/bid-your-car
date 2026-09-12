@@ -14,6 +14,11 @@ export const submitItem = (data: ItemCreateRequest) =>
         body: JSON.stringify(data),
     });
 
+export const checkVinExists = (vin: string) =>
+    http<{ exists: boolean }>(`/items/check-vin?vin=${vin}`, {
+        method: "GET"
+    });
+
 export const uploadItemImage = (
     itemId: string,
     file: File,

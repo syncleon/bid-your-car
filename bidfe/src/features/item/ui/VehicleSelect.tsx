@@ -8,10 +8,11 @@ interface VehicleSelectProps {
     loading?: boolean;
     placeholder?: string;
     disabled?: boolean;
+    hasError?: boolean;
     onChange: (e: { target: { name: string, value: string } }) => void;
 }
 
-export const VehicleSelect = ({ name, value, options, loading, placeholder, disabled, onChange }: VehicleSelectProps) => {
+export const VehicleSelect = ({ name, value, options, loading, placeholder, disabled, hasError, onChange }: VehicleSelectProps) => {
     const [searchQuery, setSearchQuery] = useState(value || '');
     const [isFocused, setIsFocused] = useState(false);
 
@@ -27,7 +28,7 @@ export const VehicleSelect = ({ name, value, options, loading, placeholder, disa
 
     // Only show hints if there is text in the input
     const dynamicHints = searchQuery.trim().length > 0
-        ? options.filter(opt => opt.toLowerCase().includes(searchQuery.toLowerCase()))
+        ? options.filter(opt => opt.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 10)
         : [];
 
     const handleSelect = (option: string) => {
@@ -64,7 +65,7 @@ export const VehicleSelect = ({ name, value, options, loading, placeholder, disa
                 {/* Foreground Input for Typing */}
                 <input
                     type="text"
-                    className="modern-input vehicle-select-input-foreground"
+                    className={`modern-input standard-input vehicle-select-input-foreground ${hasError ? 'input-error' : ''}`}
                     value={searchQuery}
                     onChange={(e) => {
                         setSearchQuery(e.target.value);

@@ -69,7 +69,7 @@ const formatPrice = (p: number) => `$${p.toLocaleString()}`;
 
 
 export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
-    const { item, currentPrice, endTime, status, isNoReserve } = auction;
+    const { item, currentPrice, endTime, status } = auction;
     const { timeLeft, isEnded, isUrgent } = useAuctionTimer(endTime);
 
     const firstImage = item.images?.[0];
@@ -92,7 +92,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
         display: "flex",
         alignItems: "center",
         gap: "6px",
-        borderRadius: "14px",
+        borderRadius: "6px",
         border: isUrgent ? "1px solid rgba(255,255,255,0.3)" : "none",
         whiteSpace: "nowrap",
     };
@@ -113,7 +113,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                 topLeft: (
                     <>
                         {isActive && !isEnded && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
                                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--color-danger-text)", display: "block", transition: "background-color 0.3s" }}></span> LIVE AUCTION
                             </div>
                         )}
@@ -129,9 +129,6 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                         )}
                         {!isSold && !isPending && isEnded && (
                             <div style={styles.badgeEnded}>ENDED</div>
-                        )}
-                        {isNoReserve && !isSold && !isEnded && (
-                            <div className="badge-no-reserve">No Reserve</div>
                         )}
                     </>
                 ),

@@ -54,7 +54,7 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         maxWidth: "440px",
         padding: "clamp(24px, 5vw, 40px)",
         backgroundColor: "var(--bg-card)",
-        borderRadius: "16px",
+        borderRadius: "6px",
         boxShadow: isModal ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" : "none",
         border: isModal ? "1px solid var(--border-color)" : "1px solid var(--border-color)",
         animation: isModal ? "fadeIn 0.2s ease-out" : "none",

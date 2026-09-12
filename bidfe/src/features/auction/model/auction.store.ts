@@ -293,10 +293,10 @@ export class AuctionStore {
         }
     };
 
-    adminCancelAuction = async (id: string) => {
+    adminCancelAuction = async (id: string, reason?: string) => {
         this.error = null;
         try {
-            await apiAdminCancelAuction(id);
+            await apiAdminCancelAuction(id, reason);
             runInAction(() => {
                 this.auctions = this.auctions.filter(a => a.id !== id);
                 if (this.selectedAuction?.id === id) this.selectedAuction.status = 'CANCELLED';

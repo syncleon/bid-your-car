@@ -28,3 +28,19 @@ data class CreateAuctionDto(
     @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
     val reservePrice: BigDecimal? = null
 )
+
+data class UpdateAuctionDto(
+    val startTime: Instant? = null,
+
+    val endTime: Instant? = null,
+
+    @field:DecimalMin(value = "0.01", inclusive = true, message = "Starting price must be at least 0.01")
+    val startPrice: BigDecimal? = null,
+    
+    val isNoReserve: Boolean? = null,
+    
+    @field:DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than zero")
+    val reservePrice: BigDecimal? = null,
+    
+    val itemUpdates: com.oblapleon.bidapi.feature.item.dto.ItemUpdateRequest? = null
+)

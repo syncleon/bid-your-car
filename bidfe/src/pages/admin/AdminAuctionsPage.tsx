@@ -29,7 +29,7 @@ export const AdminAuctionsPage = observer(() => {
                 <select 
                     value={statusFilter} 
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ padding: '5px', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                    style={{ padding: '5px', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
                 >
                     <option value="">All</option>
                     <option value="PENDING_APPROVAL">Pending Approval</option>
@@ -97,7 +97,7 @@ export const AdminAuctionsPage = observer(() => {
                                                         if (success) adminStore.fetchAuctions(statusFilter);
                                                     }
                                                 }}
-                                                style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', fontSize: '14px', fontWeight: 600 }}
+                                                style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 600 }}
                                             >
                                                 Approve
                                             </button>
@@ -108,13 +108,13 @@ export const AdminAuctionsPage = observer(() => {
                                                         if (success) adminStore.fetchAuctions(statusFilter);
                                                     }
                                                 }}
-                                                style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)', borderRadius: '4px', fontSize: '14px', fontWeight: 600 }}
+                                                style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)', borderRadius: '6px', fontSize: '14px', fontWeight: 600 }}
                                             >
                                                 Reject
                                             </button>
                                             <Link 
                                                 to={`/auctions/${auction.id}`}
-                                                style={{ display: 'inline-block', padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', textDecoration: 'none', fontSize: '14px' }}
+                                                style={{ display: 'inline-block', padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', textDecoration: 'none', fontSize: '14px' }}
                                             >
                                                 Review
                                             </Link>
@@ -123,7 +123,7 @@ export const AdminAuctionsPage = observer(() => {
                                     {auction.status === 'ACTIVE' && (
                                         <button 
                                             onClick={() => handleCancel(auction.id)}
-                                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)', borderRadius: '4px' }}
+                                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)', borderRadius: '6px' }}
                                         >
                                             Force Cancel
                                         </button>

@@ -96,7 +96,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                     <Link to="/past-auctions" className={`navbar__link ${location.pathname === '/past-auctions' ? 'active' : ''}`}>
                         Past Auctions
                     </Link>
-                    <Link to="/sell-car" className={`navbar__link ${location.pathname === '/sell-car' ? 'active' : ''}`}>
+                    <Link to="/sell-car" className="navbar__cta">
                         Add car
                     </Link>
                 </nav>
@@ -150,9 +150,9 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                                         top: '100%',
                                         right: 0,
                                         marginTop: '12px',
-                                        backgroundColor: 'var(--bg-card)',
+                                        backgroundColor: '#1a1a1c',
                                         border: '1px solid var(--border-color)',
-                                        borderRadius: '8px',
+                                        borderRadius: '6px',
                                         padding: '8px',
                                         display: 'flex',
                                         flexDirection: 'column',
@@ -161,12 +161,12 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                                         zIndex: 100
                                     }}>
-                                        <Link to="/profile" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '4px', display: 'block', fontSize: '14px', fontWeight: 600 }}>My Profile</Link>
+                                        <Link to="/profile" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '6px', display: 'block', fontSize: '14px', fontWeight: 600 }}>My Profile</Link>
                                         {user?.roles?.some((r: { name: string }) => r.name === 'ADMIN') && (
-                                            <Link to="/admin" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '4px', display: 'block', fontSize: '14px', fontWeight: 600 }}>Admin Dashboard</Link>
+                                            <Link to="/admin" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '6px', display: 'block', fontSize: '14px', fontWeight: 600 }}>Admin Dashboard</Link>
                                         )}
                                         <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
-                                        <button onClick={() => { setIsProfileMenuOpen(false); authStore.logout(); navigate('/'); }} style={{ padding: '8px 12px', color: 'var(--color-danger-text)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '4px', fontSize: '14px', fontWeight: 600, width: '100%' }}>Logout</button>
+                                        <button onClick={() => { setIsProfileMenuOpen(false); authStore.logout(); navigate('/'); }} style={{ padding: '8px 12px', color: 'var(--color-danger-text)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', fontSize: '14px', fontWeight: 600, width: '100%' }}>Logout</button>
                                     </div>
                                 </>
                             )}

@@ -1,16 +1,16 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import { LoginPage } from "../pages/LoginPage";
-import { SellCarPage } from "../pages/SellCarPage";
-import { SubmitItemPage } from "../pages/SubmitItemPage.tsx";
+import { SellCarPage } from "../pages/SellCar/SellCarPage";
+import { SubmitItemPage } from "../pages/SubmitItem/SubmitItemPage.tsx";
 import { PrivateRoute } from "../routes/PrivateRoute";
-import { VerifyPage } from "../pages/VerifyPage.tsx";
-import { AuctionPage } from "../pages/AuctionPage.tsx";
-import { AuctionDetailsPage } from "../pages/AuctionDetailsPage.tsx";
-import { ItemDetailsPage } from "../pages/ItemDetailsPage.tsx";
-import {PastAuctionsPage} from "../pages/PastAuctionsPage.tsx";
-import {ProfilePage} from "../pages/ProfilePage.tsx";
-import {CookiePolicyPage} from "../pages/CookiePolicyPage";
+import { VerifyPage } from "../pages/admin/VerifyPage.tsx";
+import { AuctionPage } from "../pages/AuctionList/AuctionPage.tsx";
+import { AuctionDetailsPage } from "../pages/AuctionDetails/AuctionDetailsPage.tsx";
+import { ItemDetailsPage } from "../pages/AuctionDetails/ItemDetailsPage.tsx";
+import {PastAuctionsPage} from "../pages/AuctionList/PastAuctionsPage.tsx";
+import {ProfilePage} from "../pages/Profile/ProfilePage.tsx";
+import {CookiePolicyPage} from "../pages/CookiePolicy/CookiePolicyPage";
 
 import { AdminRoute } from "../routes/AdminRoute";
 import { AdminLayout } from "../widgets/AdminLayout/AdminLayout";
@@ -87,6 +87,11 @@ export const AppRouter = () => {
                 <Routes>
                     <Route path="/login" element={<LoginPage isModal />} />
                     <Route path="/register" element={<LoginPage isModal />} />
+                    <Route path="/sell-car/submit" element={
+                        <PrivateRoute>
+                            <SubmitItemPage isModal />
+                        </PrivateRoute>
+                    } />
                 </Routes>
             )}
         </>

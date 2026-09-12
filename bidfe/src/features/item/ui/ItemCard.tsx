@@ -21,6 +21,7 @@ export const ItemCard = ({ item }: ItemCardProps) => {
     const isScheduled = item.status === 'LISTED_AUCTION';
     const isUnsold = item.status === 'UNSOLD';
     const isDraft = item.status === 'DRAFT';
+    const isRejected = item.status === 'REJECTED';
     let statusBadge = null;
 
     if (isSold) {
@@ -44,7 +45,13 @@ export const ItemCard = ({ item }: ItemCardProps) => {
     } else if (isPending) {
         statusBadge = (
             <div style={{ ...styles.badge, backgroundColor: '#f59e0b', color: '#fff' }}>
-                IN REVIEW
+                NEEDS ADMIN APPROVAL
+            </div>
+        );
+    } else if (isRejected) {
+        statusBadge = (
+            <div style={{ ...styles.badge, backgroundColor: '#ef4444', color: '#fff' }}>
+                REJECTED
             </div>
         );
     } else if (isUnsold) {
@@ -68,11 +75,7 @@ export const ItemCard = ({ item }: ItemCardProps) => {
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
                 topLeft: statusBadge,
-                topRight: item.auction?.isNoReserve ? (
-                    <div style={{ ...styles.badgeDark, backgroundColor: '#16a34a' }}>
-                        NO RESERVE
-                    </div>
-                ) : null,
+                topRight: null,
 
                 bottomLeft: (
                     <div style={styles.badgeDark}>

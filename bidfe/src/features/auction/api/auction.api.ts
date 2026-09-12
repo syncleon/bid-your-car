@@ -58,6 +58,7 @@ export const approveAuction = async (id: string) => {
     return http<Record<string, string>>(`/auctions/${id}/approve`, { method: "PATCH" });
 };
 
-export const adminCancelAuction = async (id: string) => {
-    return http<Record<string, string>>(`/auctions/admin/${id}/cancel`, { method: "DELETE" });
+export const adminCancelAuction = async (id: string, reason?: string) => {
+    const query = reason ? `?rejectionReason=${encodeURIComponent(reason)}` : "";
+    return http<Record<string, string>>(`/auctions/admin/${id}/cancel${query}`, { method: "DELETE" });
 };

@@ -1,7 +1,7 @@
 .app-dialog {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 6px;
     padding: 24px;
     color: var(--text-primary);
     max-width: 400px;
@@ -81,7 +81,7 @@
 
 .dialog-btn {
     padding: 14px 24px;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
@@ -124,7 +124,7 @@
     padding: 12px;
     background: var(--bg-input);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
     color: var(--text-primary);
     margin-bottom: 20px;
     box-sizing: border-box;

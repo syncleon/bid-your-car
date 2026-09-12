@@ -20,6 +20,7 @@ export const ITEM_STATUSES = [
     "SOLD",
     "UNSOLD",
     "ARCHIVED",
+    "REJECTED",
 ] as const;
 
 export type ItemStatus = typeof ITEM_STATUSES[number];
@@ -64,6 +65,7 @@ export interface ItemDto {
     mileage: number;
     description: string | null;
     seller: UserDto;
+    rejectionReason: string | null;
     thumbnailUrl: string | null;
     fuelType: string | null;
     horsepower: number | null;

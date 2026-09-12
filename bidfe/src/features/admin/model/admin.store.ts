@@ -14,6 +14,8 @@ const AdminAuctionItemModel = types.model("AdminAuctionItem", {
     year: types.number,
     make: types.string,
     model: types.string,
+    vin: types.maybeNull(types.string),
+    description: types.maybeNull(types.string),
 });
 
 const AdminAuctionModel = types.model("AdminAuction", {
@@ -21,6 +23,9 @@ const AdminAuctionModel = types.model("AdminAuction", {
     status: types.string,
     startTime: types.maybeNull(types.string),
     endTime: types.maybeNull(types.string),
+    startPrice: types.maybeNull(types.number),
+    reservePrice: types.maybeNull(types.number),
+    isNoReserve: types.maybeNull(types.boolean),
     item: AdminAuctionItemModel,
 });
 
@@ -102,12 +107,24 @@ export const AdminStore = types.model("AdminStore", {
         }
     });
 
+    const adminUpdateAuction = flow(function* (auctionId: string, dto: { startTime?: string, endTime?: string, startPrice?: number, reservePrice?: number, isNoReserve?: boolean, itemUpdates?: any }, status?: string) {
+        try {
+            yield adminApi.adminUpdateAuction(auctionId, dto);
+            yield fetchAuctions(status, self.currentPageAuctions);
+            return true;
+        } catch (error: unknown) {
+            self.error = error instanceof Error ? error.message : "An error occurred";
+            return false;
+        }
+    });
+
     return {
         fetchUsers,
         deactivateUser,
         fetchAuctions,
         approveAuction,
-        forceCancelAuction
+        forceCancelAuction,
+        adminUpdateAuction
     };
 });
 

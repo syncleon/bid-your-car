@@ -58,6 +58,19 @@ class ItemController(
     }
 
     /**
+     * Checks if a VIN already exists in the inventory.
+     *
+     * @param vin The VIN to check.
+     * @return A map containing a boolean 'exists'.
+     */
+    @Operation(summary = "Check VIN", description = "Check if a vehicle with the given VIN is already listed.")
+    @GetMapping("/check-vin")
+    fun checkVinExists(@RequestParam vin: String): ResponseEntity<Map<String, Boolean>> {
+        val exists = itemService.checkVinExists(vin)
+        return ResponseEntity.ok(mapOf("exists" to exists))
+    }
+
+    /**
      * Creates a new vehicle listing as a draft.
      *
      * @param request The listing details (make, model, year, etc.).

@@ -41,6 +41,7 @@ data class ItemDto(
     val otherItemsIncluded: String? = null,
     val images: List<ItemImageDto> = emptyList(),
     val auctionId: UUID?,
+    val rejectionReason: String? = null,
 
 ) : Serializable
 

@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { useStoreContext } from "../app/providers/useStoreContext";
-import { useUserListings } from "../features/profile/hooks/useUserListings";
-import { ChangePasswordForm, EditProfileForm } from "../features/profile/ui/ProfileActions";
+import { useStoreContext } from "../../app/providers/useStoreContext";
+import { useUserListings } from "../../features/profile/hooks/useUserListings";
+import { ChangePasswordForm, EditProfileForm } from "../../features/profile/ui/ProfileActions";
 import { Link, useNavigate } from "react-router-dom";
-import { ItemCard } from "../features/item/ui/ItemCard";
-import { ConfirmDialog } from "../shared/ui/dialog/ConfirmDialog";
-import { PromptDialog } from "../shared/ui/dialog/PromptDialog";
-import { Modal } from "../shared/ui/dialog/Modal";
-import { Loader } from "../shared/ui/Loader/Loader";
-import { Skeleton } from "../shared/ui/Skeleton/Skeleton";
-import { ImageCropModal } from "../features/profile/ui/ImageCropModal";
+import { ItemCard } from "../../features/item/ui/ItemCard";
+import { ConfirmDialog } from "../../shared/ui/dialog/ConfirmDialog";
+import { PromptDialog } from "../../shared/ui/dialog/PromptDialog";
+import { Modal } from "../../shared/ui/dialog/Modal";
+import { Loader } from "../../shared/ui/Loader/Loader";
+import { Skeleton } from "../../shared/ui/Skeleton/Skeleton";
+import { ImageCropModal } from "../../features/profile/ui/ImageCropModal";
 import "./ProfilePage.css";
 
 export const ProfilePage = observer(() => {
@@ -262,7 +262,7 @@ export const ProfilePage = observer(() => {
                             maxWidth: '90%',
                             maxHeight: '90%',
                             objectFit: 'contain',
-                            borderRadius: '12px',
+                            borderRadius: '6px',
                             boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
                         }} 
                     />

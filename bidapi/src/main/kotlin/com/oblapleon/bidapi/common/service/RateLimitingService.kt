@@ -49,7 +49,7 @@ class RateLimitingService(
      */
     fun resolveBucket(userId: Long): Bucket {
         val key = "rate_limit:user:$userId".toByteArray()
-        return proxyManager.builder().build(key, configuration)
+        return proxyManager.builder().build(key) { configuration }
     }
 
     /**
@@ -60,6 +60,6 @@ class RateLimitingService(
      */
     fun resolveBucketByIp(ip: String): Bucket {
         val key = "rate_limit:ip:$ip".toByteArray()
-        return proxyManager.builder().build(key, configuration)
+        return proxyManager.builder().build(key) { configuration }
     }
 }

@@ -5,7 +5,8 @@ import {
     submitItem,
     deleteItem,
     updateItem,
-    uploadItemImage
+    uploadItemImage,
+    checkVinExists
 } from "../api/item.api";
 import {
     CONDITION_GRADES,
@@ -41,6 +42,7 @@ export const ItemModel = types.model("Item", {
     mileage: types.number,
     description: types.maybeNull(types.string),
     thumbnailUrl: types.maybeNull(types.string),
+    rejectionReason: types.maybeNull(types.string),
     seller: types.frozen<UserDto>(),
     fuelType: types.maybeNull(types.string),
     horsepower: types.maybeNull(types.number),
@@ -180,14 +182,11 @@ export const ItemStore = types
             id: string,
             data: ItemUpdateRequest,
             newFilesWithCategories: { file: File, category: ImageCategory }[], 
-            deletedImageIds: string[]
+            keepImageIds: string[]
         ) {
             self.isLoading = true;
             self.uploadProgress = "Updating...";
             try {
-                const keepImageIds = self.selectedItem?.images
-                    .filter(img => !deletedImageIds.includes(img.id))
-                    .map(img => img.id) || [];
 
                 yield updateItem(id, { ...data, keepImageIds });
 
@@ -223,6 +222,16 @@ export const ItemStore = types
             }
         });
 
+        const checkVinExistsAction = flow(function* (vin: string) {
+            try {
+                const result = yield checkVinExists(vin);
+                return result.exists;
+            } catch (err) {
+                console.error("Failed to check VIN", err);
+                return false;
+            }
+        });
+
         return {
             loadMyItems,
             loadItemDetails,
@@ -230,6 +239,7 @@ export const ItemStore = types
             updateListing,
             deleteListing,
             clearSelectedItem,
+            checkVinExists: checkVinExistsAction,
             setSelectedItem: (id: string | null) => {
                 self.selectedItem = id as unknown as Instance<typeof ItemModel> | null;
             }

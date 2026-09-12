@@ -7,6 +7,7 @@ interface Props {
     onAddFiles: (e: ChangeEvent<HTMLInputElement>) => void;
     onRemoveExisting: (id: string) => void;
     onRemoveNew: (index: number) => void;
+    onReorderNew?: (dragIndex: number, hoverIndex: number) => void;
 }
 
 export const ImageUploader = ({
@@ -14,11 +15,28 @@ export const ImageUploader = ({
                                   newPreviews,
                                   onAddFiles,
                                   onRemoveExisting,
-                                  onRemoveNew
+                                  onRemoveNew,
+                                  onReorderNew
                               }: Props) => {
 
     const [isDragging, setIsDragging] = useState(false);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleItemDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index || !onReorderNew) return;
+        onReorderNew(draggedIndex, index);
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(true);
@@ -87,7 +105,19 @@ export const ImageUploader = ({
                     const predictedCategory = isNewMain ? "MAIN" : "EXTERIOR";
 
                     return (
-                        <div key={url} className="gallery-item">
+                        <div 
+                            key={url} 
+                            className="gallery-item"
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragOver={(e) => handleItemDragOver(e, index)}
+                            onDragEnd={handleDragEnd}
+                            style={{
+                                opacity: draggedIndex === index ? 0.5 : 1,
+                                cursor: 'grab',
+                                border: isNewMain ? '2px solid var(--accent-color, #ff5e00)' : 'none'
+                            }}
+                        >
                             <img src={url} alt="New Upload" className="gallery-img" />
                             {isNewMain ? (
                                 <div style={styles.mainBadge}><StarIcon /> Main Cover (Unsaved)</div>
@@ -136,13 +166,13 @@ export const ImageUploader = ({
 const styles = {
     header: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "16px" },
     title: { fontSize: "18px", fontWeight: 700, color: "white", marginRight: "12px" },
-    counter: { fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.8)", backgroundColor: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: "12px" },
-    bigDropZone: { display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px", borderRadius: "24px", cursor: "pointer" },
+    counter: { fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.8)", backgroundColor: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: "6px" },
+    bigDropZone: { display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px", borderRadius: "6px", cursor: "pointer" },
     iconCircle: { width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" },
     uploadTitle: { display: "block", fontSize: "18px", fontWeight: 600, color: "white", marginBottom: "8px" },
     uploadSubtitle: { fontSize: "14px", color: "rgba(255,255,255,0.5)" },
-    mainBadge: { position: "absolute" as const, top: "12px", left: "12px", backgroundColor: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(8px)", color: "#fbbf24", fontSize: "11px", fontWeight: 700, padding: "6px 10px", borderRadius: "16px", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none" as const, border: "1px solid rgba(251,191,36,0.3)" },
-    categoryBadge: { position: "absolute" as const, top: "12px", left: "12px", backgroundColor: "rgba(0, 0, 0, 0.5)", backdropFilter: "blur(8px)", color: "white", fontSize: "11px", fontWeight: 600, letterSpacing: "0.5px", padding: "6px 10px", borderRadius: "16px", pointerEvents: "none" as const, border: "1px solid rgba(255,255,255,0.2)" },
+    mainBadge: { position: "absolute" as const, top: "12px", left: "12px", backgroundColor: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(8px)", color: "#fbbf24", fontSize: "11px", fontWeight: 700, padding: "6px 10px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none" as const, border: "1px solid rgba(251,191,36,0.3)" },
+    categoryBadge: { position: "absolute" as const, top: "12px", left: "12px", backgroundColor: "rgba(0, 0, 0, 0.5)", backdropFilter: "blur(8px)", color: "white", fontSize: "11px", fontWeight: 600, letterSpacing: "0.5px", padding: "6px 10px", borderRadius: "6px", pointerEvents: "none" as const, border: "1px solid rgba(255,255,255,0.2)" },
     deleteBtn: { position: "absolute" as const, top: "12px", right: "12px", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", color: "white", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }
 };
 

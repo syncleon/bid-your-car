@@ -81,6 +81,10 @@ data class ItemUpdateRequest(
     val year: Int? = null,
     val make: String? = null,
     val model: String? = null,
+    
+    @field:Size(min = 17, max = 17, message = "VIN must be exactly 17 characters")
+    val vin: String? = null,
+    
     val location: String? = null,
     @field:Min(value = 0, message = "Mileage cannot be negative")
     val mileage: Int? = null,

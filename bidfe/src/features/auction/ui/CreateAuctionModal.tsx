@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type CSSProperties } from "react";
 import { Modal } from "../../../shared/ui/Modal";
 import type { CreateAuctionDto } from "../types";
 import type { ItemDto } from "../../item/types";
@@ -51,6 +51,7 @@ export const CreateAuctionModal = ({
     isLoading,
     error
 }: Props) => {
+    const [currentStep, setCurrentStep] = useState(1);
     const [startPrice, setStartPrice] = useState("");
     const [isNoReserve, setIsNoReserve] = useState<boolean>(true);
     const [reservePrice, setReservePrice] = useState("");
@@ -65,14 +66,17 @@ export const CreateAuctionModal = ({
 
     useEffect(() => {
         if (!isOpen) return;
-        setStartPrice("");
-        setIsNoReserve(true);
-        setReservePrice("");
-        setDurationMinutes(10080);
-        setStartMode("ASAP_AFTER_APPROVAL");
-        const resetStart = new Date(Date.now() + 60 * 60 * 1000);
-        resetStart.setSeconds(0, 0);
-        setScheduledStartLocal(toLocalDateTimeInputValue(resetStart));
+        queueMicrotask(() => {
+            setCurrentStep(1);
+            setStartPrice("");
+            setIsNoReserve(true);
+            setReservePrice("");
+            setDurationMinutes(10080);
+            setStartMode("ASAP_AFTER_APPROVAL");
+            const resetStart = new Date(Date.now() + 60 * 60 * 1000);
+            resetStart.setSeconds(0, 0);
+            setScheduledStartLocal(toLocalDateTimeInputValue(resetStart));
+        });
     }, [isOpen, item?.id]);
 
     const scheduledStartDate = useMemo(() => parseLocalDateTime(scheduledStartLocal), [scheduledStartLocal]);
@@ -96,15 +100,32 @@ export const CreateAuctionModal = ({
     if (!isOpen || !item) return null;
 
     const startPriceNum = Number(startPrice);
-    const isStartPriceValid = Number.isFinite(startPriceNum) && startPriceNum > 0;
+    const isStartPriceValid = Number.isFinite(startPriceNum) && startPriceNum > 0 && startPriceNum <= 100_000_000;
     const reservePriceNum = Number(reservePrice);
-    const isReserveValid = isNoReserve || (!isNoReserve && Number.isFinite(reservePriceNum) && reservePriceNum > 0);
+    const isReserveValid = isNoReserve || (!isNoReserve && Number.isFinite(reservePriceNum) && reservePriceNum > startPriceNum && reservePriceNum <= 100_000_000);
 
-    const canProceed = isStartPriceValid && isReserveValid && isScheduledStartValid;
+    const canProceedStep1 = isStartPriceValid && isReserveValid;
+    const canProceedStep2 = isScheduledStartValid;
+    const canProceedStep3 = true;
+
+    const handleNext = () => {
+        if (currentStep === 1 && canProceedStep1) setCurrentStep(2);
+        else if (currentStep === 2 && canProceedStep2) setCurrentStep(3);
+    };
+
+    const handleBack = () => {
+        if (currentStep > 1) setCurrentStep(currentStep - 1);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!canProceed) return;
+        
+        if (currentStep < 3) {
+            handleNext();
+            return;
+        }
+
+        if (!canProceedStep1 || !canProceedStep2 || !canProceedStep3) return;
 
         let start: Date;
         if (startMode === "SCHEDULED") {
@@ -132,101 +153,340 @@ export const CreateAuctionModal = ({
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="List for Auction">
             <form onSubmit={handleSubmit} style={{ padding: "0 4px" }}>
+                <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "32px" }}>
+                    {[1, 2, 3].map((step) => {
+                        let isClickable = false;
+                        if (step < currentStep) isClickable = true;
+                        if (step === 1) isClickable = true;
+                        if (step === 2 && canProceedStep1) isClickable = true;
+                        if (step === 3 && canProceedStep1 && canProceedStep2) isClickable = true;
+
+                        return (
+                            <div
+                                key={step}
+                                onClick={() => isClickable && setCurrentStep(step)}
+                                style={{
+                                    width: "48px",
+                                    height: "6px",
+                                    borderRadius: "6px",
+                                    background: step <= currentStep ? "var(--color-primary)" : "var(--border-color)",
+                                    opacity: step === currentStep ? 1 : 0.4,
+                                    cursor: isClickable ? "pointer" : "not-allowed",
+                                    transition: "all 0.3s ease"
+                                }}
+                            />
+                        );
+                    })}
+                </div>
+
                 {error && <div className="form-error" style={{ marginBottom: "16px" }}>{error}</div>}
 
-                <div className="form-group">
-                    <label className="form-label">Starting Bid ($)</label>
-                    <input
-                        type="number"
-                        className="form-input"
-                        value={startPrice}
-                        onChange={(e) => setStartPrice(e.target.value)}
-                        placeholder="Enter minimum starting bid"
-                        min={1}
-                        required
-                        autoFocus
-                    />
-                </div>
+                <div style={{ minHeight: "380px", animation: "fadeIn 0.2s ease-out" }}>
+                    {currentStep === 1 && (
+                        <div>
+                            <h3 style={{ marginBottom: "8px", fontSize: "20px", fontWeight: 600 }}>Set Your Pricing Strategy</h3>
+                            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "32px", lineHeight: 1.5 }}>
+                                Start strong by setting your opening bid. Choose whether to let the market decide the final price, or protect your investment with a hidden minimum reserve.
+                            </p>
 
-                <div className="form-row">
-                    <div className="form-group" style={{ flex: 1 }}>
-                        <label className="form-label">Reserve Strategy</label>
-                        <select 
-                            className="form-select"
-                            value={isNoReserve ? "NO_RESERVE" : "RESERVE"}
-                            onChange={(e) => setIsNoReserve(e.target.value === "NO_RESERVE")}
-                        >
-                            <option value="NO_RESERVE">No Reserve (Sells to highest bidder)</option>
-                            <option value="RESERVE">Set Reserve Price</option>
-                        </select>
-                    </div>
+                            <div className="form-group" style={{ marginBottom: 24 }}>
+                                <label className="form-label" style={{ display: "block", marginBottom: "8px" }}>Starting Bid ($)</label>
+                                <div style={styles.inputWrapper}>
+                                    <span style={styles.inputPrefix}>$</span>
+                                    <input
+                                        type="number"
+                                        className="auction-input"
+                                        style={styles.largeInput}
+                                        value={startPrice}
+                                        onChange={(e) => setStartPrice(e.target.value)}
+                                        placeholder="0"
+                                        min={1}
+                                        max={100000000}
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
 
-                    {!isNoReserve && (
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label className="form-label">Reserve Price ($)</label>
-                            <input
-                                type="number"
-                                className="form-input"
-                                value={reservePrice}
-                                onChange={(e) => setReservePrice(e.target.value)}
-                                placeholder="Min acceptable price"
-                                min={1}
-                                required
-                            />
+                            <div className="form-group" style={{ marginBottom: 24 }}>
+                                <label className="form-label" style={{ display: "block", marginBottom: "12px" }}>Reserve Strategy</label>
+                                <div style={styles.cardContainer}>
+                                    <div 
+                                        style={isNoReserve ? styles.cardActive : styles.card}
+                                        onClick={() => setIsNoReserve(true)}
+                                    >
+                                        <div style={styles.cardTitle}>No Reserve</div>
+                                        <div style={styles.cardDesc}>Guaranteed to sell. Generates maximum excitement and bidding wars.</div>
+                                    </div>
+                                    <div 
+                                        style={!isNoReserve ? styles.cardActive : styles.card}
+                                        onClick={() => setIsNoReserve(false)}
+                                    >
+                                        <div style={styles.cardTitle}>Set Reserve</div>
+                                        <div style={styles.cardDesc}>Protect your investment. The item won't sell unless the reserve is met.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {!isNoReserve && (
+                                <div className="form-group" style={{ marginBottom: 24, marginTop: 8, animation: 'fadeIn 0.2s ease-out' }}>
+                                    <label className="form-label" style={{ display: "block", marginBottom: "8px" }}>Reserve Price ($)</label>
+                                    <div style={styles.inputWrapper}>
+                                        <span style={styles.inputPrefix}>$</span>
+                                        <input
+                                            type="number"
+                                            className="auction-input"
+                                            style={styles.largeInput}
+                                            value={reservePrice}
+                                            onChange={(e) => setReservePrice(e.target.value)}
+                                            placeholder="Min acceptable price"
+                                            min={1}
+                                            max={100000000}
+                                            required
+                                        />
+                                    </div>
+                                    {!isNoReserve && reservePrice !== "" && reservePriceNum <= startPriceNum && (
+                                        <div className="form-error-text" style={{ marginTop: "8px", color: "var(--color-danger)", fontSize: "13px" }}>
+                                            Reserve price must be greater than the starting bid.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {currentStep === 2 && (
+                        <div>
+                            <h3 style={{ marginBottom: "8px", fontSize: "20px", fontWeight: 600 }}>When Should We Go Live?</h3>
+                            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "32px", lineHeight: 1.5 }}>
+                                Launch immediately upon approval to catch eager buyers right away, or strategically schedule your drop for a future date to build hype and anticipation.
+                            </p>
+
+                            <div className="form-group" style={{ marginBottom: 24 }}>
+                                <label className="form-label" style={{ display: "block", marginBottom: "12px" }}>Start Time</label>
+                                <div style={styles.segmentedControl}>
+                                    <div
+                                        style={startMode === "ASAP_AFTER_APPROVAL" ? styles.segmentActive : styles.segmentInactive}
+                                        onClick={() => setStartMode("ASAP_AFTER_APPROVAL")}
+                                    >
+                                        Launch ASAP
+                                    </div>
+                                    <div
+                                        style={startMode === "SCHEDULED" ? styles.segmentActive : styles.segmentInactive}
+                                        onClick={() => setStartMode("SCHEDULED")}
+                                    >
+                                        Schedule Drop
+                                    </div>
+                                </div>
+                                {startMode === "SCHEDULED" && (
+                                    <div style={{ marginTop: 24, animation: 'fadeIn 0.2s ease-out' }}>
+                                        <label className="form-label" style={{ display: "block", marginBottom: "8px" }}>Select Date & Time</label>
+                                        <input
+                                            type="datetime-local"
+                                            className="form-input"
+                                            style={{ padding: "16px", fontSize: "16px", border: "none", background: "var(--bg-input)", width: "100%", boxSizing: "border-box" }}
+                                            value={scheduledStartLocal}
+                                            onChange={(e) => setScheduledStartLocal(e.target.value)}
+                                            required
+                                        />
+                                        {scheduledStartError && <div className="form-error-text" style={{ marginTop: "8px" }}>{scheduledStartError}</div>}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {currentStep === 3 && (
+                        <div>
+                            <h3 style={{ marginBottom: "8px", fontSize: "20px", fontWeight: 600 }}>Choose Your Auction Window</h3>
+                            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "32px", lineHeight: 1.5 }}>
+                                How long should the bidding last? A shorter window drives high urgency and "FOMO", while a longer window maximizes your exposure to potential buyers.
+                            </p>
+
+                            <div className="form-group" style={{ marginBottom: 16 }}>
+                                <div style={styles.pillGrid}>
+                                    {DURATION_OPTIONS.map((opt) => (
+                                        <div
+                                            key={opt.value}
+                                            style={durationMinutes === opt.value ? styles.durationActive : styles.durationInactive}
+                                            onClick={() => setDurationMinutes(opt.value)}
+                                        >
+                                            {opt.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                <div className="form-row">
-                    <div className="form-group" style={{ flex: 1 }}>
-                        <label className="form-label">Start Time</label>
-                        <select 
-                            className="form-select"
-                            value={startMode}
-                            onChange={(e) => setStartMode(e.target.value as StartMode)}
-                        >
-                            <option value="ASAP_AFTER_APPROVAL">ASAP (After Approval)</option>
-                            <option value="SCHEDULED">Schedule for Later</option>
-                        </select>
-                    </div>
-
-                    {startMode === "SCHEDULED" && (
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label className="form-label">Scheduled Time</label>
-                            <input
-                                type="datetime-local"
-                                className="form-input"
-                                value={scheduledStartLocal}
-                                onChange={(e) => setScheduledStartLocal(e.target.value)}
-                                required
-                            />
-                            {scheduledStartError && <div className="form-error-text">{scheduledStartError}</div>}
-                        </div>
-                    )}
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Duration</label>
-                    <select 
-                        className="form-select"
-                        value={durationMinutes}
-                        onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    >
-                        {DURATION_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="form-actions" style={{ marginTop: "32px", display: "flex", gap: "16px", justifyContent: "flex-end" }}>
-                    <button type="button" className="btn-secondary" onClick={onClose} disabled={isLoading}>
-                        Cancel
+                <div className="form-actions" style={{ display: "flex", gap: "16px", justifyContent: "space-between", marginTop: "24px", paddingTop: "24px", borderTop: "1px solid var(--border-color)" }}>
+                    <button type="button" style={styles.btnCancel} onClick={currentStep === 1 ? onClose : handleBack} disabled={isLoading}>
+                        {currentStep === 1 ? "Cancel" : "Back"}
                     </button>
-                    <button type="submit" className="btn-primary" disabled={isLoading || !canProceed}>
-                        {isLoading ? "Submitting..." : "Submit for Approval"}
+                    <button type="submit" style={styles.btnSubmit} disabled={isLoading || (currentStep === 1 && !canProceedStep1) || (currentStep === 2 && !canProceedStep2)}>
+                        {currentStep === 3 ? (isLoading ? "Submitting..." : "Submit for Approval") : "Next"}
                     </button>
                 </div>
             </form>
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-4px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .auction-input:focus {
+                    outline: none !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                }
+                .form-actions button {
+                    border-radius: 0 !important;
+                }
+            `}</style>
         </Modal>
     );
+};
+
+const styles: Record<string, CSSProperties> = {
+    inputWrapper: {
+        display: "flex",
+        alignItems: "center",
+        border: "none",
+        borderRadius: "6px",
+        padding: "0 16px",
+        height: "54px",
+        background: "var(--bg-input)",
+        transition: "background-color 0.2s ease",
+    },
+    inputPrefix: {
+        color: "var(--text-muted)",
+        fontSize: "20px",
+        fontWeight: 500,
+        marginRight: "12px",
+    },
+    largeInput: {
+        border: "none",
+        background: "transparent",
+        color: "var(--text-primary)",
+        fontSize: "20px",
+        fontWeight: 600,
+        width: "100%",
+        outline: "none",
+    },
+    cardContainer: {
+        display: "flex",
+        gap: "16px",
+    },
+    card: {
+        flex: 1,
+        border: "1px solid var(--border-color)",
+        borderRadius: "6px",
+        padding: "16px",
+        cursor: "pointer",
+        background: "var(--bg-card)",
+        transition: "all 0.2s ease",
+    },
+    cardActive: {
+        flex: 1,
+        border: "1px solid var(--color-primary)",
+        borderRadius: "6px",
+        padding: "16px",
+        cursor: "pointer",
+        background: "var(--bg-hover)",
+        transition: "all 0.2s ease",
+    },
+    cardTitle: {
+        fontWeight: 600,
+        fontSize: "15px",
+        color: "var(--text-primary)",
+        marginBottom: "4px",
+    },
+    cardDesc: {
+        fontSize: "13px",
+        color: "var(--text-secondary)",
+        lineHeight: 1.4,
+    },
+    segmentedControl: {
+        display: "flex",
+        background: "var(--bg-input)",
+        border: "1px solid var(--border-color)",
+        padding: "4px",
+        borderRadius: "6px",
+        gap: "4px",
+    },
+    segmentActive: {
+        flex: 1,
+        padding: "12px",
+        textAlign: "center",
+        background: "var(--color-primary)",
+        color: "#000",
+        borderRadius: "6px",
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+    },
+    segmentInactive: {
+        flex: 1,
+        padding: "12px",
+        textAlign: "center",
+        background: "transparent",
+        color: "var(--text-primary)",
+        borderRadius: "6px",
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+    },
+    pillGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+        gap: "8px",
+    },
+    durationActive: {
+        padding: "12px",
+        textAlign: "center",
+        background: "var(--color-primary)",
+        color: "#000",
+        borderRadius: "6px",
+        fontWeight: 600,
+        cursor: "pointer",
+        border: "1px solid var(--color-primary)",
+        transition: "all 0.2s ease",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "48px",
+    },
+    durationInactive: {
+        padding: "12px",
+        textAlign: "center",
+        background: "var(--bg-card)",
+        color: "var(--text-primary)",
+        borderRadius: "6px",
+        fontWeight: 500,
+        cursor: "pointer",
+        border: "1px solid var(--border-color)",
+        transition: "all 0.2s ease",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "48px",
+    },
+    btnSubmit: {
+        padding: "12px 24px",
+        background: "var(--color-primary)",
+        color: "#000",
+        border: "none",
+        fontWeight: 600,
+        cursor: "pointer",
+        borderRadius: "0 !important",
+    },
+    btnCancel: {
+        padding: "12px 24px",
+        background: "var(--bg-card)",
+        color: "var(--text-primary)",
+        border: "1px solid var(--border-color)",
+        fontWeight: 600,
+        cursor: "pointer",
+        borderRadius: "0 !important",
+    }
 };

@@ -108,4 +108,6 @@ interface AuctionRepository : BaseRepository<Auction, UUID> {
     @Query("SELECT COUNT(a) > 0 FROM Auction a WHERE a.item.seller.id = :sellerId AND a.status = 'ACTIVE'")
     fun existsActiveAuctionsBySellerId(@Param("sellerId") sellerId: Long): Boolean
 
+    @EntityGraph(attributePaths = ["item", "item.seller", "winnerUser"])
+    fun findAllByOrderByEndTimeDesc(pageable: Pageable): Page<Auction>
 }

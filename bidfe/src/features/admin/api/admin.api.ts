@@ -26,13 +26,19 @@ export const adminApi = {
     
     getAuctions: (status?: string, page = 0, size = 20) => {
         const statusParam = status ? `&status=${status}` : '';
-        return http<PageResponse<AuctionDto>>(`/auctions?page=${page}&size=${size}${statusParam}&sort=createdDate,desc`);
+        return http<PageResponse<AuctionDto>>(`/auctions/admin?page=${page}&size=${size}${statusParam}`);
     },
     approveAuction: (auctionId: string) => {
         return http<{ message: string }>(`/auctions/${auctionId}/approve`, { method: "PATCH" });
     },
     forceCancelAuction: (auctionId: string) => {
         return http<{ message: string }>(`/auctions/admin/${auctionId}/cancel`, { method: "DELETE" });
+    },
+    adminUpdateAuction: (auctionId: string, dto: { startTime?: string, endTime?: string, startPrice?: number, reservePrice?: number, isNoReserve?: boolean, itemUpdates?: any }) => {
+        return http<AuctionDto>(`/auctions/admin/${auctionId}`, {
+            method: "PATCH",
+            body: JSON.stringify(dto)
+        });
     },
     resetGhostItem: (itemId: string) => {
         return http<{ message: string }>(`/items/admin/${itemId}/reset`, { method: "PATCH" });
