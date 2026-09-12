@@ -122,10 +122,11 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                     overflow: hidden;
                     border: 1px solid rgba(255, 255, 255, 0.1);
                     box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-                    height: 680px;
+                    height: 680px !important;
                     display: flex;
                     flex-direction: column;
                     width: 100%;
+                    box-sizing: border-box;
                 }
                 .demo-card-image-wrapper {
                     position: relative;
