@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStoreContext } from "../../app/providers/useStoreContext";
 import { observer } from "mobx-react-lite";
-import { ArrowRight, CheckCircle2, Clock, TrendingUp, MessageSquare } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { SubmitItemForm } from "../../features/item/ui/SubmitItemForm";
 import type { ItemCreateRequest, ImageCategory } from "../../features/item/types";
 import "./SellCarPage.css";
@@ -12,56 +12,11 @@ export const SellCarPage = observer(() => {
     const { authStore, itemStore } = useStoreContext();
     
     const [isVisible, setIsVisible] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(15330); // 4h 15m 30s
-    
-    // Simulation state
-    const [currentBid, setCurrentBid] = useState(285000);
-    const [bidCount, setBidCount] = useState(24);
-    const [commentCount, setCommentCount] = useState(18);
-    const [highlightBid, setHighlightBid] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         setIsVisible(true);
-        
-        const countdown = setInterval(() => {
-            setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-        }, 1000);
-        
-        let timeoutId: ReturnType<typeof setTimeout>;
-        const scheduleNextActivity = () => {
-            const nextDelay = 3000 + Math.random() * 4000;
-            timeoutId = setTimeout(() => {
-                const isBid = Math.random() > 0.3;
-                
-                if (isBid) {
-                    const increment = [500, 1000, 2000, 5000][Math.floor(Math.random() * 4)];
-                    setCurrentBid(prev => prev + increment);
-                    setBidCount(prev => prev + 1);
-                    setHighlightBid(true);
-                    setTimeout(() => setHighlightBid(false), 1000);
-                } else {
-                    setCommentCount(prev => prev + 1);
-                }
-                
-                scheduleNextActivity();
-            }, nextDelay);
-        };
-        scheduleNextActivity();
-        
-        return () => {
-            clearInterval(countdown);
-            clearTimeout(timeoutId);
-        };
     }, []);
-
-    const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleStartListing = () => {
         if (authStore.user) {
@@ -137,7 +92,6 @@ export const SellCarPage = observer(() => {
                                     <div className="demo-card-title-bar">
                                         <h3>2024 Porsche 911 GT3 RS</h3>
                                         <p>1,200 miles • Miami, FL</p>
-                                    </div>
                                     </div>
                                 </div>
                             </div>
