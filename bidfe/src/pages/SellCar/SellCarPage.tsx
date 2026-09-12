@@ -80,6 +80,41 @@ export const SellCarPage = observer(() => {
                                     <h3>2024 Porsche 911 GT3 RS</h3>
                                     <p>1,200 miles • Miami, FL</p>
                                 </div>
+
+                                <div className="demo-card-specs">
+                                    <div className="spec-item">
+                                        <span className="spec-label">Engine</span>
+                                        <span className="spec-value" title="4.0L Flat-6">4.0L Flat-6</span>
+                                    </div>
+                                    <div className="spec-item">
+                                        <span className="spec-label">Transmission</span>
+                                        <span className="spec-value" title="Automatic">Automatic</span>
+                                    </div>
+                                    <div className="spec-item">
+                                        <span className="spec-label">Drivetrain</span>
+                                        <span className="spec-value" title="RWD">RWD</span>
+                                    </div>
+                                    <div className="spec-item">
+                                        <span className="spec-label">Body Style</span>
+                                        <span className="spec-value" title="Coupe">Coupe</span>
+                                    </div>
+                                    <div className="spec-item">
+                                        <span className="spec-label">Exterior</span>
+                                        <span className="spec-value" title="Black">Black</span>
+                                    </div>
+                                    <div className="spec-item">
+                                        <span className="spec-label">Interior</span>
+                                        <span className="spec-value" title="Black Leather">Black Leather</span>
+                                    </div>
+                                    <div className="spec-item">
+                                        <span className="spec-label">Fuel Type</span>
+                                        <span className="spec-value" title="Gasoline">Gasoline</span>
+                                    </div>
+                                    <div className="spec-item">
+                                        <span className="spec-label">Title</span>
+                                        <span className="spec-value" title="Clean">Clean</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
