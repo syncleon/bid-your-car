@@ -1,7 +1,8 @@
 .sell-car-page {
-    background: #09090b; /* Deep modern dark base */
+    height: calc(100vh - 60px);
+    background: #09090b;
     color: #fafafa;
-    overflow-x: hidden;
+    overflow: hidden;
     position: relative;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
