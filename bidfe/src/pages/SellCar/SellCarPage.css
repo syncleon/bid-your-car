@@ -172,7 +172,7 @@
 .hero-content-wrapper .submit-form-card {
     grid-column: 1;
     grid-row: 1;
-    transition: opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
 }
 
 .hero-interactive-block,
