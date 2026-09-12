@@ -82,31 +82,6 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                     <h3>{displayYear} {displayMake} {displayModel}</h3>
                     <p>{formData.mileage ? Number(formData.mileage).toLocaleString() : '0'} miles • {formData.location || "Location"}</p>
                 </div>
-
-                <div className="demo-card-bidding-bar">
-                    <div className="demo-bar-stats">
-                        <div className="demo-bar-stat">
-                            <Clock size={16} color="#9ca3af" />
-                            <span className="stat-label">Time Left</span>
-                            <span className="stat-value">{formatTime(timeLeft)}</span>
-                        </div>
-                        <div className="demo-bar-stat">
-                            <TrendingUp size={16} color={highlightBid ? "#10b981" : "#9ca3af"} />
-                            <span className="stat-label">High Bid</span>
-                            <span className={`stat-value ${highlightBid ? "highlight-flash" : ""}`}>${currentBid.toLocaleString()}</span>
-                        </div>
-                        <div className="demo-bar-stat">
-                            <span className="stat-icon-text">#</span>
-                            <span className="stat-label">Bids</span>
-                            <span className={`stat-value ${highlightBid ? "highlight-flash" : ""}`}>{bidCount}</span>
-                        </div>
-                        <div className="demo-bar-stat">
-                            <MessageSquare size={16} color="#9ca3af" />
-                            <span className="stat-label">Comments</span>
-                            <span className="stat-value">0</span>
-                        </div>
-                    </div>
-                    <button className={`demo-bar-btn ${highlightBid ? 'btn-pulse' : ''}`}>Place Bid</button>
                 </div>
             </div>
 

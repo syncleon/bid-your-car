@@ -138,31 +138,6 @@ export const SellCarPage = observer(() => {
                                         <h3>2024 Porsche 911 GT3 RS</h3>
                                         <p>1,200 miles • Miami, FL</p>
                                     </div>
-                                    
-                                    <div className="demo-card-bidding-bar">
-                                        <div className="demo-bar-stats">
-                                            <div className="demo-bar-stat">
-                                                <Clock size={16} color="#9ca3af" />
-                                                <span className="stat-label">Time Left</span>
-                                                <span className="stat-value">{formatTime(timeLeft)}</span>
-                                            </div>
-                                            <div className="demo-bar-stat">
-                                                <TrendingUp size={16} color={highlightBid ? "#10b981" : "#9ca3af"} />
-                                                <span className="stat-label">High Bid</span>
-                                                <span className={`stat-value ${highlightBid ? "highlight-flash" : ""}`}>${currentBid.toLocaleString()}</span>
-                                            </div>
-                                            <div className="demo-bar-stat">
-                                                <span className="stat-icon-text">#</span>
-                                                <span className="stat-label">Bids</span>
-                                                <span className={`stat-value ${highlightBid ? "highlight-flash" : ""}`}>{bidCount}</span>
-                                            </div>
-                                            <div className="demo-bar-stat">
-                                                <MessageSquare size={16} color="#9ca3af" />
-                                                <span className="stat-label">Comments</span>
-                                                <span className="stat-value">{commentCount}</span>
-                                            </div>
-                                        </div>
-                                        <button className={`demo-bar-btn ${highlightBid ? 'btn-pulse' : ''}`}>Place Bid</button>
                                     </div>
                                 </div>
                             </div>
