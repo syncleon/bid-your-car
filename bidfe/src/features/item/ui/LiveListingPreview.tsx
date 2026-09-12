@@ -68,13 +68,6 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
 
     return (
         <div className="live-preview-container">
-            <div className="live-preview-header">
-                <div className="live-indicator">
-                    <div className="live-dot" />
-                    <span>Live Preview</span>
-                </div>
-            </div>
-            
             <div className="demo-auction-card">
                 <div className="demo-card-image-wrapper">
                     <img src={previewImage || "/placeholder-car.jpg"} alt="Preview" className="demo-card-image" />
@@ -121,32 +114,6 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                 .live-preview-container {
                     width: 100%;
                     margin: 0 auto;
-                }
-                .live-preview-header {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    margin-bottom: 16px;
-                }
-                .live-indicator {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .live-dot {
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    background: #22c55e;
-                    box-shadow: 0 0 8px #22c55e;
-                    animation: pulse-dot 2s infinite;
-                }
-                .live-indicator span {
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: rgba(255,255,255,0.6);
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
                 }
                 
                 .demo-auction-card {
