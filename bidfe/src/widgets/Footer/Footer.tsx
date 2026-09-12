@@ -10,27 +10,35 @@ export const Footer = () => {
                         BidYourCar
                     </Link>
                     <p className="footer__description">
-                        The best place to buy and sell cars through exciting auctions.
+                        The premier online auction platform for enthusiasts who value transparency, community, and the thrill of the bid.
                     </p>
                 </div>
                 
                 <div className="footer__section">
-                    <h3 className="footer__title">Navigation</h3>
+                    <h3 className="footer__title">Site Map</h3>
                     <nav className="footer__nav">
-                        <Link to="/" className="footer__link">Home</Link>
+                        <Link to="/" className="footer__link">Live Auctions</Link>
                         <Link to="/past-auctions" className="footer__link">Past Auctions</Link>
                         <Link to="/sell-car" className="footer__link">Sell a Car</Link>
+                        <Link to="/login" className="footer__link">Sign In</Link>
                     </nav>
                 </div>
 
                 <div className="footer__section">
-                    <h3 className="footer__title">Useful Links</h3>
+                    <h3 className="footer__title">Legal</h3>
+                    <nav className="footer__nav">
+                        <Link to="/terms" className="footer__link">Terms of Service</Link>
+                        <Link to="/privacy" className="footer__link">Privacy Policy</Link>
+                        <Link to="/cookie-policy" className="footer__link">Cookie Policy</Link>
+                    </nav>
+                </div>
+
+                <div className="footer__section">
+                    <h3 className="footer__title">Company</h3>
                     <nav className="footer__nav">
                         <Link to="/about" className="footer__link">About Us</Link>
                         <Link to="/contact" className="footer__link">Contact</Link>
                         <Link to="/faq" className="footer__link">FAQ</Link>
-                        <Link to="/terms" className="footer__link">Terms of Service</Link>
-                        <Link to="/privacy" className="footer__link">Privacy Policy</Link>
                     </nav>
                 </div>
             </div>
