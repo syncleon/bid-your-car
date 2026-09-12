@@ -502,7 +502,7 @@ export const SubmitItemForm = ({
                 </div>
 
                 {currentStep === 1 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <FormLabel title="17-Digit Vehicle Identification Number (VIN)" desc="Usually found on the driver's side dashboard or inside the driver's side door jamb. This helps us pull exact factory specifications." />
@@ -521,33 +521,6 @@ export const SubmitItemForm = ({
                                 </div>
                                 {errors.vin && <span className="error-text"><AlertCircle size={14} />{errors.vin}</span>}
                             </div>
-                        </div>
-
-                        <div className="onboarding-benefits" style={{ marginTop: 'auto', paddingTop: '40px' }}>
-                            <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', color: '#71717a', marginBottom: '24px', fontWeight: 700 }}>What happens next?</h4>
-                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>1</div>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#a1a1aa', lineHeight: 1.5 }}>
-                                        <strong style={{ color: '#e4e4e7', display: 'block', marginBottom: '2px' }}>Factory Build Data</strong> 
-                                        We use your VIN to securely pull original specs and factory options.
-                                    </p>
-                                </li>
-                                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.03)', color: '#71717a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>2</div>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#a1a1aa', lineHeight: 1.5 }}>
-                                        <strong style={{ color: '#e4e4e7', display: 'block', marginBottom: '2px' }}>Tell the Story</strong> 
-                                        Add your modifications, service history, and high-quality photography.
-                                    </p>
-                                </li>
-                                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.03)', color: '#71717a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>3</div>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#a1a1aa', lineHeight: 1.5 }}>
-                                        <strong style={{ color: '#e4e4e7', display: 'block', marginBottom: '2px' }}>Expert Curation</strong> 
-                                        Our auction specialists review and refine your listing before going live.
-                                    </p>
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 )}
