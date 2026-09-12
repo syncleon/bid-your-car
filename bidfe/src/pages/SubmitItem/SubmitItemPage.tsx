@@ -46,7 +46,7 @@ export const SubmitItemPage = observer(({ isModal = false }: SubmitItemPageProps
     };
 
     return (
-        <div className={`submit-page-wrapper ${isModal ? 'is-modal' : ''}`}>
+        <div className={`submit-page-wrapper ${isModal ? 'is-modal' : ''} page-fade-in`}>
             
             {/* Full Screen Immersive Background */}
             {!isModal && (

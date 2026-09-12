@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useStoreContext } from "../../app/providers/useStoreContext";
 import { observer } from "mobx-react-lite";
 import { ArrowRight, CheckCircle2, Clock, TrendingUp, MessageSquare } from "lucide-react";
@@ -7,7 +7,6 @@ import "./SellCarPage.css";
 
 export const SellCarPage = observer(() => {
     const navigate = useNavigate();
-    const location = useLocation();
     const { authStore } = useStoreContext();
     
     const [isVisible, setIsVisible] = useState(false);
@@ -60,16 +59,21 @@ export const SellCarPage = observer(() => {
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
+    const [isExiting, setIsExiting] = useState(false);
+
     const handleStartListing = () => {
-        if (authStore.user) {
-            navigate("/sell-car/submit", { state: { backgroundLocation: location } });
-        } else {
-            navigate("/login", { state: { backgroundLocation: location } });
-        }
+        setIsExiting(true);
+        setTimeout(() => {
+            if (authStore.user) {
+                navigate("/sell-car/submit");
+            } else {
+                navigate("/login");
+            }
+        }, 400); // 400ms transition
     };
 
     return (
-        <div className={`sell-car-page ${isVisible ? 'fade-in' : ''}`}>
+        <div className={`sell-car-page ${isVisible ? 'fade-in' : ''} ${isExiting ? 'fade-out' : ''}`}>
             {/* Global Ambient Glow */}
             <div className="ambient-glow top-right"></div>
             <div className="ambient-glow bottom-left"></div>

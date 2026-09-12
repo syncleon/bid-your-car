@@ -73,6 +73,27 @@
     opacity: 0.4;
 }
 
+.sell-car-page.fade-in {
+    opacity: 1;
+}
+
+.sell-car-page.fade-out {
+    animation: fadeOutTransition 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeOutTransition {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.02);
+        filter: blur(4px);
+    }
+}
+
 .ambient-glow.top-right {
     top: -200px;
     right: -200px;
