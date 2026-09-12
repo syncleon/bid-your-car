@@ -177,6 +177,11 @@
 .hero-content-wrapper .submit-preview-container {
     grid-column: 2;
     animation: slide-from-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    top: 0;
 }
 
 @media (max-width: 1024px) {
@@ -266,6 +271,24 @@
     left: 16px;
     display: flex;
     gap: 8px;
+}
+
+.demo-card-title-bar {
+    padding: 16px 24px 12px;
+    background: #111113;
+}
+.demo-card-title-bar h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+.demo-card-title-bar p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: #a1a1aa;
+    font-weight: 500;
 }
 
 .demo-badge {

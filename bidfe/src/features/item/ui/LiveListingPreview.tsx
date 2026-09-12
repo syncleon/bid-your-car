@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Clock, TrendingUp, MessageSquare } from "lucide-react";
 import type { ConditionGrade } from "../types";
 interface LiveListingPreviewProps {
     formData: {
@@ -74,44 +75,51 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                 </div>
             </div>
             
-            <div className="preview-demo-card">
-                <div className="preview-image-wrapper">
-                    <img src={previewImage || "/premium-hero-car.jpg"} alt="Vehicle preview" className="preview-image" />
-                    <div className="preview-badges">
-                        <span className="badge-live">
+            <div className="demo-auction-card">
+                <div className="demo-card-image-wrapper">
+                    <img src={previewImage || "/placeholder-car.jpg"} alt="Preview" className="demo-card-image" />
+                    <div className="demo-card-badges">
+                        <span className="demo-badge badge-live">
                             <span className="live-dot-small"></span> LIVE AUCTION
                         </span>
                     </div>
                 </div>
                 
-                <div className="preview-title-bar">
+                <div className="demo-card-title-bar">
                     <h3>{displayYear} {displayMake} {displayModel}</h3>
                     <p>{formData.mileage ? Number(formData.mileage).toLocaleString() : '0'} miles • {formData.location || "Location"}</p>
                 </div>
 
-                <div className="preview-bidding-bar">
-                    <div className="preview-stats">
-                        <div className="preview-stat">
+                <div className="demo-card-bidding-bar">
+                    <div className="demo-bar-stats">
+                        <div className="demo-bar-stat">
+                            <Clock size={16} color="#9ca3af" />
                             <span className="stat-label">Time Left</span>
                             <span className="stat-value">{formatTime(timeLeft)}</span>
                         </div>
-                        <div className="preview-stat">
+                        <div className="demo-bar-stat">
+                            <TrendingUp size={16} color={highlightBid ? "#10b981" : "#9ca3af"} />
                             <span className="stat-label">High Bid</span>
                             <span className={`stat-value ${highlightBid ? "highlight-flash" : ""}`}>${currentBid.toLocaleString()}</span>
                         </div>
-                        <div className="preview-stat">
+                        <div className="demo-bar-stat">
+                            <span className="stat-icon-text">#</span>
                             <span className="stat-label">Bids</span>
                             <span className={`stat-value ${highlightBid ? "highlight-flash" : ""}`}>{bidCount}</span>
                         </div>
+                        <div className="demo-bar-stat">
+                            <MessageSquare size={16} color="#9ca3af" />
+                            <span className="stat-label">Comments</span>
+                            <span className="stat-value">0</span>
+                        </div>
                     </div>
-                    <button className={`preview-bid-btn ${highlightBid ? 'btn-pulse' : ''}`}>Place Bid</button>
+                    <button className={`demo-bar-btn ${highlightBid ? 'btn-pulse' : ''}`}>Place Bid</button>
                 </div>
             </div>
 
             <style>{`
                 .live-preview-container {
                     width: 100%;
-                    max-width: 420px;
                     margin: 0 auto;
                 }
                 .live-preview-header {
@@ -141,7 +149,7 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                     letter-spacing: 1px;
                 }
                 
-                .preview-demo-card {
+                .demo-auction-card {
                     background: #111113;
                     border-radius: 12px;
                     overflow: hidden;
@@ -151,35 +159,36 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                     flex-direction: column;
                     width: 100%;
                 }
-                .preview-image-wrapper {
+                .demo-card-image-wrapper {
                     position: relative;
                     width: 100%;
-                    aspect-ratio: 16/10;
+                    aspect-ratio: 16/9;
                     overflow: hidden;
                 }
-                .preview-image {
+                .demo-card-image {
                     width: 100%;
                     height: 100%;
                     object-fit: cover;
-                    background: #27272a;
                 }
-                .preview-badges {
+                .demo-card-badges {
                     position: absolute;
-                    top: 12px;
-                    left: 12px;
+                    top: 16px;
+                    left: 16px;
                     display: flex;
                     gap: 8px;
                 }
-                .badge-live {
+                .demo-badge {
                     padding: 4px 8px;
                     border-radius: 6px;
-                    font-size: 10px;
+                    font-size: 11px;
                     font-weight: 700;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
                     display: flex;
                     align-items: center;
                     gap: 6px;
+                }
+                .demo-badge.badge-live {
                     background: rgba(0, 0, 0, 0.8);
                     color: #fff;
                 }
@@ -188,44 +197,57 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                     height: 6px;
                     border-radius: 50%;
                     background-color: #ef4444;
+                    display: block;
                 }
                 
-                .preview-title-bar {
-                    padding: 16px 20px 12px;
+                .demo-card-title-bar {
+                    padding: 16px 24px 12px;
                     background: #111113;
                 }
-                .preview-title-bar h3 {
+                .demo-card-title-bar h3 {
                     margin: 0;
                     font-size: 18px;
                     font-weight: 800;
                     color: #fff;
                     letter-spacing: -0.02em;
                 }
-                .preview-title-bar p {
+                .demo-card-title-bar p {
                     margin: 4px 0 0;
                     font-size: 14px;
                     color: #a1a1aa;
                     font-weight: 500;
                 }
 
-                .preview-bidding-bar {
+                .demo-card-bidding-bar {
                     display: flex;
-                    flex-direction: column;
-                    background: #111113;
-                    padding: 0 20px 20px;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 16px 24px;
+                    background: #18181b;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
                     gap: 16px;
                 }
-                .preview-stats {
-                    display: flex;
-                    justify-content: space-between;
-                    border-top: 1px solid rgba(255, 255, 255, 0.05);
-                    padding-top: 16px;
+
+                @media (max-width: 640px) {
+                    .demo-card-bidding-bar {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
                 }
-                .preview-stat {
+
+                .demo-bar-stats {
                     display: flex;
-                    flex-direction: column;
-                    gap: 4px;
+                    align-items: center;
+                    gap: 24px;
+                    flex-wrap: wrap;
                 }
+
+                .demo-bar-stat {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
                 .stat-label {
                     font-size: 11px;
                     color: #9ca3af;
@@ -244,18 +266,27 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                     text-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
                     transform: scale(1.05);
                 }
-                .preview-bid-btn {
+
+                .stat-icon-text {
+                    color: #9ca3af;
+                    font-size: 14px;
+                    font-weight: 700;
+                    margin-right: -4px;
+                }
+
+                .demo-bar-btn {
                     background: #fff;
                     color: #000;
                     border: none;
                     border-radius: 8px;
-                    padding: 12px;
+                    padding: 12px 24px;
                     font-size: 15px;
                     font-weight: 700;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                    white-space: nowrap;
                 }
-                .preview-bid-btn:hover {
+                .demo-bar-btn:hover {
                     background: #e5e5e5;
                 }
                 .btn-pulse {

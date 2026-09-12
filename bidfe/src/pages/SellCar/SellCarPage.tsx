@@ -134,6 +134,11 @@ export const SellCarPage = observer(() => {
                                         </div>
                                     </div>
                                     
+                                    <div className="demo-card-title-bar">
+                                        <h3>2024 Porsche 911 GT3 RS</h3>
+                                        <p>1,200 miles • Miami, FL</p>
+                                    </div>
+                                    
                                     <div className="demo-card-bidding-bar">
                                         <div className="demo-bar-stats">
                                             <div className="demo-bar-stat">
