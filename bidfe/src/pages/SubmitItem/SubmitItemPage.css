@@ -1,8 +1,7 @@
 .submit-page-wrapper {
     position: relative;
-    height: calc(100vh - 60px); /* strictly fixed to prevent window scroll */
+    min-height: calc(100vh - 60px);
     background: #000;
-    overflow: hidden;
 }
 
 .submit-page-wrapper.is-modal {
