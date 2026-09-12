@@ -47,9 +47,7 @@ export const SellCarPage = observer(() => {
                 <div className={`hero-content-wrapper ${isSubmitting ? 'is-submitting' : ''}`}>
                         <div className="hero-text-block">
                             <h1 className="hero-title">
-                                Sell your car to a <br className="hidden-mobile" />
-                                <span className="text-gradient">community</span> that <br className="hidden-mobile" />
-                                values it.
+                                Sell your car to a <span className="text-gradient">community</span> that values it.
                             </h1>
                             <p className="hero-subtitle">
                                 Skip the tire-kickers and lowballers. Submit your vehicle in minutes, let our experts craft a curated listing, and watch the bids roll in during a live 7-day auction.

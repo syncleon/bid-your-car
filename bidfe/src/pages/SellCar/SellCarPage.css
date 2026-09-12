@@ -128,7 +128,7 @@
 
 @media (min-width: 1024px) {
     .hero-content-wrapper {
-        grid-template-columns: 0.8fr 1.2fr;
+        grid-template-columns: 0.85fr 1.15fr;
         gap: 64px;
     }
 }
@@ -140,10 +140,10 @@
 }
 
 .hero-title {
-    font-size: clamp(40px, 6vw, 72px);
+    font-size: clamp(36px, 5vw, 60px);
     font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
     margin-bottom: 24px;
 }
 
@@ -154,11 +154,11 @@
 }
 
 .hero-subtitle {
-    font-size: clamp(16px, 2vw, 20px);
+    font-size: clamp(16px, 1.5vw, 18px);
     color: #a1a1aa;
     line-height: 1.6;
-    margin-bottom: 40px;
-    max-width: 540px;
+    margin-bottom: 32px;
+    max-width: 480px;
 }
 
 /* Inline Submit Form overrides */
