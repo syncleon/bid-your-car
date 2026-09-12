@@ -176,12 +176,12 @@
 
 .hero-content-wrapper .submit-preview-container {
     grid-column: 2;
-    animation: slide-from-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     flex: none;
     width: 100%;
     max-width: 100%;
     position: relative;
     top: 0;
+    z-index: 2;
 }
 
 @media (max-width: 1024px) {

@@ -22,9 +22,12 @@ interface LiveListingPreviewProps {
 }
 
 export const LiveListingPreview = ({ formData, previewImage }: LiveListingPreviewProps) => {
-    const displayYear = formData.year ? Number(formData.year) : new Date().getFullYear();
-    const displayMake = formData.make || "Make";
-    const displayModel = formData.model || "Model";
+    const isPristine = !formData.make && !formData.model && !formData.location;
+    const displayYear = isPristine ? 2024 : (formData.year ? Number(formData.year) : new Date().getFullYear());
+    const displayMake = isPristine ? "Porsche" : (formData.make || "Make");
+    const displayModel = isPristine ? "911 GT3 RS" : (formData.model || "Model");
+    const displayMileage = isPristine ? "1,200" : (formData.mileage ? Number(formData.mileage).toLocaleString() : '0');
+    const displayLocation = isPristine ? "Miami, FL" : (formData.location || "Location");
 
     return (
         <div className="live-preview-container">
@@ -40,7 +43,7 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                 
                 <div className="demo-card-title-bar">
                     <h3>{displayYear} {displayMake} {displayModel}</h3>
-                    <p>{formData.mileage ? Number(formData.mileage).toLocaleString() : '0'} miles • {formData.location || "Location"}</p>
+                    <p>{displayMileage} miles • {displayLocation}</p>
                 </div>
             </div>
 
