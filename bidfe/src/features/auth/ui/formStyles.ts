@@ -203,15 +203,15 @@ export const formStyles = {
         width: "100%",
         maxWidth: "440px",
         padding: "40px",
-        backgroundColor: "var(--bg-card)",
+        backgroundColor: "rgba(24, 24, 27, 0.85)",
         borderRadius: "16px",
         boxSizing: "border-box",
-        border: "1px solid var(--border-color)",
+        border: "none",
         transition: "background-color 0.3s ease, border-color 0.3s ease"
     } as React.CSSProperties,
 
     contentBoxModal: {
-        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        boxShadow: "none",
     } as React.CSSProperties,
 
     contentBoxPage: {

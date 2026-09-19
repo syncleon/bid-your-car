@@ -99,6 +99,11 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                     <Link to="/sell-car" className="navbar__cta">
                         Add car
                     </Link>
+                    {user?.roles?.some((r: { name: string }) => r.name === 'ADMIN') && (
+                        <Link to="/admin" className={`navbar__link ${location.pathname.startsWith('/admin') ? 'active' : ''}`} style={{ marginLeft: '12px' }}>
+                            Admin
+                        </Link>
+                    )}
                 </nav>
 
                 <div className="navbar__search desktop-only">
@@ -132,7 +137,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                     ) : isAuthenticated ? (
                         <>
                         <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px', position: 'relative' }}>
-                            <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="user-menu__trigger" style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Link to="/profile" className="user-menu__trigger" style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
                                 <div className="user-avatar-placeholder" style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>
                                     {user?.profilePhotoUrl ? (
                                         <img src={user.profilePhotoUrl} alt="Avatar" className="user-avatar-image" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
@@ -140,36 +145,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                                         user.username.charAt(0).toUpperCase()
                                     ) : null}
                                 </div>
-                            </button>
-                            
-                            {isProfileMenuOpen && (
-                                <>
-                                    <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setIsProfileMenuOpen(false)} />
-                                    <div className="profile-dropdown" style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        right: 0,
-                                        marginTop: '12px',
-                                        backgroundColor: '#1a1a1c',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: '6px',
-                                        padding: '8px',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '4px',
-                                        minWidth: '160px',
-                                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                                        zIndex: 100
-                                    }}>
-                                        <Link to="/profile" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '6px', display: 'block', fontSize: '14px', fontWeight: 600 }}>My Profile</Link>
-                                        {user?.roles?.some((r: { name: string }) => r.name === 'ADMIN') && (
-                                            <Link to="/admin" onClick={() => setIsProfileMenuOpen(false)} style={{ padding: '8px 12px', color: 'var(--text-primary)', textDecoration: 'none', borderRadius: '6px', display: 'block', fontSize: '14px', fontWeight: 600 }}>Admin Dashboard</Link>
-                                        )}
-                                        <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
-                                        <button onClick={() => { setIsProfileMenuOpen(false); authStore.logout(); navigate('/'); }} style={{ padding: '8px 12px', color: 'var(--color-danger-text)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', fontSize: '14px', fontWeight: 600, width: '100%' }}>Logout</button>
-                                    </div>
-                                </>
-                            )}
+                            </Link>
                         </div>
                         {isAuthenticated && (
                             <Link to="#" className="navbar__link navbar__link--orange" style={{ marginLeft: '12px' }}>

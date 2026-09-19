@@ -1,12 +1,12 @@
 .app-dialog {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: rgba(24, 24, 27, 0.85);
+    border: none;
     border-radius: 6px;
     padding: 24px;
     color: var(--text-primary);
     max-width: 400px;
     width: 90%;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: none;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     
@@ -40,7 +40,7 @@
 }
 
 .app-dialog[open]::backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--bg-overlay);
     backdrop-filter: blur(8px);
     
     @starting-style {

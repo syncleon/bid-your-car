@@ -53,10 +53,10 @@ export const LoginPage = ({ isModal = false }: LoginPageProps) => {
         width: "100%",
         maxWidth: "440px",
         padding: "clamp(24px, 5vw, 40px)",
-        backgroundColor: "var(--bg-card)",
+        backgroundColor: "rgba(24, 24, 27, 0.85)",
         borderRadius: "6px",
-        boxShadow: isModal ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" : "none",
-        border: isModal ? "1px solid var(--border-color)" : "1px solid var(--border-color)",
+        boxShadow: "none",
+        border: "none",
         animation: isModal ? "fadeIn 0.2s ease-out" : "none",
         transition: "background-color 0.3s ease, border-color 0.3s ease",
     };

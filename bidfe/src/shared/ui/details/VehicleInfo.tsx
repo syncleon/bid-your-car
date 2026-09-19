@@ -54,7 +54,8 @@ export const VehicleHeader = ({ item, auctionEndTime }: { item: ItemDto, auction
     );
 };
 
-export const VehicleInfo = ({ item, hideHeader = false }: { item: ItemDto, hideHeader?: boolean }) => {
+export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: ItemDto, hideHeader?: boolean, isNoReserve?: boolean }) => {
+    const showNoReserve = isNoReserve || item.auction?.isNoReserve;
     return (
         <div className="vehicle-info" style={{ width: "100%" }}>
             {!hideHeader && (
@@ -64,23 +65,36 @@ export const VehicleInfo = ({ item, hideHeader = false }: { item: ItemDto, hideH
                 </div>
             )}
 
-            {(item.hasServiceHistory || item.isModified) && (
-                <div style={styles.tagsContainer}>
-                    {item.hasServiceHistory && <span style={styles.tag} className="tag-vibrant">Service History</span>}
-                    {item.isModified && <span style={styles.tag} className="tag-vibrant">Modified</span>}
+            {(item.hasServiceHistory || item.isModified || showNoReserve) && (
+                <div style={{ display: "flex", gap: "10px", marginTop: "16px", flexWrap: "wrap" }}>
+                    {showNoReserve && <span className="vehicle-tag tag-no-reserve">No Reserve</span>}
+                    {item.hasServiceHistory && <span className="vehicle-tag tag-service-history">Service History</span>}
+                    {item.isModified && <span className="vehicle-tag tag-modified">Modified</span>}
                 </div>
             )}
 
-            <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "48px" }}>
+            <div style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "48px" }}>
                 
-                {/* Spec Table */}
                 <div style={{ 
+                    display: "flex", 
+                    flexDirection: "column", 
                     border: "1px solid var(--border-color)", 
-                    borderRadius: "6px",
+                    borderRadius: "3px",
                     backgroundColor: "var(--bg-card)",
-                    display: "grid", 
-                    gridTemplateColumns: "1fr 1fr", 
                 }}>
+                    {/* Seller Notes */}
+                    {item.description && (
+                        <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)" }}>
+                            <h2 style={{ fontSize: "16px", fontWeight: 700, margin: "0 0 8px 0", color: "var(--text-primary)" }}>Seller Notes</h2>
+                            <div className="info-body" style={{ fontSize: "14px", color: "var(--text-secondary)" }}>{item.description}</div>
+                        </div>
+                    )}
+
+                    {/* Spec Table */}
+                    <div style={{ 
+                        display: "grid", 
+                        gridTemplateColumns: "1fr 1fr", 
+                    }}>
                     {/* Left Column wrapper */}
                     <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-color)' }}>
                         {[
@@ -100,9 +114,9 @@ export const VehicleInfo = ({ item, hideHeader = false }: { item: ItemDto, hideH
                                 </div>
                             ) }
                         ].map((row, i, arr) => (
-                            <div key={row.label} style={{ display: 'flex', padding: '16px', borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
-                                <div style={{ width: '120px', fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0 }}>{row.label}</div>
-                                <div style={{ color: 'var(--text-secondary)' }}>{row.value}</div>
+                            <div key={row.label} style={{ display: 'flex', padding: '10px 16px', borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
+                                <div style={{ width: '120px', fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0, fontSize: '14px' }}>{row.label}</div>
+                                <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{row.value}</div>
                             </div>
                         ))}
                     </div>
@@ -118,12 +132,13 @@ export const VehicleInfo = ({ item, hideHeader = false }: { item: ItemDto, hideH
                             { label: 'Interior Color', value: item.interiorColor },
                             { label: 'Seller Type', value: item.sellerType || "Private Party" }
                         ].map((row, i, arr) => (
-                            <div key={row.label} style={{ display: 'flex', padding: '16px', borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
-                                <div style={{ width: '120px', fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0 }}>{row.label}</div>
-                                <div style={{ color: 'var(--text-secondary)' }}>{row.value}</div>
+                            <div key={row.label} style={{ display: 'flex', padding: '10px 16px', borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
+                                <div style={{ width: '120px', fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0, fontSize: '14px' }}>{row.label}</div>
+                                <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{row.value}</div>
                             </div>
                         ))}
                     </div>
+                </div>
                 </div>
 
                 {/* Highlights */}
@@ -158,13 +173,6 @@ export const VehicleInfo = ({ item, hideHeader = false }: { item: ItemDto, hideH
                     </section>
                 )}
 
-                {/* Seller Notes */}
-                {item.description && (
-                    <section className="info-section">
-                        <h2 className="info-heading">Seller Notes</h2>
-                        <div className="info-body">{item.description}</div>
-                    </section>
-                )}
             </div>
         </div>
     );

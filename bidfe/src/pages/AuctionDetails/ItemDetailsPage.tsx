@@ -342,33 +342,9 @@ export const ItemDetailsPage = observer(() => {
                                         {itemStore.error && <div style={{...pageStyles.errorBox, margin: 0}}>{itemStore.error}</div>}
                                     </div>
 
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <button style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '8px', 
-                                            backgroundColor: 'var(--bg-card)', 
-                                            border: '1px solid var(--border-color)', 
-                                            padding: '8px 16px', 
-                                            borderRadius: '6px',
-                                            color: 'var(--text-primary)',
-                                            fontWeight: 700,
-                                            cursor: 'pointer'
-                                        }}>
-                                            <span style={{ 
-                                                backgroundColor: '#fff', 
-                                                color: '#000', 
-                                                padding: '2px 6px', 
-                                                borderRadius: '6px', 
-                                                fontWeight: 900, 
-                                                letterSpacing: '1px',
-                                                fontSize: '12px' 
-                                            }}>CARFAX</span>
-                                            Vehicle History Report
-                                        </button>
-                                    </div>
 
-                                    <VehicleInfo item={item} hideHeader={true} />
+
+                                    <VehicleInfo item={item} hideHeader={true} isNoReserve={item.auction?.isNoReserve} />
                                 </div>
                                 
                                 {/* Right Column (Empty to match AuctionDetails layout) */}

@@ -89,30 +89,7 @@ export const AuctionDetailsPage = observer(() => {
                             {!isCancelled ? (
                                 <>
                                     <BiddingCard auction={auction} isHorizontal={true} />
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '8px' }}>
-                                        <button style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '8px', 
-                                            backgroundColor: 'var(--bg-card)', 
-                                            border: '1px solid var(--border-color)', 
-                                            padding: '8px 16px', 
-                                            borderRadius: '6px',
-                                            color: 'var(--text-primary)',
-                                            fontWeight: 700,
-                                            cursor: 'pointer'
-                                        }}>
-                                            <span style={{ 
-                                                backgroundColor: '#fff', 
-                                                color: '#000', 
-                                                padding: '2px 6px', 
-                                                borderRadius: '6px', 
-                                                fontWeight: 900, 
-                                                letterSpacing: '1px',
-                                                fontSize: '12px' 
-                                            }}>CARFAX</span>
-                                            Vehicle History Report
-                                        </button>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '8px' }}>
                                         <span style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 500 }}>
                                             Ending {new Date(auction.endTime).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} at {new Date(auction.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                                         </span>
@@ -160,16 +137,12 @@ export const AuctionDetailsPage = observer(() => {
                                     )}
                                 </div>
                             )}
-
-                            <VehicleInfo item={item} hideHeader={true} />
+                            <VehicleInfo item={item} hideHeader={true} isNoReserve={auction?.isNoReserve || item.auction?.isNoReserve} />
                         </div>
                         <div></div>
                     </div>
                 </div>
-
-
             </ResponsiveGrid>
-
         </DetailPageLayout>
     );
 });

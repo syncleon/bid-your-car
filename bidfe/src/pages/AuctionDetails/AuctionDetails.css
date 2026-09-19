@@ -1017,3 +1017,30 @@
 .auction-layout-container {
     padding-bottom: 120px;
 }
+
+.vehicle-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.tag-no-reserve {
+    background-color: #16a34a;
+    color: #ffffff;
+}
+
+.tag-service-history {
+    background-color: #3b82f6;
+    color: #ffffff;
+}
+
+.tag-modified {
+    background-color: #f59e0b;
+    color: #ffffff;
+}

@@ -489,20 +489,21 @@ export const SubmitItemForm = ({
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="submit-form-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             
             {/* Modern Attractive Progress Bar */}
-            <div className="modern-progress-container" style={{ flexShrink: 0 }}>
+            <div className="modern-progress-container" style={{ flexShrink: 0, marginBottom: '24px' }}>
                 <div 
                     className="modern-progress-fill" 
                     style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
                 />
             </div>
 
-            <div className="form-step-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', minHeight: 0 }}>
-                <div style={{ textAlign: 'left', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
-                    <h2 className="step-title" style={{ margin: 0 }}>{getStepTitle()}</h2>
-                </div>
+            <div style={{ flexShrink: 0, textAlign: 'left', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
+                <h2 className="step-title" style={{ margin: 0 }}>{getStepTitle()}</h2>
+            </div>
+
+            <div className="form-step-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', minHeight: 0, paddingRight: '12px' }}>
 
                 {currentStep === 1 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <FormLabel title="17-Digit Vehicle Identification Number (VIN)" desc="Usually found on the driver's side dashboard or inside the driver's side door jamb. This helps us pull exact factory specifications." />
@@ -526,7 +527,7 @@ export const SubmitItemForm = ({
                 )}
 
                 {currentStep === 2 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <FormLabel title="Model Year" desc="The official release year of the vehicle." />
                             <input type="number" name="year" value={formData.year} onChange={handleChange} className={`modern-input standard-input ${errors.year ? 'input-error' : ''}`} min="1900" max={new Date().getFullYear() + 1} placeholder="e.g. 2024" />
@@ -547,7 +548,7 @@ export const SubmitItemForm = ({
 
                 {currentStep === 3 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <FormLabel title="Transmission" desc="Select the gearbox type (Automatic, Manual, etc.)." />
                                 <ChipGroup name="transmission" value={formData.transmission} onChange={handleChange} options={TRANSMISSIONS} />
@@ -564,7 +565,7 @@ export const SubmitItemForm = ({
                                 {errors.fuelType && <span className="error-text"><AlertCircle size={14} />{errors.fuelType}</span>}
                             </div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
                                 <FormLabel title="Engine Details (Optional)" desc="Engine displacement and configuration (e.g., 4.0L Flat-6)." />
                                 <input name="engine" value={formData.engine} onChange={handleChange} className={`modern-input standard-input ${errors.engine ? 'input-error' : ''}`} placeholder="e.g. 4.0L Flat-6" />
@@ -586,7 +587,7 @@ export const SubmitItemForm = ({
                             <ChipGroup name="bodyStyle" value={formData.bodyStyle} onChange={handleChange} options={BODY_STYLES} />
                             {errors.bodyStyle && <span className="error-text"><AlertCircle size={14} />{errors.bodyStyle}</span>}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
                                 <FormLabel title="Exterior Color" desc="The primary factory or custom paint color." />
                                 <input name="exteriorColor" value={formData.exteriorColor} onChange={handleChange} className={`modern-input standard-input ${errors.exteriorColor ? 'input-error' : ''}`} placeholder="e.g. Guards Red" />
@@ -618,7 +619,7 @@ export const SubmitItemForm = ({
 
                 {currentStep === 6 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
                                 <FormLabel title="Current Mileage" desc="The exact reading currently displayed on the odometer." />
                                 <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className={`modern-input standard-input ${errors.mileage ? 'input-error' : ''}`} placeholder="e.g. 15000" />

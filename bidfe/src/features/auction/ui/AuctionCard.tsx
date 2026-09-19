@@ -118,17 +118,19 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                             </div>
                         )}
                         {isPending && (
-                            <div style={{ ...styles.badge, background: "#f59e0b", color: "#fff" }}>
-                                PENDING
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f59e0b", display: "block" }}></span> PENDING
                             </div>
                         )}
                         {isSold && (
-                            <div style={{ ...styles.badge, background: "rgba(239,68,68,0.85)", color: "#fff" }}>
-                                SOLD
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> SOLD
                             </div>
                         )}
                         {!isSold && !isPending && isEnded && (
-                            <div style={styles.badgeEnded}>ENDED</div>
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> ENDED
+                            </div>
                         )}
                     </>
                 ),
@@ -147,14 +149,18 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                         )}
                         {isSold && (
                             <div style={soldBadgeStyle}>
-                                <span style={{ fontSize: "10px", opacity: 0.7 }}>Sold</span>
-                                <span>${currentPrice.toLocaleString()}</span>
+                                <CheckCircleIcon />
+                                <span>Sold</span>
+                                <span style={{ opacity: 0.5, fontWeight: 300, margin: "0 2px" }}>·</span>
+                                <span>{formatPrice(currentPrice)}</span>
                             </div>
                         )}
                         {!isSold && isEnded && !isPending && (
                             <div style={timerBadgeStyle}>
-                                <span style={{ fontSize: "10px", opacity: 0.7 }}>Final</span>
-                                <span>${currentPrice.toLocaleString()}</span>
+                                <CheckCircleIcon />
+                                <span>Final</span>
+                                <span style={{ opacity: 0.5, fontWeight: 300, margin: "0 2px" }}>·</span>
+                                <span>{formatPrice(currentPrice)}</span>
                             </div>
                         )}
                     </>
@@ -194,4 +200,11 @@ const ClockIcon = () => (
 
 const UrgentDot = () => (
     <span className="urgent-dot" />
+);
+
+const CheckCircleIcon = () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
 );

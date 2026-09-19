@@ -17,21 +17,22 @@ interface FilterSelectProps {
     value: string | number;
     options: (string | number | FilterOption)[];
     onChange: (val: string) => void;
+    hideAllOption?: boolean;
+    icon?: React.ReactNode;
 }
-
 
 const ChevronIcon = ({ open }: { open: boolean }) => (
     <svg
-        width="13" height="13" viewBox="0 0 24 24"
+        width="14" height="14" viewBox="0 0 24 24"
         fill="none" stroke="currentColor" strokeWidth="2.5"
         strokeLinecap="round" strokeLinejoin="round"
-        style={{ transition: "transform 0.18s", transform: open ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}
+        style={{ transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)", transform: open ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0, opacity: 0.6 }}
     >
         <path d="m6 9 6 6 6-6" />
     </svg>
 );
 
-const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) => {
+const FilterSelect = ({ label, value, options, onChange, hideAllOption, icon }: FilterSelectProps) => {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -44,8 +45,8 @@ const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) =>
 
     
     const current = normalised.find(o => o.value === String(value));
-    const displayLabel = current && current.value !== "All" ? current.label : label;
-    const hasValue = current?.value !== "All";
+    const displayLabel = current && (!hideAllOption ? current.value !== "All" : true) ? current.label : label;
+    const hasValue = hideAllOption ? true : current?.value !== "All";
 
     
     const handleOutside = useCallback((e: MouseEvent) => {
@@ -64,28 +65,30 @@ const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) =>
         <div className={`custom-select${open ? " custom-select--open" : ""}`} ref={ref}>
             <button
                 type="button"
-                className={`custom-select__trigger${hasValue ? " custom-select__trigger--active" : ""}`}
+                className={`custom-select__trigger${hasValue && !hideAllOption ? " custom-select__trigger--active" : ""}`}
                 onClick={() => setOpen(v => !v)}
                 aria-expanded={open}
                 aria-haspopup="listbox"
             >
+                {icon && <span className="custom-select__icon">{icon}</span>}
                 <span className="custom-select__label">{displayLabel}</span>
                 <ChevronIcon open={open} />
             </button>
 
             {open && (
                 <div className="custom-select__dropdown" role="listbox">
-                    {}
-                    <button
-                        type="button"
-                        role="option"
-                        aria-selected={!hasValue}
-                        className={`custom-select__option${!hasValue ? " custom-select__option--selected" : ""}`}
-                        onClick={() => select("All")}
-                    >
-                        {label}
-                        {!hasValue && <CheckIcon />}
-                    </button>
+                    {!hideAllOption && (
+                        <button
+                            type="button"
+                            role="option"
+                            aria-selected={!hasValue}
+                            className={`custom-select__option${!hasValue ? " custom-select__option--selected" : ""}`}
+                            onClick={() => select("All")}
+                        >
+                            <span className="custom-select__option-text">{label}</span>
+                            {!hasValue && <CheckIcon />}
+                        </button>
+                    )}
                     {normalised.filter(o => o.value !== "All").map(o => (
                         <button
                             key={o.value}
@@ -95,7 +98,7 @@ const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) =>
                             className={`custom-select__option${String(value) === o.value ? " custom-select__option--selected" : ""}`}
                             onClick={() => select(o.value)}
                         >
-                            {o.label}
+                            <span className="custom-select__option-text">{o.label}</span>
                             {String(value) === o.value && <CheckIcon />}
                         </button>
                     ))}
@@ -112,6 +115,14 @@ const CheckIcon = () => (
     </svg>
 );
 
+
+const FilterIcons = {
+    Make: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H9.3a2 2 0 0 0-1.6.8L5 11l-5.16.86a1 1 0 0 0-.84.99V16h3m10 0a3 3 0 1 1-6 0m10 0a3 3 0 1 1-6 0M9 16a3 3 0 1 1-6 0"/></svg>,
+    Year: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    Transmission: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v20"/><path d="M12 12h8.5"/><path d="M12 12 5.5 5.5"/></svg>,
+    Condition: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+    Sort: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+};
 
 const SkeletonCard = () => (
     <div className="skeleton-card">
@@ -324,64 +335,49 @@ export const AuctionListTemplate = observer(({
             <header className="auction-header">
                 <div className="header-top">
                     <h1 className="page-title">{title}</h1>
-                </div>
 
-                {}
-                <button
-                    className="mobile-filter-toggle"
-                    onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
-                >
-                    {isMobileFiltersOpen ? '▲ Hide Filters' : '▼ Filters & Sort'}
-                </button>
+                    <button
+                        className="mobile-filter-toggle"
+                        onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+                    >
+                        {isMobileFiltersOpen ? '▲ Hide Filters' : '▼ Filters & Sort'}
+                    </button>
 
-                <div className={`controls-wrapper ${isMobileFiltersOpen ? 'mobile-open' : 'mobile-hidden'}`}>
-                    {}
-                    <div className="controls-bar">
-                        <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
-                        <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        <FilterSelect label="Transmission" value={filterTransmission} options={transmissions as any} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
-                        <FilterSelect 
-                            label="Condition" 
-                            value={filterCondition === "All" ? "All" : filterCondition.replace('_', ' ')} 
-                            options={conditions.map(c => c === "All" ? "All" : c.replace('_', ' '))} 
-                            onChange={v => { 
-                                setFilterCondition(v === "All" ? "All" : conditions.find(cond => cond.replace('_', ' ') === v) || v); 
-                                setVisibleCount(ITEMS_PER_BATCH); 
-                            }} 
-                        />
-                        
-                        <div className="sort-tabs">
-                            {sortOptions.map((opt: { label: string; value: string }) => (
-                                <button
-                                    key={opt.value}
-                                    className={`sort-tab ${sortBy === opt.value ? 'active' : ''}`}
-                                    onClick={() => setSortBy(opt.value)}
-                                >
-                                    {opt.label}
-                                </button>
-                            ))}
+                    <div className={`controls-wrapper ${isMobileFiltersOpen ? 'mobile-open' : 'mobile-hidden'}`}>
+                        <div className="controls-bar">
+                            <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                            <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            <FilterSelect label="Transmission" value={filterTransmission} options={transmissions as any} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                            <FilterSelect 
+                                label="Condition" 
+                                value={filterCondition === "All" ? "All" : filterCondition.replace('_', ' ')} 
+                                options={conditions.map(c => c === "All" ? "All" : c.replace('_', ' '))} 
+                                onChange={v => { 
+                                    setFilterCondition(v === "All" ? "All" : conditions.find(cond => cond.replace('_', ' ') === v) || v); 
+                                    setVisibleCount(ITEMS_PER_BATCH); 
+                                }} 
+                            />
                         </div>
+
+                        {hasActiveFilters && (
+                            <div className="active-chips">
+                                {chips.map((chip, i) => (
+                                    <button key={i} className="filter-chip" onClick={chip.clear}>
+                                        {chip.label}
+                                        <span className="filter-chip-x">×</span>
+                                    </button>
+                                ))}
+                                <button className="reset-btn" onClick={() => {
+                                    setFilterMake("All");
+                                    setFilterYear("All");
+                                    setSearchQuery("");
+                                }}>
+                                    Clear all
+                                </button>
+                            </div>
+                        )}
                     </div>
-
-                    {}
-                    {hasActiveFilters && (
-                        <div className="active-chips">
-                            {chips.map((chip, i) => (
-                                <button key={i} className="filter-chip" onClick={chip.clear}>
-                                    {chip.label}
-                                    <span className="filter-chip-x">×</span>
-                                </button>
-                            ))}
-                            <button className="reset-btn" onClick={() => {
-                                setFilterMake("All");
-                                setFilterYear("All");
-                                setSearchQuery("");
-                            }}>
-                                Clear all
-                            </button>
-                        </div>
-                    )}
                 </div>
             </header>
 

@@ -156,11 +156,6 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                         <span style={{ color: '#9ca3af', fontSize: '15px' }}>Comments</span>
                         <span style={{ fontWeight: 700, fontSize: '15px' }}>0</span>
                     </div>
-                    {auction.isNoReserve && (
-                        <div style={{ backgroundColor: '#16a34a', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: 'auto' }}>
-                            No Reserve
-                        </div>
-                    )}
                 </div>
 
                 {/* Right Side: Action */}
@@ -242,11 +237,6 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                             <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Comments</span>
                         </div>
                     </div>
-                    {auction.isNoReserve && (
-                        <div style={{ backgroundColor: '#16a34a', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                            No Reserve
-                        </div>
-                    )}
                 </div>
 
                 {displayError && (

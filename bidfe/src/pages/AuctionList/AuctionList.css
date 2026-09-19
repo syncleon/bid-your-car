@@ -5,6 +5,12 @@
     margin: 0 auto;
     box-sizing: border-box;
     font-family: 'Inter', sans-serif;
+    animation: pageFadeIn 0.25s ease-out;
+}
+
+@keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .auction-header {
@@ -123,8 +129,14 @@
     min-width: 90px;
 }
 
+.custom-select__trigger:hover,
+.custom-select__trigger:focus,
+.custom-select__trigger--active {
+    box-shadow: none !important;
+}
+
 .custom-select__trigger:hover {
-    opacity: 0.85;
+    color: var(--text-primary);
 }
 
 .custom-select__trigger--active {
@@ -192,12 +204,14 @@
 
 .custom-select__option:hover {
     background: var(--bg-hover);
+    box-shadow: none !important;
 }
 
 .custom-select__option--selected {
     color: var(--text-primary);
     font-weight: 700;
     background: var(--bg-input);
+    box-shadow: none !important;
 }
 
 
@@ -228,6 +242,7 @@
 
 .filter-chip:hover {
     background: var(--bg-hover);
+    box-shadow: none !important;
 }
 
 .filter-chip-x {
@@ -253,6 +268,7 @@
 .reset-btn:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
+    box-shadow: none !important;
 }
 
 .mobile-filter-toggle {
@@ -308,23 +324,10 @@
 
 
 .fade-in-item {
-    animation: fadeInUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    will-change: opacity, transform;
     height: 100%;
     display: flex;
     flex-direction: column;
     min-width: 0;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(16px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .loading-state,
