@@ -21,7 +21,6 @@ const SearchIcon = () => (
 
 export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Props) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const { authStore } = useStoreContext();
     const user = authStore.user;
 

@@ -22,50 +22,27 @@ export const ItemCard = ({ item }: ItemCardProps) => {
     const isUnsold = item.status === 'UNSOLD';
     const isDraft = item.status === 'DRAFT';
     const isRejected = item.status === 'REJECTED';
-    let statusBadge = null;
-
+        let statusText = "Draft";
+    let statusColor = "#94a3b8";
+    
     if (isSold) {
-        statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: '#dc2626', color: '#fff' }}>
-                SOLD
-            </div>
-        );
+        statusText = "Sold";
+        statusColor = "#dc2626";
     } else if (isLive) {
-        statusBadge = (
-            <div style={styles.badgeLive}>
-                <span style={styles.dot} /> LIVE AUCTION
-            </div>
-        );
+        statusText = "Live Auction";
+        statusColor = "#ef4444";
     } else if (isScheduled) {
-        statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: 'var(--color-primary)', color: '#fff' }}>
-                SCHEDULED
-            </div>
-        );
+        statusText = "Scheduled";
+        statusColor = "var(--color-primary)";
     } else if (isPending) {
-        statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: '#f59e0b', color: '#fff' }}>
-                NEEDS ADMIN APPROVAL
-            </div>
-        );
+        statusText = "Pending";
+        statusColor = "#f59e0b";
     } else if (isRejected) {
-        statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: '#ef4444', color: '#fff' }}>
-                REJECTED
-            </div>
-        );
+        statusText = "Rejected";
+        statusColor = "#ef4444";
     } else if (isUnsold) {
-        statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: '#475569', color: '#fff' }}>
-                UNSOLD
-            </div>
-        );
-    } else if (isDraft) {
-        statusBadge = (
-            <div style={{ ...styles.badge, backgroundColor: '#94a3b8', color: '#fff' }}>
-                DRAFT
-            </div>
-        );
+        statusText = "Unsold";
+        statusColor = "#475569";
     }
 
     return (
@@ -74,7 +51,11 @@ export const ItemCard = ({ item }: ItemCardProps) => {
             imageUrl={mainImage}
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
-                topLeft: statusBadge,
+                topLeft: (
+                    <div style={{ ...styles.badge, backgroundColor: statusColor, color: '#fff' }}>
+                        {statusText}
+                    </div>
+                ),
                 topRight: null,
 
                 bottomLeft: (

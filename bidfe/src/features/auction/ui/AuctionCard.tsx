@@ -78,30 +78,6 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
     const isActive = status === 'ACTIVE';
     const isPending = status === 'PENDING_APPROVAL';
     const isSold = status === 'SOLD';
-
-    
-    const timerBadgeStyle: React.CSSProperties = {
-        ...styles.badgeTimer,
-        backgroundColor: isUrgent ? "rgba(239, 68, 68, 0.9)" : "rgba(17,17,17,0.75)",
-        backdropFilter: "blur(6px)",
-        color: "#fff",
-        fontWeight: 700,
-        fontVariantNumeric: "tabular-nums",
-        fontSize: "13px",
-        padding: "6px 10px",
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        borderRadius: "6px",
-        border: isUrgent ? "1px solid rgba(255,255,255,0.3)" : "none",
-        whiteSpace: "nowrap",
-    };
-
-    const soldBadgeStyle: React.CSSProperties = {
-        ...timerBadgeStyle,
-        backgroundColor: "rgba(17,17,17,0.75)",
-    };
-
     return (
         <BaseCard
             to={`/auctions/${auction.id}`}
@@ -113,58 +89,44 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                 topLeft: (
                     <>
                         {isActive && !isEnded && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
                                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--color-danger-text)", display: "block", transition: "background-color 0.3s" }}></span> LIVE AUCTION
                             </div>
                         )}
                         {isPending && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
                                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f59e0b", display: "block" }}></span> PENDING
                             </div>
                         )}
                         {isSold && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
                                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> SOLD
                             </div>
                         )}
                         {!isSold && !isPending && isEnded && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
                                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> ENDED
                             </div>
                         )}
                     </>
                 ),
-
-
-
                 bottomLeft: (
-                    <>
-                        {isActive && !isEnded && timeLeft && (
-                            <div style={timerBadgeStyle} className={isUrgent ? "urgent-timer-anim" : ""}>
-                                {isUrgent ? <UrgentDot /> : <ClockIcon />}
-                                <span>{timeLeft}</span>
-                                <span style={{ opacity: 0.5, fontWeight: 300, margin: "0 2px" }}>·</span>
-                                <span>Bid: {formatPrice(currentPrice)}</span>
-                            </div>
-                        )}
-                        {isSold && (
-                            <div style={soldBadgeStyle}>
-                                <CheckCircleIcon />
-                                <span>Sold</span>
-                                <span style={{ opacity: 0.5, fontWeight: 300, margin: "0 2px" }}>·</span>
-                                <span>{formatPrice(currentPrice)}</span>
-                            </div>
-                        )}
-                        {!isSold && isEnded && !isPending && (
-                            <div style={timerBadgeStyle}>
-                                <CheckCircleIcon />
-                                <span>Final</span>
-                                <span style={{ opacity: 0.5, fontWeight: 300, margin: "0 2px" }}>·</span>
-                                <span>{formatPrice(currentPrice)}</span>
-                            </div>
-                        )}
-                    </>
-                ),
+                    <div style={{ background: "rgba(17, 17, 17, 0.75)", backdropFilter: "blur(4px)", padding: "6px 10px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "8px", color: "#fff", border: isUrgent && !isEnded ? "1px solid rgba(239, 68, 68, 0.5)" : "1px solid rgba(255,255,255,0.1)" }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                            <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)"}}>
+                                {isSold ? 'Sold' : isEnded ? 'Final' : 'Bid'}
+                            </span>
+                            <span style={{ fontSize: "14px"}}>{formatPrice(currentPrice)}</span>
+                        </div>
+                        <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.2)" }}></div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: isUrgent && !isEnded ? "#ef4444" : "#fff" }}>
+                            {isEnded ? <CheckCircleIcon /> : (isUrgent ? <UrgentDot /> : <ClockIcon />)}
+                            <span style={{ fontSize: "14px"}}>
+                                {isEnded ? (isSold ? 'Sold' : 'Ended') : timeLeft}
+                            </span>
+                        </div>
+                    </div>
+                )
             }}
         >
             <div className="auction-card-body">
@@ -179,10 +141,6 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                 </div>
 
                 <div className="auction-card-location-text">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                        <circle cx="12" cy="10" r="3" />
-                    </svg>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.location}</span>
                 </div>
             </div>

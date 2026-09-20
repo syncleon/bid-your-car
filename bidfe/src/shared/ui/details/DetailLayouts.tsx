@@ -42,7 +42,6 @@ export const ResponsiveGrid = ({ children, hasSidebar = true }: { children: Reac
 
 export const DetailSkeleton = () => (
     <DetailPageLayout>
-        <DetailHeader onBack={() => {}} title="Loading..." />
         <ResponsiveGrid>
             <div>
                 <div className="gallery-container">

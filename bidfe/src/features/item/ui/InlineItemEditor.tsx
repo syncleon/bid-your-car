@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { ItemDto, ItemUpdateRequest, ImageCategory } from '../types';
 import { useStore } from '../../../shared/hooks/useStore';
+import { ImageUploader } from "./ImageUploader";
 
 
 interface Props {
@@ -34,6 +35,7 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
     const [existingImages, setExistingImages] = useState([...item.images].sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0)));
     const [newFiles, setNewFiles] = useState<{ file: File; category: ImageCategory }[]>([]);
     const [newPreviews, setNewPreviews] = useState<string[]>([]);
+    const [originalPreviews, setOriginalPreviews] = useState<string[]>([]);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -73,6 +75,7 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
             const added = Array.from(e.target.files);
             setNewFiles(prev => [...prev, ...added.map(f => ({ file: f, category: 'EXTERIOR' as ImageCategory }))]);
             setNewPreviews(prev => [...prev, ...added.map(f => URL.createObjectURL(f))]);
+            setOriginalPreviews(prev => [...prev, ...added.map(f => URL.createObjectURL(f))]);
         }
     };
 
@@ -84,6 +87,58 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
             copy.splice(index, 1);
             return copy;
         });
+        setOriginalPreviews(prev => {
+            const copy = [...prev];
+            copy.splice(index, 1);
+            return copy;
+        });
+    };
+
+    
+    const handleReorderNew = (dragIndex: number, hoverIndex: number) => {
+        setNewFiles(prev => {
+            const copy = [...prev];
+            const item = copy[dragIndex];
+            copy.splice(dragIndex, 1);
+            copy.splice(hoverIndex, 0, item);
+            return copy;
+        });
+        setNewPreviews(prev => {
+            const copy = [...prev];
+            const item = copy[dragIndex];
+            copy.splice(dragIndex, 1);
+            copy.splice(hoverIndex, 0, item);
+            return copy;
+        });
+        setOriginalPreviews(prev => {
+            const copy = [...prev];
+            const item = copy[dragIndex];
+            copy.splice(dragIndex, 1);
+            copy.splice(hoverIndex, 0, item);
+            return copy;
+        });
+    };
+
+    const handleReplaceNewFile = (index: number, newFile: File, newPreview: string) => {
+        setNewFiles(prev => {
+            const next = [...prev];
+            next[index] = { file: newFile, category: next[index].category };
+            return next;
+        });
+        setNewPreviews(prev => {
+            const next = [...prev];
+            URL.revokeObjectURL(next[index]);
+            next[index] = newPreview;
+            return next;
+        });
+    };
+
+    const handleReplaceExistingWithNew = (existingId: string, newFile: File, newPreview: string) => {
+        removeExistingImage(existingId);
+        setNewFiles(prev => [...prev, { file: newFile, category: 'EXTERIOR' }]);
+        setNewPreviews(prev => [...prev, newPreview]);
+        const origImg = existingImages.find(i => i.id === existingId) || item.images.find(i => i.id === existingId);
+        setOriginalPreviews(prev => [...prev, origImg ? origImg.url : newPreview]);
     };
 
     const removeExistingImage = (id: string) => {
@@ -116,45 +171,17 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             
             <div style={{ backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                <h3 style={{ marginTop: 0, marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>Vehicle Photos</h3>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '16px' }}>
-                    {existingImages.map((img, idx) => (
-                        <div 
-                            key={img.id} 
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, idx)}
-                            onDragOver={(e) => handleDragOver(e, idx)}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                                position: 'relative', 
-                                aspectRatio: '4/3', 
-                                borderRadius: '6px', 
-                                overflow: 'hidden',
-                                opacity: draggedIndex === idx ? 0.5 : 1,
-                                cursor: 'grab',
-                                border: idx === 0 ? '2px solid var(--color-primary)' : 'none'
-                            }}
-                        >
-                            {idx === 0 && <div style={{ position: 'absolute', top: 4, left: 4, background: 'var(--color-primary)', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '6px', zIndex: 10, fontWeight: 'bold' }}>MAIN</div>}
-                            <img src={img.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Vehicle" />
-                            <button onClick={() => removeExistingImage(img.id)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>✕</button>
-                        </div>
-                    ))}
-                    
-                    {newPreviews.map((url, i) => (
-                        <div key={i} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: '6px', overflow: 'hidden', border: '2px dashed var(--color-primary)' }}>
-                            <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="New Upload" />
-                            <button onClick={() => removeNewFile(i)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-                        </div>
-                    ))}
-
-                    <label style={{ aspectRatio: '4/3', borderRadius: '6px', border: '2px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexDirection: 'column', gap: '8px', color: 'var(--text-secondary)' }}>
-                        <span style={{ fontSize: '24px' }}>+</span>
-                        <span style={{ fontSize: '12px' }}>Add Photos</span>
-                        <input type="file" multiple accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-                    </label>
-                </div>
+                <ImageUploader
+                    existingImages={existingImages}
+                    newPreviews={newPreviews}
+                    originalPreviews={originalPreviews}
+                    onAddFiles={handleFileChange}
+                    onRemoveExisting={removeExistingImage}
+                    onRemoveNew={removeNewFile}
+                    onReorderNew={handleReorderNew}
+                    onReplaceNewFile={handleReplaceNewFile}
+                    onReplaceExistingWithNew={handleReplaceExistingWithNew}
+                />
             </div>
 
             <div style={{ backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
@@ -244,7 +271,7 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
                     <button onClick={onCancel} disabled={saving} style={{ padding: '12px 24px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>
                         Cancel
                     </button>
-                    <button onClick={handleSave} disabled={saving} style={{ padding: '12px 24px', borderRadius: '6px', border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
+                    <button onClick={handleSave} disabled={saving} style={{ padding: '12px 24px', borderRadius: '6px', border: 'none', background: 'var(--color-primary)', color: 'var(--btn-primary-text)', cursor: 'pointer', fontWeight: 600 }}>
                         {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>

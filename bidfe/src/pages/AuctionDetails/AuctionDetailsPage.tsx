@@ -68,13 +68,12 @@ export const AuctionDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            <DetailHeader onBack={() => navigate('/auctions')} title="Back to Auctions" />
             
             <ResponsiveGrid hasSidebar={false}>
                 {/* Left Column */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
-                        <VehicleHeader item={item} auctionEndTime={auction.endTime} />
+                        <VehicleHeader item={item}  />
                     </div>
 
                     <div className="gallery-wrapper">
@@ -84,18 +83,15 @@ export const AuctionDetailsPage = observer(() => {
                         />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '70fr 30fr', gap: '8px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '70fr 30fr', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
                             {!isCancelled ? (
                                 <>
                                     <BiddingCard auction={auction} isHorizontal={true} />
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '8px' }}>
-                                        <span style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 500 }}>
-                                            Ending {new Date(auction.endTime).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} at {new Date(auction.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                                        </span>
-                                    </div>
+                                    
 
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {(isPending || (isScheduled && auction.startTime) || (isEnded && !isCancelled)) && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', marginBottom: '8px' }}>
                                         {isPending && (
                                             <div className="compact-banner banner-pending">
                                                 <strong>Pending Approval</strong>
@@ -117,6 +113,7 @@ export const AuctionDetailsPage = observer(() => {
                                             </div>
                                         )}
                                     </div>
+                                    )}
                                 </>
                             ) : (
                                 <div style={{ backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '6px', border: '1px solid var(--border-color)', textAlign: 'center' }}>

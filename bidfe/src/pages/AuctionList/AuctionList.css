@@ -166,11 +166,13 @@
     min-width: 100%;
     max-height: 260px;
     overflow-y: auto;
-    background: var(--bg-card);
+    background: var(--bg-dropdown);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
     z-index: 200;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 4px;
     animation: dropdownIn 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 }

@@ -258,7 +258,7 @@
 
 .primary-cta-btn {
     background: var(--accent-color, #f97316);
-    color: #fff;
+    color: #000;
     border: none;
     border-radius: 12px;
     padding: 0 32px;
@@ -344,7 +344,7 @@
     margin: 0;
     font-size: 18px;
     font-weight: 800;
-    color: #fff;
+    color: #000;
     letter-spacing: -0.02em;
 }
 .demo-card-title-bar p {
@@ -400,7 +400,7 @@
 
 .demo-badge.badge-live {
     background: rgba(0, 0, 0, 0.8);
-    color: #fff;
+    color: #000;
 }
 
 .live-dot-small {
@@ -454,14 +454,14 @@
 }
 
 .stat-value {
-    color: #fff;
+    color: #000;
     font-weight: 700;
     font-size: 15px;
 }
 
 .demo-bar-btn {
     background: #f97316;
-    color: #fff;
+    color: #000;
     border: none;
     border-radius: 6px;
     padding: 12px 32px;

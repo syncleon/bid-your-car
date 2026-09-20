@@ -116,7 +116,7 @@ const CheckIcon = () => (
 );
 
 
-const FilterIcons = {
+const _FilterIcons = {
     Make: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H9.3a2 2 0 0 0-1.6.8L5 11l-5.16.86a1 1 0 0 0-.84.99V16h3m10 0a3 3 0 1 1-6 0m10 0a3 3 0 1 1-6 0M9 16a3 3 0 1 1-6 0"/></svg>,
     Year: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
     Transmission: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v20"/><path d="M12 12h8.5"/><path d="M12 12 5.5 5.5"/></svg>,
@@ -223,7 +223,7 @@ export const AuctionListTemplate = observer(({
         }
     }, [status, pageSize, defaultSort, auctionStore]);
 
-    const sortOptions = useMemo(() => {
+    const _sortOptions = useMemo(() => {
         const options = [
             { label: "Price: Low to High", value: "price_low" },
             { label: "Price: High to Low", value: "price_high" }

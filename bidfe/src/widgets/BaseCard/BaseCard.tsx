@@ -18,11 +18,12 @@ interface BaseCardProps {
         bottomRight?: ReactNode;
     };
         children: ReactNode;
+        headerContent?: ReactNode;
         isUrgent?: boolean;
         viewMode?: "grid" | "list";
 }
 
-export const BaseCard = ({ to, imageUrl, title, overlays, children, isUrgent, viewMode = "grid" }: BaseCardProps) => {
+export const BaseCard = ({ to, imageUrl, title, overlays, children, headerContent, isUrgent, viewMode = "grid" }: BaseCardProps) => {
     const isList = viewMode === "list";
     return (
         <Link
@@ -34,6 +35,7 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children, isUrgent, vi
                 style={styles.container}
                 data-urgent={isUrgent ? "true" : undefined}
             >
+                {headerContent}
                 <div
                     className={`base-card-image-wrapper${isList ? " base-card-image-wrapper--list" : ""}`}
                     style={styles.imageWrapper}

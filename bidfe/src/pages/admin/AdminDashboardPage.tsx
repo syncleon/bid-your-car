@@ -168,7 +168,7 @@ export const AdminDashboardPage = observer(() => {
                                                 </div>
                                             )}
                                             <div>
-                                                <button onClick={handleSaveEdit} style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', marginRight: '10px' }}>Save</button>
+                                                <button onClick={handleSaveEdit} style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#10b981', color: '#000', border: 'none', borderRadius: '6px', fontSize: '14px', marginRight: '10px' }}>Save</button>
                                                 <button onClick={handleCancelEdit} style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '14px' }}>Cancel</button>
                                             </div>
                                         </div>
@@ -183,13 +183,13 @@ export const AdminDashboardPage = observer(() => {
                                                     if (success) adminStore.fetchAuctions("PENDING_APPROVAL", 0);
                                                 }
                                             }}
-                                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 600 }}
+                                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#10b981', color: '#000', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 600 }}
                                         >
                                             Approve
                                         </button>
                                         <button 
                                             onClick={() => handleEditClick(auction)}
-                                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 600 }}
+                                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: 'var(--color-primary)', color: '#000', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 600 }}
                                         >
                                             Edit
                                         </button>

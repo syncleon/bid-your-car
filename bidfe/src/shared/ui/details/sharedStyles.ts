@@ -6,21 +6,21 @@ export const minStyles = {
 
 export const styles = {
     container: { width: "92%", margin: "0 auto", padding: "16px 0", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
-    headerRow: { marginBottom: 16, display: "flex", justifyContent: "space-between" },
+    headerRow: { marginBottom: 0, display: "flex", justifyContent: "space-between" },
     grid: { display: "grid", alignItems: "start" },
 
-    galleryContainer: { display: "grid", gridTemplateColumns: "70fr 30fr", gap: "8px", margin: 0, padding: 0 },
-    mainWrapper: { position: "relative" as const, width: "100%", height: "100%", aspectRatio: "16/9", borderRadius: "12px", overflow: "hidden", cursor: "zoom-in", backgroundColor: "var(--bg-input)", padding: 0, margin: 0 },
+    galleryContainer: { display: "flex", gap: "8px", margin: 0, padding: 0, alignItems: "stretch" },
+    mainWrapper: { flex: "70", position: "relative" as const, width: "100%", height: "auto", aspectRatio: "16/9", borderRadius: "0", overflow: "hidden", cursor: "zoom-in", backgroundColor: "var(--bg-input)", padding: 0, margin: 0 },
     mainImg: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" as const, transition: "transform 0.3s ease", display: "block" },
     hoverOverlay: { position: "absolute" as const, inset: 0, background: "rgba(249, 115, 22, 0.15)", opacity: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: "14px", pointerEvents: "none" as const, backdropFilter: "blur(2px)" },
     statusOverlay: { position: "absolute" as const, top: 16, left: 16, zIndex: 10 },
-    thumbGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: 0, margin: 0, alignContent: "start" },
-    thumbWrapper: { position: "relative" as const, aspectRatio: "16/9", borderRadius: "8px", overflow: "hidden", cursor: "pointer", backgroundColor: "var(--bg-input)", padding: 0, margin: 0 },
+    thumbGrid: { flex: "30", display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "repeat(4, 1fr)", gap: "8px", padding: 0, margin: 0 },
+    thumbWrapper: { position: "relative" as const, width: "100%", height: "100%", borderRadius: "0", overflow: "hidden", cursor: "pointer", backgroundColor: "var(--bg-input)", padding: 0, margin: 0 },
     thumbImg: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" as const, display: "block" },
     moreOverlay: { position: "absolute" as const, inset: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 600, backdropFilter: "blur(2px)", borderRadius: "8px" },
-    placeholder: { width: "100%", height: "300px", backgroundColor: "var(--bg-input)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "14px", transition: "background-color 0.3s ease, color 0.3s ease" },
+    placeholder: { width: "100%", height: "300px", backgroundColor: "var(--bg-input)", borderRadius: "0", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "14px", transition: "background-color 0.3s ease, color 0.3s ease" },
     title: { fontSize: "32px", fontWeight: 800, color: "var(--text-primary)", margin: "0 0 6px 0", letterSpacing: "-0.03em", lineHeight: 1.1 },
-    subtitle: { fontSize: "15px", color: "#9ca3af", margin: 0, fontWeight: 500, letterSpacing: "0.01em" },
+    subtitle: { fontSize: "15px", color: "var(--text-primary)", margin: 0, fontWeight: 500, letterSpacing: "0.01em" },
     tagsContainer: { display: "flex", gap: "8px", marginTop: "16px" },
     tag: { padding: "4px 10px", backgroundColor: "rgba(249, 115, 22, 0.1)", border: "1px solid var(--border-color)", borderRadius: "16px", fontSize: "12px", fontWeight: 600, color: "var(--color-primary)", transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease" },
 

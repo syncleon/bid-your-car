@@ -198,11 +198,10 @@ export const ItemDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            <DetailHeader onBack={() => navigate('/garage')} title="Back to Garage" />
 
             <ResponsiveGrid hasSidebar={false}>
                 {/* Single Column matching Auction Details */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
                         <VehicleHeader item={item} />
                     </div>

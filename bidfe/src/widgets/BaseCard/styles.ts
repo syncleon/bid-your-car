@@ -17,7 +17,7 @@ const styles = {
     } as CSSProperties,
 
     imageWrapper: {
-        aspectRatio: "4/3",
+        aspectRatio: "3/2",
         flexShrink: 0,
         width: "100%",
         background: "var(--bg-input)",
@@ -55,7 +55,7 @@ const styles = {
     } as CSSProperties,
     year: {
         fontWeight: 800,
-        color: "var(--text-secondary)",
+        color: "inherit",
         transition: "color 0.3s ease",
     } as CSSProperties,
 

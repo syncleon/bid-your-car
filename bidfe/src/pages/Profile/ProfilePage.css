@@ -316,7 +316,7 @@
     justify-content: center;
     padding: 12px 28px;
     background: var(--btn-primary-bg);
-    color: #fff;
+    color: var(--btn-primary-text);
     text-decoration: none;
     font-weight: 600;
     font-size: 15px;

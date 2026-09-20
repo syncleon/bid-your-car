@@ -11,6 +11,7 @@ html {
   --bg-base: #0f0f11;
   /* Glassmorphic Cards */
   --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-dropdown: rgba(24, 24, 27, 0.95);
   --bg-input: rgba(255, 255, 255, 0.05);
   --bg-hover: rgba(255, 255, 255, 0.08);
   --bg-overlay: rgba(0, 0, 0, 0.75);
@@ -52,7 +53,7 @@ html {
 
   /* 2025/2026 UI Variables */
   --glass-blur: blur(24px);
-  --radius-pill: 4px;
+  --radius-pill: 100px;
   --radius-lg: 6px;
   --radius-md: 4px;
   --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.15);
@@ -188,4 +189,9 @@ a:not([class]):hover,
 }
 
 .btn-primary:hover {
+}
+
+/* Place Bid Button Exception */
+.place-bid-btn {
+    border-radius: 8px !important;
 }

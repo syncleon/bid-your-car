@@ -133,28 +133,28 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                     backgroundColor: 'var(--bg-card)',
                     border: '1px solid var(--border-color)',
                     padding: '16px 24px',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     flex: 1
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Clock size={18} color="#9ca3af" />
-                        <span style={{ color: '#9ca3af', fontSize: '15px' }}>Time Left</span>
-                        <span style={{ fontWeight: 700, fontSize: '15px' }}>{timeLeft}</span>
+                        <span style={{ color: '#9ca3af', fontSize: '20px' }}>Time Left</span>
+                        <span style={{ fontWeight: 700, fontSize: '20px' }}>{timeLeft}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <TrendingUp size={18} color="#9ca3af" />
-                        <span style={{ color: '#9ca3af', fontSize: '15px' }}>High Bid</span>
-                        <span style={{ fontWeight: 700, fontSize: '15px' }}>${currentPrice.toLocaleString()}</span>
+                        <span style={{ color: '#9ca3af', fontSize: '20px' }}>High Bid</span>
+                        <span style={{ fontWeight: 700, fontSize: '20px' }}>${currentPrice.toLocaleString()}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#9ca3af', fontSize: '18px', fontWeight: 700 }}>#</span>
-                        <span style={{ color: '#9ca3af', fontSize: '15px' }}>Bids</span>
-                        <span style={{ fontWeight: 700, fontSize: '15px' }}>{auction.bidCount}</span>
+                        <span style={{ color: '#9ca3af', fontSize: '20px', fontWeight: 700 }}>#</span>
+                        <span style={{ color: '#9ca3af', fontSize: '20px' }}>Bids</span>
+                        <span style={{ fontWeight: 700, fontSize: '20px' }}>{auction.bidCount}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        <span style={{ color: '#9ca3af', fontSize: '15px' }}>Comments</span>
-                        <span style={{ fontWeight: 700, fontSize: '15px' }}>0</span>
+                        <span style={{ color: '#9ca3af', fontSize: '20px' }}>Comments</span>
+                        <span style={{ fontWeight: 700, fontSize: '20px' }}>0</span>
                     </div>
                 </div>
 
@@ -165,14 +165,19 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                         if (amt && !isNaN(Number(amt))) submitBid(Number(amt));
                     }}
                     disabled={isManualBtnDisabled && isQuickBtnDisabled}
+                    className="place-bid-btn"
                     style={{
                         backgroundColor: 'var(--color-primary)',
-                        color: '#fff',
+                        color: '#000',
                         border: 'none',
                         padding: '0 40px',
-                        borderRadius: '6px',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '8px',
                         fontWeight: 700,
-                        fontSize: '16px',
+                        fontSize: '20px',
                         cursor: 'pointer',
                         opacity: (isManualBtnDisabled && isQuickBtnDisabled) ? 0.5 : 1
                     }}
@@ -188,7 +193,7 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
         <div style={{
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
-            borderRadius: '6px',
+            borderRadius: '8px',
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
@@ -202,20 +207,20 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                 {/* Header: Time Left & High Bid in a Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '20px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
                             <Clock size={12} color={isEndingSoon && !isEnded ? '#ef4444' : 'currentColor'} />
                             {isEnded ? "Status" : "Time Left"}
                         </span>
-                        <span style={{ fontSize: '24px', fontWeight: 800, color: isEndingSoon ? '#ef4444' : 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', textShadow: isEndingSoon ? '0 0 10px rgba(239, 68, 68, 0.2)' : 'none' }}>
+                        <span style={{ fontSize: '20px', fontWeight: 800, color: isEndingSoon ? '#ef4444' : 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', textShadow: isEndingSoon ? '0 0 10px rgba(239, 68, 68, 0.2)' : 'none' }}>
                             {isEnded ? "Ended" : timeLeft}
                         </span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '20px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
                             <TrendingUp size={12} />
                             {isEnded ? "Final Bid" : "Current Bid"}
                         </span>
-                        <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+                        <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
                             ${currentPrice.toLocaleString()}
                         </span>
                     </div>
@@ -225,29 +230,29 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', gap: '24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <div style={{ backgroundColor: 'var(--bg-base)', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{auction.bidCount}</span>
+                            <div style={{ backgroundColor: 'var(--bg-base)', padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' }}>{auction.bidCount}</span>
                             </div>
-                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Bids</span>
+                            <span style={{ fontSize: '20px', color: 'var(--text-secondary)', fontWeight: 500 }}>Bids</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <div style={{ backgroundColor: 'var(--bg-base)', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>0</span>
+                            <div style={{ backgroundColor: 'var(--bg-base)', padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' }}>0</span>
                             </div>
-                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Comments</span>
+                            <span style={{ fontSize: '20px', color: 'var(--text-secondary)', fontWeight: 500 }}>Comments</span>
                         </div>
                     </div>
                 </div>
 
                 {displayError && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '13px', fontWeight: 600, padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '20px', fontWeight: 600, padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                         <AlertCircle size={16} />
                         {displayError}
                     </div>
                 )}
 
                 {amIWinning && !isEnded && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '13px', fontWeight: 700, padding: '10px', backgroundColor: 'rgba(34, 197, 94, 0.08)', borderRadius: '6px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '20px', fontWeight: 700, padding: '10px', backgroundColor: 'rgba(34, 197, 94, 0.08)', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                         <CheckCircle size={16} />
                         You are the highest bidder
                     </div>
@@ -257,10 +262,10 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
             {/* Bidding Controls */}
             {!isEnded && !isOwner && isActive && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ backgroundColor: 'var(--bg-input)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ backgroundColor: 'var(--bg-input)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                         <form onSubmit={handleManualBid} style={{ display: 'flex', gap: '8px', margin: 0, width: '100%', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', flex: 1, position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: '16px', fontWeight: 700, pointerEvents: 'none' }}>$</span>
+                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: '20px', fontWeight: 700, pointerEvents: 'none' }}>$</span>
                                 <input
                                     type="number"
                                     value={bidAmount}
@@ -273,10 +278,10 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                                         backgroundColor: 'var(--bg-base)',
                                         border: '2px solid transparent',
                                         boxShadow: '0 0 0 1px var(--border-color)',
-                                        borderRadius: '6px',
+                                        borderRadius: '8px',
                                         padding: '0 12px 0 28px',
                                         color: 'var(--text-primary)',
-                                        fontSize: '16px',
+                                        fontSize: '20px',
                                         fontWeight: 700,
                                         outline: 'none',
                                         transition: 'all 0.2s'
@@ -286,7 +291,7 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                                 />
                             </div>
                             <button
-                                type="submit"
+                                type="submit" className="place-bid-btn"
                                 disabled={isManualBtnDisabled}
                                 style={{
                                     height: '40px',
@@ -294,29 +299,26 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                                     backgroundColor: 'var(--text-primary)',
                                     color: 'var(--bg-base)',
                                     border: 'none',
-                                    borderRadius: '6px',
+                                    borderRadius: '8px',
                                     fontWeight: 700,
-                                    fontSize: '14px',
+                                    fontSize: '20px',
                                     opacity: isManualBtnDisabled ? 0.4 : 1,
                                     cursor: isManualBtnDisabled ? 'not-allowed' : 'pointer',
                                     transition: 'transform 0.1s, opacity 0.2s, box-shadow 0.2s',
                                     boxShadow: isManualBtnDisabled ? 'none' : '0 2px 8px rgba(0,0,0,0.1)'
                                 }}
-                                onMouseDown={(e) => { if(!isManualBtnDisabled) e.currentTarget.style.transform = 'scale(0.98)' }}
-                                onMouseUp={(e) => { if(!isManualBtnDisabled) e.currentTarget.style.transform = 'scale(1)' }}
-                                onMouseLeave={(e) => { if(!isManualBtnDisabled) e.currentTarget.style.transform = 'scale(1)' }}
                             >
                                 Place Bid
                             </button>
                         </form>
-                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: 500 }}>
+                        <div style={{ fontSize: '20px', color: 'var(--text-secondary)', marginTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: 500 }}>
                             <span>Minimum: ${minBid.toLocaleString()}</span>
                         </div>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }} />
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>OR</span>
+                        <span style={{ fontSize: '20px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>OR</span>
                         <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }} />
                     </div>
 
@@ -326,12 +328,12 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                         style={{
                             width: '100%',
                             padding: '12px',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            border: '1px solid rgba(59, 130, 246, 0.3)',
-                            color: '#3b82f6',
-                            borderRadius: '6px',
+                            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                            border: '1px solid rgba(249, 115, 22, 0.3)',
+                            color: 'var(--color-primary)',
+                            borderRadius: '8px',
                             fontWeight: 700,
-                            fontSize: '14px',
+                            fontSize: '20px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -340,10 +342,6 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                             cursor: isQuickBtnDisabled ? 'not-allowed' : 'pointer',
                             transition: 'all 0.2s',
                         }}
-                        onMouseEnter={(e) => { if(!isQuickBtnDisabled) e.currentTarget.style.borderColor = 'var(--text-primary)' }}
-                        onMouseLeave={(e) => { if(!isQuickBtnDisabled) e.currentTarget.style.borderColor = 'var(--border-color)' }}
-                        onMouseDown={(e) => { if(!isQuickBtnDisabled) e.currentTarget.style.transform = 'scale(0.98)' }}
-                        onMouseUp={(e) => { if(!isQuickBtnDisabled) e.currentTarget.style.transform = 'scale(1)' }}
                     >
                         <Zap size={18} fill="currentColor" />
                         {auctionStore.isBidding

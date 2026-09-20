@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import type { ItemDto } from "../../../features/item/types";
 import { styles } from "./sharedStyles";
 
-export const VehicleHeader = ({ item, auctionEndTime }: { item: ItemDto, auctionEndTime?: string }) => {
+export const VehicleHeader = ({ item }: { item: ItemDto }) => {
     const handleShare = () => {
         if (navigator.share) {
             navigator.share({
@@ -20,8 +20,7 @@ export const VehicleHeader = ({ item, auctionEndTime }: { item: ItemDto, auction
             <div style={{ flex: 1 }}>
                 <h1 style={styles.title}>{item.year} {item.make} {item.model}</h1>
                 <p style={styles.subtitle}>
-                    {item.mileage.toLocaleString()} miles • {item.location}
-                    {auctionEndTime && ` • Auction ends: ${format(new Date(auctionEndTime), "MMMM d, yyyy \"at\" h:mm a")}`}
+                    {[item.engine, item.transmission, item.drivetrain, item.fuelType, item.exteriorColor, `${item.mileage.toLocaleString()} miles`, item.location].filter(Boolean).join(", ")}
                 </p>
             </div>
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -35,7 +34,7 @@ export const VehicleHeader = ({ item, auctionEndTime }: { item: ItemDto, auction
                         backgroundColor: "var(--bg-input)", 
                         color: "var(--text-primary)", 
                         border: "1px solid var(--border-color)", 
-                        borderRadius: "6px",
+                        borderRadius: "0",
                         padding: "8px 16px", 
                         cursor: "pointer", 
                         fontSize: "14px", 
@@ -106,7 +105,7 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                             { label: 'Location', value: <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>{item.location}</span> },
                             { label: 'Seller', value: (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px' }}>
+                                    <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '10px' }}>
                                         {(item.seller?.username || "S")[0].toUpperCase()}
                                     </div>
                                     <strong style={{ color: 'var(--text-primary)' }}>{item.seller?.username || "Unknown"}</strong>

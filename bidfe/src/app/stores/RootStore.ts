@@ -1,3 +1,4 @@
+
 import { types, type Instance } from "mobx-state-tree";
 import { AuthStore, type IAuthStore } from "../../features/auth/model/auth.store";
 import { ProfileStore, type IProfileStore } from "../../features/profile/model/profile.store";
