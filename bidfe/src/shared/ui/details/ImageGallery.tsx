@@ -66,11 +66,11 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
     return (
         <div style={styles.galleryContainer}>
             {/* Main Image */}
-            <div style={{...styles.mainWrapper, flex: hasThumbnails ? "70" : "0 0 70%", width: hasThumbnails ? "100%" : "70%"} as unknown}>
+            <div style={{...styles.mainWrapper, flex: hasThumbnails ? "70" : "0 0 70%", width: hasThumbnails ? "100%" : "70%"} as React.CSSProperties}>
                 <img 
                     src={currentImage}
                     onClick={() => openLightbox(activeIndex, 'single')}
-                    style={{...styles.mainImg, cursor: "pointer" } as unknown} 
+                    style={{...styles.mainImg, cursor: "pointer" } as React.CSSProperties} 
                     alt={item.model} 
                     
                     onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found"; }} 
