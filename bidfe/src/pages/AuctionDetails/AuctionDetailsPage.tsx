@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../../shared/hooks/useStore.ts";
-import { DetailPageLayout, DetailHeader, ResponsiveGrid, ImageGallery, VehicleInfo, VehicleHeader, DetailSkeleton } from "../../shared/ui/details";
+import { DetailPageLayout, ResponsiveGrid, ImageGallery, VehicleInfo, VehicleHeader, DetailSkeleton } from "../../shared/ui/details";
 import { BiddingCard } from "../../features/auction/ui/BiddingCard.tsx";
 
 import { formatDistanceToNow } from "date-fns";

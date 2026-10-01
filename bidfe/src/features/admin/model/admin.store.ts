@@ -107,7 +107,7 @@ export const AdminStore = types.model("AdminStore", {
         }
     });
 
-    const adminUpdateAuction = flow(function* (auctionId: string, dto: { startTime?: string, endTime?: string, startPrice?: number, reservePrice?: number, isNoReserve?: boolean, itemUpdates?: any }, status?: string) {
+    const adminUpdateAuction = flow(function* (auctionId: string, dto: { startTime?: string, endTime?: string, startPrice?: number, reservePrice?: number, isNoReserve?: boolean, itemUpdates?: unknown }, status?: string) {
         try {
             yield adminApi.adminUpdateAuction(auctionId, dto);
             yield fetchAuctions(status, self.currentPageAuctions);

@@ -126,9 +126,15 @@ export const SubmitItemForm = ({
     const [currentStep, setCurrentStep] = useState(1);
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
+    const [originalPreviews, setOriginalPreviews] = useState<string[]>([]);
     const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
     const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean, targetId: string | null}>({ isOpen: false, targetId: null });
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const originalPreviewsRef = useRef<string[]>([]);
+    useEffect(() => {
+        originalPreviewsRef.current = originalPreviews;
+    }, [originalPreviews]);
 
     const [makes, setMakes] = useState<string[]>([]);
     const [models, setModels] = useState<string[]>([]);
@@ -146,6 +152,10 @@ export const SubmitItemForm = ({
         location: "",
         mileage: "" as number | "",
         description: "",
+        highlights: "",
+        knownFlaws: "",
+        recentServiceHistory: "",
+        otherItemsIncluded: "",
         engine: "",
         transmission: "",
         drivetrain: "",
@@ -171,6 +181,7 @@ export const SubmitItemForm = ({
     useEffect(() => {
         return () => {
             previewsRef.current.forEach(url => URL.revokeObjectURL(url));
+            originalPreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
         };
     }, []);
 
@@ -297,7 +308,9 @@ export const SubmitItemForm = ({
         if (e.target.files?.length) {
             const newFiles = Array.from(e.target.files);
             setFiles(prev => [...prev, ...newFiles]);
-            setPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+            const newUrls = newFiles.map(f => URL.createObjectURL(f));
+            setPreviews(prev => [...prev, ...newUrls]);
+            setOriginalPreviews(prev => [...prev, ...newUrls]);
             setErrors(prev => ({ ...prev, images: "" }));
         }
     };
@@ -310,6 +323,41 @@ export const SubmitItemForm = ({
             newPreviews.splice(index, 1);
             return newPreviews;
         });
+        setOriginalPreviews(prev => {
+            const copy = [...prev];
+            // We do NOT revoke the URL here because it might be the same URL as the preview, which was just revoked.
+            // Actually, we can revoke if it's different. But creating a leak is minor compared to breaking if they point to the same URL.
+            copy.splice(index, 1);
+            return copy;
+        });
+    };
+
+    const handleReplaceNewFile = (index: number, newFile: File, newPreviewUrl: string) => {
+        setFiles(prev => {
+            const copy = [...prev];
+            copy[index] = newFile;
+            return copy;
+        });
+        setPreviews(prev => {
+            const copy = [...prev];
+            if (copy[index] !== originalPreviewsRef.current[index]) {
+                URL.revokeObjectURL(copy[index]);
+            }
+            copy[index] = newPreviewUrl;
+            return copy;
+        });
+        // We DO NOT update originalPreviews here because it should remain the original image.
+    };
+
+    const handleReplaceExistingWithNew = (id: string, newFile: File, newPreviewUrl: string) => {
+        const existingIdx = formData.images.findIndex(img => img.id === id);
+        if (existingIdx !== -1) {
+            const originalUrl = formData.images[existingIdx].url;
+            setFormData(prev => ({ ...prev, images: prev.images.filter(img => img.id !== id) }));
+            setFiles(prev => [...prev, newFile]);
+            setPreviews(prev => [...prev, newPreviewUrl]);
+            setOriginalPreviews(prev => [...prev, originalUrl]);
+        }
     };
 
     const handleReorderNew = (dragIndex: number, hoverIndex: number) => {
@@ -320,6 +368,12 @@ export const SubmitItemForm = ({
             return copy;
         });
         setPreviews(prev => {
+            const copy = [...prev];
+            const item = copy.splice(dragIndex, 1)[0];
+            copy.splice(hoverIndex, 0, item);
+            return copy;
+        });
+        setOriginalPreviews(prev => {
             const copy = [...prev];
             const item = copy.splice(dragIndex, 1)[0];
             copy.splice(hoverIndex, 0, item);
@@ -394,10 +448,7 @@ export const SubmitItemForm = ({
                 isValid = false;
             }
         } else if (step === 7) {
-            if (!formData.description || formData.description.length < 50) {
-                newErrors.description = "Please provide at least 50 characters to describe the vehicle.";
-                isValid = false;
-            }
+            // Description is optional
         } else if (step === 8) {
             if (files.length === 0 && formData.images.length === 0) {
                 newErrors.images = "Please upload at least one photo.";
@@ -647,9 +698,29 @@ export const SubmitItemForm = ({
                 {currentStep === 7 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Vehicle History & Highlights" desc="Tell us the story of this car. Buyers love details about ownership history, recent maintenance, specific modifications, and any known flaws." />
-                            <textarea name="description" value={formData.description} onChange={handleChange} className={`modern-input modern-textarea ${errors.description ? 'input-error' : ''}`} placeholder="I purchased this car in 2020... It has a full service history... Recent work includes..." />
+                            <FormLabel title="General Description (Optional)" desc="Tell us the story of this car. Buyers love details about ownership history and how you've used the vehicle." />
+                            <textarea name="description" value={formData.description} onChange={handleChange} className={`modern-input modern-textarea ${errors.description ? 'input-error' : ''}`} placeholder="I purchased this car in 2020... I've mainly used it for weekend drives..." />
                             {errors.description && <span className="error-text"><AlertCircle size={14} />{errors.description}</span>}
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <FormLabel title="Highlights (Optional)" desc="What makes this vehicle special? List factory options, desirable features, or custom modifications." />
+                            <textarea name="highlights" value={formData.highlights as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Impeccable condition, fully loaded with premium options, upgraded exhaust..." />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <FormLabel title="Known Flaws (Optional)" desc="Be transparent. What imperfections does this vehicle have?" />
+                            <textarea name="knownFlaws" value={formData.knownFlaws as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Minor stone chips on the front bumper. Slight wear on the driver seat bolster." />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <FormLabel title="Recent Service History (Optional)" desc="List recent maintenance, oil changes, or part replacements." />
+                            <textarea name="recentServiceHistory" value={formData.recentServiceHistory as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Regular oil changes every 5k miles. Brake pads replaced 2k miles ago." />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <FormLabel title="Other Items Included (Optional)" desc="Keys, manuals, spare parts, original window sticker?" />
+                            <textarea name="otherItemsIncluded" value={formData.otherItemsIncluded as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Two sets of keys, original owner's manual, and a car cover." />
                         </div>
                     </div>
                 )}
@@ -659,10 +730,13 @@ export const SubmitItemForm = ({
                         <ImageUploader
                             existingImages={formData.images}
                             newPreviews={previews}
+                            originalPreviews={originalPreviews}
                             onAddFiles={handleFileChange}
                             onRemoveExisting={handleRemoveExisting}
                             onRemoveNew={handleRemoveNew}
                             onReorderNew={handleReorderNew}
+                            onReplaceNewFile={handleReplaceNewFile}
+                            onReplaceExistingWithNew={handleReplaceExistingWithNew}
                         />
                         {errors.images && <span className="error-text" style={{marginTop: '12px'}}><AlertCircle size={14} />{errors.images}</span>}
                     </div>

@@ -61,14 +61,16 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
 
     const currentImage = images[activeIndex]?.url;
 
+    const hasThumbnails = images.length > 1;
+
     return (
         <div style={styles.galleryContainer}>
             {/* Main Image */}
-            <div style={styles.mainWrapper}>
+            <div style={{...styles.mainWrapper, flex: hasThumbnails ? "70" : "0 0 70%", width: hasThumbnails ? "100%" : "70%"} as unknown}>
                 <img 
                     src={currentImage}
-                    onClick={() => openLightbox(activeIndex, 'grid')}
-                    style={{...styles.mainImg, cursor: "pointer" } as any} 
+                    onClick={() => openLightbox(activeIndex, 'single')}
+                    style={{...styles.mainImg, cursor: "pointer" } as unknown} 
                     alt={item.model} 
                     
                     onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found"; }} 
@@ -82,7 +84,7 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
                     {images.slice(0, 8).map((img, idx) => (
                         <div 
                             key={img.id || idx}
-                            onClick={() => { setActiveIndex(idx); if (idx === 7 && images.length > 8) openLightbox(0, 'grid'); else openLightbox(idx, 'grid'); }}
+                            onClick={() => { setActiveIndex(idx); if (idx === 7 && images.length > 8) openLightbox(0, 'grid'); else openLightbox(idx, 'single'); }}
                             style={{
                                 ...styles.thumbWrapper,
                                 border: idx === activeIndex ? "2px solid var(--text-primary)" : "none", 
@@ -165,11 +167,11 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
                                 <div 
                                     key={img.id || idx} 
                                     onClick={() => { setLightboxIndex(idx); setViewMode('single'); }}
-                                    style={{ width: "100%", aspectRatio: "3/2", borderRadius: "8px", overflow: "hidden", cursor: "pointer", backgroundColor: "#111", border: "1px solid rgba(255,255,255,0.05)", transition: "transform 0.2s, border-color 0.2s" }}
-                                    onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}
+                                    style={{ width: "100%", position: "relative", paddingTop: "66.66%", borderRadius: "0", overflow: "hidden", cursor: "pointer", backgroundColor: "#111", border: "1px solid rgba(255,255,255,0.05)", transition: "border-color 0.2s" }}
+                                    onMouseOver={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}
                                 >
-                                    <img src={img.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    <img src={img.url} alt={`Gallery image ${idx + 1}`} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                                 </div>
                             ))}
                         </div>
@@ -184,7 +186,7 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
                                 <img 
                                     src={images[lightboxIndex]?.url} 
                                     alt="Lightbox" 
-                                    style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", cursor: "pointer", zIndex: 5, position: "relative" }} 
+                                    style={{ width: "100%", height: "100%", objectFit: "contain", cursor: "pointer", zIndex: 5, position: "relative" }} 
                                     onClick={(e) => { e.stopPropagation(); nextImage(); }}
                                 />
                                 
@@ -200,12 +202,13 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
                                         <img 
                                             key={img.id || idx}
                                             src={img.url}
+                                            alt={`Thumbnail ${idx + 1}`}
                                             onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
                                             style={{ 
                                                 height: "64px", 
                                                 width: "96px", 
                                                 objectFit: "cover", 
-                                                borderRadius: "6px", 
+                                                borderRadius: "0",
                                                 cursor: "pointer", 
                                                 border: idx === lightboxIndex ? "2px solid white" : "2px solid transparent",
                                                 opacity: idx === lightboxIndex ? 1 : 0.4,

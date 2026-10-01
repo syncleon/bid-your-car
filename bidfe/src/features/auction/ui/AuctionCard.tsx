@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { BaseCard } from "../../../widgets/BaseCard/BaseCard";
-import styles from "../../../widgets/BaseCard/styles";
 import type { AuctionDto } from "../types";
 import "./AuctionCard.css";
 

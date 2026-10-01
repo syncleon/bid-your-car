@@ -24,7 +24,7 @@ export const AdminDashboardPage = observer(() => {
         adminStore.fetchAuctions("PENDING_APPROVAL", 0);
     }, [adminStore]);
 
-    const handleEditClick = (auction: any) => {
+    const handleEditClick = (auction: unknown) => {
         setEditingAuctionId(auction.id);
         setEditForm({
             startTime: auction.startTime ? new Date(auction.startTime).toISOString().slice(0, 16) : "",

@@ -32,14 +32,14 @@ export const ImageUploader = ({
     const [isDragging, setIsDragging] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-    const [savedCropStates, setSavedCropStates] = useState<Record<string, { crop: { x: number, y: number }, zoom: number, rotation: number }>>({});
+    // const [savedCropStates, setSavedCropStates] = useState<Record<string, { crop: { x: number, y: number }, zoom: number, rotation: number }>>({});
     const [cropModalOpen, setCropModalOpen] = useState(false);
     const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
     const [cropContext, setCropContext] = useState<{type: 'new', index: number} | {type: 'existing', id: string} | null>(null);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [rotation, setRotation] = useState(0);
-    const [flip, setFlip] = useState({ horizontal: false, vertical: false });
+    
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
     const prevPreviewsLength = useRef(newPreviews.length);
@@ -49,10 +49,11 @@ export const ImageUploader = ({
             openCropModal('new', 0, originalPreviews ? originalPreviews[0] : newPreviews[0]);
         }
         prevPreviewsLength.current = newPreviews.length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [newPreviews.length, existingImages.length]);
 
 
-    const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    const onCropComplete = useCallback((_croppedArea: unknown, croppedAreaPixels: unknown) => {
         setCroppedAreaPixels(croppedAreaPixels);
     }, []);
 
@@ -89,14 +90,14 @@ export const ImageUploader = ({
             return;
         }
 
-        setSavedCropStates(prev => ({
-            ...prev,
-            [cropImageUrl]: { crop, zoom, rotation }
-        }));
 
         try {
             const croppedFile = await getCroppedImg(cropImageUrl, croppedAreaPixels, rotation);
-            if (!croppedFile) throw new Error("Crop failed");
+            if (!croppedFile) {
+                console.error("Crop failed");
+                closeCropModal();
+                return;
+            }
             
             const newPreviewUrl = URL.createObjectURL(croppedFile);
 
@@ -368,8 +369,8 @@ const styles = {
 
 const XIcon = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>);
 
-const FlipHorizontalIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h3"></path><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"></path><line x1="12" y1="20" x2="12" y2="22"></line><line x1="12" y1="14" x2="12" y2="16"></line><line x1="12" y1="8" x2="12" y2="10"></line><line x1="12" y1="2" x2="12" y2="4"></line></svg>);
-const FlipVerticalIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"></path><path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"></path><line x1="4" y1="12" x2="2" y2="12"></line><line x1="10" y1="12" x2="8" y2="12"></line><line x1="16" y1="12" x2="14" y2="12"></line><line x1="22" y1="12" x2="20" y2="12"></line></svg>);
+
+
 
 const ResetIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>);
 const RotateIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>);

@@ -116,13 +116,7 @@ const CheckIcon = () => (
 );
 
 
-const _FilterIcons = {
-    Make: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H9.3a2 2 0 0 0-1.6.8L5 11l-5.16.86a1 1 0 0 0-.84.99V16h3m10 0a3 3 0 1 1-6 0m10 0a3 3 0 1 1-6 0M9 16a3 3 0 1 1-6 0"/></svg>,
-    Year: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-    Transmission: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v20"/><path d="M12 12h8.5"/><path d="M12 12 5.5 5.5"/></svg>,
-    Condition: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-    Sort: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
-};
+
 
 const SkeletonCard = () => (
     <div className="skeleton-card">
@@ -218,26 +212,12 @@ export const AuctionListTemplate = observer(({
         if (status === 'SOLD') {
             auctionStore.loadRecentlySold(0, pageSize);
         } else {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            auctionStore.loadAuctions(undefined, status as any, 0, pageSize);
+             
+            auctionStore.loadAuctions(undefined, status as unknown, 0, pageSize);
         }
     }, [status, pageSize, defaultSort, auctionStore]);
 
-    const _sortOptions = useMemo(() => {
-        const options = [
-            { label: "Price: Low to High", value: "price_low" },
-            { label: "Price: High to Low", value: "price_high" }
-        ];
 
-        if (status === 'SOLD') {
-            options.unshift({ label: "Recently Sold", value: "newly_sold" });
-        } else {
-            options.unshift({ label: "Ending Soon", value: "ending_soon" });
-            options.push({ label: "Newly Listed", value: "newly_listed" });
-            options.push({ label: "Lowest Mileage", value: "lowest_mileage" });
-        }
-        return options;
-    }, [status]);
 
     const filteredAuctions = useMemo(() => {
         let result = [...auctionsFromStore];
@@ -257,7 +237,7 @@ export const AuctionListTemplate = observer(({
         result = result.filter(a => !!a);
 
         result.sort((a, b) => {
-            let diff = 0;
+            let diff;
             switch (sortBy) {
                 case "newly_sold":
                     diff = new Date(b?.endTime || 0).getTime() - new Date(a?.endTime || 0).getTime();
@@ -310,8 +290,8 @@ export const AuctionListTemplate = observer(({
             if (status === 'SOLD') {
                 auctionStore.loadRecentlySold(0, pageSize);
             } else {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                auctionStore.loadAuctions(undefined, status as any, 0, pageSize);
+                 
+                auctionStore.loadAuctions(undefined, status as unknown, 0, pageSize);
             }
         }, 15000);
 
@@ -347,8 +327,8 @@ export const AuctionListTemplate = observer(({
                         <div className="controls-bar">
                             <FilterSelect label="Make" value={filterMake} options={makes} onChange={v => { setFilterMake(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                             <FilterSelect label="Year" value={filterYear} options={years} onChange={v => { setFilterYear(v); setVisibleCount(ITEMS_PER_BATCH); }} />
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            <FilterSelect label="Transmission" value={filterTransmission} options={transmissions as any} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
+                            { }
+                            <FilterSelect label="Transmission" value={filterTransmission} options={transmissions as unknown} onChange={v => { setFilterTransmission(v); setVisibleCount(ITEMS_PER_BATCH); }} />
                             <FilterSelect 
                                 label="Condition" 
                                 value={filterCondition === "All" ? "All" : filterCondition.replace('_', ' ')} 

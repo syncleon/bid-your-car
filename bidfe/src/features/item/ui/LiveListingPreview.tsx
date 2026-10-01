@@ -131,7 +131,7 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                 .demo-card-image-wrapper {
                     position: relative;
                     width: 100%;
-                    aspect-ratio: 16/9;
+                    aspect-ratio: 3/2;
                     overflow: hidden;
                 }
                 .demo-card-image {

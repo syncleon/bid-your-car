@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../../shared/hooks/useStore.ts";
-import { DetailPageLayout, DetailSkeleton, VehicleHeader, ResponsiveGrid, DetailHeader, ImageGallery, VehicleInfo } from "../../shared/ui/details";
+import { DetailPageLayout, DetailSkeleton, VehicleHeader, ResponsiveGrid, ImageGallery, VehicleInfo } from "../../shared/ui/details";
 import { CreateAuctionModal } from "../../features/auction/ui/CreateAuctionModal.tsx";
 import { InlineItemEditor } from "../../features/item/ui/InlineItemEditor";
 import type { CreateAuctionDto } from "../../features/auction/types.ts";
@@ -69,7 +69,7 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], i
     );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const ItemDetailsPage = observer(() => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -228,21 +228,30 @@ export const ItemDetailsPage = observer(() => {
                                 />
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '70fr 30fr', gap: '24px' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '70fr 30fr', gap: '12px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+                                    
+                                    {/* Action Card matching BiddingCard layout */}
                                     <div style={{
-                                        backgroundColor: 'var(--bg-card)',
-                                        border: '1px solid var(--border-color)',
-                                        padding: '24px',
-                                        borderRadius: '6px',
                                         display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '20px',
-                                        marginBottom: '8px'
+                                        alignItems: 'stretch',
+                                        justifyContent: 'space-between',
+                                        width: '100%',
+                                        gap: '12px',
+                                        marginBottom: '12px'
                                     }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
-                                            {/* Left Side: Status & Details */}
-                                            <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {/* Left Side: Status & Details */}
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '32px',
+                                            backgroundColor: 'var(--bg-card)',
+                                            border: '1px solid var(--border-color)',
+                                            padding: '16px 24px',
+                                            borderRadius: '8px',
+                                            flex: 1
+                                        }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
                                                 <div>
                                                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, marginBottom: '4px' }}>
                                                         Listing Status
@@ -279,8 +288,9 @@ export const ItemDetailsPage = observer(() => {
                                                     </div>
                                                 )}
                                             </div>
+                                        </div>
 
-                                            {/* Right Side: Actions */}
+                                        {/* Right Side: Actions */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '240px' }}>
                                                 {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
                                                     <button onClick={() => {
@@ -336,7 +346,6 @@ export const ItemDetailsPage = observer(() => {
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
                                         
                                         {itemStore.error && <div style={{...pageStyles.errorBox, margin: 0}}>{itemStore.error}</div>}
                                     </div>

@@ -34,7 +34,7 @@ export const adminApi = {
     forceCancelAuction: (auctionId: string) => {
         return http<{ message: string }>(`/auctions/admin/${auctionId}/cancel`, { method: "DELETE" });
     },
-    adminUpdateAuction: (auctionId: string, dto: { startTime?: string, endTime?: string, startPrice?: number, reservePrice?: number, isNoReserve?: boolean, itemUpdates?: any }) => {
+    adminUpdateAuction: (auctionId: string, dto: { startTime?: string, endTime?: string, startPrice?: number, reservePrice?: number, isNoReserve?: boolean, itemUpdates?: unknown }) => {
         return http<AuctionDto>(`/auctions/admin/${auctionId}`, {
             method: "PATCH",
             body: JSON.stringify(dto)

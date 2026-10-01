@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+
 import type { ItemDto } from "../../../features/item/types";
 import { styles } from "./sharedStyles";
 
@@ -72,7 +72,7 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                 </div>
             )}
 
-            <div style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "48px" }}>
+            <div style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "24px" }}>
                 
                 <div style={{ 
                     display: "flex", 
@@ -86,6 +86,14 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                         <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)" }}>
                             <h2 style={{ fontSize: "16px", fontWeight: 700, margin: "0 0 8px 0", color: "var(--text-primary)" }}>Seller Notes</h2>
                             <div className="info-body" style={{ fontSize: "14px", color: "var(--text-secondary)" }}>{item.description}</div>
+                        </div>
+                    )}
+
+                    {/* Known Flaws */}
+                    {item.knownFlaws && (
+                        <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(239, 68, 68, 0.05)" }}>
+                            <h2 style={{ fontSize: "16px", fontWeight: 700, margin: "0 0 8px 0", color: "#ef4444" }}>Known Flaws</h2>
+                            <div className="info-body" style={{ fontSize: "14px", color: "var(--text-secondary)" }}>{item.knownFlaws}</div>
                         </div>
                     )}
 
@@ -145,14 +153,6 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                     <section className="info-section">
                         <h2 className="info-heading">Highlights</h2>
                         <div className="info-body">{item.highlights}</div>
-                    </section>
-                )}
-
-                {/* Known Flaws */}
-                {item.knownFlaws && (
-                    <section className="info-section">
-                        <h2 className="info-heading" style={{ color: "#ef4444" }}>Known Flaws</h2>
-                        <div className="info-body">{item.knownFlaws}</div>
                     </section>
                 )}
 

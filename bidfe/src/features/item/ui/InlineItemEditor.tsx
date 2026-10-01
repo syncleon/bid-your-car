@@ -36,35 +36,15 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
     const [newFiles, setNewFiles] = useState<{ file: File; category: ImageCategory }[]>([]);
     const [newPreviews, setNewPreviews] = useState<string[]>([]);
     const [originalPreviews, setOriginalPreviews] = useState<string[]>([]);
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    // const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-        setDraggedIndex(index);
-        e.dataTransfer.effectAllowed = 'move';
-    };
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-        e.preventDefault();
-        if (draggedIndex === null || draggedIndex === index) return;
-        
-        const newImages = [...existingImages];
-        const draggedImage = newImages[draggedIndex];
-        newImages.splice(draggedIndex, 1);
-        newImages.splice(index, 0, draggedImage);
-        
-        setExistingImages(newImages);
-        setDraggedIndex(index); // update dragged index to new position so we can keep dragging
-    };
-
-    const handleDragEnd = () => {
-        setDraggedIndex(null);
-    };
 
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => {
             let parsed = value;
-            if (['year', 'mileage'].includes(name)) parsed = value ? Number(value) as any : '';
+            if (['year', 'mileage'].includes(name)) parsed = value ? Number(value) as unknown : '';
             if (name === 'vin') parsed = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             return { ...prev, [name]: parsed };
         });

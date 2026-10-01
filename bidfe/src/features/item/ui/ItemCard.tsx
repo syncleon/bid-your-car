@@ -20,7 +20,7 @@ export const ItemCard = ({ item }: ItemCardProps) => {
     const isPending = item.status === 'PENDING_AUCTION';
     const isScheduled = item.status === 'LISTED_AUCTION';
     const isUnsold = item.status === 'UNSOLD';
-    const isDraft = item.status === 'DRAFT';
+    // const isDraft = item.status === 'DRAFT';
     const isRejected = item.status === 'REJECTED';
         let statusText = "Draft";
     let statusColor = "#94a3b8";
