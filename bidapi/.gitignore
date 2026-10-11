@@ -6,6 +6,7 @@
 .env.production.local
 *.pem
 *.key
+deploy-prod.sh
 
 # --- OS & General ---
 .DS_Store

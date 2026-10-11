@@ -16,10 +16,10 @@ export const VehicleHeader = ({ item }: { item: ItemDto }) => {
     };
 
     return (
-        <div style={styles.headerRow}>
-            <div style={{ flex: 1 }}>
-                <h1 style={styles.title}>{item.year} {item.make} {item.model}</h1>
-                <p style={styles.subtitle}>
+        <div style={{ ...styles.headerRow, alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, paddingRight: '16px' }}>
+                <h1 style={{ ...styles.title, fontSize: '36px', marginBottom: '8px' }}>{item.year} {item.make} {item.model}</h1>
+                <p style={{ ...styles.subtitle, fontSize: '16px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
                     {[item.engine, item.transmission, item.drivetrain, item.fuelType, item.exteriorColor, `${item.mileage.toLocaleString()} miles`, item.location].filter(Boolean).join(", ")}
                 </p>
             </div>
@@ -64,11 +64,9 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                 </div>
             )}
 
-            {(item.hasServiceHistory || item.isModified || showNoReserve) && (
+            {item.isModified && (
                 <div style={{ display: "flex", gap: "10px", marginTop: "16px", flexWrap: "wrap" }}>
-                    {showNoReserve && <span className="vehicle-tag tag-no-reserve">No Reserve</span>}
-                    {item.hasServiceHistory && <span className="vehicle-tag tag-service-history">Service History</span>}
-                    {item.isModified && <span className="vehicle-tag tag-modified">Modified</span>}
+                    <span className="vehicle-tag tag-modified">Modified</span>
                 </div>
             )}
 
@@ -98,10 +96,7 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                     )}
 
                     {/* Spec Table */}
-                    <div style={{ 
-                        display: "grid", 
-                        gridTemplateColumns: "1fr 1fr", 
-                    }}>
+                    <div className="vehicle-spec-table">
                     {/* Left Column wrapper */}
                     <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-color)' }}>
                         {[
@@ -119,7 +114,8 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                                     <strong style={{ color: 'var(--text-primary)' }}>{item.seller?.username || "Unknown"}</strong>
                                     <button style={{ backgroundColor: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '2px 8px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>Contact</button>
                                 </div>
-                            ) }
+                            ) },
+                            { label: 'Seller Type', value: item.sellerType || "Private Party" }
                         ].map((row, i, arr) => (
                             <div key={row.label} style={{ display: 'flex', padding: '10px 16px', borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
                                 <div style={{ width: '120px', fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0, fontSize: '14px' }}>{row.label}</div>
@@ -137,7 +133,8 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                             { label: 'Body Style', value: item.bodyStyle },
                             { label: 'Exterior Color', value: item.exteriorColor },
                             { label: 'Interior Color', value: item.interiorColor },
-                            { label: 'Seller Type', value: item.sellerType || "Private Party" }
+                            { label: 'Service History', value: item.hasServiceHistory ? "Included" : "N/A" },
+                            { label: 'Auction Type', value: showNoReserve ? "No Reserve" : "Reserve" }
                         ].map((row, i, arr) => (
                             <div key={row.label} style={{ display: 'flex', padding: '10px 16px', borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
                                 <div style={{ width: '120px', fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0, fontSize: '14px' }}>{row.label}</div>

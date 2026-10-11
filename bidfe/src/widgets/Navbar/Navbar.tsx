@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useStoreContext } from "../../app/providers/useStoreContext";
 import { observer } from "mobx-react-lite";
@@ -179,7 +180,8 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                 </button>
             </div>
 
-            <div className={`mobile-menu ${isMobileMenuOpen ? 'is-open' : ''}`}>
+            {createPortal(
+                <div className={`mobile-menu ${isMobileMenuOpen ? 'is-open' : ''}`}>
                 <div className="mobile-menu__header">
                     <span className="navbar__logo">BidYourCar</span>
                     <button
@@ -195,14 +197,35 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                 </div>
 
                 <div className="mobile-menu__content">
-                    <Link to="/past-auctions" className="mobile-link">Past Auctions</Link>
+                    <div style={{ marginBottom: '16px' }}>
+                        <input
+                            className="navbar__search-input"
+                            style={{ width: '100%', height: '44px', fontSize: '16px', padding: '0 40px 0 16px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-pill)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+                            type="search"
+                            name="q"
+                            autoComplete="off"
+                            placeholder="Search cars..."
+                            value={inputValue}
+                            onChange={handleSearchChange}
+                            onKeyDown={(e) => {
+                                handleKeyDown(e);
+                                if (e.key === 'Enter') setIsMobileMenuOpen(false);
+                            }}
+                        />
+                    </div>
+                    <Link to="/" className="mobile-link" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+                    <Link to="/past-auctions" className="mobile-link" onClick={() => setIsMobileMenuOpen(false)}>Past Auctions</Link>
                     <Link
                         to="/sell-car"
                         className="mobile-link mobile-cta"
                         onClick={() => setIsMobileMenuOpen(false)}
                     >
-                        Sell a Car
+                        Add car
                     </Link>
+
+                    {user?.roles?.some((r: any) => r.name === 'ADMIN') && (
+                        <Link to="/admin" className="mobile-link" onClick={() => setIsMobileMenuOpen(false)}>Admin</Link>
+                    )}
 
                     <div className="mobile-divider"></div>
 
@@ -221,6 +244,9 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                     )}
                 </div>
             </div>
+        ,
+                document.body
+            )}
         </header>
     );
 });

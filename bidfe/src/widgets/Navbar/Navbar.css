@@ -101,18 +101,18 @@ body {
 
 .navbar__login-btn {
     text-decoration: none;
-    color: var(--btn-primary-text);
-    background-color: var(--btn-primary-bg);
+    color: var(--text-primary);
+    background-color: var(--bg-card);
     font-size: 16px;
     font-weight: 700;
     padding: 0 24px;
-    height: 44px;
-    border-radius: 4px;
-    border: none;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-color);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, opacity 0.2s ease;
 }
 
 .navbar__login-btn:hover {
@@ -374,4 +374,7 @@ body {
 }
 .mobile-link.mobile-cta:active {
     transform: translateY(1px);
+}
+.navbar__link, .navbar__cta, .navbar__login-btn {
+    white-space: nowrap;
 }

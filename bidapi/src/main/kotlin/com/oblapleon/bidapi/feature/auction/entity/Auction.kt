@@ -101,8 +101,9 @@ class Auction(
             throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
         }
 
-        if (bidCount == 0) {
-            return listOf(recordBidInternal(bidder, startPrice, maxAmount, now))
+        if (bidCount == 0 || winningBid == null) {
+            val startingAmount = if (winningBid == null && bidCount > 0) minRequired else startPrice
+            return listOf(recordBidInternal(bidder, startingAmount, maxAmount, now))
         }
 
         if (maxAmount <= currentMax) {

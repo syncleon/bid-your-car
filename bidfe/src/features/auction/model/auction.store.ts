@@ -216,11 +216,13 @@ export class AuctionStore {
         }
     };
 
-    private refreshAuctionStateLocally = async (auctionId: string, newBid: BidDto) => {
+    private refreshAuctionStateLocally = async (auctionId: string, newBid?: BidDto | null) => {
         try {
             const updatedAuction = await getAuctionById(auctionId);
             runInAction(() => {
-                this.bidHistory.unshift(newBid);
+                if (newBid) {
+                    this.bidHistory.unshift(newBid);
+                }
                 this.selectedAuction = updatedAuction;
 
                 const index = this.auctions.findIndex(a => a.id === auctionId);

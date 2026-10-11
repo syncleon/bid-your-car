@@ -559,7 +559,7 @@ export const SubmitItemForm = ({
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <FormLabel title="17-Digit Vehicle Identification Number (VIN)" desc="Usually found on the driver's side dashboard or inside the driver's side door jamb. This helps us pull exact factory specifications." />
                                 <div style={{ position: 'relative', width: '100%' }}>
-                                    <input name="vin" value={formData.vin} onChange={handleChange} maxLength={17} className={`modern-input standard-input ${errors.vin ? 'input-error' : ''} ${vinCheckPassed ? 'vin-input-success' : ''}`} style={{ fontSize: '20px', letterSpacing: '2px', textTransform: 'uppercase', width: '100%', paddingRight: '48px'}} placeholder="Enter 17-digit VIN (e.g. WBA00...)" disabled={isEditMode || isCheckingVin} autoFocus />
+                                    <input name="vin" value={formData.vin} onChange={handleChange} maxLength={17} className={`modern-input standard-input ${errors.vin ? 'input-error' : ''} ${vinCheckPassed ? 'vin-input-success' : ''}`} style={{ fontSize: '20px', letterSpacing: '2px', textTransform: 'uppercase', width: '100%', paddingLeft: '16px', paddingRight: '48px'}} placeholder="Enter 17-digit VIN (e.g. WBA00...)" disabled={isEditMode || isCheckingVin} autoFocus />
                                     {isCheckingVin && (
                                         <div className="vin-success-icon" style={{ opacity: 0.5 }}>
                                             <div className="spinner-border spinner-border-sm" role="status"></div>

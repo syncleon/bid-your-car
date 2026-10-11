@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "/api/v1";
 
 export class ApiError extends Error {
     status: number;
@@ -35,7 +35,13 @@ async function _http<T>(
         headers.set("Content-Type", "application/json");
     }
 
-    const controller = new AbortController();
+    
+    const token = localStorage.getItem('auth_token');
+    if (token && !headers.has("Authorization")) {
+        headers.set("Authorization", `Bearer ${token}`);
+    }
+
+const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
@@ -53,12 +59,17 @@ async function _http<T>(
 
         let body: unknown = null;
 
-        if (response.status !== 204) {
+        // Handle empty responses appropriately
+        const text = await response.text();
+        const isEmpty = !text || text.trim() === "";
+
+        if (!isEmpty && response.status !== 204) {
             if (contentType?.includes("text/html")) {
-                const text = await response.text();
+                console.error(`[API HTML ERROR] URL: ${url} | STATUS: ${response.status}`);
+                console.error(`[API HTML ERROR PAYLOAD]:\n`, text);
                 throw new ApiError(response.status, `Server returned HTML (Proxy/Gateway Error)`, text);
             }
-            body = isJson ? await response.json() : await response.text();
+            body = isJson ? JSON.parse(text) : text;
         }
 
         if (!response.ok) {

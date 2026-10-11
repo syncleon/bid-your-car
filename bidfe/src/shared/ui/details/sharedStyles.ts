@@ -6,7 +6,7 @@ export const minStyles = {
 
 export const styles = {
     container: { width: "92%", margin: "0 auto", padding: "16px 0", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "var(--text-primary)", transition: "color 0.3s ease" },
-    headerRow: { marginBottom: 0, display: "flex", justifyContent: "space-between" },
+    headerRow: { marginBottom: 0, display: "flex", justifyContent: "space-between", alignItems: "center" },
     grid: { display: "grid", alignItems: "start" },
 
     galleryContainer: { display: "flex", gap: "4px", margin: 0, padding: 0, alignItems: "stretch" },

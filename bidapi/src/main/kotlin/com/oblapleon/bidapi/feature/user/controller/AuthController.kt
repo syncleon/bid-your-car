@@ -49,7 +49,7 @@ class AuthController(
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-            .body(mapOf("message" to "Login successful"))
+            .body(mapOf("message" to "Login successful", "token" to response.token))
     }
 
     /**

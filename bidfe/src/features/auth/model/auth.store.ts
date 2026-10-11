@@ -88,7 +88,10 @@ export const AuthStore = types.model("AuthStore", {
             self.isDeletedAccount = false;
 
             try {
-                yield apiLogin(data);
+                const loginResp = yield apiLogin(data);
+                if (loginResp && loginResp.token) {
+                    localStorage.setItem("auth_token", loginResp.token);
+                }
                 yield checkAuth();
                 closeModal();
             } catch (error: unknown) {
@@ -107,6 +110,7 @@ export const AuthStore = types.model("AuthStore", {
         const logout = flow(function* () {
             try {
                 yield apiLogout();
+                localStorage.removeItem("auth_token");
             } catch(e) {
                 console.error("Logout failed on server", e);
             } finally {

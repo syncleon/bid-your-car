@@ -1,5 +1,5 @@
 .auction-container {
-    padding: 0 var(--layout-padding, 32px) 40px;
+    padding: 0 var(--layout-padding, 32px) 120px;
     width: 92%;
     max-width: var(--layout-max-width, 1400px);
     margin: 0 auto;
@@ -431,7 +431,7 @@
 
 @media (max-width: 768px) {
     .auction-container {
-        padding: 0 12px 32px;
+        padding: 0 12px 120px;
     }
 
     .auction-header {

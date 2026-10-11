@@ -18,7 +18,7 @@ interface UserRepository : BaseRepository<User, Long> {
     @EntityGraph(attributePaths = ["roles"])
     fun findByUsername(username: String): Optional<User>
 
-    @Query(value = "SELECT CASE WHEN deleted_at IS NOT NULL THEN true ELSE false END FROM users WHERE username = :username", nativeQuery = true)
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM users WHERE username = :username AND deleted_at IS NOT NULL)", nativeQuery = true)
     fun isAccountDeleted(@Param("username") username: String): Boolean
 
     @Query(value = "SELECT password FROM users WHERE username = :username", nativeQuery = true)

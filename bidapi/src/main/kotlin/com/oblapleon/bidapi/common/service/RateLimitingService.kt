@@ -15,7 +15,9 @@ import jakarta.annotation.PreDestroy
 @Service
 class RateLimitingService(
     @Value("\${spring.data.redis.host:localhost}") private val redisHost: String,
-    @Value("\${spring.data.redis.port:6379}") private val redisPort: Int
+    @Value("\${spring.data.redis.port:6379}") private val redisPort: Int,
+    @Value("\${spring.data.redis.password:}") private val redisPassword: String,
+    @Value("\${spring.data.redis.ssl.enabled:false}") private val redisSsl: Boolean
 ) {
     private val limit = Bandwidth.builder().capacity(20).refillGreedy(2, Duration.ofSeconds(1)).build()
     private val configuration = BucketConfiguration.builder().addLimit(limit).build()
@@ -28,8 +30,14 @@ class RateLimitingService(
      */
     @PostConstruct
     fun init() {
-        val uri = RedisURI.builder().withHost(redisHost).withPort(redisPort).build()
-        redisClient = RedisClient.create(uri)
+        val uriBuilder = RedisURI.builder().withHost(redisHost).withPort(redisPort)
+        if (redisPassword.isNotEmpty()) {
+            uriBuilder.withPassword(redisPassword.toCharArray())
+        }
+        if (redisSsl) {
+            uriBuilder.withSsl(true)
+        }
+        redisClient = RedisClient.create(uriBuilder.build())
         proxyManager = LettuceBasedProxyManager.builderFor(redisClient).build()
     }
 

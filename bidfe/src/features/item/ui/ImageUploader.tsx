@@ -61,19 +61,9 @@ export const ImageUploader = ({
         setCropContext(type === 'new' ? { type: 'new', index: identifier as number } : { type: 'existing', id: identifier as string });
         setCropImageUrl(imageUrl);
         
-        setSavedCropStates(prev => {
-            const saved = prev[imageUrl];
-            if (saved) {
-                setCrop(saved.crop);
-                setZoom(saved.zoom);
-                setRotation(saved.rotation);
-            } else {
-                setCrop({ x: 0, y: 0 });
-                setZoom(1);
-                setRotation(0);
-            }
-            return prev;
-        });
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
 
         setCropModalOpen(true);
     };

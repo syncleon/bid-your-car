@@ -60,3 +60,32 @@
     background: #fff;
     flex-shrink: 0;
 }
+
+.auction-card-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.auction-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+    overflow: hidden;
+}
+
+.auction-feature-item svg {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

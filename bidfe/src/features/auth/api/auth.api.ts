@@ -12,7 +12,7 @@ export const register = (dto: RegisterRequestDto) =>
     });
 
 export const login = (dto: LoginRequestDto) =>
-    http<{ message: string }>("auth/login", {
+    http<{ message: string; token?: string }>("auth/login", {
         method: "POST",
         body: JSON.stringify(dto),
     });

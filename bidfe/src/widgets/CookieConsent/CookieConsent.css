@@ -1,8 +1,8 @@
 .cookie-consent-overlay {
     position: fixed;
-    bottom: 24px;
-    left: 24px;
-    right: 24px;
+    bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 9999;
     display: flex;
     justify-content: center;
@@ -11,12 +11,10 @@
 }
 
 .cookie-consent-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border-radius: 6px;
-    padding: 20px 24px;
-    max-width: 800px;
+    background: var(--bg-dropdown);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    padding: 16px 24px;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -28,19 +26,22 @@
 
 .cookie-consent-text {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .cookie-consent-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+    white-space: nowrap;
 }
 
 .cookie-consent-desc {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
     margin: 0;
     line-height: 1.5;
@@ -50,6 +51,7 @@
     color: var(--accent-color);
     text-decoration: none;
     font-weight: 600;
+    margin-left: 8px;
 }
 
 .cookie-policy-link:hover {
@@ -63,10 +65,10 @@
 }
 
 .cookie-btn {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 6px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
@@ -83,7 +85,7 @@
 
 @keyframes slideUp {
     from {
-        transform: translateY(100px);
+        transform: translateY(100%);
         opacity: 0;
     }
     to {
@@ -93,28 +95,26 @@
 }
 
 @media (max-width: 768px) {
-    .cookie-consent-overlay {
-        bottom: 0;
-        left: 0;
-        right: 0;
-    }
-    
     .cookie-consent-card {
         flex-direction: column;
-        border-radius: 16px 16px 0 0;
-        border-bottom: none;
-        border-left: none;
-        border-right: none;
-        padding: 24px 20px;
+        padding: 12px 16px;
         align-items: stretch;
+        gap: 12px;
     }
-
-    .cookie-consent-actions {
+    .cookie-consent-text {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
-
-    .cookie-btn {
-        width: 100%;
-        text-align: center;
+    .cookie-consent-title {
+        font-size: 0.95rem;
+    }
+    .cookie-consent-desc {
+        font-size: 0.85rem;
     }
 }
+    .cookie-consent-text {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }

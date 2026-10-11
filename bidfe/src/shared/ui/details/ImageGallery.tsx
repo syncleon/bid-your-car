@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { ItemDto } from "../../../features/item/types";
 import { styles } from "./sharedStyles";
@@ -6,6 +6,7 @@ import { styles } from "./sharedStyles";
 interface GalleryProps {
     item: ItemDto;
     statusLabel?: React.ReactNode;
+    bottomLeftBadge?: React.ReactNode;
 }
 
 
@@ -13,7 +14,7 @@ const XIcon = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none"
 const ChevronLeftIcon = () => (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>);
 const ChevronRightIcon = () => (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>);
 
-export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
+export const ImageGallery = ({ item, statusLabel, bottomLeftBadge }: GalleryProps) => {
     const images = item.images || [];
     const [activeIndex, setActiveIndex] = useState(() => {
         const mainIdx = images.findIndex(img => img.category === "MAIN");
@@ -23,6 +24,37 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'single' | 'grid'>('single');
     const [lightboxIndex, setLightboxIndex] = useState(0);
+
+    const sliderRef = useRef<HTMLDivElement>(null);
+    
+    const handlePrev = () => {
+        setActiveIndex(prev => Math.max(0, prev - 1));
+    };
+    
+    const handleNext = () => {
+        setActiveIndex(prev => Math.min(images.length - 1, prev + 1));
+    };
+
+    // Auto-scroll the thumbnail bar when activeIndex changes
+    useEffect(() => {
+        if (sliderRef.current && sliderRef.current.children[activeIndex]) {
+            const activeChild = sliderRef.current.children[activeIndex] as HTMLElement;
+            const parent = sliderRef.current;
+            const parentLeft = parent.scrollLeft;
+            const parentRight = parentLeft + parent.clientWidth;
+            
+            // Calculate child position relative to the scroll container's content
+            // offsetLeft is relative to the offsetParent. Assuming the thumbnails are 
+            // the direct children and the container is positioned.
+            const childLeft = activeChild.offsetLeft; 
+            const childRight = childLeft + activeChild.offsetWidth;
+
+            if (childLeft < parentLeft || childRight > parentRight) {
+                 const targetScroll = childLeft - (parent.clientWidth / 2) + (activeChild.offsetWidth / 2);
+                 parent.scrollTo({ left: targetScroll, behavior: 'smooth' });
+            }
+        }
+    }, [activeIndex]);
 
     const openLightbox = (idx: number, mode: 'single' | 'grid' = 'grid') => {
         setLightboxIndex(idx);
@@ -64,44 +96,108 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
     const hasThumbnails = images.length > 1;
 
     return (
-        <div style={styles.galleryContainer}>
-            {/* Main Image */}
-            <div style={{...styles.mainWrapper, flex: hasThumbnails ? "70" : "0 0 70%", width: hasThumbnails ? "100%" : "70%"} as React.CSSProperties}>
+        <div style={{ display: 'contents' }}>
+            {/* Main Image Container */}
+            <div className="image-gallery-hero" style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: 'var(--bg-input)', borderRadius: '12px', overflow: 'hidden', group: 'main-gallery' }}>
                 <img 
                     src={currentImage}
-                    onClick={() => openLightbox(activeIndex, 'single')}
-                    style={{...styles.mainImg, cursor: "pointer" } as React.CSSProperties} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }} 
                     alt={item.model} 
-                    
                     onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found"; }} 
                 />
-                {statusLabel && <div style={styles.statusOverlay}>{statusLabel}</div>}
+                
+                {statusLabel && (
+                    <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 10 }}>
+                        {statusLabel}
+                    </div>
+                )}
+
+                {/* Floating Inner Arrows */}
+                {images.length > 1 && (
+                    <>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                            disabled={activeIndex === 0}
+                            style={{ position: 'absolute', left: '16px', top: 'calc(50% - 22px)', width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', outline: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === 0 ? 'default' : 'pointer', opacity: activeIndex === 0 ? 0 : 1, transition: 'background 0.2s, opacity 0.2s', zIndex: 10, pointerEvents: activeIndex === 0 ? 'none' : 'auto' }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.7)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                            disabled={activeIndex === images.length - 1}
+                            style={{ position: 'absolute', right: '16px', top: 'calc(50% - 22px)', width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', outline: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === images.length - 1 ? 'default' : 'pointer', opacity: activeIndex === images.length - 1 ? 0 : 1, transition: 'background 0.2s, opacity 0.2s', zIndex: 10, pointerEvents: activeIndex === images.length - 1 ? 'none' : 'auto' }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.7)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                    </>
+                )}
+
+                {/* Bottom Left Badge */}
+                {bottomLeftBadge && (
+                    <div style={{ position: 'absolute', bottom: '16px', left: '16px', zIndex: 10 }}>
+                        {bottomLeftBadge}
+                    </div>
+                )}
+
+                {/* Glassmorphism View All Button */}
+                {images.length > 1 && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); openLightbox(0, 'grid'); }}
+                        style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', color: 'white', padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', zIndex: 10, transition: 'background 0.2s' }}
+                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.8)'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.6)'}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        Show all {images.length} photos
+                    </button>
+                )}
             </div>
 
-            {/* Thumbnails Grid (Right) */}
+            {/* Sleek Thumbnails Bar */}
             {images.length > 1 && (
-                <div style={styles.thumbGrid}>
-                    {images.slice(0, 8).map((img, idx) => (
+                <div 
+                    ref={sliderRef}
+                    className="image-gallery-thumbnails hide-scroll"
+                    style={{ 
+                        display: 'grid', 
+                        gridAutoFlow: 'column',
+                        gridAutoColumns: images.length <= 5 ? '1fr' : 'calc(20% - 6.4px)',
+                        gap: '8px', 
+                        overflowX: 'auto', 
+                        scrollSnapType: 'x mandatory', 
+                        paddingBottom: '4px', 
+                        scrollbarWidth: 'none', 
+                        WebkitOverflowScrolling: 'touch', 
+                        position: 'relative' 
+                    }}
+                >
+                    {images.map((img, idx) => (
                         <div 
                             key={img.id || idx}
-                            onClick={() => { setActiveIndex(idx); if (idx === 7 && images.length > 8) openLightbox(0, 'grid'); else openLightbox(idx, 'single'); }}
+                            onClick={() => setActiveIndex(idx)}
                             style={{
-                                ...styles.thumbWrapper,
-                                border: idx === activeIndex ? "2px solid var(--text-primary)" : "none", 
-                                opacity: idx === activeIndex ? 1 : 0.8
+                                aspectRatio: "16/9",
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                border: idx === activeIndex ? "2px solid var(--text-primary)" : "2px solid transparent", 
+                                opacity: idx === activeIndex ? 1 : 0.6,
+                                scrollSnapAlign: "start",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                backgroundColor: 'var(--bg-input)'
                             }}
                         >
                             <img 
                                 src={img.url} 
                                 alt={`thumb-${idx}`} 
-                                style={styles.thumbImg}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://placehold.co/150x150/eeeeee/999999?text=X"; }}
                             />
-                            {idx === 7 && images.length > 8 && (
-                                <div style={styles.moreOverlay}>
-                                    All Photos ({images.length})
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>
@@ -178,7 +274,10 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
                     ) : (
                         <>
                             {/* Main Viewport */}
-                            <div onClick={() => nextImage()} style={{ flex: 1, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: "pointer", background: "#0a0a0a" }}>
+                            <div 
+                                onClick={() => nextImage()} 
+                                style={{ flex: 1, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: "pointer", background: "#0a0a0a" }}
+                            >
                                 <button onClick={(e) => { e.stopPropagation(); prevImage(); }} style={{ position: "absolute", left: "24px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.1)", color: "white", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10, backdropFilter: "blur(12px)", transition: "background 0.2s" }} onMouseOver={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.8)"} onMouseOut={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.6)"}>
                                     <ChevronLeftIcon />
                                 </button>
@@ -186,8 +285,18 @@ export const ImageGallery = ({ item, statusLabel }: GalleryProps) => {
                                 <img 
                                     src={images[lightboxIndex]?.url} 
                                     alt="Lightbox" 
-                                    style={{ width: "100%", height: "100%", objectFit: "contain", cursor: "pointer", zIndex: 5, position: "relative" }} 
-                                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                                    style={{ 
+                                        width: "100%", 
+                                        height: "100%", 
+                                        objectFit: "contain", 
+                                        cursor: "pointer", 
+                                        zIndex: 5, 
+                                        position: "relative"
+                                    }} 
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        nextImage(); 
+                                    }}
                                 />
                                 
                                 <button onClick={(e) => { e.stopPropagation(); nextImage(); }} style={{ position: "absolute", right: "24px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.1)", color: "white", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10, backdropFilter: "blur(12px)", transition: "background 0.2s" }} onMouseOver={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.8)"} onMouseOut={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.6)"}>

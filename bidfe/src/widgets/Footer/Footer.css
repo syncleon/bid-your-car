@@ -86,8 +86,18 @@
     }
     
     .footer__container {
-        grid-template-columns: 1fr;
-        gap: 24px;
-        margin-bottom: 24px;
+        /* Prod standard: 2-column grid for links on mobile */
+        grid-template-columns: 1fr 1fr;
+        gap: 24px 16px;
+    }
+
+    /* Make logo section span full width */
+    .footer__section:first-child {
+        grid-column: 1 / -1;
+    }
+
+    /* Hide the paragraph text to save vertical space */
+    .footer__description {
+        display: none;
     }
 }

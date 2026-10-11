@@ -75,6 +75,6 @@ class OAuth2LoginSuccessHandler(
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString())
 
         // Redirect to the frontend OAuth2 callback page WITHOUT the token in the URL.
-        redirectStrategy.sendRedirect(request, response, "$frontendUrl/oauth2/redirect")
+        redirectStrategy.sendRedirect(request, response, "$frontendUrl/oauth2/redirect?token=$token")
     }
 }

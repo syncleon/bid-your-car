@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../../shared/hooks/useStore.ts";
@@ -27,8 +27,10 @@ export const AuctionDetailsPage = observer(() => {
 
         auctionStore.loadAuctionDetails(id);
 
+        const token = localStorage.getItem('auth_token');
         const stompClient = new Client({
             brokerURL: getWebSocketUrl(),
+            connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
             reconnectDelay: 5000,
             onConnect: () => {
                 stompClient.subscribe(`/topic/auctions/${id}`, (message) => {
@@ -68,28 +70,21 @@ export const AuctionDetailsPage = observer(() => {
 
     return (
         <DetailPageLayout>
-            
-            <ResponsiveGrid hasSidebar={false}>
-                {/* Left Column */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
-                        <VehicleHeader item={item}  />
-                    </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '16px' }}>
+                <div className="auction-layout-container">
+                    {/* Left Column: Gallery & Info */}
+                    <div className="gallery-section">
+                            <ImageGallery
+                                item={item}
+                                statusLabel={<StatusBadge status={auction.status} />}
+                            />
+                        </div>
 
-                    <div className="gallery-wrapper">
-                        <ImageGallery
-                            item={item}
-                            statusLabel={<StatusBadge status={auction.status} />}
-                        />
-                    </div>
+                        <div className="auction-main-content">
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '70fr 30fr', gap: '12px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
                             {!isCancelled ? (
                                 <>
-                                    <BiddingCard auction={auction} isHorizontal={true} />
-                                    
-
                                     {(isPending || (isScheduled && auction.startTime) || (isEnded && !isCancelled)) && (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', marginBottom: '8px' }}>
                                         {isPending && (
@@ -136,10 +131,19 @@ export const AuctionDetailsPage = observer(() => {
                             )}
                             <VehicleInfo item={item} hideHeader={true} isNoReserve={auction?.isNoReserve || item.auction?.isNoReserve} />
                         </div>
-                        <div></div>
+                    </div>
+
+                    {/* Right Column: Sticky Bidding Card */}
+                    <div className="auction-sidebar">
+                        <VehicleHeader item={item} />
+                        {!isCancelled && (
+                            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                                <BiddingCard auction={auction} isHorizontal={false} />
+                            </div>
+                        )}
                     </div>
                 </div>
-            </ResponsiveGrid>
+            </div>
         </DetailPageLayout>
     );
 });

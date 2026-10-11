@@ -16,6 +16,6 @@ fun Auction.toDto(): AuctionDto {
         isNoReserve = this.isNoReserve,
         isReserveMet = this.isReserveMet,
         bidCount = this.bidCount,
-        winnerId = this.winnerUser?.id
+        winnerId = this.winningBid?.bidder?.id ?: this.winnerUser?.id
     )
 }

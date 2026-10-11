@@ -1,3 +1,4 @@
+import { OAuthCallbackPage } from "../pages/OAuthCallbackPage";
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import { LoginPage } from "../pages/LoginPage";
@@ -31,6 +32,7 @@ export const AppRouter = () => {
                 <Route path="/past-auctions" element={<PastAuctionsPage />} />
                 <Route path="/auctions/:id" element={<AuctionDetailsPage />} />
                 <Route path="/items/:id" element={<ItemDetailsPage />} />
+                <Route path="/oauth2/redirect" element={<OAuthCallbackPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<LoginPage />} />
                 <Route path="/sell-car" element={<SellCarPage />} />
@@ -85,7 +87,8 @@ export const AppRouter = () => {
             </Routes>
             {background && (
                 <Routes>
-                    <Route path="/login" element={<LoginPage isModal />} />
+                    <Route path="/oauth2/redirect" element={<OAuthCallbackPage />} />
+                <Route path="/login" element={<LoginPage isModal />} />
                     <Route path="/register" element={<LoginPage isModal />} />
                     <Route path="/sell-car/submit" element={
                         <PrivateRoute>
