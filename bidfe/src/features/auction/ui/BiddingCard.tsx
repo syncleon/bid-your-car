@@ -1,211 +1,236 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { Clock, TrendingUp, AlertCircle, CheckCircle, Gavel, Tag } from "lucide-react";
+import { Clock, AlertCircle, CheckCircle } from "lucide-react";
 import { useStore } from "../../../shared/hooks/useStore";
 import type { AuctionDto } from "../types";
 
-export const BiddingCard = observer(({ auction, isHorizontal = false }: { auction: AuctionDto, isHorizontal?: boolean }) => {
+export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const { auctionStore, authStore } = useStore();
     const [timeLeft, setTimeLeft] = useState("");
     const [isEndingSoon, setIsEndingSoon] = useState(false);
-    const [localError, setLocalError] = useState<string | null>(null);
-    const displayError = localError || auctionStore.error;
     const [cooldown, setCooldown] = useState(0);
-    
-    const isCoolingDown = cooldown > 0;
-    const isActive = auction.status === 'ACTIVE';
-    const isEnded = new Date(auction.endTime).getTime() < Date.now();
+    const [localError, setLocalError] = useState<string | null>(null);
+
+    const isEnded = new Date(auction.endTime).getTime() <= Date.now();
+    const isActive = auction.status === "ACTIVE";
     const isOwner = authStore.user?.id === auction.item.seller.id;
+    const isWinning = auction.winnerId === authStore.user?.id;
     const currentPrice = auction.currentPrice || auction.startPrice;
     const minBid = auction.bidCount === 0 ? auction.startPrice : currentPrice + auction.minBidIncrement;
-    const currentWinnerId = auction.winnerId;
-    const amIWinning = currentWinnerId === authStore.user?.id;
+    const displayError = localError || auctionStore.error;
 
+    // Countdown timer
     useEffect(() => {
-        const tick = () => {
-            const now = Date.now();
-            const end = new Date(auction.endTime).getTime();
-            const diff = end - now;
+        const update = () => {
+            const diff = new Date(auction.endTime).getTime() - Date.now();
             if (diff <= 0) {
+                setTimeLeft("Ended");
                 setIsEndingSoon(false);
-                return setTimeLeft("Ended");
+                return;
             }
 
-            const underAnHour = diff < 3600000;
-            setIsEndingSoon(underAnHour);
+            setIsEndingSoon(diff < 3600000);
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            if (days > 0) {
-                setTimeLeft(`${days}d ${hours}h`);
-            } else if (hours > 0) {
-                setTimeLeft(`${hours}h ${minutes}m`);
-            } else {
-                setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-            }
+            if (d > 0) setTimeLeft(`${d}d ${h}h`);
+            else if (h > 0) setTimeLeft(`${h}h ${m}m`);
+            else setTimeLeft(`${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
         };
-        tick();
-        const interval = setInterval(tick, 1000);
-        return () => clearInterval(interval);
+
+        update();
+        const timer = setInterval(update, 1000);
+        return () => clearInterval(timer);
     }, [auction.endTime]);
 
+    // Cooldown ticker
     useEffect(() => {
-        if (!isCoolingDown) return;
-        const interval = setInterval(() => setCooldown((prev) => prev - 1), 1000);
-        return () => clearInterval(interval);
-    }, [isCoolingDown]);
+        if (cooldown <= 0) return;
+        const timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
+        return () => clearInterval(timer);
+    }, [cooldown]);
 
+    // Auto-dismiss error & parse cooldown
     useEffect(() => {
-        if (displayError) {
-            const match = displayError.match(/Wait (\d+) seconds/i);
-            if (match) {
-                setCooldown(parseInt(match[1], 10));
-            }
-            
-            const timer = setTimeout(() => {
-                setLocalError(null);
-                auctionStore.clearError();
-            }, 4000);
-            return () => clearTimeout(timer);
-        }
+        if (!displayError) return;
+        const match = displayError.match(/Wait (\d+) seconds/i);
+        if (match) setCooldown(parseInt(match[1], 10));
+
+        const timer = setTimeout(() => {
+            setLocalError(null);
+            auctionStore.clearError();
+        }, 4000);
+        return () => clearTimeout(timer);
     }, [displayError, auctionStore]);
 
     const handlePlaceBid = async () => {
         setLocalError(null);
         auctionStore.clearError();
 
-        if (isCoolingDown) return;
+        if (cooldown > 0) return;
         if (!authStore.isAuthenticated) return setLocalError("Please log in to bid.");
         if (isOwner) return setLocalError("You cannot bid on your own item.");
-        if (amIWinning) return setLocalError("You are already the highest bidder.");
+        if (isWinning) return setLocalError("You are already the highest bidder.");
 
-        const result = await auctionStore.submitQuickBid(auction.id);
-        if (result?.success) {
-            setCooldown(2);
-        } else if (result?.error) {
-            setLocalError(result.error);
-        }
+        const res = await auctionStore.submitQuickBid(auction.id);
+        if (res?.success) setCooldown(2);
+        else if (res?.error) setLocalError(res.error);
     };
 
-    const isBtnDisabled = auctionStore.isBidding || isCoolingDown;
+    const getBtnText = () => {
+        if (auctionStore.isBidding) return "Processing...";
+        if (cooldown > 0) return `Wait ${cooldown}s`;
+        if (isWinning) return "Winning";
+        return "Place Bid";
+    };
 
-    if (isHorizontal) {
-        return (
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                width: '100%',
-                padding: '16px 0',
-                borderTop: '1px solid var(--border-color)',
-                borderBottom: '1px solid var(--border-color)',
-                gap: '16px',
-                marginBottom: '24px'
-            }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '16px', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Current Bid</span>
-                        <span style={{ fontSize: '40px', fontWeight: 300, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.02em' }}>${currentPrice.toLocaleString()}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '16px', color: 'var(--text-muted)', letterSpacing: '0.05em' }}><Clock size={14} /> Time Left</span>
-                        <span style={{ fontSize: '18px', fontWeight: 500, color: isEndingSoon && !isEnded ? '#ef4444' : 'var(--text-primary)' }}>{isEnded ? 'Ended' : timeLeft}</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>Bids number: {auction.bidCount}</span>
-                    </div>
-                </div>
-
-                {!isEnded && isActive && !isOwner && (
-                    <button
-                        className={`btn-place-bid ${amIWinning ? 'winning' : ''}`}
-                        onClick={handlePlaceBid}
-                        disabled={isBtnDisabled}
-                    >
-                        {auctionStore.isBidding ? "Processing..." : isCoolingDown ? `Wait ${cooldown}s` : amIWinning ? `Winning` : `Place Bid`}
-                    </button>
-                )}
-            </div>
-        );
-    }
-
-    // Default Vertical Layout
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            width: '100%',
-            flexGrow: 1
-        }}>
-            {/* Top Bar: Time Left & Bids */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '20px', color: 'white', fontWeight: 500, letterSpacing: '0.05em' }}><Clock size={20} />Time left</span>
-                    <span style={{ fontSize: '20px', fontWeight: 800, color: isEndingSoon && !isEnded ? '#ef4444' : 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>
-                        {isEnded ? 'Ended' : timeLeft}
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                height: "100%",
+                flexGrow: 1,
+                justifyContent: "space-between",
+                gap: "16px",
+            }}
+        >
+            {/* Meta Row: Time & Bids */}
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingBottom: "14px"
+                }}
+            >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Clock size={18} style={{ color: "var(--text-muted)" }} />
+                    <span style={{ fontSize: "16px", color: "var(--text-muted)", fontWeight: 500 }}>Time Left</span>
+                    <span
+                        style={{
+                            fontSize: "18px",
+                            fontWeight: 800,
+                            color: isEndingSoon && !isEnded ? "#ef4444" : "var(--text-primary)",
+                            fontVariantNumeric: "tabular-nums",
+                            marginLeft: "4px",
+                        }}
+                    >
+                        {isEnded ? "Ended" : timeLeft}
                     </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '20px', color: 'white', fontWeight: 500, letterSpacing: '0.05em' }}>Bids</span>
-                    <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{auction.bidCount}</span>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "16px", color: "var(--text-muted)", fontWeight: 500 }}>Bids</span>
+                    <span
+                        style={{
+                            fontSize: "18px",
+                            fontWeight: 800,
+                            color: "var(--text-primary)",
+                            fontVariantNumeric: "tabular-nums",
+                        }}
+                    >
+                        {auction.bidCount}
+                    </span>
                 </div>
             </div>
 
-            {/* Bidding Panel */}
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                flexGrow: 1,
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
-                {/* Current Price Hero */}
-                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'center', zIndex: 1 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', fontSize: '30px', color: 'var(--color-primary)', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '1px' }}>
-                        {isEnded ? "Final Price" : "Current Bid"}
-                    </span>
-                    <span style={{ 
-                        fontSize: '64px',
+            {/* Price Info (Centered in available middle space) */}
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", flexGrow: 1, gap: "6px" }}>
+                <span
+                    style={{
+                        fontSize: "18px",
                         fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        lineHeight: 1, 
-                        letterSpacing: '-0.04em',
-                        fontVariantNumeric: 'tabular-nums',
-                        textShadow: '0 4px 24px rgba(0,0,0,0.4)'
-                    }}>
-                        ${currentPrice.toLocaleString()}
-                    </span>
-                    {amIWinning && !isEnded && (
-                        <div style={{ marginTop: '16px', fontSize: '13px', color: '#4ade80', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(74, 222, 128, 0.1)', padding: '6px 12px', borderRadius: '100px' }}>
-                            <CheckCircle size={14} /> You hold the highest bid
-                        </div>
-                    )}
-                </div>
+                        color: "var(--text-muted)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                    }}
+                >
+                    {isEnded ? "Final Price" : "Current Bid"}
+                </span>
+                <span
+                    style={{
+                        fontSize: "52px",
+                        fontWeight: 700,
+                        color: "var(--text-primary)",
+                        lineHeight: 1.05,
+                        letterSpacing: "-0.03em",
+                        fontVariantNumeric: "tabular-nums",
+                    }}
+                >
+                    ${currentPrice.toLocaleString()}
+                </span>
 
+                {isWinning && !isEnded && (
+                    <div
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginTop: "8px",
+                            padding: "6px 14px",
+                            borderRadius: "100px",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            color: "#4ade80",
+                            backgroundColor: "rgba(74, 222, 128, 0.1)",
+                            border: "1px solid rgba(74, 222, 128, 0.2)",
+                            width: "fit-content",
+                        }}
+                    >
+                        <CheckCircle size={16} /> You hold the highest bid
+                    </div>
+                )}
+            </div>
+
+            {/* Actions & Feedback (Pinned to bottom to match hero image height) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
                 {displayError && (
-                    <div style={{ color: '#fca5a5', fontSize: '13px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: 'rgba(153, 27, 27, 0.2)', padding: '8px 12px', borderRadius: '8px', zIndex: 1 }}>
-                        <AlertCircle size={14} /> {displayError}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            fontSize: "14px",
+                            color: "#fca5a5",
+                            backgroundColor: "rgba(153, 27, 27, 0.2)",
+                            border: "1px solid rgba(239, 68, 68, 0.2)",
+                            borderRadius: "8px",
+                            padding: "10px 14px",
+                        }}
+                    >
+                        <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                        <span>{displayError}</span>
                     </div>
                 )}
 
-                {/* Bidding Controls */}
                 {!isEnded && isActive && (
                     isOwner ? (
-                        <div style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: 'auto', textAlign: 'center', zIndex: 1 }}>
+                        <div style={{ fontSize: "15px", color: "var(--text-muted)", textAlign: "center", padding: "10px 0" }}>
                             This is your listing.
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginTop: 'auto', zIndex: 1 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                             <button
-                                className={`btn-place-bid ${amIWinning ? 'winning' : ''}`}
+                                className={`btn-place-bid ${isWinning ? "winning" : ""}`}
                                 onClick={handlePlaceBid}
-                                disabled={isBtnDisabled}
+                                disabled={auctionStore.isBidding || cooldown > 0}
                             >
-                                {auctionStore.isBidding ? "Processing..." : isCoolingDown ? `Wait ${cooldown}s` : amIWinning ? `Winning` : `Place Bid`}
+                                {getBtnText()}
                             </button>
-                            
-                            {!amIWinning && !isBtnDisabled && (
-                                <span style={{ textAlign: 'center', fontSize: '16px', marginTop: '15px', fontWeight: 600 }}>
+
+                            {!isWinning && !auctionStore.isBidding && cooldown <= 0 && (
+                                <span
+                                    style={{
+                                        fontSize: "15px",
+                                        fontWeight: 500,
+                                        color: "var(--text-muted)",
+                                        textAlign: "center",
+                                    }}
+                                >
                                     Minimum next bid: ${minBid.toLocaleString()}
                                 </span>
                             )}

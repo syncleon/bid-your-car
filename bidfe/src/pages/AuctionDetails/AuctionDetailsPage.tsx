@@ -137,8 +137,8 @@ export const AuctionDetailsPage = observer(() => {
                     <div className="auction-sidebar">
                         <VehicleHeader item={item} />
                         {!isCancelled && (
-                            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                                <BiddingCard auction={auction} isHorizontal={false} />
+                            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}>
+                                <BiddingCard auction={auction} />
                             </div>
                         )}
                     </div>
