@@ -1,0 +1,36 @@
+name: Deploy Preview to Firebase Hosting
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'bidfe/**'
+      - '.github/workflows/firebase-preview.yml'
+
+jobs:
+  build_and_preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'bidfe/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./bidfe
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./bidfe
+        run: npm run build
+
+      - name: Deploy to Firebase Hosting (Preview Channel)
+        working-directory: ./bidfe
+        run: npx --yes firebase-tools@latest hosting:channel:deploy "pr-${{ github.event.pull_request.number }}" --project bidyourcar-prod-ui --token "${{ secrets.FIREBASE_TOKEN }}" --expires 7d

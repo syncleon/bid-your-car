@@ -1,0 +1,37 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'bidfe/**'
+      - '.github/workflows/firebase-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'bidfe/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./bidfe
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./bidfe
+        run: npm run build
+
+      - name: Deploy to Firebase Hosting
+        working-directory: ./bidfe
+        run: npx --yes firebase-tools@latest deploy --only hosting --project bidyourcar-prod-ui --token "${{ secrets.FIREBASE_TOKEN }}"
