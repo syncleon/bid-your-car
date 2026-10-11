@@ -106,11 +106,11 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '16px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Bid</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '16px', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Current Bid</span>
                         <span style={{ fontSize: '40px', fontWeight: 300, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.02em' }}>${currentPrice.toLocaleString()}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}><Clock size={14} /> Time Left</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '16px', color: 'var(--text-muted)', letterSpacing: '0.05em' }}><Clock size={14} /> Time Left</span>
                         <span style={{ fontSize: '18px', fontWeight: 500, color: isEndingSoon && !isEnded ? '#ef4444' : 'var(--text-primary)' }}>{isEnded ? 'Ended' : timeLeft}</span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>Bids number: {auction.bidCount}</span>
                     </div>
@@ -138,16 +138,16 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
             flexGrow: 1
         }}>
             {/* Top Bar: Time Left & Bids */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}><Clock size={14} /> Time Left</span>
-                    <span style={{ fontSize: '18px', fontWeight: 600, color: isEndingSoon && !isEnded ? '#ef4444' : 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '20px', color: 'white', fontWeight: 500, letterSpacing: '0.05em' }}><Clock size={20} />Time left</span>
+                    <span style={{ fontSize: '20px', fontWeight: 800, color: isEndingSoon && !isEnded ? '#ef4444' : 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>
                         {isEnded ? 'Ended' : timeLeft}
                     </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bids number:</span>
-                    <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>{auction.bidCount}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '20px', color: 'white', fontWeight: 500, letterSpacing: '0.05em' }}>Bids</span>
+                    <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{auction.bidCount}</span>
                 </div>
             </div>
 
@@ -156,25 +156,17 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                 display: 'flex',
                 flexDirection: 'column',
                 flexGrow: 1,
-                backgroundColor: 'var(--bg-card)',
-                border: '1px solid var(--border-light)',
-                borderRadius: '16px',
-                padding: '24px',
                 position: 'relative',
-                overflow: 'hidden',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                overflow: 'hidden'
             }}>
-                {/* Subtle gradient glow in background */}
-                <div style={{ position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '250px', height: '250px', background: 'radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(30px)', pointerEvents: 'none' }} />
-
                 {/* Current Price Hero */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, justifyContent: 'center', zIndex: 1 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: 'var(--color-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'center', zIndex: 1 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', fontSize: '30px', color: 'var(--color-primary)', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '1px' }}>
                         {isEnded ? "Final Price" : "Current Bid"}
                     </span>
                     <span style={{ 
-                        fontSize: '64px', 
-                        fontWeight: 600, 
+                        fontSize: '64px',
+                        fontWeight: 600,
                         color: 'var(--text-primary)',
                         lineHeight: 1, 
                         letterSpacing: '-0.04em',
@@ -213,7 +205,7 @@ export const BiddingCard = observer(({ auction, isHorizontal = false }: { auctio
                             </button>
                             
                             {!amIWinning && !isBtnDisabled && (
-                                <span style={{ textAlign: 'center', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '12px', fontWeight: 500 }}>
+                                <span style={{ textAlign: 'center', fontSize: '16px', marginTop: '15px', fontWeight: 600 }}>
                                     Minimum next bid: ${minBid.toLocaleString()}
                                 </span>
                             )}
