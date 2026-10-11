@@ -14,10 +14,15 @@
 }
 
 .auction-header {
-    background: var(--bg-base);
+    position: sticky;
+    top: var(--nav-height, 60px);
+    z-index: 100;
+    background: rgba(15, 15, 17, 1);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-bottom: 1px solid var(--border-color);
-    padding: 14px 0 12px;
-    margin-bottom: 24px;
+    padding: 10px 0 1px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .header-top {
@@ -29,7 +34,7 @@
 }
 
 .page-title {
-    font-size: 22px;
+    font-size: 25px;
     font-weight: 800;
     color: var(--text-primary);
     margin: 0;
@@ -94,8 +99,6 @@
     border-bottom: 2px solid var(--btn-primary-bg);
     color: var(--text-primary);
 }
-
-
 
 .filters-row {
     display: flex;
