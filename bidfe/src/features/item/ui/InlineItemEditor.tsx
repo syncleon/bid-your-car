@@ -99,6 +99,74 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
         });
     };
 
+    const handleMoveNew = (index: number, direction: 'left' | 'right') => {
+        const targetIndex = direction === 'left' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= newPreviews.length) return;
+        handleReorderNew(index, targetIndex);
+    };
+
+    const handleSetMainNew = (index: number) => {
+        setExistingImages(prev => prev.map(img =>
+            img.category === 'MAIN' ? { ...img, category: 'EXTERIOR' as ImageCategory } : img
+        ));
+        setNewFiles(prev => {
+            const copy = [...prev];
+            const [target] = copy.splice(index, 1);
+            const updatedTarget = { ...target, category: 'MAIN' as ImageCategory };
+            const updatedRemaining = copy.map(f => f.category === 'MAIN' ? { ...f, category: 'EXTERIOR' as ImageCategory } : f);
+            return [updatedTarget, ...updatedRemaining];
+        });
+        setNewPreviews(prev => {
+            const copy = [...prev];
+            const [target] = copy.splice(index, 1);
+            return [target, ...copy];
+        });
+        setOriginalPreviews(prev => {
+            const copy = [...prev];
+            const [target] = copy.splice(index, 1);
+            return [target, ...copy];
+        });
+    };
+
+    const handleReorderExisting = (dragIndex: number, hoverIndex: number) => {
+        if (dragIndex === hoverIndex) return;
+        setExistingImages(prev => {
+            const copy = [...prev];
+            const [moved] = copy.splice(dragIndex, 1);
+            copy.splice(hoverIndex, 0, moved);
+            return copy.map((img, idx) => {
+                if (idx === 0) return { ...img, category: 'MAIN' as ImageCategory };
+                if (img.category === 'MAIN') return { ...img, category: 'EXTERIOR' as ImageCategory };
+                return img;
+            });
+        });
+    };
+
+    const handleMoveExisting = (index: number, direction: 'left' | 'right') => {
+        const targetIndex = direction === 'left' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= existingImages.length) return;
+        handleReorderExisting(index, targetIndex);
+    };
+
+    const handleSetMainExisting = (id: string) => {
+        setExistingImages(prev => {
+            const targetIndex = prev.findIndex(img => img.id === id);
+            if (targetIndex === -1) return prev;
+            if (targetIndex === 0) {
+                return prev.map((img, idx) => ({
+                    ...img,
+                    category: (idx === 0 ? 'MAIN' : (img.category === 'MAIN' ? 'EXTERIOR' : img.category)) as ImageCategory
+                }));
+            }
+            const target = { ...prev[targetIndex], category: 'MAIN' as ImageCategory };
+            const remaining = prev.filter(img => img.id !== id).map(img =>
+                img.category === 'MAIN' ? { ...img, category: 'EXTERIOR' as ImageCategory } : img
+            );
+            return [target, ...remaining];
+        });
+        setNewFiles(prev => prev.map(f => f.category === 'MAIN' ? { ...f, category: 'EXTERIOR' as ImageCategory } : f));
+    };
+
     const handleReplaceNewFile = (index: number, newFile: File, newPreview: string) => {
         setNewFiles(prev => {
             const next = [...prev];
@@ -158,7 +226,12 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
                     onAddFiles={handleFileChange}
                     onRemoveExisting={removeExistingImage}
                     onRemoveNew={removeNewFile}
+                    onReorderExisting={handleReorderExisting}
+                    onMoveExisting={handleMoveExisting}
+                    onSetMainExisting={handleSetMainExisting}
                     onReorderNew={handleReorderNew}
+                    onMoveNew={handleMoveNew}
+                    onSetMainNew={handleSetMainNew}
                     onReplaceNewFile={handleReplaceNewFile}
                     onReplaceExistingWithNew={handleReplaceExistingWithNew}
                 />

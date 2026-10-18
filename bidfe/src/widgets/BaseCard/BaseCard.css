@@ -89,3 +89,9 @@
     }
 }
 
+@media (max-width: 560px) {
+    .base-card-title-row h3 {
+        min-height: auto !important;
+    }
+}
+

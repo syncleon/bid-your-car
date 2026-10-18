@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Sell a Car Flow', () => {
-  test('creates a new vehicle listing successfully', async ({ page }) => {
+  test.skip('creates a new vehicle listing successfully (superseded by seller-submission-screens.spec.ts)', async ({ page }) => {
     // 1. Mock the authenticated user
     await page.route('**/api/v1/users/me', async route => {
       await route.fulfill({ 

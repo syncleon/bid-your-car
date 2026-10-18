@@ -44,6 +44,11 @@ export const getItemById = (id: string) =>
         method: "GET"
     });
 
+export const getItemForEdit = (id: string) =>
+    http<ItemDto>(`/items/${id}/edit`, {
+        method: "GET"
+    });
+
 export const updateItem = (id: string, data: ItemUpdateRequest) =>
     http<ItemDto>(`/items/${id}`, {
         method: "PUT",

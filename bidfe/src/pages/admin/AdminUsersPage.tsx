@@ -65,7 +65,17 @@ export const AdminUsersPage = observer(() => {
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>{user.username}</td>
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>{user.email}</td>
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>
-                                    {user.enabled ? "Active" : "Inactive"}
+                                    {user.enabled ? (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+                                            Active
+                                        </span>
+                                    ) : (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'rgba(156, 163, 175, 0.15)', color: '#9ca3af', border: '1px solid rgba(156, 163, 175, 0.3)' }}>
+                                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#9ca3af' }} />
+                                            Inactive
+                                        </span>
+                                    )}
                                 </td>
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>
                                     <button 

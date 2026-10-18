@@ -20,18 +20,67 @@ export const AdminAuctionsPage = observer(() => {
         }
     };
 
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'ACTIVE':
+                return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+                        Active
+                    </span>
+                );
+            case 'PENDING_APPROVAL':
+                return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+                        Pending
+                    </span>
+                );
+            case 'COMPLETED':
+                return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
+                        Completed
+                    </span>
+                );
+            case 'CANCELLED':
+                return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                        Cancelled
+                    </span>
+                );
+            default:
+                return (
+                    <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'rgba(255, 255, 255, 0.1)', color: 'var(--text-secondary)' }}>
+                        {status}
+                    </span>
+                );
+        }
+    };
+
     return (
         <div>
             <h1>Manage Auctions</h1>
             
-            <div style={{ marginBottom: '20px' }}>
-                <label style={{ marginRight: '10px' }}>Filter by Status: </label>
+            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>Filter by Status:</label>
                 <select 
                     value={statusFilter} 
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ padding: '5px', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                    style={{ 
+                        height: '38px', 
+                        padding: '6px 14px', 
+                        backgroundColor: 'var(--bg-input)', 
+                        color: 'var(--text-primary)', 
+                        border: '1px solid var(--border-color)', 
+                        borderRadius: '8px', 
+                        fontSize: '14px', 
+                        outline: 'none', 
+                        cursor: 'pointer' 
+                    }}
                 >
-                    <option value="">All</option>
+                    <option value="">All Statuses</option>
                     <option value="PENDING_APPROVAL">Pending Approval</option>
                     <option value="ACTIVE">Active</option>
                     <option value="COMPLETED">Completed</option>
@@ -83,10 +132,10 @@ export const AdminAuctionsPage = observer(() => {
                                 </td>
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>
                                     <Link to={`/auctions/${auction.id}`} style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}>
-                                        {auction.item.year} {auction.item.make} {auction.item.model}
+                                        {`${auction.item.year} ${auction.item.make} ${auction.item.model}`}
                                     </Link>
                                 </td>
-                                <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>{auction.status}</td>
+                                <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>{getStatusBadge(auction.status)}</td>
                                 <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>
                                     {auction.status === 'PENDING_APPROVAL' && (
                                         <div style={{ display: 'flex', gap: '8px' }}>

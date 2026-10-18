@@ -573,11 +573,23 @@
     border-left: 4px solid #eab308;
 }
 
-/* Ensure history list looks modern */
+/* Ensure history list looks modern and is smoothly scrollable */
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 340px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
 .history-list::-webkit-scrollbar { width: 6px; }
 .history-list::-webkit-scrollbar-track { background: transparent; }
-.history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-.history-list::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+.history-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+.history-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
 /* 2025 Admin Panel Trends */
 .admin-panel {
@@ -719,43 +731,35 @@
 }
 
 .auction-layout-container {
+    position: static;
     display: grid;
     grid-template-columns: minmax(0, 68%) minmax(0, 32%);
     column-gap: 24px;
-    row-gap: 12px;
+    row-gap: 16px;
     margin-top: 12px;
 }
 
 .gallery-section {
-    display: contents;
-}
-
-.image-gallery-hero {
     grid-column: 1;
     grid-row: 1;
-}
-
-.image-gallery-thumbnails {
-    grid-column: 1;
-    grid-row: 2;
+    min-width: 0;
 }
 
 .auction-main-content {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 2;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    margin-top: 12px;
 }
 
 .auction-sidebar {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 1 / span 2;
     display: flex;
     flex-direction: column;
-    position: relative;
-    height: 100%;
+    position: static;
+    height: fit-content;
 }
 
 .btn-place-bid {
@@ -789,11 +793,13 @@
 }
 
 .btn-place-bid:disabled {
-    opacity: 0.6 !important;
-    cursor: not-allowed;
-    background: #3f3f46;
-    box-shadow: none;
-    color: #a1a1aa !important;
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+    color: rgba(255, 255, 255, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    transform: none !important;
 }
 
 .btn-place-bid.winning {

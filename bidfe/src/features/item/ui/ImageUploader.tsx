@@ -12,7 +12,12 @@ interface Props {
     onAddFiles: (e: ChangeEvent<HTMLInputElement>) => void;
     onRemoveExisting: (id: string) => void;
     onRemoveNew: (index: number) => void;
+    onReorderExisting?: (dragIndex: number, hoverIndex: number) => void;
+    onMoveExisting?: (index: number, direction: 'left' | 'right') => void;
+    onSetMainExisting?: (id: string) => void;
     onReorderNew?: (dragIndex: number, hoverIndex: number) => void;
+    onMoveNew?: (index: number, direction: 'left' | 'right') => void;
+    onSetMainNew?: (index: number) => void;
     onReplaceNewFile?: (index: number, newFile: File, newPreview: string) => void;
     onReplaceExistingWithNew?: (existingId: string, newFile: File, newPreview: string) => void;
 }
@@ -24,15 +29,26 @@ export const ImageUploader = ({
                                   onAddFiles,
                                   onRemoveExisting,
                                   onRemoveNew,
+                                  onReorderExisting,
+                                  onMoveExisting,
+                                  onSetMainExisting,
                                   onReorderNew,
+                                  onMoveNew,
+                                  onSetMainNew,
                                   onReplaceNewFile,
                                   onReplaceExistingWithNew
                               }: Props) => {
 
     const [isDragging, setIsDragging] = useState(false);
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    
+    // Drag-and-drop state for existing images
+    const [draggedExistingIndex, setDraggedExistingIndex] = useState<number | null>(null);
+    const [dragOverExistingIndex, setDragOverExistingIndex] = useState<number | null>(null);
 
-    // const [savedCropStates, setSavedCropStates] = useState<Record<string, { crop: { x: number, y: number }, zoom: number, rotation: number }>>({});
+    // Drag-and-drop state for newly uploaded previews
+    const [draggedNewIndex, setDraggedNewIndex] = useState<number | null>(null);
+    const [dragOverNewIndex, setDragOverNewIndex] = useState<number | null>(null);
+
     const [cropModalOpen, setCropModalOpen] = useState(false);
     const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
     const [cropContext, setCropContext] = useState<{type: 'new', index: number} | {type: 'existing', id: string} | null>(null);
@@ -80,7 +96,6 @@ export const ImageUploader = ({
             return;
         }
 
-
         try {
             const croppedFile = await getCroppedImg(cropImageUrl, croppedAreaPixels, rotation);
             if (!croppedFile) {
@@ -102,22 +117,75 @@ export const ImageUploader = ({
         closeCropModal();
     };
 
-
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-        setDraggedIndex(index);
+    // Existing images drag-and-drop handlers
+    const handleExistingDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        setDraggedExistingIndex(index);
         e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `existing:${index}`);
     };
 
-    const handleItemDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    const handleExistingDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
         e.preventDefault();
-        if (draggedIndex === null || draggedIndex === index || !onReorderNew) return;
-        onReorderNew(draggedIndex, index);
-        setDraggedIndex(index);
+        e.dataTransfer.dropEffect = 'move';
+        if (draggedExistingIndex === null || draggedExistingIndex === index) return;
+        if (onReorderExisting) {
+            onReorderExisting(draggedExistingIndex, index);
+            setDraggedExistingIndex(index);
+        } else {
+            setDragOverExistingIndex(index);
+        }
     };
 
-    const handleDragEnd = () => {
-        setDraggedIndex(null);
+    const handleExistingDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (draggedExistingIndex !== null && draggedExistingIndex !== dropIndex && onReorderExisting) {
+            onReorderExisting(draggedExistingIndex, dropIndex);
+        }
+        setDraggedExistingIndex(null);
+        setDragOverExistingIndex(null);
     };
+
+    const handleExistingDragEnd = () => {
+        setDraggedExistingIndex(null);
+        setDragOverExistingIndex(null);
+    };
+
+    // New previews drag-and-drop handlers
+    const handleNewDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        setDraggedNewIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `new:${index}`);
+    };
+
+    const handleNewDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (draggedNewIndex === null || draggedNewIndex === index) return;
+        if (onReorderNew) {
+            onReorderNew(draggedNewIndex, index);
+            setDraggedNewIndex(index);
+        } else {
+            setDragOverNewIndex(index);
+        }
+    };
+
+    const handleNewDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (draggedNewIndex !== null && draggedNewIndex !== dropIndex && onReorderNew) {
+            onReorderNew(draggedNewIndex, dropIndex);
+        }
+        setDraggedNewIndex(null);
+        setDragOverNewIndex(null);
+    };
+
+    const handleNewDragEnd = () => {
+        setDraggedNewIndex(null);
+        setDragOverNewIndex(null);
+    };
+
+    // Dropzone handlers for uploading files
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(true);
@@ -147,16 +215,31 @@ export const ImageUploader = ({
                 .upload-zone { border: 2px dashed rgba(255,255,255,0.2); background: rgba(255,255,255,0.03); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); backdrop-filter: blur(8px); }
                 .upload-zone.dragging { border-color: var(--accent-color, #ff5e00); background: rgba(255,94,0,0.1); transform: scale(1.02); }
                 .upload-zone:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.08); }
-                .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; width: 100%; }
-                .gallery-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); transition: transform 0.2s; background: rgba(255,255,255,0.05); width: 100%; aspect-ratio: 16/9; }
-                .gallery-img { width: 100%; height: 100%; object-fit: cover; }
+                .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; width: 100%; }
+                .gallery-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease; background: rgba(255,255,255,0.05); width: 100%; aspect-ratio: 16/9; cursor: grab; user-select: none; }
+                .gallery-item:active { cursor: grabbing; }
+                .gallery-item.is-main { border: 2px solid #fbbf24; box-shadow: 0 0 16px rgba(251, 191, 36, 0.3); }
+                .gallery-item.is-dragging { opacity: 0.35; transform: scale(0.96); }
+                .gallery-item.is-drop-target { border: 2px dashed #fbbf24; background: rgba(251, 191, 36, 0.12); transform: scale(1.03); }
+                .gallery-img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
                 
-                .crop-btn { opacity: 0; transition: all 0.2s ease; transform: scale(0.8); }
-                .gallery-item:hover .crop-btn { opacity: 1; transform: scale(1); }
-                .gallery-item:hover .crop-btn:hover { background-color: var(--accent-color, #ff5e00); color: white; }
+                .main-cover-badge { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); color: #fbbf24; font-size: 11px; font-weight: 700; padding: 5px 9px; border-radius: 6px; display: flex; align-items: center; gap: 5px; border: 1px solid rgba(251, 191, 36, 0.4); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); z-index: 2; pointer-events: none; }
+                .slot-badge { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px); color: rgba(255, 255, 255, 0.9); font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.18); z-index: 2; pointer-events: none; }
 
-                .delete-btn { opacity: 0; transition: all 0.2s ease; transform: scale(0.8); }
-                .gallery-item:hover .delete-btn { opacity: 1; transform: scale(1); background-color: #ef4444; color: white; }
+                .card-top-actions { position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 6px; z-index: 3; }
+                .crop-btn, .delete-btn { width: 30px; height: 30px; border-radius: 6px; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.85; transition: all 0.2s ease; }
+                .crop-btn:hover { background: var(--accent-color, #ff5e00); border-color: var(--accent-color, #ff5e00); opacity: 1; transform: scale(1.08); }
+                .delete-btn:hover { background: #ef4444; border-color: #ef4444; opacity: 1; transform: scale(1.08); }
+
+                .card-bottom-bar { position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; align-items: center; justify-content: space-between; z-index: 3; pointer-events: auto; }
+                .set-main-btn { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(251, 191, 36, 0.5); color: #fbbf24; font-size: 11px; font-weight: 600; padding: 5px 9px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+                .set-main-btn:hover { background: #fbbf24; border-color: #fbbf24; color: #111827; font-weight: 700; transform: scale(1.05); }
+
+                .reorder-arrows { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+                .arrow-btn { width: 26px; height: 26px; border-radius: 5px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+                .arrow-btn:hover { background: rgba(255, 255, 255, 0.25); border-color: rgba(255, 255, 255, 0.6); transform: scale(1.1); }
+
+                .drag-hint-strip { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255, 255, 255, 0.7); margin-bottom: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 8px 12px; border-radius: 8px; }
                 .mini-upload-bar { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 20px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
             `}</style>
 
@@ -167,60 +250,242 @@ export const ImageUploader = ({
                 </div>
             </div>
 
+            {hasImages && (
+                <div className="drag-hint-strip">
+                    <GripIcon />
+                    <span>
+                        <strong>Drag photos to reorder</strong>, or click <strong>Make Main</strong> on any image to set it as the primary cover photo. The first photo (#1) is always the cover thumbnail.
+                    </span>
+                </div>
+            )}
+
             <div className="gallery-grid" style={{ marginBottom: hasImages ? "24px" : "0" }}>
-                {existingImages.map((img) => (
-                    <div key={img.id} className="gallery-item">
-                        <img
-                            src={img.url}
-                            alt={`Vehicle ${img.category}`}
-                            className="gallery-img"
-                        />
-                        {img.category === "MAIN" ? (
-                            <div style={styles.mainBadge}><StarIcon /> Main Cover</div>
-                        ) : (
-                            <div style={styles.categoryBadge}>{img.category}</div>
-                        )}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openCropModal('existing', img.id, img.url); }} className="crop-btn" style={styles.cropBtn} title="Crop photo">
-                                <CropIcon />
-                            </button>
-                        <button type="button" onClick={() => onRemoveExisting(img.id)} className="delete-btn" style={styles.deleteBtn} title="Remove photo">
-                            <TrashIcon />
-                        </button>
-                    </div>
-                ))}
+                {existingImages.map((img, index) => {
+                    const isMain = index === 0;
+                    const isDraggingThis = draggedExistingIndex === index;
+                    const isDropTarget = dragOverExistingIndex === index;
+
+                    return (
+                        <div
+                            key={img.id}
+                            className={`gallery-item ${isMain ? 'is-main' : ''} ${isDraggingThis ? 'is-dragging' : ''} ${isDropTarget ? 'is-drop-target' : ''}`}
+                            draggable={Boolean(onReorderExisting)}
+                            onDragStart={(e) => handleExistingDragStart(e, index)}
+                            onDragOver={(e) => handleExistingDragOver(e, index)}
+                            onDrop={(e) => handleExistingDrop(e, index)}
+                            onDragEnd={handleExistingDragEnd}
+                            title={onReorderExisting ? "Drag to reorder photos" : undefined}
+                            data-testid={`existing-image-${index}`}
+                        >
+                            <img
+                                src={img.url}
+                                alt={`Vehicle ${img.category}`}
+                                className="gallery-img"
+                            />
+
+                            {/* Main badge or Slot number */}
+                            {isMain ? (
+                                <div className="main-cover-badge">
+                                    <StarIcon /> Main Cover
+                                </div>
+                            ) : (
+                                <div className="slot-badge">
+                                    #{index + 1} • {img.category}
+                                </div>
+                            )}
+
+                            {/* Top right actions: Crop & Delete */}
+                            <div className="card-top-actions">
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); openCropModal('existing', img.id, img.url); }}
+                                    className="crop-btn"
+                                    title="Crop / Rotate photo"
+                                    aria-label="Crop photo"
+                                >
+                                    <CropIcon />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onRemoveExisting(img.id); }}
+                                    className="delete-btn"
+                                    title="Remove photo"
+                                    aria-label="Remove photo"
+                                >
+                                    <TrashIcon />
+                                </button>
+                            </div>
+
+                            {/* Bottom bar: Make Main button & Reorder arrows */}
+                            <div className="card-bottom-bar">
+                                {!isMain && onSetMainExisting && (
+                                    <button
+                                        type="button"
+                                        className="set-main-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onSetMainExisting(img.id);
+                                        }}
+                                        title="Make this photo the main cover thumbnail"
+                                        data-testid={`make-main-existing-${index}`}
+                                    >
+                                        <StarIcon /> Make Main
+                                    </button>
+                                )}
+
+                                <div className="reorder-arrows">
+                                    {index > 0 && (
+                                        <button
+                                            type="button"
+                                            className="arrow-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (onMoveExisting) {
+                                                    onMoveExisting(index, 'left');
+                                                } else if (onReorderExisting) {
+                                                    onReorderExisting(index, index - 1);
+                                                }
+                                            }}
+                                            title="Move earlier (to the left)"
+                                            aria-label="Move photo left"
+                                            data-testid={`move-left-existing-${index}`}
+                                        >
+                                            <ChevronLeftIcon />
+                                        </button>
+                                    )}
+                                    {index < existingImages.length - 1 && (
+                                        <button
+                                            type="button"
+                                            className="arrow-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (onMoveExisting) {
+                                                    onMoveExisting(index, 'right');
+                                                } else if (onReorderExisting) {
+                                                    onReorderExisting(index, index + 1);
+                                                }
+                                            }}
+                                            title="Move later (to the right)"
+                                            aria-label="Move photo right"
+                                            data-testid={`move-right-existing-${index}`}
+                                        >
+                                            <ChevronRightIcon />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
 
                 {newPreviews.map((url, index) => {
-                    const isNewMain = !hasMainInExisting && index === 0;
-                    const predictedCategory = isNewMain ? "MAIN" : "EXTERIOR";
+                    const isNewMain = (!hasMainInExisting && index === 0);
+                    const slotNum = existingImages.length + index + 1;
+                    const isDraggingThis = draggedNewIndex === index;
+                    const isDropTarget = dragOverNewIndex === index;
 
                     return (
                         <div 
                             key={url} 
-                            className="gallery-item"
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, index)}
-                            onDragOver={(e) => handleItemDragOver(e, index)}
-                            onDragEnd={handleDragEnd}
-                            style={{
-                                opacity: draggedIndex === index ? 0.5 : 1,
-                                cursor: 'grab',
-                                border: isNewMain ? '2px solid var(--accent-color, #ff5e00)' : 'none'
-                            }}
+                            className={`gallery-item ${isNewMain ? 'is-main' : ''} ${isDraggingThis ? 'is-dragging' : ''} ${isDropTarget ? 'is-drop-target' : ''}`}
+                            draggable={Boolean(onReorderNew)}
+                            onDragStart={(e) => handleNewDragStart(e, index)}
+                            onDragOver={(e) => handleNewDragOver(e, index)}
+                            onDrop={(e) => handleNewDrop(e, index)}
+                            onDragEnd={handleNewDragEnd}
+                            title={onReorderNew ? "Drag to reorder photos" : undefined}
+                            data-testid={`new-image-${index}`}
                         >
                             <img src={url} alt="New Upload" className="gallery-img" />
-                            {isNewMain ? (
-                                <div style={styles.mainBadge}><StarIcon /> Main Cover (Unsaved)</div>
-                            ) : (
-                                <div style={styles.categoryBadge}>{predictedCategory} (Unsaved)</div>
-                            )}
-                            
-                            <button type="button" onClick={(e) => { e.stopPropagation(); openCropModal('new', index, originalPreviews ? originalPreviews[index] : url); }} className="crop-btn" style={styles.cropBtn} title="Crop photo">
-                                <CropIcon />
-                            </button>
 
-                            <button type="button" onClick={(e) => { e.stopPropagation(); onRemoveNew(index); }} className="delete-btn" style={styles.deleteBtn}>
-                                <TrashIcon />
-                            </button>
+                            {isNewMain ? (
+                                <div className="main-cover-badge">
+                                    <StarIcon /> Main Cover (Unsaved)
+                                </div>
+                            ) : (
+                                <div className="slot-badge">
+                                    #{slotNum} • EXTERIOR (Unsaved)
+                                </div>
+                            )}
+
+                            <div className="card-top-actions">
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); openCropModal('new', index, originalPreviews ? originalPreviews[index] : url); }}
+                                    className="crop-btn"
+                                    title="Crop / Rotate photo"
+                                    aria-label="Crop photo"
+                                >
+                                    <CropIcon />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onRemoveNew(index); }}
+                                    className="delete-btn"
+                                    title="Remove photo"
+                                    aria-label="Remove photo"
+                                >
+                                    <TrashIcon />
+                                </button>
+                            </div>
+
+                            <div className="card-bottom-bar">
+                                {!isNewMain && onSetMainNew && (
+                                    <button
+                                        type="button"
+                                        className="set-main-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onSetMainNew(index);
+                                        }}
+                                        title="Make this photo the main cover thumbnail"
+                                        data-testid={`make-main-new-${index}`}
+                                    >
+                                        <StarIcon /> Make Main
+                                    </button>
+                                )}
+
+                                <div className="reorder-arrows">
+                                    {index > 0 && (
+                                        <button
+                                            type="button"
+                                            className="arrow-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (onMoveNew) {
+                                                    onMoveNew(index, 'left');
+                                                } else if (onReorderNew) {
+                                                    onReorderNew(index, index - 1);
+                                                }
+                                            }}
+                                            title="Move earlier (to the left)"
+                                            aria-label="Move photo left"
+                                            data-testid={`move-left-new-${index}`}
+                                        >
+                                            <ChevronLeftIcon />
+                                        </button>
+                                    )}
+                                    {index < newPreviews.length - 1 && (
+                                        <button
+                                            type="button"
+                                            className="arrow-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (onMoveNew) {
+                                                    onMoveNew(index, 'right');
+                                                } else if (onReorderNew) {
+                                                    onReorderNew(index, index + 1);
+                                                }
+                                            }}
+                                            title="Move later (to the right)"
+                                            aria-label="Move photo right"
+                                            data-testid={`move-right-new-${index}`}
+                                        >
+                                            <ChevronRightIcon />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     );
                 })}
@@ -371,3 +636,7 @@ const CropIcon = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="no
 const TrashIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>);
 const PlusIcon = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
 const StarIcon = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>);
+const ChevronLeftIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>);
+const ChevronRightIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>);
+const GripIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="5" r="1.5"></circle><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="19" r="1.5"></circle><circle cx="15" cy="5" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="19" r="1.5"></circle></svg>);
+

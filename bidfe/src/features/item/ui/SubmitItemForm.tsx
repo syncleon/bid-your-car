@@ -381,6 +381,17 @@ export const SubmitItemForm = ({
         });
     };
 
+    const handleMoveNew = (index: number, direction: 'left' | 'right') => {
+        const targetIndex = direction === 'left' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= previews.length) return;
+        handleReorderNew(index, targetIndex);
+    };
+
+    const handleSetMainNew = (index: number) => {
+        if (index === 0) return;
+        handleReorderNew(index, 0);
+    };
+
     const handleRemoveExisting = (id: string) => setConfirmDialog({ isOpen: true, targetId: id });
 
     const confirmRemoveExisting = () => {
@@ -461,22 +472,7 @@ export const SubmitItemForm = ({
     };
 
     const changeStep = (newStep: number) => {
-        if (!document.startViewTransition) {
-            setCurrentStep(newStep);
-            return;
-        }
-
-        const isForward = newStep > currentStep;
-        document.documentElement.classList.remove('going-forward', 'going-backward');
-        document.documentElement.classList.add(isForward ? 'going-forward' : 'going-backward');
-
-        const transition = document.startViewTransition(() => {
-            setCurrentStep(newStep);
-        });
-
-        transition.finished.finally(() => {
-            document.documentElement.classList.remove('going-forward', 'going-backward');
-        });
+        setCurrentStep(newStep);
     };
 
     const handleNext = async (e?: React.MouseEvent | React.KeyboardEvent) => {
@@ -548,6 +544,14 @@ export const SubmitItemForm = ({
             </div>
 
             <div style={{ flexShrink: 0, textAlign: 'left', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-color, #ff5e00)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        Step {currentStep} of {TOTAL_STEPS}
+                    </span>
+                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+                        {Math.round((currentStep / TOTAL_STEPS) * 100)}% complete
+                    </span>
+                </div>
                 <h2 className="step-title" style={{ margin: 0 }}>{getStepTitle()}</h2>
             </div>
 
@@ -572,6 +576,14 @@ export const SubmitItemForm = ({
                                     )}
                                 </div>
                                 {errors.vin && <span className="error-text"><AlertCircle size={14} />{errors.vin}</span>}
+                            </div>
+
+                            <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                <span style={{ fontSize: '20px', lineHeight: 1 }}>⚡</span>
+                                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+                                    <strong style={{ color: '#fff', display: 'block', marginBottom: '4px' }}>Instant NHTSA Factory Decoding</strong>
+                                    We automatically verify your vehicle's make, model, year, drivetrain, and factory options directly from official federal vehicle databases.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -735,6 +747,8 @@ export const SubmitItemForm = ({
                             onRemoveExisting={handleRemoveExisting}
                             onRemoveNew={handleRemoveNew}
                             onReorderNew={handleReorderNew}
+                            onMoveNew={handleMoveNew}
+                            onSetMainNew={handleSetMainNew}
                             onReplaceNewFile={handleReplaceNewFile}
                             onReplaceExistingWithNew={handleReplaceExistingWithNew}
                         />
@@ -745,16 +759,16 @@ export const SubmitItemForm = ({
 
             <div style={{ display: "flex", gap: "12px", flexShrink: 0, paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 {currentStep > 1 ? (
-                    <button type="button" onClick={handleBack} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "16px", height: "48px", padding: "0 24px", borderRadius: "6px", transition: "all 0.3s ease", backdropFilter: "blur(8px)" }}>Back</button>
+                    <button type="button" onClick={handleBack} style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#ffffff", fontWeight: 600, cursor: "pointer", fontSize: "15px", height: "48px", padding: "0 24px", borderRadius: "8px", transition: "all 0.25s ease", backdropFilter: "blur(8px)" }}>Back</button>
                 ) : (
-                    onCancel ? <button type="button" onClick={onCancel} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "16px", height: "48px", padding: "0 24px", borderRadius: "6px", transition: "all 0.3s ease", backdropFilter: "blur(8px)" }}>Cancel</button> : null
+                    onCancel ? <button type="button" onClick={onCancel} style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#ffffff", fontWeight: 600, cursor: "pointer", fontSize: "15px", height: "48px", padding: "0 24px", borderRadius: "8px", transition: "all 0.25s ease", backdropFilter: "blur(8px)" }}>Cancel</button> : null
                 )}
 
                 {currentStep < TOTAL_STEPS ? (
                     <button
                         type="button"
                         onClick={handleNext}
-                        style={{ flex: 1, background: "white", color: "#000", border: "none", padding: "0 32px", height: "48px", borderRadius: "6px", fontWeight: 700, cursor: "pointer", fontSize: "16px", transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)", boxShadow: "0 8px 24px rgba(255,255,255,0.2)" }}
+                        style={{ flex: 1, background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)", color: "#ffffff", border: "none", padding: "0 32px", height: "48px", borderRadius: "8px", fontWeight: 700, cursor: "pointer", fontSize: "15px", transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)", boxShadow: "0 4px 16px rgba(249, 115, 22, 0.35)" }}
                     >
                         Continue
                     </button>
@@ -762,7 +776,7 @@ export const SubmitItemForm = ({
                     <button
                         type="submit"
                         disabled={isLoading}
-                        style={{ flex: 1, background: "linear-gradient(135deg, var(--accent-color), #ff5e00)", color: "#fff", border: "none", padding: "0 32px", height: "48px", borderRadius: "6px", fontWeight: 700, cursor: "pointer", fontSize: "16px", transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)", boxShadow: "0 12px 32px rgba(249, 115, 22, 0.4)" }}
+                        style={{ flex: 1, background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)", color: "#ffffff", border: "none", padding: "0 32px", height: "48px", borderRadius: "8px", fontWeight: 700, cursor: "pointer", fontSize: "15px", transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)", boxShadow: "0 4px 16px rgba(249, 115, 22, 0.35)" }}
                     >
                         {isLoading ? "Saving..." : submitLabel}
                     </button>

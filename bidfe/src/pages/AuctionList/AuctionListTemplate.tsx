@@ -365,8 +365,28 @@ export const AuctionListTemplate = observer(({
                 <SkeletonGrid />
             ) : visibleAuctions.length === 0 ? (
                 <div className="empty-state">
+                    <div className="empty-state-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.45 }}>
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
                     <h3>No vehicles found</h3>
                     <p>Try adjusting your filters or search query.</p>
+                    {hasActiveFilters && (
+                        <button
+                            className="empty-state-reset-btn"
+                            onClick={() => {
+                                setFilterMake("All");
+                                setFilterYear("All");
+                                setFilterTransmission("All");
+                                setFilterCondition("All");
+                                setSearchQuery("");
+                            }}
+                        >
+                            Clear all filters
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="auction-grid">

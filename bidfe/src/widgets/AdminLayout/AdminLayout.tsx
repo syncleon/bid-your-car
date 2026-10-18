@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Users, Gavel } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 
 interface AdminLayoutProps {
@@ -19,19 +20,22 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                         end
                         className={({ isActive }) => isActive ? styles.activeLink : styles.link}
                     >
-                        Dashboard
+                        <LayoutDashboard size={18} />
+                        <span>Dashboard</span>
                     </NavLink>
                     <NavLink
                         to="/admin/users"
                         className={({ isActive }) => isActive ? styles.activeLink : styles.link}
                     >
-                        Users
+                        <Users size={18} />
+                        <span>Users</span>
                     </NavLink>
                     <NavLink
                         to="/admin/auctions"
                         className={({ isActive }) => isActive ? styles.activeLink : styles.link}
                     >
-                        Auctions
+                        <Gavel size={18} />
+                        <span>Auctions</span>
                     </NavLink>
                 </nav>
             </aside>

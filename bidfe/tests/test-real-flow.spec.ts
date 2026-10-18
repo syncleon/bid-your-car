@@ -33,11 +33,11 @@ test.describe('Real UI Flow', () => {
     await page.click('button[type="submit"]:has-text("Sign in")');
     
     // 7. Verify we are logged in by checking the user menu
-    const userMenuButton = page.locator('button.user-menu__trigger');
+    const userMenuButton = page.locator('.user-menu__trigger');
     await expect(userMenuButton).toBeVisible({ timeout: 5000 });
     
-    // Check if the dropdown menu is visible
+    // Navigate to profile
     await userMenuButton.click();
-    await expect(page.getByText('My Profile')).toBeVisible();
+    await expect(page).toHaveURL(/.*\/profile/, { timeout: 5000 });
   });
 });

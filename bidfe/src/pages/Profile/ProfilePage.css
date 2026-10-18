@@ -146,12 +146,13 @@
 .profile-actions {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .profile-btn {
     width: 100%;
-    padding: 10px 0;
+    height: 42px;
+    padding: 0 16px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
@@ -160,41 +161,59 @@
     justify-content: center;
     gap: 8px;
     border-radius: 8px;
-    transition: opacity 0.15s ease-out;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(10px);
+    box-sizing: border-box;
 }
 
 .profile-btn:hover {
-    opacity: 0.7;
-    box-shadow: none !important;
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
 }
 
 .profile-btn:active {
-    opacity: 0.4;
+    transform: translateY(0);
 }
 
 .profile-btn--primary {
-    background: transparent;
-    color: var(--accent-color);
-    border: 1px solid var(--border-color);
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(234, 88, 12, 0.08) 100%);
+    color: var(--color-primary, #f97316);
+    border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
-
+.profile-btn--primary:hover {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(234, 88, 12, 0.15) 100%);
+    border-color: rgba(249, 115, 22, 0.5);
+    color: #fb923c;
+}
 
 .profile-btn--secondary {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-secondary);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .profile-btn--secondary:hover {
     color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.09);
 }
 
 .profile-btn--danger {
-    background: transparent;
-    color: var(--color-danger-text);
-    border: 1px solid var(--border-color);
+    background: rgba(239, 68, 68, 0.08);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
 }
+
+.profile-btn--danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
 
 
 
@@ -310,36 +329,49 @@
     z-index: 1;
 }
 
+@media (max-width: 600px) {
+    .garage-empty-state {
+        padding: 36px 16px;
+    }
+    .garage-empty-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+    }
+    .garage-empty-title {
+        font-size: 20px;
+    }
+    .garage-empty-desc {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+}
+
 .garage-btn-sell {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 12px 28px;
-    background: var(--btn-primary-bg);
-    color: var(--btn-primary-text);
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #ffffff;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 15px;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     z-index: 1;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
 }
 
 .garage-btn-sell:hover {
-    background: var(--btn-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
+    filter: brightness(1.05);
 }
 
-@keyframes pulse {
-    0%, 100% { box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-    50% { box-shadow: 0 4px 20px rgba(37, 99, 235, 0.6); }
-}
-
-.garage-btn-sell:hover {
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-    animation: none;
+@keyframes garagePulse {
+    0%, 100% { box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35); }
+    50% { box-shadow: 0 6px 22px rgba(249, 115, 22, 0.55); }
 }
 
 .profile-loader {

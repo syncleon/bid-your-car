@@ -1,73 +1,71 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+    Clock,
+    AlertCircle,
+    Trophy,
+    Trash2,
+    Edit3,
+} from "lucide-react";
 import { useStore } from "../../shared/hooks/useStore.ts";
-import { DetailPageLayout, DetailSkeleton, VehicleHeader, ResponsiveGrid, ImageGallery, VehicleInfo } from "../../shared/ui/details";
+import { DetailPageLayout, DetailSkeleton, VehicleHeader, ImageGallery, VehicleInfo } from "../../shared/ui/details";
 import { CreateAuctionModal } from "../../features/auction/ui/CreateAuctionModal.tsx";
-import { InlineItemEditor } from "../../features/item/ui/InlineItemEditor";
+import { BidHistoryList } from "../../features/bid/ui/BidHistoryList.tsx";
 import type { CreateAuctionDto } from "../../features/auction/types.ts";
-import type { ItemImageDto } from "../../features/item/types.ts";
 import { ConfirmDialog } from "../../shared/ui/dialog/ConfirmDialog";
 import { adminApi } from "../../features/admin/api/admin.api";
 import "./AuctionDetails.css";
 
+const StatusBadge = ({ status }: { status: string }) => {
+    let className = "badge-base ";
+    let label = status.replace('_', ' ');
 
+    switch (status) {
+        case 'ACTIVE_AUCTION':
+        case 'ACTIVE':
+            className += "badge-active";
+            label = "ACTIVE AUCTION";
+            break;
+        case 'PENDING_AUCTION':
+        case 'PENDING_APPROVAL':
+            className += "badge-pending";
+            label = "PENDING APPROVAL";
+            break;
+        case 'LISTED_AUCTION':
+        case 'SCHEDULED':
+            className += "badge-pending";
+            label = "SCHEDULED";
+            break;
+        case 'DRAFT':
+            className += "badge-ended";
+            label = "DRAFT";
+            break;
+        case 'UNSOLD':
+            className += "badge-ended";
+            label = "UNSOLD";
+            break;
+        case 'SOLD':
+            className += "badge-sold";
+            label = "SOLD";
+            break;
+        case 'REJECTED':
+        case 'CANCELLED':
+            className += "badge-rejected";
+            label = "REJECTED";
+            break;
+        default:
+            className += "badge-ended";
+            break;
+    }
 
-const pageStyles = {
-    statusBox: { background: "var(--bg-input)", padding: 16, borderRadius: 4, textAlign: "center" as const, color: "var(--text-secondary)", fontWeight: 500, transition: "background-color 0.3s ease, color 0.3s ease" },
-    pricingBox: { marginTop: 16, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-card)", borderRadius: 4, border: "1px solid var(--border-color)", transition: "all 0.3s ease" },
-    pricingLabel: { fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, margin: 0, transition: "color 0.3s ease" },
-    btnPrimary: { width: "100%", padding: "12px", background: "var(--btn-primary-bg)", color: "var(--btn-primary-text)", border: "none", borderRadius: 4, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
-    btnSecondary: { width: "100%", padding: "12px", background: "var(--btn-secondary-bg)", color: "var(--btn-secondary-text)", border: "1px solid var(--border-color)", borderRadius: 4, fontWeight: 600, cursor: "pointer", transition: "all 0.3s ease" },
-    btnTextDestructive: { width: "100%", padding: "8px", background: "transparent", border: "none", color: "var(--color-danger-text)", cursor: "pointer", fontSize: 13, transition: "color 0.3s ease" },
-    zoomHint: { textAlign: "center" as const, fontSize: "12px", color: "var(--text-muted)", marginTop: "8px", cursor: "pointer", transition: "color 0.3s ease" },
-    errorBox: { padding: "12px", backgroundColor: "var(--color-danger-bg)", color: "var(--color-danger-text)", border: "1px solid var(--color-danger-border)", borderRadius: "6px", marginBottom: "16px", fontSize: "14px", textAlign: "center" as const, fontWeight: 500 }
-};
-
-const lightboxStyles = {
-    overlay: { position: "fixed" as const, top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.95)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.2s" },
-    content: { position: "relative" as const, maxWidth: "90vw", maxHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", outline: "none" },
-    image: { maxWidth: "100%", maxHeight: "90vh", borderRadius: "6px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)", userSelect: "none" as const },
-    closeBtn: { position: "fixed" as const, top: "24px", right: "24px", background: "rgba(255, 255, 255, 0.1)", border: "none", color: "#fff", fontSize: "24px", cursor: "pointer", zIndex: 1000, width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)", transition: "background 0.2s" },
-    prevBtn: { position: "fixed" as const, left: "24px", top: "50%", transform: "translateY(-50%)", background: "rgba(255, 255, 255, 0.1)", border: "none", color: "#fff", fontSize: "32px", cursor: "pointer", padding: "0", width: "56px", height: "56px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)", transition: "background 0.2s" },
-    nextBtn: { position: "fixed" as const, right: "24px", top: "50%", transform: "translateY(-50%)", background: "rgba(255, 255, 255, 0.1)", border: "none", color: "#fff", fontSize: "32px", cursor: "pointer", padding: "0", width: "56px", height: "56px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)", transition: "background 0.2s" },
-    counter: { position: "fixed" as const, bottom: "24px", left: "50%", transform: "translateX(-50%)", color: "rgba(255, 255, 255, 0.8)", fontSize: "14px", fontWeight: 500, background: "rgba(0, 0, 0, 0.5)", padding: "4px 12px", borderRadius: "6px", backdropFilter: "blur(4px)" }
-};
-
-const Lightbox = ({ images, initialIndex, onClose }: { images: ItemImageDto[], initialIndex: number, onClose: () => void }) => {
-    const [index, setIndex] = useState(initialIndex || 0);
-
-    const handleNext = (e: React.MouseEvent) => { e.stopPropagation(); if (images?.length) setIndex((prev) => (prev + 1) % images.length); };
-    const handlePrev = (e: React.MouseEvent) => { e.stopPropagation(); if (images?.length) setIndex((prev) => (prev - 1 + images.length) % images.length); };
-
-    useEffect(() => {
-        const handleKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-            if (!images?.length) return;
-            if (e.key === "ArrowRight") setIndex((prev) => (prev + 1) % images.length);
-            if (e.key === "ArrowLeft") setIndex((prev) => (prev - 1 + images.length) % images.length);
-        };
-        window.addEventListener("keydown", handleKey);
-        return () => window.removeEventListener("keydown", handleKey);
-    }, [images?.length, onClose]);
-
-    if (!images || images.length === 0) return null;
     return (
-        <div style={lightboxStyles.overlay} onClick={onClose}>
-            <button style={lightboxStyles.closeBtn}>✕</button>
-            {images.length > 1 && (
-                <>
-                    <button style={lightboxStyles.prevBtn} onClick={handlePrev}>‹</button>
-                    <button style={lightboxStyles.nextBtn} onClick={handleNext}>›</button>
-                    <div style={lightboxStyles.counter}>{index + 1} / {images.length}</div>
-                </>
-            )}
-            <div style={lightboxStyles.content} onClick={(e) => e.stopPropagation()}>
-                {images[index]?.url && <img src={images[index].url} alt="Vehicle" style={lightboxStyles.image} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found'; }} />}
-            </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+            <span className={className}>{label}</span>
         </div>
     );
 };
+
 
  
 export const ItemDetailsPage = observer(() => {
@@ -76,8 +74,6 @@ export const ItemDetailsPage = observer(() => {
     const { itemStore, auctionStore, authStore } = useStore();
 
     const [isListModalOpen, setIsListModalOpen] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -85,9 +81,19 @@ export const ItemDetailsPage = observer(() => {
     const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
-        if (id) itemStore.loadItemDetails(id);
-        return () => itemStore.clearSelectedItem();
-    }, [id, itemStore]);
+        if (id) {
+            itemStore.loadItemDetails(id).then(() => {
+                const targetAuctionId = itemStore.selectedItem?.auctionId || itemStore.selectedItem?.auction?.id;
+                if (targetAuctionId) {
+                    auctionStore.loadAuctionDetails(targetAuctionId);
+                }
+            });
+        }
+        return () => {
+            itemStore.clearSelectedItem();
+            auctionStore.clearSelectedAuction();
+        };
+    }, [id, itemStore, auctionStore]);
 
     const handleCreateAuction = async (data: CreateAuctionDto) => {
         const success = await auctionStore.startAuction(data);
@@ -102,7 +108,6 @@ export const ItemDetailsPage = observer(() => {
             }
         }
     };
-
 
     const handleDeleteItem = async () => {
         if (!id) return;
@@ -161,7 +166,19 @@ export const ItemDetailsPage = observer(() => {
         return (
             <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-primary)' }}>
                 <h3>Item not found.</h3>
-                <button onClick={() => navigate(-1)} style={{ ...pageStyles.btnSecondary, width: 'auto', marginTop: '1rem' }}>
+                <button 
+                    onClick={() => navigate(-1)} 
+                    style={{ 
+                        marginTop: '1rem', 
+                        padding: '12px 24px', 
+                        background: 'var(--btn-secondary-bg)', 
+                        color: 'var(--btn-secondary-text)', 
+                        border: '1px solid var(--border-color)', 
+                        borderRadius: 4, 
+                        fontWeight: 600, 
+                        cursor: 'pointer' 
+                    }}
+                >
                     Go Back
                 </button>
             </div>
@@ -181,187 +198,488 @@ export const ItemDetailsPage = observer(() => {
 
     const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
     const isGhostPending = isPending && !targetAuctionId;
-
     const canList = isDraft || isUnsold || isGhostPending || isRejected;
-
     const soldPrice = item.auction?.currentPrice;
 
     const getStatusText = () => {
         if (isActiveAuction) return "Active Auction";
-        if (isScheduled) return "Scheduled for Auction";
-        if (isGhostPending) return "Garage Inventory (Draft)";
+        if (isScheduled) return "Scheduled";
+        if (isGhostPending) return "Draft (Garage)";
         if (isPending) return "Needs Admin Approval";
-        if (isRejected) return "Your Submission Rejected";
-        if (isUnsold) return "Unsold / Returned to Garage";
-        return "Garage Inventory (Draft)";
+        if (isRejected) return "Submission Rejected";
+        if (isUnsold) return "Returned to Garage";
+        if (isSold) return "Vehicle Sold";
+        return "Draft (Garage)";
+    };
+
+    const getPriceLabel = () => {
+        if (isSold) return "Sold Price";
+        if (isActiveAuction) return "Current Bid";
+        if (item.auction?.startPrice) return "Starting Bid";
+        return "Estimated Price";
+    };
+
+    const getPriceValue = () => {
+        if (isSold && soldPrice !== undefined) return `$${soldPrice.toLocaleString()}`;
+        if (item.auction?.currentPrice) return `$${item.auction.currentPrice.toLocaleString()}`;
+        if (item.auction?.startPrice) return `$${item.auction.startPrice.toLocaleString()}`;
+        return "—";
     };
 
     return (
         <DetailPageLayout>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '16px' }}>
+                    <div className="auction-layout-container">
+                        {/* Left Column: Gallery & Vehicle Info */}
+                        <div className="gallery-section">
+                            <ImageGallery
+                                item={item}
+                                statusLabel={<StatusBadge status={item.status} />}
+                            />
+                        </div>
 
-            <ResponsiveGrid hasSidebar={false}>
-                {/* Single Column matching Auction Details */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div className="vehicle-header-wrapper" style={{ marginTop: '0', paddingTop: '0', marginBottom: '0' }}>
-                        <VehicleHeader item={item} />
-                    </div>
-
-                    {isEditing ? (
-                        <InlineItemEditor 
-                            item={item} 
-                            onCancel={() => setIsEditing(false)} 
-                            onSaveSuccess={() => {
-                                setIsEditing(false);
-                                itemStore.loadItemDetails(item.id);
-                            }} 
-                        />
-                    ) : (
-                        <>
-                            <div className="gallery-wrapper">
-                                <ImageGallery
-                                    item={item}
-                                    statusLabel={
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <span className="badge-ended">AUCTION PREVIEW</span>
+                        <div className="auction-main-content">
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {item.rejectionReason && (
+                                    <div
+                                        style={{
+                                            padding: "16px 20px",
+                                            backgroundColor: "rgba(239, 68, 68, 0.08)",
+                                            borderRadius: "8px",
+                                            border: "1px solid rgba(239, 68, 68, 0.25)",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "6px",
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#ef4444", fontWeight: 700, fontSize: "14px" }}>
+                                            <AlertCircle size={16} /> Admin Rejection Notice
                                         </div>
-                                    }
-                                />
+                                        <span style={{ fontSize: "14px", color: "var(--text-primary)", lineHeight: "1.5" }}>
+                                            {item.rejectionReason}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <VehicleInfo item={item} hideHeader={true} isNoReserve={item.auction?.isNoReserve} />
+                            </div>
+                        </div>
+
+                        {/* Right Column: Vehicle Header, Item Action Sidebar & Bid History */}
+                        <div className="auction-sidebar">
+                            <div className="vehicle-header-wrapper">
+                                <VehicleHeader item={item} />
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '70fr 30fr', gap: '12px' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
-                                    
-                                    {/* Action Card matching BiddingCard layout */}
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'stretch',
-                                        justifyContent: 'space-between',
-                                        width: '100%',
-                                        gap: '12px',
-                                        marginBottom: '12px'
-                                    }}>
-                                        {/* Left Side: Status & Details */}
-                                        <div style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '32px',
-                                            backgroundColor: 'var(--bg-card)',
-                                            border: '1px solid var(--border-color)',
-                                            padding: '16px 24px',
-                                            borderRadius: '8px',
-                                            flex: 1
-                                        }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-                                                <div>
-                                                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, marginBottom: '4px' }}>
-                                                        Listing Status
-                                                    </div>
-                                                    <div style={{ fontSize: '24px', fontWeight: 800, color: isSold ? 'var(--color-danger-text)' : 'var(--text-primary)' }}>
-                                                        {isSold ? 'Vehicle Sold' : getStatusText()}
-                                                    </div>
-                                                    {isSold && soldPrice !== undefined && (
-                                                        <div style={{ fontSize: '18px', marginTop: '4px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                                            ${soldPrice.toLocaleString()}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {item.auction && (
-                                                    <div style={{ display: 'flex', gap: '32px', backgroundColor: 'var(--bg-input)', padding: '16px 20px', borderRadius: '6px', width: 'fit-content' }}>
-                                                        <div>
-                                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Start Price</div>
-                                                            <div style={{ fontWeight: 600, fontSize: '16px' }}>{item.auction.startPrice ? `$${item.auction.startPrice.toLocaleString()}` : "Not set"}</div>
-                                                        </div>
-                                                        <div>
-                                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Reserve Price</div>
-                                                            <div style={{ fontWeight: 600, fontSize: '16px', color: item.auction.isNoReserve ? 'var(--color-success-text)' : 'inherit' }}>
-                                                                {item.auction.isNoReserve ? 'No Reserve' : (item.auction.reservePrice ? `$${item.auction.reservePrice.toLocaleString()}` : "Not set")}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {item.rejectionReason && (
-                                                    <div style={{ padding: '12px 16px', backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                                                        <strong style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'var(--color-danger-text)' }}>Admin Message:</strong>
-                                                        <span style={{ fontSize: '14px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{item.rejectionReason}</span>
-                                                    </div>
-                                                )}
-                                            </div>
+                            <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "16px", flexGrow: 1, minHeight: 0 }}>
+                                {/* Action Card matching BiddingCard */}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        width: "100%",
+                                        height: "100%",
+                                        flexGrow: 1,
+                                        justifyContent: "space-between",
+                                        gap: "16px",
+                                    }}
+                                >
+                                    {/* Meta Row: Status & Reserve Indicator */}
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            paddingBottom: "14px",
+                                            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                                            gap: "8px",
+                                            flexWrap: "wrap",
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <Clock size={18} style={{ color: "var(--text-muted)" }} />
+                                            <span style={{ fontSize: "15px", color: "var(--text-muted)", fontWeight: 500 }}>Listing Status</span>
+                                            <span
+                                                style={{
+                                                    fontSize: "17px",
+                                                    fontWeight: 800,
+                                                    color: isSold ? "#4ade80" : isRejected ? "#ef4444" : "var(--text-primary)",
+                                                    marginLeft: "4px",
+                                                }}
+                                            >
+                                                {getStatusText()}
+                                            </span>
                                         </div>
 
-                                        {/* Right Side: Actions */}
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '240px' }}>
-                                                {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
-                                                    <button onClick={() => {
-                                                        const targetAuctionId = item.auctionId || item.auction?.id || auctionStore.currentAuction?.id;
-                                                        if (targetAuctionId) navigate(`/auctions/${targetAuctionId}`);
-                                                    }} style={{ ...pageStyles.btnPrimary, backgroundColor: 'var(--color-primary)' }}>
-                                                        {isPending ? "View Submitted Auction" : "View Live Auction"}
-                                                    </button>
-                                                )}
-
-                                                {isOwner && canList && (
-                                                    <>
-                                                        <button onClick={() => setIsListModalOpen(true)} style={{ ...pageStyles.btnPrimary }}>
-                                                            List for Auction
-                                                        </button>
-                                                        <button onClick={() => setIsEditing(true)} style={{ ...pageStyles.btnSecondary }}>
-                                                            Edit Details & Specs
-                                                        </button>
-                                                        <button onClick={handleDeleteItem} disabled={isDeleting} style={{ ...pageStyles.btnTextDestructive, opacity: isDeleting ? 0.5 : 1 }}>
-                                                            {isDeleting ? "Deleting..." : "Delete Listing"}
-                                                        </button>
-                                                    </>
-                                                )}
-                                                
-                                                {isAdmin && isPending && !isGhostPending && (
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-                                                        <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.5px', marginBottom: '4px' }}>ADMIN ACTIONS</div>
-                                                        <button onClick={handleApprove} disabled={actionLoading} style={{ ...pageStyles.btnPrimary, backgroundColor: '#10b981', color: '#fff' }}>
-                                                            {actionLoading ? "Processing..." : "✓ Approve Listing"}
-                                                        </button>
-                                                        <button onClick={handleReject} disabled={actionLoading} style={{ ...pageStyles.btnPrimary, backgroundColor: '#ef4444', color: '#fff' }}>
-                                                            {actionLoading ? "Processing..." : "✗ Reject Listing"}
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                {isAdmin && isPending && isGhostPending && (
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-                                                        <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--color-danger-text)', letterSpacing: '0.5px', marginBottom: '4px' }}>GHOST DETECTED</div>
-                                                        <button onClick={async () => {
-                                                            if (window.confirm("Are you sure you want to reset this item to DRAFT?")) {
-                                                                setActionLoading(true);
-                                                                try {
-                                                                    await adminApi.resetGhostItem(item.id);
-                                                                    await itemStore.loadItemDetails(item.id);
-                                                                } finally {
-                                                                    setActionLoading(false);
-                                                                }
-                                                            }
-                                                        }} disabled={actionLoading} style={{ ...pageStyles.btnPrimary, backgroundColor: '#ef4444', color: '#fff' }}>
-                                                            {actionLoading ? "Processing..." : "Reset to Draft"}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        
-                                        {itemStore.error && <div style={{...pageStyles.errorBox, margin: 0}}>{itemStore.error}</div>}
+                                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                            {item.auction?.isNoReserve ? (
+                                                <span
+                                                    style={{
+                                                        padding: "3px 10px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "11px",
+                                                        fontWeight: 700,
+                                                        letterSpacing: "0.04em",
+                                                        textTransform: "uppercase",
+                                                        backgroundColor: "rgba(34, 197, 94, 0.15)",
+                                                        color: "#4ade80",
+                                                        border: "1px solid rgba(34, 197, 94, 0.3)",
+                                                    }}
+                                                >
+                                                    No Reserve
+                                                </span>
+                                            ) : item.auction?.reservePrice ? (
+                                                <span
+                                                    style={{
+                                                        padding: "3px 10px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "11px",
+                                                        fontWeight: 700,
+                                                        letterSpacing: "0.04em",
+                                                        textTransform: "uppercase",
+                                                        backgroundColor: "rgba(245, 158, 11, 0.15)",
+                                                        color: "#f59e0b",
+                                                        border: "1px solid rgba(245, 158, 11, 0.3)",
+                                                    }}
+                                                >
+                                                    Reserve Set
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    style={{
+                                                        padding: "3px 10px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "11px",
+                                                        fontWeight: 700,
+                                                        letterSpacing: "0.04em",
+                                                        textTransform: "uppercase",
+                                                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                                        color: "var(--text-muted)",
+                                                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                                                    }}
+                                                >
+                                                    Garage Lot
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
+                                    {/* Price & Context Info */}
+                                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", flexGrow: 1, gap: "4px" }}>
+                                        <span
+                                            style={{
+                                                fontSize: "14px",
+                                                fontWeight: 600,
+                                                color: "var(--text-muted)",
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.06em",
+                                            }}
+                                        >
+                                            {getPriceLabel()}
+                                        </span>
+                                        <span
+                                            style={{
+                                                fontSize: "48px",
+                                                fontWeight: 800,
+                                                color: "var(--text-primary)",
+                                                lineHeight: 1.05,
+                                                letterSpacing: "-0.03em",
+                                                fontVariantNumeric: "tabular-nums",
+                                            }}
+                                        >
+                                            {getPriceValue()}
+                                        </span>
 
+                                        <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", marginTop: "2px" }}>
+                                            {isSold
+                                                ? "Auction completed • Sold to the highest bidder."
+                                                : isActiveAuction
+                                                ? "Auction is currently active and accepting live bids."
+                                                : isPending
+                                                ? "Under admin review. You will be notified once scheduled."
+                                                : isScheduled
+                                                ? "Approved for auction and awaiting scheduled start date."
+                                                : isRejected
+                                                ? "Submission was rejected by administrator."
+                                                : isUnsold
+                                                ? "Returned to garage. Ready for revision or relisting."
+                                                : "Saved in your garage inventory."}
+                                        </span>
 
-                                    <VehicleInfo item={item} hideHeader={true} isNoReserve={item.auction?.isNoReserve} />
+                                        {/* Status Notice Banners */}
+                                        {isSold && (
+                                            <div style={{ marginTop: "10px", fontSize: "14px", lineHeight: 1.4 }}>
+                                                <div
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "8px",
+                                                        padding: "8px 14px",
+                                                        borderRadius: "8px",
+                                                        backgroundColor: "rgba(34, 197, 94, 0.1)",
+                                                        border: "1px solid rgba(34, 197, 94, 0.25)",
+                                                        color: "#4ade80",
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    <Trophy size={16} /> Vehicle successfully sold at auction.
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {isPending && !isGhostPending && (
+                                            <div style={{ marginTop: "10px", fontSize: "14px", lineHeight: 1.4 }}>
+                                                <div
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "8px",
+                                                        padding: "8px 14px",
+                                                        borderRadius: "8px",
+                                                        backgroundColor: "rgba(245, 158, 11, 0.1)",
+                                                        border: "1px solid rgba(245, 158, 11, 0.25)",
+                                                        color: "#f59e0b",
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    <Clock size={16} /> Under review. Admin decision pending.
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {isRejected && (
+                                            <div style={{ marginTop: "10px", fontSize: "14px", lineHeight: 1.4 }}>
+                                                <div
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "8px",
+                                                        padding: "8px 14px",
+                                                        borderRadius: "8px",
+                                                        backgroundColor: "rgba(239, 68, 68, 0.1)",
+                                                        border: "1px solid rgba(239, 68, 68, 0.25)",
+                                                        color: "#ef4444",
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    <AlertCircle size={16} /> Submission rejected.
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                                        {itemStore.error && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "8px",
+                                                    fontSize: "13px",
+                                                    color: "#fca5a5",
+                                                    backgroundColor: "rgba(153, 27, 27, 0.25)",
+                                                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                                                    borderRadius: "8px",
+                                                    padding: "10px 14px",
+                                                }}
+                                            >
+                                                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                                                <span>{itemStore.error}</span>
+                                            </div>
+                                        )}
+
+                                        {(isActiveAuction || isScheduled || (isPending && !isGhostPending)) && (
+                                            <button
+                                                className="btn-place-bid"
+                                                onClick={() => {
+                                                    if (targetAuctionId) navigate(`/auctions/${targetAuctionId}`);
+                                                }}
+                                                style={{
+                                                    height: "52px",
+                                                    fontSize: "16px",
+                                                }}
+                                            >
+                                                {isPending ? "View Submitted Auction" : "View Live Auction"}
+                                            </button>
+                                        )}
+
+                                        {isOwner && canList && (
+                                            <>
+                                                <button
+                                                    className="btn-place-bid"
+                                                    onClick={() => setIsListModalOpen(true)}
+                                                    style={{
+                                                        height: "52px",
+                                                        fontSize: "16px",
+                                                    }}
+                                                >
+                                                    List for Auction
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/items/${item.id}/edit`)}
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "46px",
+                                                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                                        color: "var(--text-primary)",
+                                                        border: "1px solid rgba(255, 255, 255, 0.15)",
+                                                        borderRadius: "10px",
+                                                        fontWeight: 600,
+                                                        fontSize: "14px",
+                                                        cursor: "pointer",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        gap: "8px",
+                                                        transition: "all 0.2s ease",
+                                                    }}
+                                                >
+                                                    <Edit3 size={16} /> Edit Details & Specs
+                                                </button>
+                                                <button
+                                                    onClick={handleDeleteItem}
+                                                    disabled={isDeleting}
+                                                    style={{
+                                                        width: "100%",
+                                                        padding: "8px",
+                                                        background: "transparent",
+                                                        border: "none",
+                                                        color: "var(--color-danger-text, #ef4444)",
+                                                        cursor: isDeleting ? "not-allowed" : "pointer",
+                                                        fontSize: "13px",
+                                                        fontWeight: 600,
+                                                        opacity: isDeleting ? 0.5 : 1,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        gap: "6px",
+                                                    }}
+                                                >
+                                                    <Trash2 size={14} /> {isDeleting ? "Deleting..." : "Delete Listing"}
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {isAdmin && isPending && !isGhostPending && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "10px",
+                                                    marginTop: "8px",
+                                                    padding: "16px",
+                                                    backgroundColor: "rgba(255, 255, 255, 0.03)",
+                                                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                                                    borderRadius: "10px",
+                                                }}
+                                            >
+                                                <div style={{ fontSize: "11px", fontWeight: 800, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                                                    Admin Actions
+                                                </div>
+                                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                                                    <button
+                                                        onClick={handleApprove}
+                                                        disabled={actionLoading}
+                                                        style={{
+                                                            padding: "12px",
+                                                            borderRadius: "8px",
+                                                            border: "none",
+                                                            backgroundColor: "#10b981",
+                                                            color: "#ffffff",
+                                                            fontWeight: 700,
+                                                            fontSize: "14px",
+                                                            cursor: "pointer",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            gap: "6px",
+                                                        }}
+                                                    >
+                                                        {actionLoading ? "Processing..." : "✓ Approve"}
+                                                    </button>
+                                                    <button
+                                                        onClick={handleReject}
+                                                        disabled={actionLoading}
+                                                        style={{
+                                                            padding: "12px",
+                                                            borderRadius: "8px",
+                                                            border: "1px solid rgba(239, 68, 68, 0.4)",
+                                                            backgroundColor: "rgba(239, 68, 68, 0.1)",
+                                                            color: "#ef4444",
+                                                            fontWeight: 700,
+                                                            fontSize: "14px",
+                                                            cursor: "pointer",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            gap: "6px",
+                                                        }}
+                                                    >
+                                                        {actionLoading ? "Processing..." : "✗ Reject"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {isAdmin && isPending && isGhostPending && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "8px",
+                                                    marginTop: "8px",
+                                                    padding: "14px",
+                                                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                                                    borderRadius: "10px",
+                                                    backgroundColor: "rgba(239, 68, 68, 0.05)",
+                                                }}
+                                            >
+                                                <div style={{ fontSize: "11px", fontWeight: 800, color: "#ef4444", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                                                    Ghost Item Detected
+                                                </div>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (window.confirm("Are you sure you want to reset this item to DRAFT?")) {
+                                                            setActionLoading(true);
+                                                            try {
+                                                                await adminApi.resetGhostItem(item.id);
+                                                                await itemStore.loadItemDetails(item.id);
+                                                            } finally {
+                                                                setActionLoading(false);
+                                                            }
+                                                        }
+                                                    }}
+                                                    disabled={actionLoading}
+                                                    style={{
+                                                        padding: "12px",
+                                                        backgroundColor: "#ef4444",
+                                                        color: "#fff",
+                                                        border: "none",
+                                                        borderRadius: "8px",
+                                                        fontWeight: 700,
+                                                        cursor: "pointer",
+                                                    }}
+                                                >
+                                                    {actionLoading ? "Processing..." : "Reset to Draft"}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                
-                                {/* Right Column (Empty to match AuctionDetails layout) */}
-                                <div></div>
+
+                                {/* Bid History if bids exist */}
+                                {auctionStore.bidHistory && auctionStore.bidHistory.length > 0 && (
+                                    <BidHistoryList
+                                        bids={auctionStore.bidHistory}
+                                        isEnded={isSold || isUnsold}
+                                        isSold={isSold}
+                                    />
+                                )}
                             </div>
-                        </>
-                    )}
+                        </div>
+                    </div>
                 </div>
-            </ResponsiveGrid>
 
             <CreateAuctionModal
                 key={isListModalOpen ? "open" : "closed"}
@@ -372,11 +690,6 @@ export const ItemDetailsPage = observer(() => {
                 isLoading={auctionStore.isLoading}
                 error={auctionStore.error}
             />
-
-
-            {lightboxIndex !== null && item.images && item.images.length > 0 && (
-                <Lightbox images={item.images} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
-            )}
 
             <ConfirmDialog
                 isOpen={deleteDialogOpen}

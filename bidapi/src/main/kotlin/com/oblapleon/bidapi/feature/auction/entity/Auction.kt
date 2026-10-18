@@ -85,48 +85,24 @@ class Auction(
                 Instant.now().isAfter(startTime) &&
                 Instant.now().isBefore(endTime)
 
-    fun processBidRequest(bidder: User, maxAmount: BigDecimal, now: Instant): List<Bid> {
-        val minRequired = if (bidCount == 0) startPrice else currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(currentPrice))
+    fun processBidRequest(bidder: User, amount: BigDecimal, now: Instant): List<Bid> {
         val currentWinnerId = winningBid?.bidder?.id
-        val currentMax = winningBid?.maxAmount ?: BigDecimal.ZERO
-
         if (currentWinnerId == bidder.id) {
-            if (maxAmount <= currentMax) {
-                throw BadRequestException("Your new max bid must be higher than your current max bid ($currentMax).")
-            }
-            return listOf(recordBidInternal(bidder, currentPrice, maxAmount, now))
+            throw BadRequestException("You are already the highest bidder.")
         }
 
-        if (maxAmount < minRequired) {
+        val minRequired = if (bidCount == 0) startPrice else currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(currentPrice))
+        if (amount < minRequired) {
             throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
         }
 
-        if (bidCount == 0 || winningBid == null) {
-            val startingAmount = if (winningBid == null && bidCount > 0) minRequired else startPrice
-            return listOf(recordBidInternal(bidder, startingAmount, maxAmount, now))
-        }
-
-        if (maxAmount <= currentMax) {
-            val prevWinner = winningBid!!.bidder
-            val bobBid = recordBidInternal(bidder, maxAmount, maxAmount, now)
-            val nextIncrement = maxAmount.add(BidIncrementUtil.getDynamicBidIncrement(maxAmount))
-            val newPriceForA = if (currentMax >= nextIncrement) nextIncrement else currentMax
-            val aliceBid = recordBidInternal(prevWinner, newPriceForA, currentMax, now.plusMillis(1))
-            return listOf(bobBid, aliceBid)
-        } else {
-            val prevWinner = winningBid!!.bidder
-            val bobBid = recordBidInternal(prevWinner, currentMax, currentMax, now)
-            val nextIncrement = currentMax.add(BidIncrementUtil.getDynamicBidIncrement(currentMax))
-            val newPriceForB = if (maxAmount >= nextIncrement) nextIncrement else maxAmount
-            val aliceBid = recordBidInternal(bidder, newPriceForB, maxAmount, now.plusMillis(1))
-            return listOf(bobBid, aliceBid)
-        }
+        return listOf(recordBidInternal(bidder, amount, now))
     }
 
-    private fun recordBidInternal(bidder: User, amount: BigDecimal, maxAmount: BigDecimal, now: Instant): Bid {
+    private fun recordBidInternal(bidder: User, amount: BigDecimal, now: Instant): Bid {
         val secondsRemaining = ChronoUnit.SECONDS.between(now, endTime)
-        if (secondsRemaining in 0..119) {
-            val newEndTime = now.plus(120, ChronoUnit.SECONDS)
+        if (secondsRemaining in 0..59) {
+            val newEndTime = now.plus(60, ChronoUnit.SECONDS)
             if (newEndTime.isAfter(endTime)) {
                 endTime = newEndTime
             }
@@ -137,9 +113,10 @@ class Auction(
             bidder = bidder,
             amount = amount,
             bidTime = now,
-            maxAmount = maxAmount
+            maxAmount = amount
         )
         currentPrice = amount
+        minBidIncrement = BidIncrementUtil.getDynamicBidIncrement(amount)
         bidCount += 1
         winningBid = bid
         return bid

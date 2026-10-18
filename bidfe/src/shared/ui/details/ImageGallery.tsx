@@ -92,13 +92,10 @@ export const ImageGallery = ({ item, statusLabel, bottomLeftBadge }: GalleryProp
     }
 
     const currentImage = images[activeIndex]?.url;
-
-    const hasThumbnails = images.length > 1;
-
     return (
-        <div style={{ display: 'contents' }}>
+        <div className="image-gallery-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
             {/* Main Image Container */}
-            <div className="image-gallery-hero" style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: 'var(--bg-input)', borderRadius: '12px', overflow: 'hidden', group: 'main-gallery' }}>
+            <div className="image-gallery-hero" style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: 'var(--bg-input)', borderRadius: '12px', overflow: 'hidden' }}>
                 <img 
                     src={currentImage}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }} 
@@ -148,7 +145,7 @@ export const ImageGallery = ({ item, statusLabel, bottomLeftBadge }: GalleryProp
                 {images.length > 1 && (
                     <button 
                         onClick={(e) => { e.stopPropagation(); openLightbox(0, 'grid'); }}
-                        style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', color: 'white', padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', zIndex: 10, transition: 'background 0.2s' }}
+                        style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', color: 'white', padding: '8px 16px', borderRadius: '100px', fontSize: '15px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', zIndex: 10, transition: 'background 0.2s' }}
                         onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.8)'}
                         onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.6)'}
                     >
@@ -167,7 +164,7 @@ export const ImageGallery = ({ item, statusLabel, bottomLeftBadge }: GalleryProp
                         display: 'grid', 
                         gridAutoFlow: 'column',
                         gridAutoColumns: images.length <= 5 ? '1fr' : 'calc(20% - 6.4px)',
-                        gap: '8px', 
+                        gap: '8px',
                         overflowX: 'auto', 
                         scrollSnapType: 'x mandatory', 
                         paddingBottom: '4px', 

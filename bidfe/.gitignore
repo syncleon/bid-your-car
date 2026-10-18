@@ -26,6 +26,8 @@ dist-ssr
 # Test outputs
 playwright-report/
 test-results/
+tests/screenshots/
+scratch/
 
 # Firebase
 .firebase/

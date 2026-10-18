@@ -54,7 +54,7 @@ test.describe('Admin Panel Flows', () => {
 
   test('Admin can view auctions list', async ({ page }) => {
     // Mock auctions list API
-    await page.route('**/api/v1/auctions?*', async route => {
+    await page.route('**/api/v1/auctions/admin*', async route => {
       await route.fulfill({
         json: {
           content: [
@@ -75,6 +75,6 @@ test.describe('Admin Panel Flows', () => {
     
     // Check if the auction list or table is rendered
     await expect(page.getByText('2024 Porsche 911 GT3')).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'ACTIVE' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: /active/i })).toBeVisible();
   });
 });

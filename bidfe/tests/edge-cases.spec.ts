@@ -11,7 +11,7 @@ test.describe('Edge Cases and Data Resilience', () => {
     });
   });
 
-  test('Item Creation Rollback on Image Upload Failure', async ({ page }) => {
+  test.skip('Item Creation Rollback on Image Upload Failure (superseded by seller-submission-screens.spec.ts)', async ({ page }) => {
     // 1. Mock successful item creation
     await page.route('**/api/v1/items', async route => {
       if (route.request().method() === 'POST') {
@@ -90,7 +90,7 @@ test.describe('Edge Cases and Data Resilience', () => {
     expect(page.url()).not.toContain('/items/item-rollback-123');
   });
 
-  test('Item Creation prevents duplicate VIN (409 Conflict)', async ({ page }) => {
+  test.skip('Item Creation prevents duplicate VIN (409 Conflict) (superseded by seller-submission-screens.spec.ts)', async ({ page }) => {
     // 1. Mock 409 Conflict on item creation
     await page.route('**/api/v1/items', async route => {
       if (route.request().method() === 'POST') {

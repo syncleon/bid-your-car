@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useStoreContext } from "../../app/providers/useStoreContext";
 import { observer } from "mobx-react-lite";
+import { Plus } from "lucide-react";
 import "./Navbar.css";
 
 interface Props {
@@ -97,7 +98,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         Past Auctions
                     </Link>
                     <Link to="/sell-car" className="navbar__cta">
-                        Add car
+                        <span>Add car</span>
                     </Link>
                     {user?.roles?.some((r: { name: string }) => r.name === 'ADMIN') && (
                         <Link to="/admin" className={`navbar__link ${location.pathname.startsWith('/admin') ? 'active' : ''}`} style={{ marginLeft: '12px' }}>
@@ -220,7 +221,8 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         className="mobile-link mobile-cta"
                         onClick={() => setIsMobileMenuOpen(false)}
                     >
-                        Add car
+                        <Plus size={16} strokeWidth={2.2} className="mobile-cta-icon" />
+                        <span>Add car</span>
                     </Link>
 
                     {user?.roles?.some((r: any) => r.name === 'ADMIN') && (
@@ -237,7 +239,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         <Link
                             to="/login"
                             state={{ backgroundLocation: location }}
-                            className="mobile-link mobile-cta"
+                            className="mobile-link mobile-login-btn"
                         >
                             Sign In
                         </Link>

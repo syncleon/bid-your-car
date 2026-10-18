@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
-@RequestMapping("/api/v1/items")
+@RequestMapping("/api/v1/items", "/api/v1/item")
 @Tag(name = "Items (Inventory)", description = "Private vehicle inventory management for sellers")
 class ItemController(
     private val itemService: ItemService,
@@ -54,6 +54,20 @@ class ItemController(
     @GetMapping("/{id}")
     fun getItemById(@PathVariable id: UUID): ResponseEntity<ItemDto> {
         val item = itemService.findById(id)
+        return ResponseEntity.ok(item.toDto())
+    }
+
+    /**
+     * Retrieves item details specifically for editing.
+     * Requires ownership or admin access and verifies that the item is in an editable status.
+     *
+     * @param id The UUID of the item.
+     * @return The [ItemDto] representing the vehicle for editing.
+     */
+    @Operation(summary = "Get Item For Editing", description = "Get details of a specific item for the edit form. You must be the owner or an Admin, and vehicle must be in editable status.")
+    @GetMapping("/{id}/edit")
+    fun getItemForEdit(@PathVariable id: UUID): ResponseEntity<ItemDto> {
+        val item = itemService.getItemForEdit(id)
         return ResponseEntity.ok(item.toDto())
     }
 

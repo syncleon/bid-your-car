@@ -145,7 +145,10 @@ export const LoginForm = observer(() => {
 
             <button
                 type="button"
-                onClick={() => window.location.href = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '') + '/oauth2/authorization/google'}
+                onClick={() => {
+                    const baseUrl = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+                    window.location.href = baseUrl.replace('/api/v1', '') + '/oauth2/authorization/google';
+                }}
                 style={formStyles.googleBtn}
             >
                 <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

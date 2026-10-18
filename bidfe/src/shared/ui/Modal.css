@@ -1,31 +1,31 @@
 .modal__overlay {
     position: fixed;
     inset: 0;
-    background-color: var(--bg-overlay);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: var(--bg-overlay, rgba(0, 0, 0, 0.75));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    z-index: 2000;
+    z-index: 9999;
     padding: 16px;
     overflow-y: auto;
     animation: fadeIn 0.2s ease-out forwards;
 }
 
 .modal__card {
-    background: rgba(24, 24, 27, 0.85);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: none;
+    background: rgba(24, 24, 27, 0.95);
+    backdrop-filter: var(--glass-blur, blur(16px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
+    border: 1px solid rgba(255, 255, 255, 0.12);
     width: min(100%, 850px);
-        max-height: calc(100dvh - 32px);
+    max-height: calc(100dvh - 32px);
     min-height: 0;
-    margin: auto 0;
+    margin: auto;
     display: flex;
     flex-direction: column;
-    border-radius: 6px;
-    box-shadow: none;
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
     position: relative;
     overflow: hidden;
     animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;

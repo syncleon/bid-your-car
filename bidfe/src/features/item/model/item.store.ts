@@ -2,6 +2,7 @@ import { types, flow, cast, type Instance } from "mobx-state-tree";
 import {
     getMyItems,
     getItemById,
+    getItemForEdit,
     submitItem,
     deleteItem,
     updateItem,
@@ -111,6 +112,29 @@ export const ItemStore = types
                 self.selectedItem = id as unknown as Instance<typeof ItemModel>;
             } catch (err) {
                 self.error = err instanceof Error ? err.message : "Failed to load item details";
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
+        const loadItemForEdit = flow(function* (id: string) {
+            self.isLoading = true;
+            self.error = null;
+            try {
+                const itemData: ItemDto = yield getItemForEdit(id);
+                updateLocalCache(itemData);
+
+                const exists = self.myItems.find(i => i.id === id);
+                if (!exists) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    self.myItems.push(cast(itemData as any));
+                }
+
+                self.selectedItem = id as unknown as Instance<typeof ItemModel>;
+                return itemData;
+            } catch (err) {
+                self.error = err instanceof Error ? err.message : "Failed to load item for editing";
+                return null;
             } finally {
                 self.isLoading = false;
             }
@@ -235,6 +259,7 @@ export const ItemStore = types
         return {
             loadMyItems,
             loadItemDetails,
+            loadItemForEdit,
             submitNewItem,
             updateListing,
             deleteListing,

@@ -9,6 +9,7 @@ import { VerifyPage } from "../pages/admin/VerifyPage.tsx";
 import { AuctionPage } from "../pages/AuctionList/AuctionPage.tsx";
 import { AuctionDetailsPage } from "../pages/AuctionDetails/AuctionDetailsPage.tsx";
 import { ItemDetailsPage } from "../pages/AuctionDetails/ItemDetailsPage.tsx";
+import { EditItemPage } from "../pages/EditItem/EditItemPage";
 import {PastAuctionsPage} from "../pages/AuctionList/PastAuctionsPage.tsx";
 import {ProfilePage} from "../pages/Profile/ProfilePage.tsx";
 import {CookiePolicyPage} from "../pages/CookiePolicy/CookiePolicyPage";
@@ -32,6 +33,22 @@ export const AppRouter = () => {
                 <Route path="/past-auctions" element={<PastAuctionsPage />} />
                 <Route path="/auctions/:id" element={<AuctionDetailsPage />} />
                 <Route path="/items/:id" element={<ItemDetailsPage />} />
+                <Route
+                    path="/items/:id/edit"
+                    element={
+                        <PrivateRoute>
+                            <EditItemPage />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/item/:id/edit"
+                    element={
+                        <PrivateRoute>
+                            <EditItemPage />
+                        </PrivateRoute>
+                    }
+                />
                 <Route path="/oauth2/redirect" element={<OAuthCallbackPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<LoginPage />} />

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
+import { Car } from "lucide-react";
 import styles from "./styles.ts";
 import "./BaseCard.css";
 
@@ -48,13 +49,26 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children, headerConten
                             style={styles.image}
                             loading="lazy"
                             onError={(e) => {
-                                e.currentTarget.onerror = null;
-                                e.currentTarget.src = 'https://placehold.co/600x400/eeeeee/999999?text=Image+Not+Found';
+                                e.currentTarget.style.display = 'none';
+                                const parent = e.currentTarget.parentElement;
+                                if (parent) {
+                                    const fallback = parent.querySelector('.base-card-fallback');
+                                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                                }
                             }}
                         />
-                    ) : (
-                        <div style={styles.placeholder}>No Photos</div>
-                    )}
+                    ) : null}
+
+                    <div
+                        className="base-card-fallback"
+                        style={{
+                            ...styles.placeholder,
+                            display: imageUrl ? "none" : "flex",
+                        }}
+                    >
+                        <Car size={36} strokeWidth={1.5} style={{ opacity: 0.35 }} />
+                        <span>No Photo</span>
+                    </div>
 
                     {overlays?.topLeft && (
                         <div style={styles.overlayTopLeft}>{overlays.topLeft}</div>
@@ -73,7 +87,7 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children, headerConten
                 <div style={isList ? { ...styles.content, flex: 1, padding: "12px 14px" } : styles.content}>
                     <div className="base-card-title-row">
                         <h3 style={styles.title}>
-                            <span style={styles.year}>{title.year}</span> {title.make} {title.model}
+                            {`${title.year} ${title.make} ${title.model}`}
                         </h3>
                     </div>
                     {children}

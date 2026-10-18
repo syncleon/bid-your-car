@@ -1,17 +1,35 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Clock } from "lucide-react";
 import { BaseCard } from "../../../widgets/BaseCard/BaseCard";
 import type { AuctionDto } from "../types";
-import "./AuctionCard.css";
 
 interface Props {
     auction: AuctionDto;
     viewMode?: "grid" | "list";
 }
 
+
+type CountdownTier = 'orange' | 'red' | null;
+
+const tierStyles = {
+    orange: {
+        text: "#f97316",
+        border: "1px solid rgba(249, 115, 22, 0.5)",
+        progressBg: "linear-gradient(90deg, #ea580c, #f97316)",
+    },
+    red: {
+        text: "#ef4444",
+        border: "1px solid rgba(239, 68, 68, 0.5)",
+        progressBg: "linear-gradient(90deg, #dc2626, #ef4444)",
+    },
+};
+
 const useAuctionTimer = (endTime?: string) => {
     const [timeLeft, setTimeLeft] = useState<string | null>(null);
     const [isEnded, setIsEnded] = useState(false);
     const [isUrgent, setIsUrgent] = useState(false);
+    const [progressPercent, setProgressPercent] = useState<number>(100);
+    const [tier, setTier] = useState<CountdownTier>(null);
 
     useEffect(() => {
         const calculate = () => {
@@ -19,6 +37,8 @@ const useAuctionTimer = (endTime?: string) => {
                 setIsEnded(true);
                 setTimeLeft("N/A");
                 setIsUrgent(false);
+                setProgressPercent(0);
+                setTier(null);
                 return;
             }
             const end = new Date(endTime).getTime();
@@ -29,6 +49,8 @@ const useAuctionTimer = (endTime?: string) => {
                 setIsEnded(true);
                 setTimeLeft("Ended");
                 setIsUrgent(false);
+                setProgressPercent(0);
+                setTier(null);
                 return;
             }
 
@@ -41,15 +63,40 @@ const useAuctionTimer = (endTime?: string) => {
                 const weeks = Math.floor(days / 7);
                 setTimeLeft(`${weeks} ${weeks === 1 ? 'week' : 'weeks'}`);
                 setIsUrgent(false);
+                setProgressPercent(100);
+                setTier(null);
             } else if (days >= 1) {
                 setTimeLeft(`${days} ${days === 1 ? 'day' : 'days'}`);
                 setIsUrgent(false);
+                setProgressPercent(100);
+                setTier(null);
             } else {
                 const h = String(hours).padStart(2, '0');
                 const m = String(minutes).padStart(2, '0');
                 const s = String(seconds).padStart(2, '0');
                 setTimeLeft(`${h}:${m}:${s}`);
-                setIsUrgent(hours < 1 && days === 0);
+
+                // Progress bar countdown for the last 2 hours (7,200,000 ms):
+                // - Orange (2h to 1h): 100% down to 50%
+                // - Red    (1h to 0m):  50% down to 0%
+                const TWO_HOURS_MS = 2 * 3600 * 1000;
+                const ONE_HOUR_MS = 3600 * 1000;
+
+                if (diff < ONE_HOUR_MS) {
+                    setTier('red');
+                    setIsUrgent(true);
+                    const pct = Math.max(0, Math.min(50, (diff / TWO_HOURS_MS) * 100));
+                    setProgressPercent(pct);
+                } else if (diff < TWO_HOURS_MS) {
+                    setTier('orange');
+                    setIsUrgent(true);
+                    const pct = Math.max(50, Math.min(100, (diff / TWO_HOURS_MS) * 100));
+                    setProgressPercent(pct);
+                } else {
+                    setTier(null);
+                    setIsUrgent(false);
+                    setProgressPercent(100);
+                }
             }
         };
 
@@ -58,7 +105,7 @@ const useAuctionTimer = (endTime?: string) => {
         return () => clearInterval(timer);
     }, [endTime]);
 
-    return { timeLeft, isEnded, isUrgent };
+    return { timeLeft, isEnded, isUrgent, progressPercent, tier };
 };
 
 
@@ -69,7 +116,7 @@ const formatPrice = (p: number) => `$${p.toLocaleString()}`;
 
 export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
     const { item, currentPrice, endTime, status } = auction;
-    const { timeLeft, isEnded, isUrgent } = useAuctionTimer(endTime);
+    const { timeLeft, isEnded, progressPercent, tier } = useAuctionTimer(endTime);
 
     const firstImage = item.images?.[0];
     const mainImage = firstImage ? firstImage.url : item.thumbnailUrl;
@@ -82,78 +129,244 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
             to={`/auctions/${auction.id}`}
             imageUrl={mainImage}
             title={{ year: item.year, make: item.make, model: item.model }}
-            isUrgent={isUrgent && isActive && !isEnded}
+            isUrgent={tier === 'red' && isActive && !isEnded}
             viewMode={viewMode}
             overlays={{
                 topLeft: (
                     <>
                         {isActive && !isEnded && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
-                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--color-danger-text)", display: "block", transition: "background-color 0.3s" }}></span> LIVE AUCTION
+                            <div style={{
+                                background: "rgba(0, 0, 0, 0.8)",
+                                color: "rgb(255, 255, 255)",
+                                padding: "4px 8px",
+                                borderRadius: "4px",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                letterSpacing: "0.5px"
+                            }}
+                            >
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--color-danger-text)", display: "block", transition: "background-color 0.3s" }}></span> Live
                             </div>
                         )}
                         {isPending && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
-                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f59e0b", display: "block" }}></span> PENDING
+                            <div style={
+                                {
+                                    background: "rgba(0, 0, 0, 0.8)",
+                                    color: "rgb(255, 255, 255)",
+                                    padding: "4px 8px",
+                                    borderRadius: "4px",
+                                    fontSize: "12px",
+                                    fontWeight: 700,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    letterSpacing: "0.5px"
+                                }
+                            }>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f59e0b", display: "block" }}></span> Pending
                             </div>
                         )}
                         {isSold && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
-                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> SOLD
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> Sold
                             </div>
                         )}
                         {!isSold && !isPending && isEnded && (
-                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
-                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> ENDED
+                            <div style={{ background: "rgba(0, 0, 0, 0.8)", color: "rgb(255, 255, 255)", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.5px" }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--text-secondary)", display: "block" }}></span> Ended
                             </div>
                         )}
                     </>
                 ),
+                topRight: auction.isNoReserve ? (
+                    <div
+                        style={{
+                            background: "rgba(0, 0, 0, 0.8)",
+                            color: "rgb(255, 255, 255)",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            letterSpacing: "0.5px"
+                        }}
+                    >
+                        No reserve
+                    </div>
+                ) : undefined,
                 bottomLeft: (
-                    <div style={{ background: "rgba(17, 17, 17, 0.75)", backdropFilter: "blur(4px)", padding: "6px 10px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "8px", color: "#fff", border: isUrgent && !isEnded ? "1px solid rgba(239, 68, 68, 0.5)" : "1px solid rgba(255,255,255,0.1)" }}>
+                    <div
+                        style={{
+                            background: "rgba(17, 17, 17, 0.75)",
+                            backdropFilter: "blur(4px)",
+                            padding: "6px 10px 8px 10px",
+                            borderRadius: "6px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            color: "#fff",
+                            position: "relative",
+                            overflow: "hidden",
+                            border: tier && !isEnded ? tierStyles[tier].border : "1px solid rgba(255,255,255,0.1)",
+                        }}
+                    >
                         <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-                            <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)"}}>
+                            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)"}}>
                                 {isSold ? 'Sold' : isEnded ? 'Final' : 'Bid'}
                             </span>
-                            <span style={{ fontSize: "14px"}}>{formatPrice(currentPrice)}</span>
+                            <span style={{ fontSize: "15px"}}>{formatPrice(currentPrice)}</span>
                         </div>
                         <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.2)" }}></div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: isUrgent && !isEnded ? "#ef4444" : "#fff" }}>
-                            {isEnded ? <CheckCircleIcon /> : (isUrgent ? <UrgentDot /> : <ClockIcon />)}
-                            <span style={{ fontSize: "14px"}}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: tier && !isEnded ? tierStyles[tier].text : "#fff" }}>
+                            {isEnded ? <CheckCircleIcon /> : <Clock size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
+                            <span style={{ fontSize: "15px"}}>
                                 {isEnded ? (isSold ? 'Sold' : 'Ended') : timeLeft}
                             </span>
                         </div>
+                        {tier && !isEnded && (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: "3px",
+                                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        height: "100%",
+                                        width: `${progressPercent}%`,
+                                        background: tierStyles[tier].progressBg,
+                                        transition: "width 1s linear",
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
                 )
             }}
         >
-            <div className="auction-card-body">
-                <div className="auction-card-features">
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    flexGrow: 1,
+                    gap: "4px",
+                    paddingBottom: "2px",
+                    minWidth: 0,
+                }}
+            >
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, 1fr)",
+                        gap: "8px 12px",
+                        marginTop: "8px",
+                        marginBottom: "4px",
+                    }}
+                >
                     {item.mileage !== undefined && item.mileage !== null && (
-                        <div className="auction-feature-item">
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                color: "var(--text-primary)",
+                                fontWeight: 500,
+                                overflow: "hidden",
+                            }}
+                        >
                             <GaugeIcon />
-                            <span className="truncate">{item.mileage.toLocaleString()} km</span>
+                            <span
+                                style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {item.mileage.toLocaleString()} km
+                            </span>
                         </div>
                     )}
                     {item.transmission && (
-                        <div className="auction-feature-item">
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                color: "var(--text-primary)",
+                                fontWeight: 500,
+                                overflow: "hidden",
+                            }}
+                        >
                             <CogIcon />
-                            <span className="truncate">{item.transmission}</span>
+                            <span
+                                style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {item.transmission}
+                            </span>
                         </div>
                     )}
                     {(item.fuelType || item.engine) && (
-                        <div className="auction-feature-item">
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                color: "var(--text-primary)",
+                                fontWeight: 500,
+                                overflow: "hidden",
+                            }}
+                            title={[item.engine, item.fuelType].filter(Boolean).join(" • ")}
+                        >
                             <GasPumpIcon />
-                            <span className="truncate">
-                                {[item.fuelType, item.engine].filter(Boolean).join(", ")}
+                            <span
+                                style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {item.engine || item.fuelType}
                             </span>
                         </div>
                     )}
                     {item.location && (
-                        <div className="auction-feature-item">
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                                color: "var(--text-primary)",
+                                fontWeight: 500,
+                                overflow: "hidden",
+                            }}
+                        >
                             <MapPinIcon />
-                            <span className="truncate">{item.location}</span>
+                            <span
+                                style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {item.location}
+                            </span>
                         </div>
                     )}
                 </div>
@@ -163,40 +376,29 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
 };
 
 
-const ClockIcon = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-    </svg>
-);
-
-const UrgentDot = () => (
-    <span className="urgent-dot" />
-);
-
 const CheckCircleIcon = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
         <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
 );
 
 const GaugeIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <path d="m12 14 4-4" />
         <path d="M3.34 16A10 10 0 1 1 20.66 16" />
     </svg>
 );
 
 const CogIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <circle cx="12" cy="12" r="3"></circle>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
     </svg>
 );
 
 const GasPumpIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <path d="M3 22v-8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v8"></path>
         <path d="M3 10V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"></path>
         <line x1="7" y1="12" x2="7" y2="12"></line>
@@ -206,58 +408,9 @@ const GasPumpIcon = () => (
     </svg>
 );
 
-const CarIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-        <circle cx="7" cy="17" r="2" />
-        <path d="M9 17h6" />
-        <circle cx="17" cy="17" r="2" />
-    </svg>
-);
-
-const PaletteIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="13.5" cy="6.5" r=".5"></circle>
-        <circle cx="17.5" cy="10.5" r=".5"></circle>
-        <circle cx="8.5" cy="7.5" r=".5"></circle>
-        <circle cx="6.5" cy="12.5" r=".5"></circle>
-        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
-    </svg>
-);
-
 const MapPinIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
         <circle cx="12" cy="10" r="3"></circle>
-    </svg>
-);
-
-const ZapIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-    </svg>
-);
-
-const BoxIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-    </svg>
-);
-
-const StarIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-    </svg>
-);
-
-const SofaIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3" />
-        <path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0Z" />
-        <path d="M4 18v2" />
-        <path d="M20 18v2" />
-        <path d="M12 4v9" />
     </svg>
 );

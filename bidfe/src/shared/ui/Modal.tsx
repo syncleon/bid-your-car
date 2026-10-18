@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import "./Modal.css";
 
 interface Props {
@@ -7,9 +8,11 @@ interface Props {
     onClose: () => void;
     children: ReactNode;
     title?: string;
+    maxWidth?: string | number;
+    className?: string;
 }
 
-export const Modal = ({ isOpen, onClose, children, title }: Props) => {
+export const Modal = ({ isOpen, onClose, children, title, maxWidth, className = "" }: Props) => {
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -21,10 +24,18 @@ export const Modal = ({ isOpen, onClose, children, title }: Props) => {
 
     if (!isOpen) return null;
 
-    return (
+    const customWidthStyle = maxWidth
+        ? {
+              maxWidth: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
+              width: `min(100%, ${typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth})`,
+          }
+        : undefined;
+
+    return createPortal(
         <div className="modal__overlay" onClick={onClose}>
             <div
-                className="modal__card"
+                className={`modal__card ${className}`}
+                style={customWidthStyle}
                 onClick={(e) => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
@@ -47,6 +58,7 @@ export const Modal = ({ isOpen, onClose, children, title }: Props) => {
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

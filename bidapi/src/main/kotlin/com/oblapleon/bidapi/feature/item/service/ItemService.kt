@@ -144,10 +144,30 @@ class ItemService(
             bodyStyle = request.bodyStyle,
             exteriorColor = request.exteriorColor,
             interiorColor = request.interiorColor,
-            sellerType = request.sellerType
+            sellerType = request.sellerType,
+            highlights = request.highlights,
+            knownFlaws = request.knownFlaws,
+            recentServiceHistory = request.recentServiceHistory,
+            otherItemsIncluded = request.otherItemsIncluded
         )
 
         return itemRepository.save(newItem)
+    }
+
+    /**
+     * Retrieves an item specifically for editing, verifying editable status.
+     *
+     * @param id The UUID of the item.
+     * @return The [Item].
+     * @throws ConflictException if the item status does not allow editing.
+     */
+    @Transactional(readOnly = true)
+    fun getItemForEdit(id: UUID): Item {
+        val item = findById(id)
+        if (item.status != ItemStatus.DRAFT && item.status != ItemStatus.REJECTED && item.status != ItemStatus.UNSOLD) {
+            throw ConflictException("Vehicle cannot be edited in its current status: ${item.status}")
+        }
+        return item
     }
 
     /**
@@ -186,6 +206,10 @@ class ItemService(
         request.exteriorColor?.let { item.exteriorColor = it }
         request.interiorColor?.let { item.interiorColor = it }
         request.sellerType?.let { item.sellerType = it }
+        request.highlights?.let { item.highlights = it }
+        request.knownFlaws?.let { item.knownFlaws = it }
+        request.recentServiceHistory?.let { item.recentServiceHistory = it }
+        request.otherItemsIncluded?.let { item.otherItemsIncluded = it }
 
         request.keepImageIds?.let { keepIds ->
             val imagesToRemove = item.images.filter { it.id !in keepIds }
@@ -275,16 +299,23 @@ class ItemService(
         
         val imageUrl = storageService.uploadFile(file)
 
+        val image: ItemImage
         if (category == ImageCategory.MAIN) {
             val oldMainImage = itemImageRepository.findFirstByItemIdAndCategory(itemId, ImageCategory.MAIN)
             if (oldMainImage != null) {
                 oldMainImage.category = ImageCategory.EXTERIOR
                 itemImageRepository.save(oldMainImage)
             }
+            item.images.forEach { existingImg ->
+                existingImg.sortOrder = existingImg.sortOrder + 1
+                itemImageRepository.save(existingImg)
+            }
+            image = ItemImage(url = imageUrl, item = item, category = category, sortOrder = 0)
+            item.addImage(image)
+        } else {
+            image = ItemImage(url = imageUrl, item = item, category = category, sortOrder = item.images.size)
+            item.addImage(image)
         }
-
-        val image = ItemImage(url = imageUrl, item = item, category = category, sortOrder = item.images.size)
-        item.addImage(image)
 
         return itemImageRepository.save(image)
     }

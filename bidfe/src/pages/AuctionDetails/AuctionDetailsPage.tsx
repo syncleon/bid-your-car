@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../../shared/hooks/useStore.ts";
-import { DetailPageLayout, ResponsiveGrid, ImageGallery, VehicleInfo, VehicleHeader, DetailSkeleton } from "../../shared/ui/details";
+import { DetailPageLayout, ImageGallery, VehicleInfo, VehicleHeader, DetailSkeleton } from "../../shared/ui/details";
 import { BiddingCard } from "../../features/auction/ui/BiddingCard.tsx";
+import { BidHistoryList } from "../../features/bid/ui/BidHistoryList.tsx";
 
 import { formatDistanceToNow } from "date-fns";
 import "./AuctionDetails.css";
@@ -133,12 +134,17 @@ export const AuctionDetailsPage = observer(() => {
                         </div>
                     </div>
 
-                    {/* Right Column: Sticky Bidding Card */}
+                    {/* Right Column: Bidding Card & Bid History */}
                     <div className="auction-sidebar">
                         <VehicleHeader item={item} />
                         {!isCancelled && (
-                            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}>
+                            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px', flexGrow: 1, minHeight: 0 }}>
                                 <BiddingCard auction={auction} />
+                                <BidHistoryList
+                                    bids={auctionStore.bidHistory}
+                                    isEnded={isEnded}
+                                    isSold={auction.status === 'SOLD'}
+                                />
                             </div>
                         )}
                     </div>

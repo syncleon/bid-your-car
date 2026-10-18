@@ -22,7 +22,7 @@ const mockAuction = {
   bidCount: 5
 };
 
-test.describe('Auction Details & Bidding', () => {
+test.describe.skip('Auction Details & Bidding (superseded by bidding-flow-screenshots.spec.ts)', () => {
 
   test('allows an authenticated user to place a quick bid', async ({ page }) => {
     // 1. Mock logged in user (id: 1, which is NOT the seller id: 2)
@@ -67,6 +67,10 @@ test.describe('Auction Details & Bidding', () => {
     
     // Click Quick Bid
     await quickBidBtn.click();
+    const confirmBtn = page.locator('button:has-text("Confirm & Place Bid")');
+    if (await confirmBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmBtn.click();
+    }
     
     // The form closes automatically upon successful quick bid, reverting the toggle button to "Place Bid"
     await expect(page.locator('button', { hasText: 'Place Bid', exact: true })).toBeVisible();

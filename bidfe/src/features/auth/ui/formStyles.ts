@@ -51,16 +51,17 @@ export const formStyles = {
 
     primaryBtn: {
         width: "100%",
-        padding: "12px",
-        fontSize: "14px",
-        fontWeight: "600",
-        color: "var(--btn-primary-text)",
-        backgroundColor: "var(--btn-primary-bg)",
+        padding: "13px 20px",
+        fontSize: "15px",
+        fontWeight: "700",
+        color: "#ffffff",
+        background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
         border: "none",
         borderRadius: "8px",
         cursor: "pointer",
         marginTop: "8px",
-        transition: "opacity 0.2s, background-color 0.3s ease, color 0.3s ease",
+        boxShadow: "0 4px 14px rgba(249, 115, 22, 0.35)",
+        transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
         textDecoration: "none",
         display: "inline-block",
         boxSizing: "border-box",
@@ -73,12 +74,12 @@ export const formStyles = {
         fontSize: "14px",
         fontWeight: "600",
         color: "var(--text-primary)",
-        backgroundColor: "var(--bg-input)",
-        border: "1px solid var(--border-color)",
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
+        border: "1px solid rgba(255, 255, 255, 0.12)",
         borderRadius: "8px",
         cursor: "pointer",
         marginTop: "16px",
-        transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease",
+        transition: "all 0.25s ease",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -135,7 +136,7 @@ export const formStyles = {
     } as React.CSSProperties,
 
     footer: {
-        marginTop: "24px",
+        marginTop: "20px",
         textAlign: "center",
         fontSize: "14px",
         color: "var(--text-secondary)",
@@ -143,15 +144,21 @@ export const formStyles = {
     } as React.CSSProperties,
 
     errorBanner: {
-        backgroundColor: "var(--color-danger-bg)",
-        color: "var(--color-danger-text)",
-        padding: "12px",
+        backgroundColor: "rgba(239, 68, 68, 0.12)",
+        color: "#fca5a5",
+        padding: "12px 16px",
         borderRadius: "8px",
         fontSize: "13px",
-        marginBottom: "24px",
-        border: "1px solid var(--color-danger-border)",
-        transition: "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease"
+        fontWeight: "500",
+        marginBottom: "20px",
+        border: "1px solid rgba(239, 68, 68, 0.3)",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        lineHeight: "1.4",
+        transition: "all 0.3s ease"
     } as React.CSSProperties,
+
 
     successBanner: {
         backgroundColor: "var(--color-success-bg)",
@@ -202,20 +209,21 @@ export const formStyles = {
         position: "relative",
         width: "100%",
         maxWidth: "440px",
-        padding: "40px",
-        backgroundColor: "rgba(24, 24, 27, 0.85)",
+        padding: "36px 36px 32px 36px",
+        backgroundColor: "rgba(24, 24, 27, 0.95)",
         borderRadius: "16px",
         boxSizing: "border-box",
-        border: "none",
+        border: "1px solid rgba(255, 255, 255, 0.12)",
+        backdropFilter: "blur(20px)",
         transition: "background-color 0.3s ease, border-color 0.3s ease"
     } as React.CSSProperties,
 
     contentBoxModal: {
-        boxShadow: "none",
+        boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05)",
     } as React.CSSProperties,
 
     contentBoxPage: {
-        boxShadow: "none",
+        boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
     } as React.CSSProperties,
 
     closeButton: {

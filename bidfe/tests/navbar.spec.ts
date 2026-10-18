@@ -14,8 +14,8 @@ test.describe('Navbar Component', () => {
 
     await page.goto('/');
 
-    // Verify "Sign In" button is visible
-    const signInBtn = page.getByRole('link', { name: 'Sign In' }).first();
+    // Verify "Sign In" button is visible in navbar
+    const signInBtn = page.locator('.navbar').getByRole('link', { name: 'Sign In' });
     await expect(signInBtn).toBeVisible();
 
     // Verify Avatar is not visible
@@ -37,18 +37,16 @@ test.describe('Navbar Component', () => {
 
     await page.goto('/');
 
-    // Verify "Sign In" button is NOT visible
-    await expect(page.getByRole('link', { name: 'Sign In' })).not.toBeVisible();
+    // Verify "Sign In" button is NOT visible in navbar
+    await expect(page.locator('.navbar').getByRole('link', { name: 'Sign In' })).not.toBeVisible();
 
     // Verify User Menu Trigger is visible
     const userMenu = page.locator('.user-menu__trigger');
     await expect(userMenu).toBeVisible();
     await expect(userMenu).toContainText('T'); // Username initial should be displayed
 
-    // Click User Menu to open dropdown
+    // Click User Menu (links directly to user profile)
     await userMenu.click();
-    // Click My Profile
-    await page.getByRole('link', { name: 'My Profile' }).click();
     await expect(page).toHaveURL(/.*\/profile/);
   });
 });

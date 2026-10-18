@@ -191,39 +191,96 @@ export class AuctionStore {
         this.isBidding = true;
         this.error = null;
         try {
-            const newBid = await placeBid(auctionId, amount);
-            await this.refreshAuctionStateLocally(auctionId, newBid);
-            return true;
-        } catch (error: unknown) {
+            await placeBid(auctionId, amount);
+
+            // Optimistic update so the user immediately sees their bid on the first click
+            const currentUserId = this.root.authStore.user?.id;
+            const currentUsername = this.root.authStore.user?.username || "You";
             runInAction(() => {
-                this.error = this.getErrorMessage(error, "Failed to place bid");
+                if (this.selectedAuction && this.selectedAuction.id === auctionId) {
+                    this.selectedAuction = {
+                        ...this.selectedAuction,
+                        currentPrice: amount,
+                        bidCount: this.selectedAuction.bidCount + 1,
+                        winnerId: currentUserId || this.selectedAuction.winnerId,
+                    };
+                }
+                const optimisticBid: BidDto = {
+                    id: "optimistic-" + Date.now(),
+                    amount,
+                    bidTime: new Date().toISOString(),
+                    bidderId: currentUserId || 0,
+                    bidderUsername: currentUsername,
+                };
+                this.bidHistory.unshift(optimisticBid);
+            });
+
+            await this.refreshAuctionStateLocally(auctionId);
+            return { success: true };
+        } catch (error: unknown) {
+            const errMsg = this.getErrorMessage(error, "Failed to place bid");
+            runInAction(() => {
+                this.error = errMsg;
                 this.isBidding = false;
             });
-            return false;
+            return { success: false, error: errMsg };
         }
     };
 
     submitQuickBid = async (auctionId: string) => {
         this.isBidding = true;
-        
+        this.error = null;
         try {
-            const newBid = await placeQuickBid(auctionId);
-            await this.refreshAuctionStateLocally(auctionId, newBid);
+            await placeQuickBid(auctionId);
+
+            // Optimistic update so the user immediately sees their bid on the first click
+            const currentUserId = this.root.authStore.user?.id;
+            const currentUsername = this.root.authStore.user?.username || "You";
+            runInAction(() => {
+                if (this.selectedAuction && this.selectedAuction.id === auctionId) {
+                    const price = this.selectedAuction.bidCount === 0
+                        ? this.selectedAuction.startPrice
+                        : this.selectedAuction.currentPrice + this.selectedAuction.minBidIncrement;
+                    this.selectedAuction = {
+                        ...this.selectedAuction,
+                        currentPrice: price,
+                        bidCount: this.selectedAuction.bidCount + 1,
+                        winnerId: currentUserId || this.selectedAuction.winnerId,
+                    };
+                    const optimisticBid: BidDto = {
+                        id: "optimistic-" + Date.now(),
+                        amount: price,
+                        bidTime: new Date().toISOString(),
+                        bidderId: currentUserId || 0,
+                        bidderUsername: currentUsername,
+                    };
+                    this.bidHistory.unshift(optimisticBid);
+                }
+            });
+
+            await this.refreshAuctionStateLocally(auctionId);
             return { success: true };
         } catch (error: unknown) {
-            runInAction(() => { this.isBidding = false; });
-            return { success: false, error: this.getErrorMessage(error, "Failed to place quick bid") };
+            const errMsg = this.getErrorMessage(error, "Failed to place quick bid");
+            runInAction(() => {
+                this.error = errMsg;
+                this.isBidding = false;
+            });
+            return { success: false, error: errMsg };
         }
     };
 
-    private refreshAuctionStateLocally = async (auctionId: string, newBid?: BidDto | null) => {
+    private refreshAuctionStateLocally = async (auctionId: string) => {
         try {
-            const updatedAuction = await getAuctionById(auctionId);
+            // Wait 400ms for Redis batch processor and cache update
+            await new Promise(r => setTimeout(r, 400));
+            const [updatedAuction, historyPage] = await Promise.all([
+                getAuctionById(auctionId),
+                getAuctionBidHistory(auctionId)
+            ]);
             runInAction(() => {
-                if (newBid) {
-                    this.bidHistory.unshift(newBid);
-                }
                 this.selectedAuction = updatedAuction;
+                this.bidHistory = historyPage.content;
 
                 const index = this.auctions.findIndex(a => a.id === auctionId);
                 if (index !== -1) this.auctions[index] = updatedAuction;
@@ -236,7 +293,7 @@ export class AuctionStore {
         } catch {
             runInAction(() => { this.isBidding = false; });
         }
-    }
+    };
 
     private replaceAuctionInCollections = (updated: AuctionDto) => {
         const replace = (list: AuctionDto[]) => {

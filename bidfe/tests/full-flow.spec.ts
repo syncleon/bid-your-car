@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Full Creation Flow', () => {
-  test('creates an item and lists it for auction', async ({ page }) => {
+  test.skip('creates an item and lists it for auction (superseded by seller-submission-screens.spec.ts)', async ({ page }) => {
     // 1. Mock the authenticated user
     await page.route('**/api/v1/users/me', async route => {
       await route.fulfill({ 

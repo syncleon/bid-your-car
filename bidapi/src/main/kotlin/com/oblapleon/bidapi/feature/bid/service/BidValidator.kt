@@ -18,14 +18,25 @@ class BidValidator {
             throw BadRequestException("Seller cannot bid on their own item.")
         }
 
-        return if (req.isQuickBid) {
+        if (auction.winningBid?.bidder?.id == req.bidderId) {
+            throw BadRequestException("You are already the highest bidder.")
+        }
+
+        val amount = if (req.isQuickBid) {
             if (auction.bidCount == 0) {
                 auction.startPrice
             } else {
                 auction.currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(auction.currentPrice))
             }
         } else {
-            req.maxAmount ?: throw BadRequestException("Max amount must be provided for non-quick bids.")
+            req.maxAmount ?: throw BadRequestException("Bid amount must be provided.")
         }
+
+        val minRequired = if (auction.bidCount == 0) auction.startPrice else auction.currentPrice.add(BidIncrementUtil.getDynamicBidIncrement(auction.currentPrice))
+        if (amount < minRequired) {
+            throw BadRequestException("Bid amount too low. Minimum required: $minRequired")
+        }
+
+        return amount
     }
 }
