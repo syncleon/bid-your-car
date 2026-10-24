@@ -179,6 +179,7 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                     gap: "4px",
                     paddingBottom: "2px",
                     minWidth: 0,
+                    marginTop: "auto",
                 }}
             >
                 <CardSpecsGrid

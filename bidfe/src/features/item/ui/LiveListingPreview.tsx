@@ -75,6 +75,7 @@ export const LiveListingPreview = ({ formData, previewImage }: LiveListingPrevie
                             gap: "4px",
                             paddingBottom: "2px",
                             minWidth: 0,
+                            marginTop: "auto",
                         }}
                     >
                         <CardSpecsGrid

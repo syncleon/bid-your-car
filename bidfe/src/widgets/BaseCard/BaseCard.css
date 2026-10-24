@@ -29,7 +29,18 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.base-card-title-row h3 {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.01em !important;
+    color: var(--text-primary);
+    margin: 0 !important;
+    min-height: auto !important;
 }
 
 .base-card-star-btn {
@@ -85,12 +96,13 @@
         border-radius: 0 !important;
     }
     .base-card-title-row h3 {
-        font-size: 15px !important;
+        font-size: 14px !important;
     }
 }
 
 @media (max-width: 560px) {
     .base-card-title-row h3 {
+        font-size: 15px !important;
         min-height: auto !important;
     }
 }

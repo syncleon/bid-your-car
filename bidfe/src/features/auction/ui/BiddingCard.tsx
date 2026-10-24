@@ -13,6 +13,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
     const [localError, setLocalError] = useState<string | null>(null);
 
     const isEnded = (auction.status && auction.status !== "ACTIVE") || new Date(auction.endTime).getTime() <= Date.now();
+    const isSold = auction.status === "SOLD";
     const isActive = auction.status === "ACTIVE" && !isEnded;
     const isOwner = authStore.user?.id === auction.item.seller.id;
     const isWinning = auction.winnerId === authStore.user?.id;
@@ -239,7 +240,9 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                     }}
                 >
                     {isEnded
-                        ? (auction.isReserveMet || auction.isNoReserve ? "Sold Price" : "Final Bid (Reserve Not Met)")
+                        ? (isSold
+                            ? "Sold Price"
+                            : (auction.isNoReserve ? "Final Bid (Unsold)" : (auction.isReserveMet ? "Final Bid" : "Final Bid (Reserve Not Met)")))
                         : "Current Bid"}
                 </span>
                 <span
@@ -258,9 +261,13 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                 {/* Reserve Explanation Line */}
                 <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", marginTop: "2px" }}>
                     {isEnded
-                        ? (auction.isReserveMet || auction.isNoReserve
+                        ? (isSold
                             ? "Auction completed • Sold to the highest bidder."
-                            : "Auction completed • Reserve was not met.")
+                            : (auction.isNoReserve
+                                ? "Auction completed without a winning bid."
+                                : (auction.isReserveMet
+                                    ? "Auction completed • Unsold."
+                                    : "Auction completed • Reserve was not met.")))
                         : (auction.isNoReserve
                             ? "No reserve price. This vehicle will sell to the highest bidder."
                             : auction.isReserveMet
@@ -272,7 +279,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
 
                 {isEnded && (
                     <div style={{ marginTop: "10px", fontSize: "14px", lineHeight: 1.4 }}>
-                        {auction.isReserveMet || auction.isNoReserve ? (
+                        {isSold ? (
                             isWinning ? (
                                 <div style={{ color: "#4ade80", fontWeight: 600, padding: "8px 12px", borderRadius: "8px", backgroundColor: "rgba(74, 222, 128, 0.1)", border: "1px solid rgba(74, 222, 128, 0.2)" }}>
                                     🎉 Congratulations! You won this auction at ${currentPrice.toLocaleString()}.
@@ -283,14 +290,20 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                                 </div>
                             )
                         ) : (
-                            isWinning ? (
-                                <div style={{ color: "#f59e0b", fontWeight: 600, padding: "8px 12px", borderRadius: "8px", backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
-                                    Reserve not met. As the highest bidder (${currentPrice.toLocaleString()}), you have exclusive rights to negotiate a post-auction deal with the seller.
-                                </div>
+                            !auction.isReserveMet && !auction.isNoReserve ? (
+                                isWinning ? (
+                                    <div style={{ color: "#f59e0b", fontWeight: 600, padding: "8px 12px", borderRadius: "8px", backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                                        Reserve not met. As the highest bidder (${currentPrice.toLocaleString()}), you have exclusive rights to negotiate a post-auction deal with the seller.
+                                    </div>
+                                ) : (
+                                    <span style={{ color: "var(--text-muted)" }}>
+                                        Reserve price was not met. The vehicle was not sold automatically.
+                                    </span>
+                                )
                             ) : (
-                                <span style={{ color: "var(--text-muted)" }}>
-                                    Reserve price was not met. The vehicle was not sold automatically.
-                                </span>
+                                <div style={{ color: "var(--text-muted)", padding: "8px 12px", borderRadius: "8px", backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                                    Auction ended without a sale.
+                                </div>
                             )
                         )}
                     </div>
@@ -452,7 +465,17 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
 
                                 {/* Quick increment chips */}
                                 <div style={{ display: "flex", gap: "4px" }}>
-                                    {[auction.minBidIncrement, 500, 1000].filter((inc, idx, self) => inc > 0 && self.indexOf(inc) === idx).map((inc) => (
+                                    {Array.from(
+                                        new Set([
+                                            auction.minBidIncrement,
+                                            Math.max(500, auction.minBidIncrement),
+                                            Math.max(1000, auction.minBidIncrement * 2),
+                                        ])
+                                    )
+                                        .filter((inc) => inc >= auction.minBidIncrement && inc > 0)
+                                        .sort((a, b) => a - b)
+                                        .slice(0, 3)
+                                        .map((inc) => (
                                         <button
                                             key={inc}
                                             type="button"

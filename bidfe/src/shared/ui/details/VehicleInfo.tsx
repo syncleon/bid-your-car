@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { ItemDto } from "../../../features/item/types";
 import { styles } from "./sharedStyles";
 
@@ -70,6 +71,7 @@ export const VehicleHeader = ({ item }: { item: ItemDto }) => {
 };
 
 export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: ItemDto, hideHeader?: boolean, isNoReserve?: boolean }) => {
+    const navigate = useNavigate();
     const showNoReserve = isNoReserve || item.auction?.isNoReserve;
     return (
         <div className="vehicle-info" style={{ width: "100%" }}>
@@ -116,12 +118,45 @@ export const VehicleInfo = ({ item, hideHeader = false, isNoReserve }: { item: I
                     {/* Left Column wrapper */}
                     <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-color)' }}>
                         {[
-                            { label: 'Make', value: <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>{item.make || "—"}</span> },
-                            { label: 'Model', value: <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>{item.model || "—"}</span> },
+                            {
+                                label: 'Make',
+                                value: item.make ? (
+                                    <span
+                                        onClick={() => navigate(`/auctions?query=${encodeURIComponent(item.make)}`)}
+                                        title={`Search all ${item.make} auctions`}
+                                        style={{ textDecoration: 'underline', cursor: 'pointer', color: 'var(--text-primary)' }}
+                                    >
+                                        {item.make}
+                                    </span>
+                                ) : "—"
+                            },
+                            {
+                                label: 'Model',
+                                value: item.model ? (
+                                    <span
+                                        onClick={() => navigate(`/auctions?query=${encodeURIComponent(item.model)}`)}
+                                        title={`Search all ${item.model} auctions`}
+                                        style={{ textDecoration: 'underline', cursor: 'pointer', color: 'var(--text-primary)' }}
+                                    >
+                                        {item.model}
+                                    </span>
+                                ) : "—"
+                            },
                             { label: 'Mileage', value: item.mileage != null ? `${item.mileage.toLocaleString()} miles` : "—" },
                             { label: 'VIN', value: item.vin ? <span style={{ fontFamily: "monospace", letterSpacing: "0.04em", wordBreak: "break-all" }}>{item.vin}</span> : "—" },
                             { label: 'Title Status', value: item.titleStatus || "Clean" },
-                            { label: 'Location', value: <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>{item.location || "—"}</span> },
+                            {
+                                label: 'Location',
+                                value: item.location ? (
+                                    <span
+                                        onClick={() => navigate(`/auctions?query=${encodeURIComponent(item.location)}`)}
+                                        title={`Search auctions in ${item.location}`}
+                                        style={{ textDecoration: 'underline', cursor: 'pointer', color: 'var(--text-primary)' }}
+                                    >
+                                        {item.location}
+                                    </span>
+                                ) : "—"
+                            },
                             { label: 'Seller', value: (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <div style={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '11px', fontWeight: 700 }}>

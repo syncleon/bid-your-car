@@ -73,6 +73,9 @@ export const CardPricePill = ({
                         right: 0,
                         height: "3px",
                         backgroundColor: "rgba(255, 255, 255, 0.15)",
+                        borderBottomLeftRadius: "6px",
+                        borderBottomRightRadius: "6px",
+                        overflow: "hidden",
                     }}
                 >
                     <div
@@ -80,6 +83,7 @@ export const CardPricePill = ({
                             height: "100%",
                             width: `${progressPercent}%`,
                             background: progressBg,
+                            borderBottomLeftRadius: "6px",
                             transition: "width 1s linear",
                         }}
                     />

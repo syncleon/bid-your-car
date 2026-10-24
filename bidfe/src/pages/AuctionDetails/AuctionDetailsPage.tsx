@@ -104,7 +104,7 @@ export const AuctionDetailsPage = observer(() => {
 
                                         {isEnded && !isCancelled && (
                                             <div className="compact-banner" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                                                <strong>{auction.status === 'SOLD' ? 'Auction Completed • Sold' : 'Auction Ended • Reserve Not Met'}</strong>
+                                                <strong>{auction.status === 'SOLD' ? 'Auction Completed • Sold' : (auction.isNoReserve ? 'Auction Ended • Unsold' : 'Auction Ended • Reserve Not Met')}</strong>
                                                 <p>Ended {auction.endTime ? formatDistanceToNow(new Date(auction.endTime), { addSuffix: true }) : ''}.</p>
                                             </div>
                                         )}

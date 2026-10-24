@@ -53,7 +53,7 @@ export const CardSpecsGrid = ({
     transmission,
     engineOrFuel,
     location,
-    mileageUnit = "km",
+    mileageUnit = "mi",
     style,
 }: CardSpecsGridProps) => {
     let formattedMileage: string | null = null;
