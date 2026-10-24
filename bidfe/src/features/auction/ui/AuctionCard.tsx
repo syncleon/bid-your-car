@@ -62,12 +62,12 @@ const useAuctionTimer = (endTime?: string) => {
 
             if (days >= 7) {
                 const weeks = Math.floor(days / 7);
-                setTimeLeft(`${weeks} ${weeks === 1 ? 'week' : 'weeks'}`);
+                setTimeLeft(`${weeks}w`);
                 setIsUrgent(false);
                 setProgressPercent(100);
                 setTier(null);
             } else if (days >= 1) {
-                setTimeLeft(`${days} ${days === 1 ? 'day' : 'days'}`);
+                setTimeLeft(`${days}d`);
                 setIsUrgent(false);
                 setProgressPercent(100);
                 setTier(null);
@@ -154,12 +154,12 @@ export const AuctionCard = ({ auction, viewMode = "grid" }: Props) => {
                 ) : undefined,
                 bottomLeft: (
                     <CardPricePill
-                        priceLabel={isSold ? 'Winning Bid' : isEnded ? 'Final Bid' : 'Bid'}
+                        priceLabel={isSold ? 'Won' : isEnded ? 'Final' : 'Bid'}
                         priceValue={formatPrice(currentPrice)}
                         rightContent={
                             <div style={{ display: "flex", alignItems: "center", gap: "4px", color: tier && !isEnded ? tierStyles[tier].text : "#fff" }}>
-                                {isEnded ? <CheckCircleIcon /> : <Clock size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
-                                <span style={{ fontSize: "15px" }}>
+                                {isEnded ? <CheckCircleIcon /> : <Clock size={12} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
+                                <span style={{ fontSize: "13px", fontWeight: 600 }}>
                                     {isEnded ? (isSold ? 'Closed' : 'Ended') : timeLeft}
                                 </span>
                             </div>

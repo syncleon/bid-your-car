@@ -14,14 +14,14 @@ export const CardBadge = ({ children, dotColor, style, className }: CardBadgePro
             style={{
                 background: "rgba(0, 0, 0, 0.8)",
                 color: "#ffffff",
-                padding: "4px 8px",
-                borderRadius: "4px",
-                fontSize: "12px",
+                padding: "3px 6px",
+                borderRadius: "3px",
+                fontSize: "11px",
                 fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
-                letterSpacing: "0.5px",
+                gap: "5px",
+                letterSpacing: "0.4px",
                 backdropFilter: "blur(4px)",
                 ...style,
             }}
@@ -29,8 +29,8 @@ export const CardBadge = ({ children, dotColor, style, className }: CardBadgePro
             {dotColor && (
                 <span
                     style={{
-                        width: "6px",
-                        height: "6px",
+                        width: "5px",
+                        height: "5px",
                         borderRadius: "50%",
                         backgroundColor: dotColor,
                         display: "block",

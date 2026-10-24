@@ -49,15 +49,15 @@ const styles = {
         transition: "all 0.3s ease",
     } as CSSProperties,
 
-    content: { padding: "12px 0 6px 0", flexGrow: 1, display: "flex", flexDirection: "column" } as CSSProperties,
+    content: { padding: "8px 0 4px 0", flexGrow: 1, display: "flex", flexDirection: "column" } as CSSProperties,
     title: {
         margin: "0 0 6px 0",
-        fontSize: "16px",
+        fontSize: "18px",
         fontWeight: 700,
         color: "var(--text-primary)",
-        lineHeight: 1.25,
+        lineHeight: 1.3,
         minHeight: "auto",
-        letterSpacing: "-0.01em",
+        letterSpacing: "-0.015em",
         transition: "color 0.3s ease",
     } as CSSProperties,
     year: {

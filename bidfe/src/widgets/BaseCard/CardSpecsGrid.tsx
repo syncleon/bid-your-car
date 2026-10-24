@@ -1,21 +1,21 @@
 import type { CSSProperties } from "react";
 
 export const GaugeIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <path d="m12 14 4-4" />
         <path d="M3.34 16A10 10 0 1 1 20.66 16" />
     </svg>
 );
 
 export const CogIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <circle cx="12" cy="12" r="3" />
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
 );
 
 export const GasPumpIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <path d="M3 22v-8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v8" />
         <path d="M3 10V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4" />
         <line x1="7" y1="12" x2="7" y2="12" />
@@ -26,14 +26,14 @@ export const GasPumpIcon = () => (
 );
 
 export const MapPinIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
         <circle cx="12" cy="10" r="3" />
     </svg>
 );
 
 export const CheckCircleIcon = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
         <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
@@ -72,9 +72,9 @@ export const CardSpecsGrid = ({
             style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "8px 12px",
-                marginTop: "8px",
-                marginBottom: "4px",
+                gap: "4px 8px",
+                marginTop: "6px",
+                marginBottom: "2px",
                 ...style,
             }}
         >
@@ -83,8 +83,9 @@ export const CardSpecsGrid = ({
                     style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "6px",
-                        fontSize: "13px",
+                        gap: "5px",
+                        fontSize: "12px",
+                        lineHeight: 1.2,
                         color: "var(--text-primary)",
                         fontWeight: 500,
                         overflow: "hidden",
@@ -107,8 +108,9 @@ export const CardSpecsGrid = ({
                     style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "6px",
-                        fontSize: "13px",
+                        gap: "5px",
+                        fontSize: "12px",
+                        lineHeight: 1.2,
                         color: "var(--text-primary)",
                         fontWeight: 500,
                         overflow: "hidden",
@@ -131,8 +133,9 @@ export const CardSpecsGrid = ({
                     style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "6px",
-                        fontSize: "13px",
+                        gap: "5px",
+                        fontSize: "12px",
+                        lineHeight: 1.2,
                         color: "var(--text-primary)",
                         fontWeight: 500,
                         overflow: "hidden",
@@ -156,8 +159,9 @@ export const CardSpecsGrid = ({
                     style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "6px",
-                        fontSize: "13px",
+                        gap: "5px",
+                        fontSize: "12px",
+                        lineHeight: 1.2,
                         color: "var(--text-primary)",
                         fontWeight: 500,
                         overflow: "hidden",
