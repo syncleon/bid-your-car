@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite";
 import { ArrowLeft, AlertCircle, Save, CheckCircle2, Lock, ShieldAlert } from "lucide-react";
 import { useStore } from "../../shared/hooks/useStore";
 import { ImageUploader } from "../../features/item/ui/ImageUploader";
-import type { ItemDto, ItemUpdateRequest, ImageCategory, ConditionGrade } from "../../features/item/types";
+import type { ItemDto, ItemUpdateRequest, ImageCategory, ConditionGrade, ItemImageDto } from "../../features/item/types";
 import "./EditItemPage.css";
 
 const BODY_STYLES = [
@@ -77,10 +77,17 @@ export const EditItemPage = observer(() => {
     });
 
     // Images state
-    const [existingImages, setExistingImages] = useState<any[]>([]);
+    const [existingImages, setExistingImages] = useState<ItemImageDto[]>([]);
     const [newFiles, setNewFiles] = useState<{ file: File; category: ImageCategory }[]>([]);
     const [newPreviews, setNewPreviews] = useState<string[]>([]);
     const [originalPreviews, setOriginalPreviews] = useState<string[]>([]);
+
+    useEffect(() => {
+        return () => {
+            // Clean up object URLs
+            newPreviews.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [newPreviews]);
 
     useEffect(() => {
         if (!id) return;
@@ -124,11 +131,6 @@ export const EditItemPage = observer(() => {
         }).finally(() => {
             setLoading(false);
         });
-
-        return () => {
-            // Clean up object URLs
-            newPreviews.forEach(url => URL.revokeObjectURL(url));
-        };
     }, [id, itemStore]);
 
     if (loading) {
@@ -166,7 +168,7 @@ export const EditItemPage = observer(() => {
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
         setFormData(prev => {
-            let parsed: any = value;
+            let parsed: string | number | boolean | undefined = value;
             if (type === "number") {
                 parsed = value === "" ? undefined : Number(value);
             } else if (type === "checkbox") {
@@ -339,9 +341,10 @@ export const EditItemPage = observer(() => {
             setTimeout(() => {
                 navigate(`/items/${item.id}`);
             }, 600);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Save error:", err);
-            setSaveError(err?.message || "Failed to save listing changes. Please review your entries.");
+            const message = err instanceof Error ? err.message : (typeof err === "object" && err && "message" in err ? String((err as { message: unknown }).message) : "Failed to save listing changes. Please review your entries.");
+            setSaveError(message);
         } finally {
             setSaving(false);
         }

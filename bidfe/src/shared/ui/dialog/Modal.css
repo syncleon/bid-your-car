@@ -4,28 +4,28 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: var(--bg-overlay);
+    background: rgba(0, 0, 0, 0.75) !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 9999 !important;
     animation: modal-overlay-in 0.3s ease forwards;
     padding: 20px;
 }
 
 .modal-content {
-    background: rgba(24, 24, 27, 0.85);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: none;
-    border-radius: 6px;
+    background: #18181b !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px;
     width: 100%;
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: none;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8) !important;
+    position: relative;
+    z-index: 10000 !important;
     animation: modal-content-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     display: flex;
     flex-direction: column;

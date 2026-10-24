@@ -15,8 +15,7 @@ export const OAuthCallbackPage = () => {
 
         // Wait for auth to resolve
         authStore.checkAuth().then(() => {
-            // Use React Router to prevent full browser reload crash on Firebase
-            navigate("/", { replace: true });
+            navigate("/?setup_password=1", { replace: true });
             
             setTimeout(() => {
                 if (!authStore.isAuthenticated) {

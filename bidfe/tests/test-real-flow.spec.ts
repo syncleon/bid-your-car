@@ -1,43 +1,42 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Real UI Flow', () => {
-  test('should create account and login successfully', async ({ page }) => {
-    // Navigate to the app (frontend running on 5173)
-    await page.goto('http://localhost:5173');
-    
-    const uniqueUsername = `testuser_${Date.now()}`;
-    const uniqueEmail = `test_${Date.now()}@example.com`;
+  test('should display Google auth and allow password creation', async ({ page }) => {
+    // 1. Go to /register directly
+    await page.goto('/register');
+    await page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
 
-    // 1. Go to register directly to bypass cookie banners
-    await page.goto('http://localhost:5173/register');
+    // 2. Verify Google Auth Card is displayed (and manual registration form is deleted)
+    await expect(page.locator('h2', { hasText: 'Sign in with your Google account to continue' })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible();
+    await expect(page.locator('input[placeholder="Choose a username"]')).toHaveCount(0);
+    await expect(page.locator('input[placeholder="Enter your username"]')).toHaveCount(0);
 
-    // 2. Fill the Registration Form
-    await page.fill('input[placeholder="Choose a username"]', uniqueUsername);
-    await page.fill('input[placeholder="name@example.com"]', uniqueEmail);
-    await page.fill('input[placeholder="Create a strong password"]', 'password123');
-    
-    // 3. Submit Registration
-    await page.click('button[type="submit"]:has-text("Create account")');
-    
-    // Wait for the success message
-    await expect(page.getByText('Account Created')).toBeVisible({ timeout: 5000 });
-    
-    // 4. Click "Continue to Login"
-    await page.click('a:has-text("Continue to Login")');
-    
-    // 5. Fill the Login Form
-    await page.fill('input[placeholder="Enter your username"]', uniqueUsername);
-    await page.fill('input[placeholder="••••••••"]', 'password123');
-    
-    // 6. Submit Login
-    await page.click('button[type="submit"]:has-text("Sign in")');
-    
-    // 7. Verify we are logged in by checking the user menu
-    const userMenuButton = page.locator('.user-menu__trigger');
-    await expect(userMenuButton).toBeVisible({ timeout: 5000 });
-    
-    // Navigate to profile
-    await userMenuButton.click();
-    await expect(page).toHaveURL(/.*\/profile/, { timeout: 5000 });
+    // 3. Mock Google OAuth redirect
+    await page.route('**/oauth2/authorization/google', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: '<html><body>Mocked Google OAuth</body></html>'
+      });
+    });
+
+    await page.click('button:has-text("Continue with Google")');
+    await page.waitForURL('**/oauth2/authorization/google');
+    await expect(page).toHaveURL(/\/oauth2\/authorization\/google/);
+
+    // 4. Test post-auth Create Password flow
+    await page.route('**/api/v1/users/me/password', async route => {
+      await route.fulfill({ json: { message: "Password created successfully" } });
+    });
+
+    await page.goto('/?setup_password=1');
+    await expect(page.getByText('Create Account Password')).toBeVisible({ timeout: 5000 });
+
+    await page.fill('input[placeholder="At least 6 characters"]', 'mySecurePass123');
+    await page.fill('input[placeholder="Repeat new password"]', 'mySecurePass123');
+    await page.click('button:has-text("Set Password")');
+
+    await expect(page.getByText(/Password created successfully/i)).toBeVisible({ timeout: 5000 });
   });
 });

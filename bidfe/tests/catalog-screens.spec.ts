@@ -1,20 +1,7 @@
 import { test, expect } from '@playwright/test';
-import path from 'node:path';
-import fs from 'node:fs';
+import { createScreenshotSaver } from './helpers/screenshot';
 
-const ARTIFACT_DIR = '/Users/syncleon/.gemini/antigravity/brain/ed091e2a-be58-4de9-b49f-b5e75719a85b/screenshots/catalog';
-const LOCAL_DIR = '/Users/syncleon/bidyourcarua/bid-your-car/bidfe/tests/screenshots/catalog';
-
-fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
-fs.mkdirSync(LOCAL_DIR, { recursive: true });
-
-async function saveScreenshot(pageOrLocator: any, filename: string, options: any = {}) {
-  const artifactPath = path.join(ARTIFACT_DIR, filename);
-  const localPath = path.join(LOCAL_DIR, filename);
-  await pageOrLocator.screenshot({ path: artifactPath, ...options });
-  await pageOrLocator.screenshot({ path: localPath, ...options });
-  console.log(`📸 Saved Catalog Screenshot: ${filename}`);
-}
+const saveScreenshot = createScreenshotSaver('catalog');
 
 test.describe('Auctions Catalog & Discovery UI Tests (Positive & Negative)', () => {
 
@@ -50,10 +37,13 @@ test.describe('Auctions Catalog & Discovery UI Tests (Positive & Negative)', () 
       const makeSelect = page.locator('.custom-select__trigger').filter({ hasText: /Make/i }).first();
       await makeSelect.click();
 
-      // Select Porsche
+      // Select Porsche or Ford
       const porscheOption = page.locator('.custom-select__option').filter({ hasText: 'Porsche' }).first();
       if (await porscheOption.isVisible({ timeout: 2000 }).catch(() => false)) {
         await porscheOption.click();
+      } else {
+        const firstOption = page.locator('.custom-select__option').nth(1);
+        await firstOption.click();
       }
 
       // Verify active filter chip
@@ -76,7 +66,7 @@ test.describe('Auctions Catalog & Discovery UI Tests (Positive & Negative)', () 
       await expect(page.locator('.auction-grid')).toBeVisible({ timeout: 10000 });
 
       // Search for AMG
-      const searchInput = page.locator('input[placeholder="Search"]').first();
+      const searchInput = page.locator('input[name="q"]').first();
       await searchInput.fill('AMG');
       await searchInput.press('Enter');
 
@@ -107,7 +97,57 @@ test.describe('Auctions Catalog & Discovery UI Tests (Positive & Negative)', () 
     }
   });
 
-  test('Step 5 [Positive]: Past Auctions Archive Screen', async ({ browser }) => {
+  test('Step 5 [Positive]: Sort Dropdown Options Selection', async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+
+    try {
+      await page.goto('/auctions');
+      await page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
+      await expect(page.locator('.auction-grid')).toBeVisible({ timeout: 10000 });
+
+      // Click Sort dropdown if present
+      const sortSelect = page.locator('.custom-select__trigger').filter({ hasText: /Ending Soonest|Sort|Newly Listed/i }).first();
+      if (await sortSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await sortSelect.click();
+        const option = page.locator('.custom-select__option').first();
+        await option.click();
+        await page.waitForTimeout(500);
+      }
+
+      await saveScreenshot(page, 'catalog_05_sort_applied.png');
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('Step 6 [Positive]: Clear All Filters Button Restores Full Catalog', async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+
+    try {
+      await page.goto('/auctions?q=Porsche');
+      await page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
+
+      // Verify chip is visible
+      await expect(page.locator('.filter-chip')).toBeVisible({ timeout: 5000 });
+      
+      // Click Clear all
+      const clearBtn = page.locator('.reset-btn', { hasText: 'Clear all' });
+      await expect(clearBtn).toBeVisible({ timeout: 5000 });
+      await clearBtn.click();
+
+      // Verify chips are removed
+      await expect(page.locator('.filter-chip')).toHaveCount(0);
+      await page.waitForTimeout(500);
+
+      await saveScreenshot(page, 'catalog_06_filters_cleared.png');
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('Step 7 [Positive]: Past Auctions Archive Screen', async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
 
@@ -120,7 +160,7 @@ test.describe('Auctions Catalog & Discovery UI Tests (Positive & Negative)', () 
       const grid = page.locator('.auction-grid');
       await expect(grid).toBeVisible({ timeout: 10000 });
 
-      await saveScreenshot(page, 'catalog_05_past_auctions.png');
+      await saveScreenshot(page, 'catalog_07_past_auctions.png');
     } finally {
       await context.close();
     }

@@ -1,4 +1,4 @@
-import { test, expect, Browser } from '@playwright/test';
+import { test, expect, Browser, Page } from '@playwright/test';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
@@ -10,7 +10,7 @@ const LOCAL_DIR = '/Users/syncleon/bidyourcarua/bid-your-car/bidfe/tests/screens
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 fs.mkdirSync(LOCAL_DIR, { recursive: true });
 
-async function saveScreenshot(page: any, filename: string) {
+async function saveScreenshot(page: Page, filename: string) {
   const artifactPath = path.join(ARTIFACT_DIR, filename);
   const localPath = path.join(LOCAL_DIR, filename);
   await page.screenshot({ path: artifactPath });
@@ -59,7 +59,9 @@ function get100DatabaseUsers(): DbUser[] {
     if (users.length >= 100) {
       return users;
     }
-  } catch (_) {}
+  } catch {
+    // Fallback if docker query fails
+  }
 
   // Fallback if docker query fails
   const fallback: DbUser[] = [];
@@ -97,13 +99,15 @@ test.describe('100 Users Parallel Bidding Test Suite', () => {
           const auctions = body.content || [];
           if (auctions.length > 0) {
             // Prefer an auction with fewer bids to clearly see the 100 bids jump
-            const selected = auctions.find((a: any) => a.bidCount === 0) || auctions[0];
+            const selected = auctions.find((a: { bidCount?: number }) => a.bidCount === 0) || auctions[0];
             targetLotId = selected.id;
             sellerId = selected.item?.seller?.id || 1;
             lotTitle = `${selected.item?.year} ${selected.item?.make} ${selected.item?.model}`;
           }
         }
-      } catch (_) {}
+      } catch {
+        // Fallback if request fails
+      }
     }
 
     if (!targetLotId) {

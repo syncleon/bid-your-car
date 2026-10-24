@@ -4,11 +4,15 @@ import { Car } from "lucide-react";
 import styles from "./styles.ts";
 import "./BaseCard.css";
 
+export { CardBadge } from "./CardBadge";
+export { CardPricePill } from "./CardPricePill";
+export { CardSpecsGrid } from "./CardSpecsGrid";
+
 interface BaseCardProps {
-    to: string;
+    to?: string;
     imageUrl?: string | null;
     title: {
-        year: number;
+        year: number | string;
         make: string;
         model: string;
     };
@@ -18,24 +22,21 @@ interface BaseCardProps {
         bottomLeft?: ReactNode;
         bottomRight?: ReactNode;
     };
-        children: ReactNode;
-        headerContent?: ReactNode;
-        isUrgent?: boolean;
-        viewMode?: "grid" | "list";
+    children: ReactNode;
+    headerContent?: ReactNode;
+    isUrgent?: boolean;
+    viewMode?: "grid" | "list";
 }
 
 export const BaseCard = ({ to, imageUrl, title, overlays, children, headerContent, isUrgent, viewMode = "grid" }: BaseCardProps) => {
     const isList = viewMode === "list";
-    return (
-        <Link
-            to={to}
-            className={`base-card-link${isList ? " base-card-link--list" : ""}`}
+
+    const cardContent = (
+        <div
+            className={`base-card${isUrgent ? " base-card--urgent" : ""}${isList ? " base-card--list" : ""}`}
+            style={styles.container}
+            data-urgent={isUrgent ? "true" : undefined}
         >
-            <div
-                className={`base-card${isUrgent ? " base-card--urgent" : ""}${isList ? " base-card--list" : ""}`}
-                style={styles.container}
-                data-urgent={isUrgent ? "true" : undefined}
-            >
                 {headerContent}
                 <div
                     className={`base-card-image-wrapper${isList ? " base-card-image-wrapper--list" : ""}`}
@@ -93,6 +94,22 @@ export const BaseCard = ({ to, imageUrl, title, overlays, children, headerConten
                     {children}
                 </div>
             </div>
-        </Link>
+    );
+
+    if (to) {
+        return (
+            <Link
+                to={to}
+                className={`base-card-link${isList ? " base-card-link--list" : ""}`}
+            >
+                {cardContent}
+            </Link>
+        );
+    }
+
+    return (
+        <div className={`base-card-link${isList ? " base-card-link--list" : ""}`}>
+            {cardContent}
+        </div>
     );
 };

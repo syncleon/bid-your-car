@@ -103,6 +103,22 @@ class UserController(
     }
 
     /**
+     * Sets or creates a password for the currently authenticated user (e.g. Google OAuth user).
+     *
+     * @param request The request containing the new password.
+     * @return A success message.
+     */
+    @Operation(summary = "Set/Create Password", description = "Create or set a password for user without old password.")
+    @PostMapping("/me/password")
+    fun setPassword(
+        @Valid @RequestBody request: SetPasswordReqDto
+    ): ResponseEntity<Map<String, String>> {
+        val user = authorizationHelper.getCurrentUser()
+        userService.setPassword(user.id!!, request.newPassword)
+        return ResponseEntity.ok(mapOf("message" to "Password created successfully"))
+    }
+
+    /**
      * Retrieves all items listed by the currently authenticated user.
      *
      * @param pageable Pagination information.

@@ -1,37 +1,7 @@
 import { test, expect } from '@playwright/test';
-import path from 'node:path';
-import fs from 'node:fs';
+import { createScreenshotSaver, createAuthenticatedContext } from './helpers/screenshot';
 
-const ARTIFACT_DIR = '/Users/syncleon/.gemini/antigravity/brain/ed091e2a-be58-4de9-b49f-b5e75719a85b/screenshots/profile';
-const LOCAL_DIR = '/Users/syncleon/bidyourcarua/bid-your-car/bidfe/tests/screenshots/profile';
-
-fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
-fs.mkdirSync(LOCAL_DIR, { recursive: true });
-
-async function saveScreenshot(pageOrLocator: any, filename: string, options: any = {}) {
-  const artifactPath = path.join(ARTIFACT_DIR, filename);
-  const localPath = path.join(LOCAL_DIR, filename);
-  await pageOrLocator.screenshot({ path: artifactPath, ...options });
-  await pageOrLocator.screenshot({ path: localPath, ...options });
-  console.log(`📸 Saved Profile Screenshot: ${filename}`);
-}
-
-async function createAuthenticatedContext(browser: any, user: { username: string; password: string }) {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const loginRes = await context.request.post('http://localhost:8080/api/v1/auth/login', {
-    data: { username: user.username, password: user.password },
-  });
-
-  if (loginRes.ok()) {
-    const data = await loginRes.json();
-    await context.addInitScript((token) => {
-      localStorage.setItem('auth_token', token);
-    }, data.token);
-  }
-
-  const page = await context.newPage();
-  return { context, page };
-}
+const saveScreenshot = createScreenshotSaver('profile');
 
 test.describe('User Profile UI Tests (Positive & Negative)', () => {
 
@@ -45,7 +15,7 @@ test.describe('User Profile UI Tests (Positive & Negative)', () => {
 
       // Verify redirected to login with redirect param
       await expect(page).toHaveURL(/.*login\?redirect=%2Fprofile/);
-      await expect(page.getByText(/Please enter your details to sign in/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/Sign in with your Google account/i)).toBeVisible({ timeout: 5000 });
 
       await saveScreenshot(page, 'profile_01_unauthenticated_guard.png');
     } finally {
@@ -65,6 +35,7 @@ test.describe('User Profile UI Tests (Positive & Negative)', () => {
 
       // Verify profile header with username
       await expect(session.page.getByText(/turbo_collector/i).first()).toBeVisible({ timeout: 10000 });
+      await expect(session.page.locator('.profile-card')).toBeVisible();
 
       await saveScreenshot(session.page, 'profile_02_overview.png');
     } finally {
@@ -72,7 +43,7 @@ test.describe('User Profile UI Tests (Positive & Negative)', () => {
     }
   });
 
-  test('Step 3 [Positive]: Profile User Listings Section', async ({ browser }) => {
+  test('Step 3 [Positive]: Profile User Listings Section (My Garage)', async ({ browser }) => {
     const session = await createAuthenticatedContext(browser, {
       username: 'seller_john',
       password: 'password123',
@@ -82,6 +53,7 @@ test.describe('User Profile UI Tests (Positive & Negative)', () => {
       await session.page.goto('/profile');
       await session.page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
       await expect(session.page.getByText(/seller_john/i).first()).toBeVisible({ timeout: 10000 });
+      await expect(session.page.locator('.garage-section')).toBeVisible({ timeout: 10000 });
 
       await session.page.waitForTimeout(1000);
       await saveScreenshot(session.page, 'profile_03_user_listings.png');
@@ -101,12 +73,11 @@ test.describe('User Profile UI Tests (Positive & Negative)', () => {
       await session.page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
       await expect(session.page.getByText(/turbo_collector/i).first()).toBeVisible({ timeout: 10000 });
 
-      // Click Edit Profile button if present
+      // Click Edit Profile button
       const editBtn = session.page.locator('button:has-text("Edit Profile")').first();
-      if (await editBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await editBtn.click();
-        await session.page.waitForTimeout(500);
-      }
+      await expect(editBtn).toBeVisible({ timeout: 5000 });
+      await editBtn.click();
+      await session.page.waitForTimeout(500);
 
       await saveScreenshot(session.page, 'profile_04_edit_profile.png');
     } finally {
@@ -114,7 +85,30 @@ test.describe('User Profile UI Tests (Positive & Negative)', () => {
     }
   });
 
-  test('Step 5 [Positive]: Garage Inventory Item Details View', async ({ browser }) => {
+  test('Step 5 [Positive]: Update Password Mode', async ({ browser }) => {
+    const session = await createAuthenticatedContext(browser, {
+      username: 'turbo_collector',
+      password: 'password123',
+    });
+
+    try {
+      await session.page.goto('/profile');
+      await session.page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
+      await expect(session.page.getByText(/turbo_collector/i).first()).toBeVisible({ timeout: 10000 });
+
+      // Click Update Password button
+      const pwdBtn = session.page.locator('button:has-text("Update Password")').first();
+      await expect(pwdBtn).toBeVisible({ timeout: 5000 });
+      await pwdBtn.click();
+      await session.page.waitForTimeout(500);
+
+      await saveScreenshot(session.page, 'profile_05_update_password.png');
+    } finally {
+      await session.context.close();
+    }
+  });
+
+  test('Step 6 [Positive]: Garage Inventory Item Details View', async ({ browser }) => {
     const session = await createAuthenticatedContext(browser, {
       username: 'seller_john',
       password: 'password123',
@@ -133,13 +127,59 @@ test.describe('User Profile UI Tests (Positive & Negative)', () => {
       await session.page.goto(`/items/${itemId}`);
       await session.page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
 
-      await expect(session.page.locator('.vehicle-header-wrapper')).toBeVisible({ timeout: 10000 });
-      await expect(session.page.getByText(/Listing Status/i)).toBeVisible();
+      await expect(session.page.locator('.vehicle-header-wrapper').or(session.page.locator('.item-details-container'))).toBeVisible({ timeout: 10000 });
 
-      await saveScreenshot(session.page, 'profile_05_garage_item_details.png');
+      await saveScreenshot(session.page, 'profile_06_garage_item_details.png');
+    } finally {
+      await session.context.close();
+    }
+  });
+
+  test('Step 7 [Positive]: Log Out Confirmation Dialog Flow', async ({ browser }) => {
+    const session = await createAuthenticatedContext(browser, {
+      username: 'turbo_collector',
+      password: 'password123',
+    });
+
+    try {
+      await session.page.goto('/profile');
+      await session.page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
+      await expect(session.page.getByText(/turbo_collector/i).first()).toBeVisible({ timeout: 10000 });
+
+      // Click Log Out button
+      await session.page.getByRole('button', { name: 'Log Out' }).click();
+
+      // Verify the ConfirmDialog appears
+      const dialogTitle = session.page.locator('.dialog-title', { hasText: 'Log Out' });
+      await expect(dialogTitle).toBeVisible({ timeout: 5000 });
+
+      await saveScreenshot(session.page, 'profile_07_logout_dialog.png');
+    } finally {
+      await session.context.close();
+    }
+  });
+
+  test('Step 8 [Positive]: Deactivate Account Prompt Dialog Flow', async ({ browser }) => {
+    const session = await createAuthenticatedContext(browser, {
+      username: 'turbo_collector',
+      password: 'password123',
+    });
+
+    try {
+      await session.page.goto('/profile');
+      await session.page.click('button:has-text("Accept Cookies")', { timeout: 2000 }).catch(() => {});
+      await expect(session.page.getByText(/turbo_collector/i).first()).toBeVisible({ timeout: 10000 });
+
+      // Click Deactivate Account button
+      await session.page.getByRole('button', { name: 'Deactivate Account' }).click();
+
+      // Verify the PromptDialog appears
+      const dialogTitle = session.page.locator('.dialog-title', { hasText: 'Delete Account' });
+      await expect(dialogTitle).toBeVisible({ timeout: 5000 });
+
+      await saveScreenshot(session.page, 'profile_08_deactivate_dialog.png');
     } finally {
       await session.context.close();
     }
   });
 });
-

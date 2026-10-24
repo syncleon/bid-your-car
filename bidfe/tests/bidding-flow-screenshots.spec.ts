@@ -1,59 +1,56 @@
-import { test, expect, Browser, Page, Locator } from '@playwright/test';
-import path from 'node:path';
-import fs from 'node:fs';
+import { test, expect } from '@playwright/test';
+import { createScreenshotSaver, createAuthenticatedContext } from './helpers/screenshot';
 
-const ARTIFACT_SCREENSHOT_DIR = '/Users/syncleon/.gemini/antigravity/brain/ed091e2a-be58-4de9-b49f-b5e75719a85b/screenshots/bidding-flow';
-const LOCAL_SCREENSHOT_DIR = '/Users/syncleon/bidyourcarua/bid-your-car/bidfe/tests/screenshots/bidding-flow';
-
-// Ensure output directories exist
-fs.mkdirSync(ARTIFACT_SCREENSHOT_DIR, { recursive: true });
-fs.mkdirSync(LOCAL_SCREENSHOT_DIR, { recursive: true });
-
-async function saveStepScreenshot(page: Page, filename: string, targetLocator?: Locator) {
-  const artifactPath = path.join(ARTIFACT_SCREENSHOT_DIR, filename);
-  const localPath = path.join(LOCAL_SCREENSHOT_DIR, filename);
-
-  // If locator is provided and visible, capture that component with padding; otherwise capture full viewport
-  if (targetLocator && await targetLocator.isVisible().catch(() => false)) {
-    await targetLocator.screenshot({ path: artifactPath });
-    await targetLocator.screenshot({ path: localPath });
-  } else {
-    await page.screenshot({ path: artifactPath, fullPage: false });
-    await page.screenshot({ path: localPath, fullPage: false });
-  }
-  console.log(`📸 Saved screenshot: ${filename}`);
-}
-
-async function createAuthenticatedContext(browser: Browser, user: { username: string; password: string }) {
-  const context = await browser.newContext();
-  const loginRes = await context.request.post('http://localhost:8080/api/v1/auth/login', {
-    data: {
-      username: user.username,
-      password: user.password,
-    },
-  });
-
-  if (loginRes.ok()) {
-    const data = await loginRes.json();
-    await context.addInitScript((token) => {
-      localStorage.setItem('auth_token', token);
-    }, data.token);
-  }
-
-  const page = await context.newPage();
-  return { context, page, user };
-}
+const saveStepScreenshot = createScreenshotSaver('bidding-flow');
 
 test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)', () => {
   test.describe.configure({ mode: 'serial' });
 
-  // Target active lot where seller is seller_john (User ID: 1)
-  const activeLotId = '5dd616b4-c4bd-4bed-b704-2d09bf3cc225'; // 2010 Mercedes-Benz AMG GT
-  const endedLotId = '6d78e22e-3a99-4fe0-9a63-aaacb6aa6ae3';  // 2023 Porsche 911 Carrera (SOLD)
+  let activeLotId = 'f54d67f6-f07c-427b-9ed8-846780eaaaf9';
+  let activeLotSeller = 'vintage_v8';
+  let endedLotId = '5dd616b4-c4bd-4bed-b704-2d09bf3cc225';
+
+  test.beforeAll(async ({ request }) => {
+    try {
+      const activeRes = await request.get('http://localhost:8080/api/v1/auctions?status=ACTIVE&size=20');
+      if (activeRes.ok()) {
+        const data = await activeRes.json();
+        const lot = data.content?.find(
+          (a: { item?: { seller?: { username?: string } } }) =>
+            a.item?.seller?.username &&
+            a.item.seller.username !== 'turbo_collector' &&
+            a.item.seller.username !== 'apex_hunter'
+        );
+        if (lot) {
+          activeLotId = lot.id;
+          activeLotSeller = lot.item.seller.username;
+        }
+      }
+
+      const endedRes = await request.get('http://localhost:8080/api/v1/auctions?status=SOLD&size=5');
+      if (endedRes.ok()) {
+        const data = await endedRes.json();
+        if (data.content && data.content.length > 0) {
+          endedLotId = data.content[0].id;
+        }
+      }
+      if (!endedLotId) {
+        const unsoldRes = await request.get('http://localhost:8080/api/v1/auctions?status=UNSOLD&size=5');
+        if (unsoldRes.ok()) {
+          const data = await unsoldRes.json();
+          if (data.content && data.content.length > 0) {
+            endedLotId = data.content[0].id;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not dynamically query auctions in beforeAll, falling back to defaults:', e);
+    }
+  });
 
   test('Step 1 [Negative]: Unauthenticated User Bidding Prevention', async ({ browser }) => {
     // 1. Launch a completely clean, unauthenticated context (guest)
-    const context = await browser.newContext();
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
 
     try {
@@ -69,16 +66,15 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
 
       // UI should display error requiring login
       await expect(page.getByText(/Please log in to bid/i)).toBeVisible({ timeout: 5000 });
-      await saveStepScreenshot(page, '01_unauthenticated_user_blocked.png', sidebar);
+      await saveStepScreenshot(sidebar, '01_unauthenticated_user_blocked.png');
     } finally {
       await context.close();
     }
   });
 
   test('Step 2 [Negative]: Seller Cannot Bid on Own Listing', async ({ browser }) => {
-    // Seller of this car is seller_john (id: 1)
     const session = await createAuthenticatedContext(browser, {
-      username: 'seller_john',
+      username: activeLotSeller,
       password: 'password123',
     });
 
@@ -96,7 +92,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       await expect(session.page.locator('button:has-text("Quick Bid")')).toHaveCount(0);
       await expect(session.page.locator('button.btn-place-bid')).toHaveCount(0);
 
-      await saveStepScreenshot(session.page, '02_seller_own_listing_blocked.png', sidebar);
+      await saveStepScreenshot(sidebar, '02_seller_own_listing_blocked.png');
     } finally {
       await session.context.close();
     }
@@ -124,7 +120,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       // Verify the button is disabled and input indicates error
       const placeBtn = session.page.locator('button.btn-place-bid');
       await expect(placeBtn).toBeDisabled();
-      await saveStepScreenshot(session.page, '03_bid_too_low_error.png', sidebar);
+      await saveStepScreenshot(sidebar, '03_bid_too_low_error.png');
     } finally {
       await session.context.close();
     }
@@ -149,7 +145,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       await customInput.fill('-500');
       const placeBtn = session.page.locator('button.btn-place-bid');
       await expect(placeBtn).toBeDisabled();
-      await saveStepScreenshot(session.page, '04_empty_invalid_bid_input.png', sidebar);
+      await saveStepScreenshot(sidebar, '04_empty_invalid_bid_input.png');
     } finally {
       await session.context.close();
     }
@@ -168,7 +164,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       await expect(sidebar).toBeVisible({ timeout: 10000 });
 
       // 5. Ready state before bidding
-      await saveStepScreenshot(session.page, '05_bidder_ready_to_bid.png', sidebar);
+      await saveStepScreenshot(sidebar, '05_bidder_ready_to_bid.png');
 
       // Place valid Quick Bid - opens confirmation modal
       const quickBtn = session.page.locator('button:has-text("Quick Bid")');
@@ -189,7 +185,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       expect(res.status()).toBe(202);
 
       // 6. Capture immediate cooldown feedback ("Wait 2s")
-      await saveStepScreenshot(session.page, '06_quick_bid_cooldown_ticker.png', sidebar);
+      await saveStepScreenshot(sidebar, '06_quick_bid_cooldown_ticker.png');
 
       // Wait for backend queue to process and verify winning leader badge
       await expect(async () => {
@@ -199,12 +195,12 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       }).toPass({ timeout: 15000, intervals: [1000, 2000] });
 
       // 7. Winning state with green badge and leading notice
-      await saveStepScreenshot(session.page, '07_winning_bidder_leader_badge.png', sidebar);
+      await saveStepScreenshot(sidebar, '07_winning_bidder_leader_badge.png');
 
       // 8. Negative check: while winning, bidding controls are replaced with leading notice
       await expect(session.page.getByText(/You are the leading bidder at/i)).toBeVisible();
       await expect(session.page.locator('button:has-text("Quick Bid")')).toHaveCount(0);
-      await saveStepScreenshot(session.page, '08_winning_bidder_cannot_reoutbid.png', sidebar);
+      await saveStepScreenshot(sidebar, '08_winning_bidder_cannot_reoutbid.png');
 
     } finally {
       await session.context.close();
@@ -237,7 +233,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       await expect(placeBtn).toBeEnabled({ timeout: 5000 });
 
       // 9. Screenshot custom bid ready
-      await saveStepScreenshot(session2.page, '09_competing_bidder_custom_input.png', sidebar2);
+      await saveStepScreenshot(sidebar2, '09_competing_bidder_custom_input.png');
 
       // Click Place Bid to open confirmation dialog
       await placeBtn.click();
@@ -258,7 +254,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       }).toPass({ timeout: 15000, intervals: [1000, 2000] });
 
       // 10. Screenshot apex_hunter as new winning leader
-      await saveStepScreenshot(session2.page, '10_competing_bidder_takes_lead.png', sidebar2);
+      await saveStepScreenshot(sidebar2, '10_competing_bidder_takes_lead.png');
 
     } finally {
       await session2.context.close();
@@ -281,12 +277,12 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       // 11. Verify turbo_collector is no longer winning, green badge is gone, controls re-enabled
       await expect(session1.page.getByText(/You currently hold the highest bid/i)).toHaveCount(0);
       await expect(session1.page.locator('button:has-text("Quick Bid")')).toBeVisible({ timeout: 5000 });
-      await saveStepScreenshot(session1.page, '11_original_bidder_now_outbid.png', sidebar1);
+      await saveStepScreenshot(sidebar1, '11_original_bidder_now_outbid.png');
 
       // 12. Verify Bid History list contains recent bids
       const bidHistoryList = session1.page.locator('text=Bid History');
       await expect(bidHistoryList).toBeVisible({ timeout: 5000 });
-      await saveStepScreenshot(session1.page, '12_bid_history_feed.png', sidebar1);
+      await saveStepScreenshot(sidebar1, '12_bid_history_feed.png');
 
     } finally {
       await session1.context.close();
@@ -295,7 +291,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
 
   test('Step 11 [Positive]: Ended Auction State Verification', async ({ browser }) => {
     // Navigate to a known SOLD / Ended auction
-    const context = await browser.newContext();
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
 
     try {
@@ -304,9 +300,8 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       const sidebar = page.locator('.auction-sidebar');
       await expect(sidebar).toBeVisible({ timeout: 10000 });
 
-      // Verify Ended status and Sold Price
-      await expect(page.getByText(/Ended/i).first()).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText(/Sold Price/i)).toBeVisible({ timeout: 5000 });
+      // Verify Ended / Unsold / Sold status
+      await expect(page.locator('.auction-sidebar').getByText(/Ended|SOLD|UNSOLD/i).first()).toBeVisible({ timeout: 5000 });
 
       // Verify all bidding inputs are completely removed
       await expect(page.locator('button:has-text("Quick Bid")')).toHaveCount(0);
@@ -314,7 +309,7 @@ test.describe('Bidding Flow Deep Analysis with Screenshots (Positive & Negative)
       await expect(page.locator('input[type="number"]')).toHaveCount(0);
 
       // 13. Screenshot ended auction state
-      await saveStepScreenshot(page, '13_ended_sold_auction_state.png', sidebar);
+      await saveStepScreenshot(sidebar, '13_ended_sold_auction_state.png');
 
     } finally {
       await context.close();

@@ -34,12 +34,12 @@ const TITLE_STATUSES = [
 ];
 
 const CONDITION_GRADES: { value: ConditionGrade; label: string; desc: string }[] = [
-    { value: "EXCELLENT", label: "Excellent", desc: "Near-perfect, no visible flaws" },
-    { value: "VERY_GOOD", label: "Very Good", desc: "Minor cosmetic blemishes" },
-    { value: "GOOD", label: "Good", desc: "Normal wear, mechanically sound" },
-    { value: "FAIR", label: "Fair", desc: "Noticeable wear, driveable" },
-    { value: "POOR", label: "Poor", desc: "Significant issues" },
-    { value: "PARTS_ONLY", label: "Parts Only", desc: "Non-running/Damaged" },
+    { value: "EXCELLENT", label: "Excellent", desc: "Near-perfect, collector grade" },
+    { value: "VERY_GOOD", label: "Very Good", desc: "Minor cosmetic wear, well kept" },
+    { value: "GOOD", label: "Good", desc: "Normal road wear, mechanically sound" },
+    { value: "FAIR", label: "Fair", desc: "Noticeable wear, fully drivable" },
+    { value: "POOR", label: "Poor", desc: "Needs mechanical or cosmetic work" },
+    { value: "PARTS_ONLY", label: "Parts Only", desc: "Non-running, salvage, or salvage parts" },
 ];
 
 const toTitleCase = (str: string) => {
@@ -561,7 +561,7 @@ export const SubmitItemForm = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <FormLabel title="17-Digit Vehicle Identification Number (VIN)" desc="Usually found on the driver's side dashboard or inside the driver's side door jamb. This helps us pull exact factory specifications." />
+                                <FormLabel title="17-Digit Vehicle Identification Number (VIN)" desc="Found on your driver's side dashboard corner, driver door jamb sticker, vehicle title, or registration card." />
                                 <div style={{ position: 'relative', width: '100%' }}>
                                     <input name="vin" value={formData.vin} onChange={handleChange} maxLength={17} className={`modern-input standard-input ${errors.vin ? 'input-error' : ''} ${vinCheckPassed ? 'vin-input-success' : ''}`} style={{ fontSize: '20px', letterSpacing: '2px', textTransform: 'uppercase', width: '100%', paddingLeft: '16px', paddingRight: '48px'}} placeholder="Enter 17-digit VIN (e.g. WBA00...)" disabled={isEditMode || isCheckingVin} autoFocus />
                                     {isCheckingVin && (
@@ -581,7 +581,7 @@ export const SubmitItemForm = ({
                             <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                                 <span style={{ fontSize: '20px', lineHeight: 1 }}>⚡</span>
                                 <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
-                                    <strong style={{ color: '#fff', display: 'block', marginBottom: '4px' }}>Instant NHTSA Factory Decoding</strong>
+                                    <strong style={{ color: '#fff', display: 'block', marginBottom: '4px' }}>Instant Vehicle Data Decoding</strong>
                                     We automatically verify your vehicle's make, model, year, drivetrain, and factory options directly from official federal vehicle databases.
                                 </div>
                             </div>
@@ -592,17 +592,17 @@ export const SubmitItemForm = ({
                 {currentStep === 2 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Model Year" desc="The official release year of the vehicle." />
+                            <FormLabel title="Model Year" desc="Official manufacture year of the vehicle." />
                             <input type="number" name="year" value={formData.year} onChange={handleChange} className={`modern-input standard-input ${errors.year ? 'input-error' : ''}`} min="1900" max={new Date().getFullYear() + 1} placeholder="e.g. 2024" />
                             {errors.year && <span className="error-text"><AlertCircle size={14} />{errors.year}</span>}
                         </div>
                         <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Make" desc="The manufacturer (e.g., Porsche, BMW)." />
+                            <FormLabel title="Make" desc="Vehicle manufacturer (e.g., Porsche, BMW, Ford)." />
                             <VehicleSelect name="make" value={formData.make} onChange={handleChange} options={makes} loading={loadingMakes} placeholder="Enter Make..." hasError={!!errors.make} />
                             {errors.make && <span className="error-text"><AlertCircle size={14} />{errors.make}</span>}
                         </div>
                         <div style={{ zIndex: 9, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Model" desc="The specific model designation (e.g., 911, M3)." />
+                            <FormLabel title="Model" desc="Specific model name or series (e.g., 911, M3, Mustang)." />
                             <VehicleSelect name="model" value={formData.model} onChange={handleChange} options={models} loading={loadingModels} disabled={!formData.make} placeholder={!formData.make ? "Enter Make first..." : "Enter Model..."} hasError={!!errors.model} />
                             {errors.model && <span className="error-text"><AlertCircle size={14} />{errors.model}</span>}
                         </div>
@@ -613,29 +613,29 @@ export const SubmitItemForm = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <FormLabel title="Transmission" desc="Select the gearbox type (Automatic, Manual, etc.)." />
+                                <FormLabel title="Transmission" desc="Select your gearbox type (Manual, Automatic, Dual-Clutch, etc.)." />
                                 <ChipGroup name="transmission" value={formData.transmission} onChange={handleChange} options={TRANSMISSIONS} />
                                 {errors.transmission && <span className="error-text"><AlertCircle size={14} />{errors.transmission}</span>}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <FormLabel title="Drivetrain" desc="Select the driven wheels (RWD, AWD, etc.)." />
+                                <FormLabel title="Drivetrain" desc="Select which wheels receive power (RWD, FWD, AWD, or 4WD)." />
                                 <ChipGroup name="drivetrain" value={formData.drivetrain} onChange={handleChange} options={DRIVETRAINS} />
                                 {errors.drivetrain && <span className="error-text"><AlertCircle size={14} />{errors.drivetrain}</span>}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <FormLabel title="Fuel Type" desc="Select the primary fuel source." />
+                                <FormLabel title="Fuel Type" desc="Select the primary propulsion or fuel source." />
                                 <ChipGroup name="fuelType" value={formData.fuelType} onChange={handleChange} options={FUEL_TYPES} />
                                 {errors.fuelType && <span className="error-text"><AlertCircle size={14} />{errors.fuelType}</span>}
                             </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
-                                <FormLabel title="Engine Details (Optional)" desc="Engine displacement and configuration (e.g., 4.0L Flat-6)." />
+                                <FormLabel title="Engine Details (Optional)" desc="Displacement and cylinder configuration (e.g., 4.0L Flat-6, 3.0L Twin-Turbo I6)." />
                                 <input name="engine" value={formData.engine} onChange={handleChange} className={`modern-input standard-input ${errors.engine ? 'input-error' : ''}`} placeholder="e.g. 4.0L Flat-6" />
                                 {errors.engine && <span className="error-text"><AlertCircle size={14} />{errors.engine}</span>}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
-                                <FormLabel title="Horsepower (Optional)" desc="Factory rating or documented dyno output." />
+                                <FormLabel title="Horsepower (Optional)" desc="Factory rating or dyno-verified horsepower (hp)." />
                                 <input type="number" name="horsepower" value={formData.horsepower} onChange={handleChange} className={`modern-input standard-input ${errors.horsepower ? 'input-error' : ''}`} placeholder="e.g. 500" />
                                 {errors.horsepower && <span className="error-text"><AlertCircle size={14} />{errors.horsepower}</span>}
                             </div>
@@ -646,18 +646,18 @@ export const SubmitItemForm = ({
                 {currentStep === 4 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <FormLabel title="Body Style" desc="Choose the vehicle's structural design (Sedan, Coupe, SUV, etc.)." />
+                            <FormLabel title="Body Style" desc="Structural vehicle body configuration (Coupe, Sedan, SUV, etc.)." />
                             <ChipGroup name="bodyStyle" value={formData.bodyStyle} onChange={handleChange} options={BODY_STYLES} />
                             {errors.bodyStyle && <span className="error-text"><AlertCircle size={14} />{errors.bodyStyle}</span>}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
-                                <FormLabel title="Exterior Color" desc="The primary factory or custom paint color." />
+                                <FormLabel title="Exterior Color" desc="Official factory paint name or primary color (e.g., Guards Red, Nardo Gray)." />
                                 <input name="exteriorColor" value={formData.exteriorColor} onChange={handleChange} className={`modern-input standard-input ${errors.exteriorColor ? 'input-error' : ''}`} placeholder="e.g. Guards Red" />
                                 {errors.exteriorColor && <span className="error-text"><AlertCircle size={14} />{errors.exteriorColor}</span>}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
-                                <FormLabel title="Interior Color & Material" desc="The dominant interior color and upholstery type (e.g., Black Leather)." />
+                                <FormLabel title="Interior Color & Material" desc="Upholstery color and material (e.g., Black Leather, Cognac Alcantara)." />
                                 <input name="interiorColor" value={formData.interiorColor} onChange={handleChange} className={`modern-input standard-input ${errors.interiorColor ? 'input-error' : ''}`} placeholder="e.g. Black Leather" />
                                 {errors.interiorColor && <span className="error-text"><AlertCircle size={14} />{errors.interiorColor}</span>}
                             </div>
@@ -668,12 +668,12 @@ export const SubmitItemForm = ({
                 {currentStep === 5 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <FormLabel title="Overall Condition" desc="Provide an honest assessment of the vehicle's mechanical and cosmetic state." />
+                            <FormLabel title="Overall Condition" desc="Honest evaluation of mechanical operation, cosmetic condition, and road wear." />
                             <ChipGroup name="condition" value={formData.condition} onChange={handleChange} options={CONDITION_GRADES} />
                             {errors.condition && <span className="error-text"><AlertCircle size={14} />{errors.condition}</span>}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <FormLabel title="Title Status" desc="Indicate the legal status of the title (Clean, Salvage, Rebuilt, etc.)." />
+                            <FormLabel title="Title Status" desc="Legal branding status on your vehicle's title document." />
                             <ChipGroup name="titleStatus" value={formData.titleStatus} onChange={handleChange} options={TITLE_STATUSES} />
                             {errors.titleStatus && <span className="error-text"><AlertCircle size={14} />{errors.titleStatus}</span>}
                         </div>
@@ -684,13 +684,13 @@ export const SubmitItemForm = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
-                                <FormLabel title="Current Mileage" desc="The exact reading currently displayed on the odometer." />
-                                <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className={`modern-input standard-input ${errors.mileage ? 'input-error' : ''}`} placeholder="e.g. 15000" />
+                                <FormLabel title="Current Mileage" desc="Exact odometer reading currently displayed on your dashboard." />
+                                <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className={`modern-input standard-input ${errors.mileage ? 'input-error' : ''}`} placeholder="e.g. 15,000" />
                                 {errors.mileage && <span className="error-text"><AlertCircle size={14} />{errors.mileage}</span>}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'space-between', height: '100%' }}>
-                                <FormLabel title="Vehicle Location" desc="Where the car is currently stored (City, State, or Zip Code)." />
-                                <input name="location" value={formData.location} onChange={handleChange} className={`modern-input standard-input ${errors.location ? 'input-error' : ''}`} placeholder="City, State / Zip" />
+                                <FormLabel title="Vehicle Location" desc="City and state or postal code where the vehicle can be inspected and picked up." />
+                                <input name="location" value={formData.location} onChange={handleChange} className={`modern-input standard-input ${errors.location ? 'input-error' : ''}`} placeholder="e.g. Los Angeles, CA or Miami, FL" />
                                 {errors.location && <span className="error-text"><AlertCircle size={14} />{errors.location}</span>}
                             </div>
                         </div>
@@ -710,29 +710,29 @@ export const SubmitItemForm = ({
                 {currentStep === 7 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="General Description (Optional)" desc="Tell us the story of this car. Buyers love details about ownership history and how you've used the vehicle." />
-                            <textarea name="description" value={formData.description} onChange={handleChange} className={`modern-input modern-textarea ${errors.description ? 'input-error' : ''}`} placeholder="I purchased this car in 2020... I've mainly used it for weekend drives..." />
+                            <FormLabel title="General Description (Optional)" desc="Tell the vehicle's story. How long have you owned it, how was it driven and maintained, and why are you selling?" />
+                            <textarea name="description" value={formData.description} onChange={handleChange} className={`modern-input modern-textarea ${errors.description ? 'input-error' : ''}`} placeholder="I purchased this vehicle in 2021 from the original owner. Always garage-kept and hand-washed. Used primarily for weekend road trips..." />
                             {errors.description && <span className="error-text"><AlertCircle size={14} />{errors.description}</span>}
                         </div>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Highlights (Optional)" desc="What makes this vehicle special? List factory options, desirable features, or custom modifications." />
-                            <textarea name="highlights" value={formData.highlights as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Impeccable condition, fully loaded with premium options, upgraded exhaust..." />
+                            <FormLabel title="Highlights (Optional)" desc="Key factory options, desirable packages, or aftermarket upgrades." />
+                            <textarea name="highlights" value={formData.highlights as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Equipped with Sport Chrono package, 18-way adaptive sport seats, carbon fiber interior trim, and sport exhaust..." />
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Known Flaws (Optional)" desc="Be transparent. What imperfections does this vehicle have?" />
-                            <textarea name="knownFlaws" value={formData.knownFlaws as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Minor stone chips on the front bumper. Slight wear on the driver seat bolster." />
+                            <FormLabel title="Known Flaws (Optional)" desc="Full transparency earns higher bids. Mention any scratches, stone chips, curb rash, or upcoming service needs." />
+                            <textarea name="knownFlaws" value={formData.knownFlaws as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Minor rock chips on front bumper consistent with mileage. Small curb rash on right rear wheel..." />
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Recent Service History (Optional)" desc="List recent maintenance, oil changes, or part replacements." />
-                            <textarea name="recentServiceHistory" value={formData.recentServiceHistory as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Regular oil changes every 5k miles. Brake pads replaced 2k miles ago." />
+                            <FormLabel title="Recent Service History (Optional)" desc="Notable recent maintenance, fluid changes, or part replacements (last 1-2 years)." />
+                            <textarea name="recentServiceHistory" value={formData.recentServiceHistory as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Annual synthetic oil change performed 1,500 miles ago. New Michelin Pilot Sport 4S tires installed last summer..." />
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <FormLabel title="Other Items Included (Optional)" desc="Keys, manuals, spare parts, original window sticker?" />
-                            <textarea name="otherItemsIncluded" value={formData.otherItemsIncluded as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="Two sets of keys, original owner's manual, and a car cover." />
+                            <FormLabel title="Other Items Included (Optional)" desc="Keys, manuals, original window sticker, tools, or spare accessories." />
+                            <textarea name="otherItemsIncluded" value={formData.otherItemsIncluded as string} onChange={handleChange} className="modern-input modern-textarea" placeholder="2 master keys, original owner's manual portfolio, factory window sticker, and OEM indoor car cover." />
                         </div>
                     </div>
                 )}
@@ -778,7 +778,7 @@ export const SubmitItemForm = ({
                         disabled={isLoading}
                         style={{ flex: 1, background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)", color: "#ffffff", border: "none", padding: "0 32px", height: "48px", borderRadius: "8px", fontWeight: 700, cursor: "pointer", fontSize: "15px", transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)", boxShadow: "0 4px 16px rgba(249, 115, 22, 0.35)" }}
                     >
-                        {isLoading ? "Saving..." : submitLabel}
+                        {isLoading ? (isEditMode ? "Saving changes..." : "Creating listing...") : submitLabel}
                     </button>
                 )}
             </div>
@@ -786,7 +786,7 @@ export const SubmitItemForm = ({
             <ConfirmDialog
                 isOpen={confirmDialog.isOpen}
                 title="Remove Photo"
-                message="Are you sure you want to remove this photo?"
+                message="Are you sure you want to remove this photo from your listing?"
                 onConfirm={confirmRemoveExisting}
                 onCancel={() => setConfirmDialog({ isOpen: false, targetId: null })}
                 confirmLabel="Remove"

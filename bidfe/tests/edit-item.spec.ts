@@ -1,22 +1,9 @@
-import { test, expect } from '@playwright/test';
-import path from 'node:path';
-import fs from 'node:fs';
+import { test, expect, Browser } from '@playwright/test';
+import { createScreenshotSaver } from './helpers/screenshot';
 
-const ARTIFACT_DIR = '/Users/syncleon/.gemini/antigravity/brain/2114084e-7648-4201-98e1-f3dd962520c7/screenshots/edit_item';
-const LOCAL_DIR = '/Users/syncleon/bidyourcarua/bid-your-car/bidfe/tests/screenshots/edit_item';
+const saveScreenshot = createScreenshotSaver('edit_item');
 
-fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
-fs.mkdirSync(LOCAL_DIR, { recursive: true });
-
-async function saveScreenshot(page: any, filename: string, options: any = {}) {
-  const artifactPath = path.join(ARTIFACT_DIR, filename);
-  const localPath = path.join(LOCAL_DIR, filename);
-  await page.screenshot({ path: artifactPath, ...options });
-  await page.screenshot({ path: localPath, ...options });
-  console.log(`📸 Saved Screenshot: ${filename}`);
-}
-
-async function loginUser(browser: any, user: { username: string; password: string }, viewport = { width: 1440, height: 900 }) {
+async function loginUser(browser: Browser, user: { username: string; password: string }, viewport = { width: 1440, height: 900 }) {
   const context = await browser.newContext({ viewport });
   const loginRes = await context.request.post('http://localhost:8080/api/v1/auth/login', {
     data: { username: user.username, password: user.password },
@@ -65,7 +52,7 @@ test.describe('Edit Item Page & Endpoint (/items/:id/edit)', () => {
       expect(meRes.ok()).toBeTruthy();
       const meData = await meRes.json();
 
-      let testItem = meData.content?.find((i: any) => i.status === 'DRAFT' || i.status === 'UNSOLD');
+      let testItem = meData.content?.find((i: { status?: string }) => i.status === 'DRAFT' || i.status === 'UNSOLD');
 
       if (!testItem) {
         // Create a draft vehicle listing
@@ -132,7 +119,7 @@ test.describe('Edit Item Page & Endpoint (/items/:id/edit)', () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       const meData = await meRes.json();
-      let testItem = meData.content?.find((i: any) => i.status === 'DRAFT' || i.status === 'UNSOLD');
+      let testItem = meData.content?.find((i: { status?: string }) => i.status === 'DRAFT' || i.status === 'UNSOLD');
 
       if (!testItem) {
         const uniqueVin = `2HGCR2F8${Math.floor(100000000 + Math.random() * 900000000)}`.substring(0, 17);
@@ -234,7 +221,7 @@ test.describe('Edit Item Page & Endpoint (/items/:id/edit)', () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       const meData = await meRes.json();
-      const testItem = meData.content?.find((i: any) => i.status === 'DRAFT' || i.status === 'UNSOLD') || meData.content?.[0];
+      const testItem = meData.content?.find((i: { status?: string; id?: string }) => i.status === 'DRAFT' || i.status === 'UNSOLD') || meData.content?.[0];
 
       if (testItem) {
         await page.goto(`/items/${testItem.id}/edit`);
@@ -302,7 +289,7 @@ test.describe('Edit Item Page & Endpoint (/items/:id/edit)', () => {
         }
       });
       expect(img1Res.ok()).toBeTruthy();
-      const img1 = await img1Res.json();
+      await img1Res.json();
 
       const img2Res = await context.request.post(`http://localhost:8080/api/v1/items/${item.id}/images?category=EXTERIOR`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -320,7 +307,7 @@ test.describe('Edit Item Page & Endpoint (/items/:id/edit)', () => {
         }
       });
       expect(img3Res.ok()).toBeTruthy();
-      const img3 = await img3Res.json();
+      await img3Res.json();
 
       // 3. Navigate to Edit Details & Specs page
       await page.goto(`/items/${item.id}/edit`);

@@ -9,6 +9,8 @@ import io.lettuce.core.RedisURI
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
+import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 
@@ -19,26 +21,36 @@ class RateLimitingService(
     @Value("\${spring.data.redis.password:}") private val redisPassword: String,
     @Value("\${spring.data.redis.ssl.enabled:false}") private val redisSsl: Boolean
 ) {
+    private val logger = LoggerFactory.getLogger(RateLimitingService::class.java)
+
     private val limit = Bandwidth.builder().capacity(20).refillGreedy(2, Duration.ofSeconds(1)).build()
     private val configuration = BucketConfiguration.builder().addLimit(limit).build()
     
-    private lateinit var redisClient: RedisClient
-    private lateinit var proxyManager: LettuceBasedProxyManager<ByteArray>
+    private var redisClient: RedisClient? = null
+    private var proxyManager: LettuceBasedProxyManager<ByteArray>? = null
+    private val fallbackBuckets = ConcurrentHashMap<String, Bucket>()
 
     /**
      * Initializes the Redis connection and proxy manager.
      */
     @PostConstruct
     fun init() {
-        val uriBuilder = RedisURI.builder().withHost(redisHost).withPort(redisPort)
-        if (redisPassword.isNotEmpty()) {
-            uriBuilder.withPassword(redisPassword.toCharArray())
+        try {
+            val uriBuilder = RedisURI.builder().withHost(redisHost).withPort(redisPort)
+            if (redisPassword.isNotEmpty()) {
+                uriBuilder.withPassword(redisPassword.toCharArray())
+            }
+            if (redisSsl) {
+                uriBuilder.withSsl(true)
+            }
+            val client = RedisClient.create(uriBuilder.build())
+            redisClient = client
+            proxyManager = LettuceBasedProxyManager.builderFor(client).build()
+            logger.info("RateLimitingService initialized with Redis at {}:{}", redisHost, redisPort)
+        } catch (e: Exception) {
+            logger.warn("Failed to initialize Redis rate limiter (using local in-memory fallback): {}", e.message)
+            proxyManager = null
         }
-        if (redisSsl) {
-            uriBuilder.withSsl(true)
-        }
-        redisClient = RedisClient.create(uriBuilder.build())
-        proxyManager = LettuceBasedProxyManager.builderFor(redisClient).build()
     }
 
     /**
@@ -46,7 +58,11 @@ class RateLimitingService(
      */
     @PreDestroy
     fun cleanup() {
-        redisClient.shutdown()
+        try {
+            redisClient?.shutdown()
+        } catch (e: Exception) {
+            logger.warn("Error shutting down Redis client: {}", e.message)
+        }
     }
 
     /**
@@ -56,8 +72,18 @@ class RateLimitingService(
      * @return The rate limiting bucket associated with the user.
      */
     fun resolveBucket(userId: Long): Bucket {
-        val key = "rate_limit:user:$userId".toByteArray()
-        return proxyManager.builder().build(key) { configuration }
+        val manager = proxyManager
+        if (manager != null) {
+            try {
+                val key = "rate_limit:user:$userId".toByteArray()
+                return manager.builder().build(key) { configuration }
+            } catch (e: Exception) {
+                logger.warn("Redis rate limiter failed for user {}, falling back to local: {}", userId, e.message)
+            }
+        }
+        return fallbackBuckets.computeIfAbsent("user:$userId") {
+            Bucket.builder().addLimit(limit).build()
+        }
     }
 
     /**
@@ -67,7 +93,17 @@ class RateLimitingService(
      * @return The rate limiting bucket associated with the IP.
      */
     fun resolveBucketByIp(ip: String): Bucket {
-        val key = "rate_limit:ip:$ip".toByteArray()
-        return proxyManager.builder().build(key) { configuration }
+        val manager = proxyManager
+        if (manager != null) {
+            try {
+                val key = "rate_limit:ip:$ip".toByteArray()
+                return manager.builder().build(key) { configuration }
+            } catch (e: Exception) {
+                logger.warn("Redis rate limiter failed for IP {}, falling back to local: {}", ip, e.message)
+            }
+        }
+        return fallbackBuckets.computeIfAbsent("ip:$ip") {
+            Bucket.builder().addLimit(limit).build()
+        }
     }
 }

@@ -82,7 +82,7 @@ test.describe('Profile Page Actions', () => {
     const dialogTitle = page.locator('.dialog-title', { hasText: 'Delete Account' });
     await expect(dialogTitle).toBeVisible();
 
-    const dialogMessage = page.locator('.dialog-message', { hasText: 'This action is permanent and cannot be undone. Enter your password to confirm.' });
+    const dialogMessage = page.locator('.dialog-message', { hasText: /This action is permanent/i });
     await expect(dialogMessage).toBeVisible();
 
     // Verify confirm button is disabled initially
@@ -90,7 +90,7 @@ test.describe('Profile Page Actions', () => {
     await expect(confirmBtn).toBeDisabled();
 
     // Enter password
-    await page.getByPlaceholder('Password').fill('mysecretpassword');
+    await page.getByPlaceholder(/Password/i).fill('mysecretpassword');
 
     // Verify confirm button is enabled and click it
     await expect(confirmBtn).toBeEnabled();

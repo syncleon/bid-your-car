@@ -98,7 +98,7 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         Past Auctions
                     </Link>
                     <Link to="/sell-car" className="navbar__cta">
-                        <span>Add car</span>
+                        <span>Sell a Car</span>
                     </Link>
                     {user?.roles?.some((r: { name: string }) => r.name === 'ADMIN') && (
                         <Link to="/admin" className={`navbar__link ${location.pathname.startsWith('/admin') ? 'active' : ''}`} style={{ marginLeft: '12px' }}>
@@ -115,7 +115,8 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         autoComplete="new-password"
                         autoCorrect="off"
                         spellCheck="false"
-                        placeholder="Search"
+                        placeholder="Search make, model, or keyword..."
+                        aria-label="Search vehicles"
                         value={inputValue}
                         onChange={handleSearchChange}
                         onKeyDown={handleKeyDown}
@@ -205,7 +206,8 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                             type="search"
                             name="q"
                             autoComplete="off"
-                            placeholder="Search cars..."
+                            placeholder="Search make, model, or keyword..."
+                            aria-label="Search vehicles"
                             value={inputValue}
                             onChange={handleSearchChange}
                             onKeyDown={(e) => {
@@ -222,10 +224,10 @@ export const Navbar = observer(({ isAuthenticated, isInitializing = false }: Pro
                         onClick={() => setIsMobileMenuOpen(false)}
                     >
                         <Plus size={16} strokeWidth={2.2} className="mobile-cta-icon" />
-                        <span>Add car</span>
+                        <span>Sell a Car</span>
                     </Link>
 
-                    {user?.roles?.some((r: any) => r.name === 'ADMIN') && (
+                    {user?.roles?.some((r: { name: string }) => r.name === 'ADMIN') && (
                         <Link to="/admin" className="mobile-link" onClick={() => setIsMobileMenuOpen(false)}>Admin</Link>
                     )}
 

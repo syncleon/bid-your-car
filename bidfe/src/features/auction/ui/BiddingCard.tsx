@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { Clock, AlertCircle, CheckCircle, Trophy, Tag, Zap, ShieldCheck, Plus, Gavel, Loader2 } from "lucide-react";
+import { Clock, AlertCircle, Trophy, Tag, Zap, ShieldCheck, Gavel, Loader2 } from "lucide-react";
 import { useStore } from "../../../shared/hooks/useStore";
 import { Modal } from "../../../shared/ui/Modal";
 import type { AuctionDto } from "../types";
@@ -265,7 +265,7 @@ export const BiddingCard = observer(({ auction }: { auction: AuctionDto }) => {
                             ? "No reserve price. This vehicle will sell to the highest bidder."
                             : auction.isReserveMet
                             ? "Reserve met! This vehicle will sell to the highest bidder."
-                            : "Reserve price not yet met. (Seller reserve is hidden).")}
+                            : "Reserve price not yet met (seller's reserve is hidden).")}
                 </span>
 
 

@@ -72,6 +72,12 @@ data class UpdatePasswordReqDto(
     val newPassword: String
 )
 
+data class SetPasswordReqDto(
+    @field:NotBlank(message = "New password is required")
+    @field:Size(min = 6, max = 100, message = "New password must be between 6 and 100 characters")
+    val newPassword: String
+)
+
 data class UserBatchRequest(
     @field:NotEmpty(message = "User ID list cannot be empty")
     val userIds: Set<Long>

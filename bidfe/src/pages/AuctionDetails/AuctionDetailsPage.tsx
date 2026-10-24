@@ -91,21 +91,21 @@ export const AuctionDetailsPage = observer(() => {
                                         {isPending && (
                                             <div className="compact-banner banner-pending">
                                                 <strong>Pending Approval</strong>
-                                                <p>{isOwner ? "Under review." : "Waiting for admin."}</p>
+                                                <p>{isOwner ? "Your listing is currently under review by our curation team." : "This auction is awaiting curator approval before opening for bidding."}</p>
                                             </div>
                                         )}
 
                                         {isScheduled && auction.startTime && (
                                             <div className="compact-banner banner-pending">
                                                 <strong>Scheduled</strong>
-                                                <p>Starts {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}.</p>
+                                                <p>Bidding opens {formatDistanceToNow(new Date(auction.startTime), { addSuffix: true })}.</p>
                                             </div>
                                         )}
 
                                         {isEnded && !isCancelled && (
                                             <div className="compact-banner" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                                                <strong>Auction {auction.status}</strong>
-                                                <p>Ended {auction.endTime ? formatDistanceToNow(new Date(auction.endTime)) : ''} ago.</p>
+                                                <strong>{auction.status === 'SOLD' ? 'Auction Completed • Sold' : 'Auction Ended • Reserve Not Met'}</strong>
+                                                <p>Ended {auction.endTime ? formatDistanceToNow(new Date(auction.endTime), { addSuffix: true }) : ''}.</p>
                                             </div>
                                         )}
                                     </div>

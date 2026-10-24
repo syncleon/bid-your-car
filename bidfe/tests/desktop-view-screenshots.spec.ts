@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page, Locator } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
 
@@ -8,7 +8,7 @@ const LOCAL_DIR = '/Users/syncleon/bidyourcarua/bid-your-car/bidfe/tests/screens
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 fs.mkdirSync(LOCAL_DIR, { recursive: true });
 
-async function saveScreenshot(pageOrLocator: any, filename: string, options: any = {}) {
+async function saveScreenshot(pageOrLocator: Page | Locator, filename: string, options: Parameters<Page['screenshot']>[0] = {}) {
   const artifactPath = path.join(ARTIFACT_DIR, filename);
   const localPath = path.join(LOCAL_DIR, filename);
   await pageOrLocator.screenshot({ path: artifactPath, ...options });

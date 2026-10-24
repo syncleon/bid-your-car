@@ -1,4 +1,4 @@
-import { test, expect, Browser } from '@playwright/test';
+import { test, expect, Browser, APIRequestContext } from '@playwright/test';
 
 // Real database users available in the system
 const DB_USERS = [
@@ -39,13 +39,15 @@ async function createAuthenticatedContext(browser: Browser, user: { id: number; 
   return { context, page, user };
 }
 
-async function fetchAuctionDetails(request: any, auctionId: string) {
+async function fetchAuctionDetails(request: APIRequestContext, auctionId: string) {
   try {
     const res = await request.get(`http://localhost:8080/api/v1/auctions/${auctionId}`);
     if (res.ok()) {
       return await res.json();
     }
-  } catch (_) {}
+  } catch {
+    // ignore
+  }
   return null;
 }
 
@@ -74,7 +76,9 @@ test.describe('Parallel UI Bidding Simulation on One Lot', () => {
           lotTitle = `${selected.item?.year} ${selected.item?.make} ${selected.item?.model}`;
         }
       }
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
 
     // Fallback if no backend auction found
     if (!targetLotId) {

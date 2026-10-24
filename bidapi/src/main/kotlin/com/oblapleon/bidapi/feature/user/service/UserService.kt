@@ -115,6 +115,20 @@ class UserService(
     }
 
     /**
+     * Sets or creates a password for a user without requiring the old password (for Google Auth users).
+     *
+     * @param userId The ID of the user.
+     * @param newPassword The new password to set.
+     */
+    @Transactional
+    fun setPassword(userId: Long, newPassword: String) {
+        if (newPassword.length < 6) throw BadRequestException("Password too short")
+        val user = findById(userId)
+        user.password = passwordEncoder.encode(newPassword)
+        userRepository.save(user)
+    }
+
+    /**
      * Soft deletes the current user's account.
      * Requires password confirmation.
      *

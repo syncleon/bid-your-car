@@ -14,6 +14,7 @@ interface Props {
 export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
     const { itemStore } = useStore();
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     
     const [formData, setFormData] = useState<Partial<ItemUpdateRequest>>({
         year: item.year,
@@ -194,6 +195,7 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
     };
 
     const handleSave = async () => {
+        setError(null);
         setSaving(true);
         try {
             const keepImageIds = existingImages.map(img => img.id);
@@ -201,7 +203,7 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
             onSaveSuccess();
         } catch (e) {
             console.error(e);
-            alert("Failed to save. Check inputs.");
+            setError("Unable to save changes. Please review your input fields and try again.");
         } finally {
             setSaving(false);
         }
@@ -319,6 +321,12 @@ export const InlineItemEditor = ({ item, onCancel, onSaveSuccess }: Props) => {
                         <textarea name="description" value={formData.description} onChange={handleChange} style={{ ...inputStyle, minHeight: '120px', resize: 'vertical' }} />
                     </div>
                 </div>
+
+                {error && (
+                    <div style={{ padding: '12px 16px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#f87171', fontSize: '14px', marginTop: '16px' }}>
+                        {error}
+                    </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
                     <button onClick={onCancel} disabled={saving} style={{ padding: '12px 24px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>

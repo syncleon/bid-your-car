@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page, Locator } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
 
@@ -11,7 +11,7 @@ fs.mkdirSync(path.join(CONV_ARTIFACT_DIR, 'mobile'), { recursive: true });
 fs.mkdirSync(LOCAL_DESKTOP_DIR, { recursive: true });
 fs.mkdirSync(LOCAL_MOBILE_DIR, { recursive: true });
 
-async function saveDesktopScreenshot(pageOrLocator: any, filename: string, options: any = {}) {
+async function saveDesktopScreenshot(pageOrLocator: Page | Locator, filename: string, options: Parameters<Page['screenshot']>[0] = {}) {
   const artifactPath = path.join(CONV_ARTIFACT_DIR, 'desktop', filename);
   const localPath = path.join(LOCAL_DESKTOP_DIR, filename);
   await pageOrLocator.screenshot({ path: artifactPath, ...options });
@@ -19,7 +19,7 @@ async function saveDesktopScreenshot(pageOrLocator: any, filename: string, optio
   console.log(`📸 Saved Desktop: ${filename}`);
 }
 
-async function saveMobileScreenshot(pageOrLocator: any, filename: string, options: any = {}) {
+async function saveMobileScreenshot(pageOrLocator: Page | Locator, filename: string, options: Parameters<Page['screenshot']>[0] = {}) {
   const artifactPath = path.join(CONV_ARTIFACT_DIR, 'mobile', filename);
   const localPath = path.join(LOCAL_MOBILE_DIR, filename);
   await pageOrLocator.screenshot({ path: artifactPath, ...options });

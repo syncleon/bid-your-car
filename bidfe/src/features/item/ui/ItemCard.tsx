@@ -1,5 +1,5 @@
-import { BaseCard } from "../../../widgets/BaseCard/BaseCard";
-import styles from "../../../widgets/BaseCard/styles";
+import { BaseCard, CardBadge, CardPricePill, CardSpecsGrid } from "../../../widgets/BaseCard/BaseCard";
+import { CheckCircleIcon } from "../../../widgets/BaseCard/CardSpecsGrid";
 import type { ItemDto } from "../types";
 
 interface ItemCardProps {
@@ -11,26 +11,22 @@ export const ItemCard = ({ item }: ItemCardProps) => {
         item.images?.find(img => img.category === "MAIN")?.url ||
         item.images?.[0]?.url;
 
-    const specs = [item.transmission, item.drivetrain, item.fuelType]
-        .filter(Boolean)
-        .join(" • ");
-
     const isLive = item.status === 'ACTIVE_AUCTION';
     const isSold = item.status === 'SOLD';
     const isPending = item.status === 'PENDING_AUCTION';
     const isScheduled = item.status === 'LISTED_AUCTION';
     const isUnsold = item.status === 'UNSOLD';
-    // const isDraft = item.status === 'DRAFT';
     const isRejected = item.status === 'REJECTED';
-        let statusText = "Draft";
+
+    let statusText = "Draft";
     let statusColor = "#94a3b8";
-    
+
     if (isSold) {
         statusText = "Sold";
-        statusColor = "#dc2626";
+        statusColor = "var(--text-secondary)";
     } else if (isLive) {
-        statusText = "Live Auction";
-        statusColor = "#ef4444";
+        statusText = "Live";
+        statusColor = "var(--color-danger-text)";
     } else if (isScheduled) {
         statusText = "Scheduled";
         statusColor = "var(--color-primary)";
@@ -42,8 +38,11 @@ export const ItemCard = ({ item }: ItemCardProps) => {
         statusColor = "#ef4444";
     } else if (isUnsold) {
         statusText = "Unsold";
-        statusColor = "#475569";
+        statusColor = "#64748b";
     }
+
+    const hasAuction = Boolean(item.auction);
+    const conditionText = item.condition ? item.condition.replace('_', ' ') : null;
 
     return (
         <BaseCard
@@ -52,29 +51,65 @@ export const ItemCard = ({ item }: ItemCardProps) => {
             title={{ year: item.year, make: item.make, model: item.model }}
             overlays={{
                 topLeft: (
-                    <div style={{ ...styles.badge, backgroundColor: statusColor, color: '#fff' }}>
+                    <CardBadge dotColor={statusColor}>
                         {statusText}
-                    </div>
+                    </CardBadge>
                 ),
-                topRight: null,
-
+                topRight: (
+                    hasAuction ? (
+                        conditionText ? <CardBadge>Condition: {conditionText}</CardBadge> : null
+                    ) : (
+                        item.titleStatus ? <CardBadge>{item.titleStatus} Title</CardBadge> : null
+                    )
+                ),
                 bottomLeft: (
-                    <div style={styles.badgeDark}>
-                        {item.mileage.toLocaleString()} km
-                    </div>
+                    hasAuction && item.auction ? (
+                        <CardPricePill
+                            priceLabel={item.auction.status === 'SOLD' ? 'Winning Bid' : 'Bid'}
+                            priceValue={`$${item.auction.currentPrice.toLocaleString()}`}
+                            rightContent={
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    <CheckCircleIcon />
+                                    <span style={{ fontSize: "14px" }}>
+                                        {item.auction.status === 'SOLD' ? 'Closed' : 'Active'}
+                                    </span>
+                                </div>
+                            }
+                        />
+                    ) : (
+                        conditionText ? (
+                            <CardPricePill
+                                rightContent={
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <CheckCircleIcon />
+                                        <span style={{ fontSize: "14px", fontWeight: 600 }}>
+                                            Condition: {conditionText}
+                                        </span>
+                                    </div>
+                                }
+                            />
+                        ) : null
+                    )
                 )
             }}
         >
-            <div style={styles.metaRow}>
-                <div style={{ display: "flex", flexDirection: "column", gap: '4px' }}>
-                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                        Condition: <span style={{ color: 'var(--text-primary)' }}>{item.condition.replace('_', ' ')}</span>
-                    </div>
-                </div>
-                <div style={styles.locationText}>{item.location}</div>
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    flexGrow: 1,
+                    gap: "4px",
+                    paddingBottom: "2px",
+                    minWidth: 0,
+                }}
+            >
+                <CardSpecsGrid
+                    mileage={item.mileage}
+                    transmission={item.transmission}
+                    engineOrFuel={item.engine || item.fuelType}
+                    location={item.location}
+                />
             </div>
-
-            {specs && <div style={styles.specsText}>{specs}</div>}
         </BaseCard>
     );
 };

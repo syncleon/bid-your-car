@@ -246,7 +246,7 @@ export const ImageUploader = ({
             <div style={styles.header}>
                 <div>
                     <span style={styles.title}>Vehicle Photos</span>
-                    <span style={styles.counter}>{totalImages} uploaded</span>
+                    <span style={styles.counter}>{totalImages} {totalImages === 1 ? 'photo' : 'photos'} uploaded</span>
                 </div>
             </div>
 
@@ -254,7 +254,7 @@ export const ImageUploader = ({
                 <div className="drag-hint-strip">
                     <GripIcon />
                     <span>
-                        <strong>Drag photos to reorder</strong>, or click <strong>Make Main</strong> on any image to set it as the primary cover photo. The first photo (#1) is always the cover thumbnail.
+                        <strong>Drag photos to reorder</strong>, or click <strong>Make Main</strong> on any image to set it as the primary cover photo. The first photo (#1) is shown on auction cards and search results.
                     </span>
                 </div>
             )}
@@ -500,7 +500,7 @@ export const ImageUploader = ({
                 >
                     <input type="file" multiple accept="image/*" onChange={onAddFiles} style={{ display: "none" }} />
                     <PlusIcon />
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Drop more photos here or click to add</span>
+                    <span style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>+ Add more photos</span>
                 </label>
             ) : (
                 <label 
@@ -514,10 +514,18 @@ export const ImageUploader = ({
                     <div style={styles.iconCircle}><CameraIcon /></div>
                     <div style={{ textAlign: "center" }}>
                         <span style={styles.uploadTitle}>Drag & drop photos here, or click to browse</span>
-                        <span style={styles.uploadSubtitle}>High-res JPG, PNG, WEBP • Max 10MB<br/>For the best fit in cards, use landscape photos with a 3:2 aspect ratio (e.g. 2400x1600)</span>
+                        <span style={styles.uploadSubtitle}>High-resolution JPG, PNG, or WebP up to 10MB.<br/>Landscape orientation (3:2 ratio) works best for auction cards and detail views.</span>
                     </div>
                 </label>
             )}
+
+            <div style={{ marginTop: '16px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '12px', alignItems: 'flex-start', fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+                <span style={{ fontSize: '16px' }}>📸</span>
+                <div>
+                    <strong style={{ color: 'rgba(255,255,255,0.95)', display: 'block', marginBottom: '2px' }}>Tips for higher bids:</strong>
+                    Shoot in natural daylight (early morning or golden hour). Be sure to include exterior 3/4 angles, profile views, wheels, odometer reading, clean interior dashboard, and engine bay.
+                </div>
+            </div>
 
             {cropModalOpen && createPortal(
                 <div style={styles.cropModalOverlay}>

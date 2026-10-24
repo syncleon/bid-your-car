@@ -25,13 +25,7 @@ export const ProfilePage = observer(() => {
     const [isAvatarZoomed, setIsAvatarZoomed] = useState(false);
 
     const handleSetViewMode = (mode: 'view' | 'edit' | 'password') => {
-        if (!document.startViewTransition) {
-            setViewMode(mode);
-            return;
-        }
-        document.startViewTransition(() => {
-            setViewMode(mode);
-        });
+        setViewMode(mode);
     };
 
     useEffect(() => {
@@ -215,8 +209,8 @@ export const ProfilePage = observer(() => {
             <PromptDialog
                 isOpen={deleteAccountDialogOpen}
                 title="Delete Account"
-                message="This action is permanent and cannot be undone. Enter your password to confirm."
-                placeholder="Password"
+                message="This action is permanent and cannot be undone. Active bids and vehicle listings will be withdrawn. Enter your password to confirm:"
+                placeholder="Enter your password"
                 isPassword={true}
                 error={deleteAccountError}
                 onConfirm={confirmDeleteAccount}

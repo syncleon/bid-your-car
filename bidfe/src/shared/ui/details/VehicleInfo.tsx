@@ -1,8 +1,11 @@
 
+import { useState } from "react";
 import type { ItemDto } from "../../../features/item/types";
 import { styles } from "./sharedStyles";
 
 export const VehicleHeader = ({ item }: { item: ItemDto }) => {
+    const [copied, setCopied] = useState(false);
+
     const handleShare = () => {
         if (navigator.share) {
             navigator.share({
@@ -11,7 +14,8 @@ export const VehicleHeader = ({ item }: { item: ItemDto }) => {
             }).catch(console.error);
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert("Link copied to clipboard!");
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         }
     };
 
@@ -31,22 +35,34 @@ export const VehicleHeader = ({ item }: { item: ItemDto }) => {
                         alignItems: "center", 
                         justifyContent: "center",
                         gap: "8px", 
-                        backgroundColor: "var(--bg-input)", 
-                        color: "var(--text-primary)", 
-                        border: "1px solid var(--border-color)", 
+                        backgroundColor: copied ? "rgba(74, 222, 128, 0.15)" : "var(--bg-input)", 
+                        color: copied ? "#4ade80" : "var(--text-primary)", 
+                        border: copied ? "1px solid rgba(74, 222, 128, 0.3)" : "1px solid var(--border-color)", 
                         borderRadius: "0",
                         padding: "8px 16px", 
                         cursor: "pointer", 
                         fontSize: "14px", 
                         fontWeight: 600,
                         height: "40px",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                        transition: "all 0.2s ease"
                     }}
                 >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                    </svg>
-                    Share
+                    {copied ? (
+                        <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Copied!
+                        </>
+                    ) : (
+                        <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                            Share
+                        </>
+                    )}
                 </button>
             </div>
         </div>

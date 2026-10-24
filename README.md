@@ -6,7 +6,7 @@ BidYourCar web app is real-time car auctioning platform.
   * media uploading and delivering;
   * auction and bidding ecosystem;
 
-[https://bidyourcar.web.app](https://bidyourcar.web.app)
+[https://bidyourcar-prod.web.app](https://bidyourcar-prod.web.app)
 
 ---
 

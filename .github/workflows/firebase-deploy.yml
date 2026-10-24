@@ -34,4 +34,4 @@ jobs:
 
       - name: Deploy to Firebase Hosting
         working-directory: ./bidfe
-        run: npx --yes firebase-tools@latest deploy --only hosting --project bidyourcar-prod-ui --token "${{ secrets.FIREBASE_TOKEN }}"
+        run: npx --yes firebase-tools@latest deploy --only hosting --project bidyourcar-prod --token "${{ secrets.FIREBASE_TOKEN }}"

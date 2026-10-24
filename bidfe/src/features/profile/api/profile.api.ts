@@ -31,6 +31,13 @@ export const changePassword = (data: UpdatePasswordRequestDto) =>
         body: JSON.stringify(data),
     });
 
+export const setPassword = (data: { newPassword: string }) =>
+    http<{ message: string }>(
+        "/users/me/password", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+
 export const deleteMyAccount = (data: DeleteAccountRequestDto) =>
     http<void>(
         `/users/me`, {

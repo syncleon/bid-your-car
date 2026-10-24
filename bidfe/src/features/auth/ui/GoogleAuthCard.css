@@ -1,0 +1,49 @@
+.google-auth-card {
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.google-auth-card__title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 20px 0;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.google-auth-card__btn {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.google-auth-card__btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.google-auth-card__btn:active {
+  transform: scale(0.99);
+}
+
+.google-auth-card__btn:focus-visible {
+  outline: 2px solid var(--color-primary, #f97316);
+  outline-offset: 2px;
+}

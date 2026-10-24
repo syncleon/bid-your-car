@@ -22,6 +22,10 @@ export interface UpdatePasswordRequestDto {
     oldPassword: string;
     newPassword: string;
 }
+
+export interface SetPasswordRequestDto {
+    newPassword: string;
+}
 export interface RoleDto {
     name: string;
 }

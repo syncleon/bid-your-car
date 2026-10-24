@@ -4,6 +4,7 @@ import {
     deleteMyAccount,
     updateProfile,
     changePassword,
+    setPassword,
     uploadProfilePhoto,
 } from "../api/profile.api";
 import { getErrorMessage } from "../../../shared/utils/error"; 
@@ -144,11 +145,26 @@ export const ProfileStore = types.model("ProfileStore", {
             }
         });
 
+        const setUserPassword = flow(function* (newPassword: string) {
+            self.isLoading = true;
+            clearMessages();
+            try {
+                const resp = (yield setPassword({ newPassword })) as { message?: string } | undefined;
+                self.successMessage = (resp && resp.message) || "Password created successfully!";
+            } catch (error: unknown) {
+                self.error = getErrorMessage(error);
+                throw error;
+            } finally {
+                self.isLoading = false;
+            }
+        });
+
         return {
             clearMessages,
             loadProfile,
             updateProfileData,
             changeUserPassword,
+            setUserPassword,
             deleteAccount,
             uploadPhoto
         };
